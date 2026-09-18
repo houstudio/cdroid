@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Top-level Settings list (structure follows AOSP 12 Settings
+     top_level_settings.xml). Entries are plain Preferences: tapping one
+     routes through onPreferenceTreeClick to the second-level screen,
+     the androidx equivalent of app:fragment destinations. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <Preference
+        android:key="screen_network"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Network &amp; internet"
+        android:summary="Mobile, Wi&#8209;Fi, hotspot" />
+
+    <Preference
+        android:key="screen_connected"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Connected devices"
+        android:summary="Bluetooth, pairing" />
+
+    <Preference
+        android:key="screen_apps"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Apps"
+        android:summary="Assistant, recent apps, default apps" />
+
+    <Preference
+        android:key="screen_notifications"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Notifications"
+        android:summary="Notification history, conversations" />
+
+    <Preference
+        android:key="screen_battery"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Battery"
+        android:summary="Battery share" />
+
+    <Preference
+        android:key="screen_storage"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Storage"
+        android:summary="Photos and videos, music" />
+
+    <Preference
+        android:key="screen_sound"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Sound &amp; vibration"
+        android:summary="Volume, ringtone, do not disturb" />
+
+    <Preference
+        android:key="screen_display"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Display"
+        android:summary="Dark theme, adaptive brightness, screen timeout" />
+
+    <Preference
+        android:key="screen_accessibility"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Accessibility"
+        android:summary="Display, interaction, audio" />
+
+    <Preference
+        android:key="screen_security"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Security &amp; privacy"
+        android:summary="Screen lock, permissions" />
+
+    <Preference
+        android:key="screen_location"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Location"
+        android:summary="Location requests" />
+
+    <Preference
+        android:key="screen_privacy"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="Privacy"
+        android:summary="Permission manager, usage &amp; diagnostics" />
+
+    <Preference
+        android:key="screen_system"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="System"
+        android:summary="Languages &amp; gestures, date &amp; time, reset" />
+
+    <Preference
+        android:key="screen_about"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="About phone"
+        android:summary="Device name, status, legal" />
+
+</PreferenceScreen>

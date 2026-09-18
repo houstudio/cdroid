@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionCurrentStateAnimatesDelta: currentState animates current -> current+delta
+     (a WIDTH delta so an unattached test view reflects it via layout()). -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <Transition app:constraintSetStart="@+id/csa_start" app:constraintSetEnd="@+id/csa_end" />
+    <ConstraintSet android:id="@+id/csa_start">
+        <Constraint android:id="@+id/csa_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/csa_end">
+        <Constraint android:id="@+id/csa_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintRight_toRightOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+    <ViewTransition android:id="@+id/vt_cur" app:motionTarget="@+id/csa_target"
+                    app:duration="400" app:viewTransitionMode="currentState">
+        <ConstraintOverride app:motionTarget="@+id/csa_target" android:layout_width="200px" />
+    </ViewTransition>
+</MotionScene>

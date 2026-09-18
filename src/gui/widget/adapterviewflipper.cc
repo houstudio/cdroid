@@ -15,22 +15,35 @@
 + * License along with this library; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/adapterviewflipper.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(AdapterViewFlipper);
+DECLARE_WIDGET2(AdapterViewFlipper, "android.widget.AdapterViewFlipper");
 
-AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet& attrs)
-    :AdapterViewAnimator(context, attrs){
+AdapterViewFlipper::AdapterViewFlipper(Context*ctx)
+    :AdapterViewFlipper(ctx,nullptr){}
 
-    mFlipInterval = attrs.getInt("flipInterval", DEFAULT_INTERVAL);
-    mAutoStart = attrs.getBoolean("autoStart", false);
+AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* attrs):AdapterViewFlipper(context,attrs,0){}
 
-    // A view flipper should cycle through the views
-    mLoopViews = true;
-    mFlipRunnable = [this](){
-        if (mRunning) showNext();
-    };
+AdapterViewFlipper::AdapterViewFlipper(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :AdapterViewAnimator(context, pAttrs, defStyleAttr){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::AdapterViewFlipper, defStyleAttr);
+    
+
+mFlipInterval = ta->getInt(R::styleable::AdapterViewFlipper_flipInterval, DEFAULT_INTERVAL);
+mAutoStart = ta->getBoolean(R::styleable::AdapterViewFlipper_autoStart, false);
+
+// A view flipper should cycle through the views
+mLoopViews = true;
+mFlipRunnable = [this](){
+    if (mRunning) showNext();
+};
+
 }
 
 void AdapterViewFlipper::onAttachedToWindow() {

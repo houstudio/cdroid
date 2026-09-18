@@ -12,6 +12,7 @@
  * therefore limited to what the inflater currently populates.
  *********************************************************************************/
 #include <gtest/gtest.h>
+#include "R.h"
 #include <core/app.h>
 #include <navigation/navcontroller.h>
 #include <navigation/navigatorprovider.h>
@@ -26,22 +27,20 @@
 using namespace cdroid;
 
 namespace {
-int idOf(const std::string& name) { return App::getInstance().getId(name); }
-
-NavGraph* inflateTestGraph(const std::string& ref) {
+NavGraph* inflateTestGraph(int graphResId) {
     NavController nc(&App::getInstance());
     nc.getNavigatorProvider()->addNavigator(new TestNavigator());
     NavInflater inflater(&App::getInstance(), nc.getNavigatorProvider());
-    return inflater.inflate(ref);
+    return inflater.inflate(graphResId);
 }
 } // namespace
 
 TEST(NavInflater, InflateSimpleGraph) {
-    NavGraph* g = inflateTestGraph("@navigation/nav_simple_test");
+    NavGraph* g = inflateTestGraph(gui_test::R::navigation::nav_simple_test);
     ASSERT_NE(g, nullptr);
 
-    int startId = idOf("start_test");
-    int secondId = idOf("second_test");
+    int startId = gui_test::R::id::start_test;
+    int secondId = gui_test::R::id::second_test;
     ASSERT_NE(startId, 0);
     ASSERT_NE(secondId, 0);
 
@@ -53,25 +52,25 @@ TEST(NavInflater, InflateSimpleGraph) {
 }
 
 TEST(NavInflater, InflateActionsPresent) {
-    NavGraph* g = inflateTestGraph("@navigation/nav_simple_test");
+    NavGraph* g = inflateTestGraph(gui_test::R::navigation::nav_simple_test);
     ASSERT_NE(g, nullptr);
-    NavDestination* start = g->findNode(idOf("start_test"));
-    NavDestination* second = g->findNode(idOf("second_test"));
+    NavDestination* start = g->findNode(gui_test::R::id::start_test);
+    NavDestination* second = g->findNode(gui_test::R::id::second_test);
     ASSERT_NE(start, nullptr);
     ASSERT_NE(second, nullptr);
 
     // The <action> elements are registered on their destinations (keyed by the action's idgen id).
     // (Their app:destination/app:popUpTo resolution is a known inflater gap — see file header.)
-    EXPECT_NE(start->getAction(idOf("second")), nullptr);
-    EXPECT_NE(second->getAction(idOf("self")), nullptr);
-    EXPECT_NE(second->getAction(idOf("finish")), nullptr);
-    EXPECT_NE(second->getAction(idOf("finish_self")), nullptr);
+    EXPECT_NE(start->getAction(gui_test::R::id::second), nullptr);
+    EXPECT_NE(second->getAction(gui_test::R::id::self), nullptr);
+    EXPECT_NE(second->getAction(gui_test::R::id::finish), nullptr);
+    EXPECT_NE(second->getAction(gui_test::R::id::finish_self), nullptr);
 }
 
 TEST(NavInflater, InflateArgumentsMetadata) {
-    NavGraph* g = inflateTestGraph("@navigation/nav_simple_test");
+    NavGraph* g = inflateTestGraph(gui_test::R::navigation::nav_simple_test);
     ASSERT_NE(g, nullptr);
-    NavDestination* second = g->findNode(idOf("second_test"));
+    NavDestination* second = g->findNode(gui_test::R::id::second_test);
     ASSERT_NE(second, nullptr);
 
     const auto& args = second->getArguments();

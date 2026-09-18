@@ -24,7 +24,7 @@ DayPickerPagerAdapter::ViewHolder::ViewHolder(int position, View* container, Sim
     this->calendar = calendar;
 }
 
-DayPickerPagerAdapter::DayPickerPagerAdapter(Context* context,const std::string&layoutResId,int calendarViewId){
+DayPickerPagerAdapter::DayPickerPagerAdapter(Context* context,int layoutResId,int calendarViewId){
     mInflater = LayoutInflater::from(context);
     mLayoutResId = layoutResId;
     mCalendarViewId = calendarViewId;
@@ -45,6 +45,11 @@ DayPickerPagerAdapter::~DayPickerPagerAdapter(){
     //delete mCalendarTextColor;
     //delete mDaySelectorColor;
     //delete mDayHighlightColor;
+    // Pages still cached at teardown (ViewPager never destroyItem'd them): the
+    // holders are ours (new'ed in instantiateItem), the views themselves stay
+    // owned by their container.
+    for (int i = 0; i < mItems.size(); i++) delete mItems.valueAt(i);
+    mItems.clear();
 }
 
 void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
@@ -57,6 +62,24 @@ void DayPickerPagerAdapter::setRange(Calendar& min,Calendar& max) {
 
     // Positions are now invalid, clear everything and start over.
     notifyDataSetChanged();
+}
+
+void DayPickerPagerAdapter::onLocaleChanged() {
+    int count = mItems.size();
+    for (int i = 0; i < count; i++) {
+        mItems.valueAt(i)->calendar->onLocaleChanged();
+    }
+}
+
+void DayPickerPagerAdapter::setDayOfWeekNameLength(int length) {
+    mDayOfWeekNameLength = length;
+
+    // Update displayed views.
+    int count = mItems.size();
+    for (int i = 0; i < count; i++) {
+        SimpleMonthView* monthView = mItems.valueAt(i)->calendar;
+        monthView->setDayOfWeekNameLength(length);
+    }
 }
 
 void DayPickerPagerAdapter::setFirstDayOfWeek(int weekStart) {
@@ -133,26 +156,26 @@ void DayPickerPagerAdapter::setDaySelectorColor(const cdroid::RefPtr<ColorStateL
     }
 }
 
-void DayPickerPagerAdapter::setMonthTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setMonthTextAppearance(int resId) {
     mMonthTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-void DayPickerPagerAdapter::setDayOfWeekTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setDayOfWeekTextAppearance(int resId) {
     mDayOfWeekTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-std::string DayPickerPagerAdapter::getDayOfWeekTextAppearance() {
+int DayPickerPagerAdapter::getDayOfWeekTextAppearance() {
     return mDayOfWeekTextAppearance;
 }
 
-void DayPickerPagerAdapter::setDayTextAppearance(const std::string& resId) {
+void DayPickerPagerAdapter::setDayTextAppearance(int resId) {
     mDayTextAppearance = resId;
     notifyDataSetChanged();
 }
 
-std::string DayPickerPagerAdapter::getDayTextAppearance() {
+int DayPickerPagerAdapter::getDayTextAppearance() {
     return mDayTextAppearance;
 }
 
@@ -192,6 +215,7 @@ void* DayPickerPagerAdapter::instantiateItem(ViewGroup* container, int position)
     v->setOnDayClickListener(mOnDayClickListener);
     v->setMonthTextAppearance(mMonthTextAppearance);
     v->setDayOfWeekTextAppearance(mDayOfWeekTextAppearance);
+    v->setDayOfWeekNameLength(mDayOfWeekNameLength);
     v->setDayTextAppearance(mDayTextAppearance);
 
     if (mDaySelectorColor != nullptr) {
@@ -248,6 +272,7 @@ void DayPickerPagerAdapter::destroyItem(ViewGroup* container, int position,void*
     ViewHolder* holder = (ViewHolder*) object;
     container->removeView(holder->container);
     mItems.remove(position);
+    delete holder;   // allocated in instantiateItem; Java relies on GC
 }
 
 int DayPickerPagerAdapter::getItemPosition(void* object) {

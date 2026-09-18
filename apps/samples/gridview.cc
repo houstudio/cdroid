@@ -16,7 +16,7 @@ public:
 
        CheckBox*tv=(CheckBox*)convertView;
        if(convertView==nullptr){
-           tv=new CheckBox("",600,20);
+           tv=new CheckBox(&App::getInstance());
            tv->setPadding(20,0,0,0);
        }
        tv->setId(position);
@@ -47,9 +47,9 @@ int main(int argc,const char*argv[]){
     ons.onScrollStateChanged=[](AbsListView& view, int scrollState){
         LOGV("scrollState=%d",scrollState);
     };
-    LinearLayout*ll=new LinearLayout(-1,-1);
+    LinearLayout*ll=new LinearLayout(&App::getInstance());
     ll->setOrientation(LinearLayout::VERTICAL);
-    GridView*gv=new GridView(800,640);
+    GridView*gv=new GridView(&App::getInstance());
     ll->addView(gv,new LinearLayout::LayoutParams(-1,640));
     gv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     gv->setVerticalScrollBarEnabled(true);
@@ -65,7 +65,7 @@ int main(int argc,const char*argv[]){
     gv->setSelection(0);
     w->requestLayout();
     gv->setChoiceMode(GridView::CHOICE_MODE_SINGLE);
-    Button *btn=new Button("Columns[2]",200,40);
+    Button *btn=new Button(&App::getInstance()); btn->setText("Columns[2]" );
     ll->addView(btn,new LinearLayout::LayoutParams(-1,40));
     btn->layout(100,645,200,40);
     btn->setFocusable(true);

@@ -122,8 +122,8 @@ TEST(NavController, DestinationChangedListener) {
     NavController* nc = makeController();
     DestRecorder rec;
     NavController::OnDestinationChangedListener listener =
-        [&rec](NavController*, NavDestination* destination, Bundle*) {
-            if(destination) rec.routes.push_back(destination->getRoute());
+        [&rec](NavController&, NavDestination& destination, Bundle*) {
+            rec.routes.push_back(destination.getRoute());
         };
     nc->addOnDestinationChangedListener(listener);
     // Registering dispatches the current destination (androidx V7: immediate dispatch).

@@ -18,7 +18,7 @@
 #include <stdarg.h>
 #include <porting/cdlog.h>
 #include <animation/objectanimator.h>
-#include <core/pathmeasure.h>   // Path sampling for ofFloat(target, propX, propY, Path)
+#include <animation/pathkeyframes.h>   // Path X/Y projections for ofFloat(x, y, path)
 
 namespace cdroid{
 
@@ -47,9 +47,11 @@ ObjectAnimator::ObjectAnimator(void* target,const std::string& propertyName)
 void ObjectAnimator::initAnimation(){
     if(!mInitialized){
         void* target = getTarget();
-        for(auto value:mValues){
-            value->setupSetterAndGetter(target);
-            value->setupStartValue(target);
+        if (target != nullptr) {
+            for(auto value:mValues){
+                value->setupSetterAndGetter(target);
+                value->setupStartValue(target);
+            }
         }
         ValueAnimator::initAnimation();
     }
@@ -311,21 +313,16 @@ ObjectAnimator* ObjectAnimator::ofObject(void*target,const Property*prop,TypeEva
     return ofPropertyValuesHolder(target,{pvh});
 }
 
-// Drives two float properties (e.g. translationX/translationY) along a Path simultaneously.
-// AOSP's degenerate PathKeyframes approach: sample the Path to N+1 (x,y) pairs and run two float holders.
+// AOSP ofFloat(target, x, y, path): PathKeyframes X/Y projections over the
+// error-bounded Path::approximate sampling (the uniform N=32 scheme retired).
+// The projections share ownership of the sampled parent (shared_ptr), same as
+// the AnimatorInflater path route.
 ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*propX,const Property*propY,const Cairo::RefPtr<cdroid::Path>& path){
-    PathMeasure measure(path, false);
-    const double length = measure.getLength();
-    const int N = 32;
-    std::vector<float> xs, ys;
-    for (int i = 0; i <= N; i++) {
-        double pos[2] = {0,0}, tan[2] = {0,0};
-        measure.getPosTan(length * i / N, pos, tan);
-        xs.push_back((float)pos[0]);
-        ys.push_back((float)pos[1]);
-    }
-    PropertyValuesHolder*pvhX = PropertyValuesHolder::ofFloat(propX, xs);
-    PropertyValuesHolder*pvhY = PropertyValuesHolder::ofFloat(propY, ys);
+    auto keyframeSet = std::make_shared<PathKeyframes>(path);
+    PropertyValuesHolder*pvhX = PropertyValuesHolder::ofKeyframes(propX,
+            keyframeSet->createXFloatKeyframes());
+    PropertyValuesHolder*pvhY = PropertyValuesHolder::ofKeyframes(propY,
+            keyframeSet->createYFloatKeyframes());
     return ofPropertyValuesHolder(target,{pvhX, pvhY});
 }
 

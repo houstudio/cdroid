@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/security_settings.xml fragments. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="security_dashboard_screen"
+    android:title="Security &amp; privacy">
+
+    <PreferenceCategory android:title="Device security">
+
+        <ListPreference
+            android:key="screen_lock"
+            android:title="Screen lock"
+            android:entries="@array/prefdemo_lock_type_entries"
+            android:entryValues="@array/prefdemo_lock_type_values"
+            android:defaultValue="pin" />
+
+        <SwitchPreference
+            android:key="make_passwords_visible"
+            android:title="Show passwords"
+            android:summary="Show characters briefly as you type"
+            android:defaultValue="false" />
+
+        <SwitchPreference
+            android:key="lock_after_timeout"
+            android:title="Lock after screen timeout"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Security">
+
+        <SwitchPreference
+            android:key="play_protect"
+            android:title="Google Play Protect"
+            android:summary="Check apps for harmful behavior"
+            android:defaultValue="true" />
+
+        <Preference android:key="security_updates" android:title="Security &amp; system updates" />
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="find_my_device" android:title="Find My Device" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Privacy">
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="permission_manager" android:title="Permission manager" />
+        <SwitchPreference
+            android:key="auto_revoke_permissions"
+            android:title="Remove permissions if app unused"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -17,7 +17,11 @@
  *********************************************************************************/
 #include <animation/cliprectanimation.h>
 #include <core/rect.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ClipRectAnimation::ClipRectAnimation(const ClipRectAnimation&o):Animation(o){
     mFromLeftValue  = o.mFromLeftValue;
@@ -32,35 +36,44 @@ ClipRectAnimation::ClipRectAnimation(const ClipRectAnimation&o):Animation(o){
 
 ClipRectAnimation::ClipRectAnimation(Context* context, const AttributeSet& attrs)
 :Animation(context,attrs){
-    Description d = Description::parseValue(attrs.getString("fromLeft"));
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::ClipRectAnimation);
+
+    // AOSP: Description.parseValue(a.peekValue(idx), context) — null when absent.
+    TypedValue v;
+    auto parse = [&](int idx)->Description {
+        if (!a->peekValue(idx, &v)) return Description::parseValue(nullptr, context);
+        return Description::parseValue(&v, context);
+    };
+
+    Description d = parse(R::styleable::ClipRectAnimation_fromLeft);
     mFromLeftType = d.type;
     mFromLeftValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromTop"));
-    mFromTopType =d.type;
+    d = parse(R::styleable::ClipRectAnimation_fromTop);
+    mFromTopType = d.type;
     mFromTopValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromRight"));
+    d = parse(R::styleable::ClipRectAnimation_fromRight);
     mFromRightType = d.type;
     mFromRightValue = d.value;
 
-    d = Description::parseValue(attrs.getString("fromBottom"));
+    d = parse(R::styleable::ClipRectAnimation_fromBottom);
     mFromBottomType = d.type;
     mFromBottomValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toLeft"));
+    d = parse(R::styleable::ClipRectAnimation_toLeft);
     mToLeftType = d.type;
     mToLeftValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toTop"));
+    d = parse(R::styleable::ClipRectAnimation_toTop);
     mToTopType = d.type;
     mToTopValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toRight"));
+    d = parse(R::styleable::ClipRectAnimation_toRight);
     mToRightType = d.type;
     mToRightValue= d.value;
 
-    d = Description::parseValue(attrs.getString("tpBottom"));
+    d = parse(R::styleable::ClipRectAnimation_toBottom);
     mToBottomType = d.type;
     mToBottomValue= d.value;
 }

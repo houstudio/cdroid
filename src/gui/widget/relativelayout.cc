@@ -15,10 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/relativelayout.h>
+#include <widget/framework_styleable.h>
 #include <cstring>
+#include <stdexcept>
+#include <typeinfo>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 static constexpr int RULES_VERTICAL[] = {
     RelativeLayout::ABOVE, 
@@ -39,20 +45,23 @@ static constexpr int RULES_HORIZONTAL[] = {
     RelativeLayout::ALIGN_END
 };
 
-DECLARE_WIDGET(RelativeLayout)
+DECLARE_WIDGET2(RelativeLayout, "android.widget.RelativeLayout");
 
-RelativeLayout::RelativeLayout(int w,int h):ViewGroup(w,h){
-    mIgnoreGravity  = NO_ID;
-    mDirtyHierarchy = true;
-    mGraph = new DependencyGraph();
-}
+RelativeLayout::RelativeLayout(Context*ctx)
+    :RelativeLayout(ctx,nullptr){}
 
-RelativeLayout::RelativeLayout(Context* context,const AttributeSet& attrs)
- :ViewGroup(context,attrs){
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet* attrs):RelativeLayout(context,attrs,0){}
+
+RelativeLayout::RelativeLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+ :ViewGroup(context,pAttrs, defStyleAttr){
     mDirtyHierarchy = true;
-    mIgnoreGravity = attrs.getResourceId("ignoreGravity", View::NO_ID);
-    mGravity=attrs.getGravity("gravity",mGravity);
-    mGraph = new DependencyGraph();
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::RelativeLayout, defStyleAttr);
+    
+mIgnoreGravity = (int)ta->getResourceId(R::styleable::RelativeLayout_ignoreGravity,(uint32_t)View::NO_ID);
+mGravity = ta->getInt(R::styleable::RelativeLayout_gravity,mGravity);
+mGraph = new DependencyGraph();
+
 }
 
 RelativeLayout::~RelativeLayout(){
@@ -113,6 +122,25 @@ int RelativeLayout::getBaseline() {
 void RelativeLayout::requestLayout() {
     ViewGroup::requestLayout();
     mDirtyHierarchy = true;
+}
+
+/* AOSP: every RelativeLayout measure/layout path casts the child's params to
+ * its own LayoutParams — a foreign type raises ClassCastException right there.
+ * addView() converts via checkLayoutParams/generateLayoutParams; the bypass is
+ * View::setLayoutParams(). Translate the contract with dynamic_cast + throw
+ * (the addView "child already has a parent" throw is the in-tree precedent).
+ * A blind C-style cast instead would index mRules[]/mLeft.. past the end of
+ * e.g. a plain MarginLayoutParams and corrupt the heap. */
+static RelativeLayout::LayoutParams* childLayoutParams(View* child) {
+    RelativeLayout::LayoutParams* lp =
+            dynamic_cast<RelativeLayout::LayoutParams*>(child->getLayoutParams());
+    if (lp == nullptr) {
+        throw std::runtime_error(std::string("RelativeLayout cannot layout child ")
+                + typeid(*child).name()
+                + ": foreign LayoutParams (View::setLayoutParams bypasses"
+                  " addView's conversion; Java would throw ClassCastException)");
+    }
+    return lp;
 }
 
 void RelativeLayout::sortChildren(){
@@ -191,7 +219,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* params = childLayoutParams(child);
             const int*rules = params->getRules(layoutDirection);
 
             applyHorizontalSizeRules(params, myWidth, rules);
@@ -209,7 +237,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* params = childLayoutParams(child);
 
             applyVerticalSizeRules(params, myHeight, child->getBaseline());
             measureChild(child, params, myWidth, myHeight);
@@ -249,7 +277,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     for (int i = 0; i < count; i++) {
         View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
-            LayoutParams* childParams = (LayoutParams*) child->getLayoutParams();
+            LayoutParams* childParams = childLayoutParams(child);
             if ((baselineView == nullptr) || (baselineParams == nullptr)
                     || compareLayoutPosition(childParams, baselineParams) < 0) {
                 baselineView = child;
@@ -273,7 +301,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     const int* rules = params->getRules(layoutDirection);
                     if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_HORIZONTAL] != 0)) {
                         centerHorizontal(child, params, width);
@@ -303,7 +331,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     const int* rules = params->getRules(layoutDirection);
                     if ((rules[CENTER_IN_PARENT] != 0) || (rules[CENTER_VERTICAL] != 0)) {
                         centerVertical(child, params, height);
@@ -332,7 +360,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             for (int i = 0; i < count; i++) {
                 View* child = (*views)[i];
                 if ((child->getVisibility() != GONE) && (child != ignore)) {
-                    LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                    LayoutParams* params = childLayoutParams(child);
                     if (horizontalGravity) {
                         params->mLeft += horizontalOffset;
                         params->mRight += horizontalOffset;
@@ -351,7 +379,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         for (int i = 0; i < count; i++) {
             View* child = (*views)[i];
             if (child->getVisibility() != GONE) {
-                LayoutParams* params = (LayoutParams*) child->getLayoutParams();
+                LayoutParams* params = childLayoutParams(child);
                 params->mLeft -= offsetWidth;
                 params->mRight -= offsetWidth;
             }
@@ -694,7 +722,7 @@ View* RelativeLayout::getRelatedView(const int* rules, int relation){
 
         // Find the first non-GONE view up the chain
         while (v->getVisibility() == View::GONE) {
-            rules = ((LayoutParams*) v->getLayoutParams())->getRules(v->getLayoutDirection());
+            rules = childLayoutParams(v)->getRules(v->getLayoutDirection());
             node = mGraph->mKeyNodes.get((rules[relation]));
             // ignore self dependency. for more info look in git commit: da3003
             if ((node == nullptr) || (v == node->view)) return nullptr;
@@ -754,8 +782,7 @@ void RelativeLayout::onLayout(bool changed, int l, int t, int w, int h) {
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
-            const RelativeLayout::LayoutParams* st =
-                    (RelativeLayout::LayoutParams*) child->getLayoutParams();
+            const RelativeLayout::LayoutParams* st = childLayoutParams(child);
             child->layout(st->mLeft, st->mTop, st->mRight-st->mLeft, st->mBottom-st->mTop);
         }
     }
@@ -881,34 +908,42 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
 }
 
 RelativeLayout::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):MarginLayoutParams(ctx,atts){
-    alignWithParent = atts.getBoolean("alignWithParentIfMissing",false);
+    alignWithParent = atts.getAttributeBooleanValue(std::string(), "alignWithParentIfMissing",false); // not in styleable; bridge handles both
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
-    mRules[LEFT_OF] = atts.getResourceId("layout_toLeftOf",0);
-    mRules[RIGHT_OF]= atts.getResourceId("layout_toRightOf",0);
-    mRules[ABOVE]   = atts.getResourceId("layout_above",0);
-    mRules[BELOW]   = atts.getResourceId("layout_below",0);
-    mRules[ALIGN_BASELINE]= atts.getResourceId("layout_alignBaseline",0);
-    mRules[ALIGN_LEFT]    = atts.getResourceId("layout_alignLeft",0);
-    mRules[ALIGN_TOP]     = atts.getResourceId("layout_alignTop",0);
-    mRules[ALIGN_RIGHT]   = atts.getResourceId("layout_alignRight",0);
-    mRules[ALIGN_BOTTOM]  = atts.getResourceId("layout_alignBottom",0);
+    memset(mRules, 0, sizeof(mRules)); // absent rules stay 0 (binary switch only fires present attrs)
+    // Phase 2: TypedArray switch-loop (22 rules = many attrs → loop, AOSP pattern).
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::RelativeLayoutLayout);
 
-    mRules[ALIGN_PARENT_LEFT]  = atts.getBoolean("layout_alignParentLeft"  , false) ? LTRUE : 0;
-    mRules[ALIGN_PARENT_TOP]   = atts.getBoolean("layout_alignParentTop"   , false) ? LTRUE : 0;    
-    mRules[ALIGN_PARENT_RIGHT] = atts.getBoolean("layout_alignParentRight" , false) ? LTRUE : 0;    
-    mRules[ALIGN_PARENT_BOTTOM]= atts.getBoolean("layout_alignParentBottom", false) ? LTRUE : 0;    
     
-    mRules[CENTER_IN_PARENT] = atts.getBoolean("layout_centerInParent"  , false) ? LTRUE : 0;
-    mRules[CENTER_HORIZONTAL]= atts.getBoolean("layout_centerHorizontal", false) ? LTRUE : 0;
-    mRules[CENTER_VERTICAL]  = atts.getBoolean("layout_centerVertical"  , false) ? LTRUE : 0;
+    for (size_t n = ta->getIndexCount(); n > 0; ) {
+        size_t i = ta->getIndex(--n);
+        switch (i) {
+        case R::styleable::RelativeLayoutLayout_layout_toLeftOf:        mRules[LEFT_OF]          = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_toRightOf:       mRules[RIGHT_OF]         = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_above:           mRules[ABOVE]            = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_below:           mRules[BELOW]            = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignBaseline:   mRules[ALIGN_BASELINE]   = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignLeft:       mRules[ALIGN_LEFT]       = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignTop:        mRules[ALIGN_TOP]        = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignRight:      mRules[ALIGN_RIGHT]      = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignBottom:     mRules[ALIGN_BOTTOM]     = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentLeft: mRules[ALIGN_PARENT_LEFT]  = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentTop:  mRules[ALIGN_PARENT_TOP]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentRight:mRules[ALIGN_PARENT_RIGHT] = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentBottom:mRules[ALIGN_PARENT_BOTTOM]= ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerInParent:  mRules[CENTER_IN_PARENT]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerHorizontal:mRules[CENTER_HORIZONTAL]  = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_centerVertical:  mRules[CENTER_VERTICAL]    = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_toStartOf:       mRules[START_OF]           = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_toEndOf:         mRules[END_OF]             = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignStart:      mRules[ALIGN_START]        = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignEnd:        mRules[ALIGN_END]          = ta->getResourceId(i,0); break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentStart:mRules[ALIGN_PARENT_START] = ta->getBoolean(i,false)?LTRUE:0; break;
+        case R::styleable::RelativeLayoutLayout_layout_alignParentEnd:  mRules[ALIGN_PARENT_END]   = ta->getBoolean(i,false)?LTRUE:0; break;
+        default: break;
+        }
+    }
 
-    mRules[START_OF]   = atts.getResourceId("layout_toStartOf",0);
-    mRules[END_OF]     = atts.getResourceId("layout_toEndOf",0);
-    mRules[ALIGN_START]= atts.getResourceId("layout_alignStart",0);
-    mRules[ALIGN_END]  = atts.getResourceId("layout_alignEnd",0);
-
-    mRules[ALIGN_PARENT_START] = atts.getBoolean("layout_alignParentStart", false) ? LTRUE : 0;
-    mRules[ALIGN_PARENT_END]   = atts.getBoolean("layout_alignParentEnd"  , false) ? LTRUE : 0;
     mRulesChanged = true;
     mNeedsLayoutResolution = false;
     memcpy(mInitialRules,mRules,sizeof(mRules));
@@ -1176,7 +1211,7 @@ std::list<RelativeLayout::DependencyGraph::Node*> RelativeLayout::DependencyGrap
     // Builds up the dependents and dependencies for each node of the graph
     for (Node*node:mNodes) {
 
-        LayoutParams* layoutParams = (LayoutParams*) node->view->getLayoutParams();
+        LayoutParams* layoutParams = childLayoutParams(node->view);
         const int* rules = layoutParams->mRules;
 
         // Look only the the rules passed in parameter, this way we build only the

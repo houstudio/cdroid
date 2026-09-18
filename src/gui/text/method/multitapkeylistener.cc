@@ -76,6 +76,12 @@ public:
         Editable* buf = mBuffer;
         mBuffer = nullptr;
         if (buf != nullptr) {
+            // Detach FIRST: the selection fix-up below fires onSpanChanged, which
+            // re-enters MultiTapKeyListener::onSpanChanged -> removeTimeouts; with
+            // this span still listed that sweep would cancel() + delete the Timeout
+            // that is currently running, and the trailing removeSpan/delete here
+            // would then use freed memory (CTS MultiTapKeyListenerTest).
+            buf->removeSpan(this);
             const int st = Selection::getSelectionStart(buf);
             const int en = Selection::getSelectionEnd(buf);
             const int start = buf->getSpanStart(TextKeyListener::ACTIVE);
@@ -83,7 +89,6 @@ public:
             if (st == start && en == end) {
                 Selection::setSelection(buf, Selection::getSelectionEnd(buf));
             }
-            buf->removeSpan(this);
         }
         delete this;   // owned nowhere else (borrowed span); single-threaded, fire already cancelled if removed
     }

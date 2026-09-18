@@ -5,7 +5,12 @@
 #include <text/parcelablespan.h>
 namespace cdroid{
 
-class MetricAffectingSpan:public CharacterStyle{
+/*AOSP: `MetricAffectingSpan extends CharacterStyle implements UpdateLayout` —
+  DynamicLayout's ChangeWatcher reflows exactly when a span is an UpdateLayout
+  (e.g. adding a ReplacementSpan must flag its block as always-needing-redraw).
+  Both bases virtual so the ParcelableSpan diamond collapses to one subobject
+  (CharacterStyle already inherits it virtually).*/
+class MetricAffectingSpan:virtual public CharacterStyle,virtual public UpdateLayout{
 public:
     virtual void updateMeasureState(TextPaint& textPaint)const{};
 };

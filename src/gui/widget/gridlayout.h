@@ -93,7 +93,7 @@ public:
         virtual ~Alignment()=default;
         virtual int getGravityOffset(View*view,int dellDelta)const=0;
         virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
-        int getSizeInCell(View*v,int viewSize,int cellSize)const{
+        virtual int getSizeInCell(View*v,int viewSize,int cellSize)const{
             return viewSize;
         }
         virtual std::shared_ptr<Bounds> getBounds()const;
@@ -284,8 +284,8 @@ public:
         static constexpr int DEFAULT_SPAN_SIZE = 1;//DEFAULT_SPAN.size()
         LayoutParams(int width, int height,int left, int top, int right, int bottom,
            std::shared_ptr<Spec> rowSpec, std::shared_ptr<Spec> columnSpec);
-        void reInitSuper(Context* context,const AttributeSet& attrs);
-        void init(Context* context,const AttributeSet& attrs);
+        void reInitSuper(Context* context,const AttributeSet* attrs);
+        void init(Context* context,const AttributeSet* attrs);
     public:
         std::shared_ptr<Spec> rowSpec;
         std::shared_ptr<Spec> columnSpec;
@@ -353,8 +353,9 @@ protected:
     void onMeasure(int widthSpec, int heightSpec)override;
     void onLayout(bool changed, int left, int top, int w, int h)override;
 public:
-    GridLayout(int w,int h);
-    GridLayout(Context*ctx,const AttributeSet&attrs);
+    GridLayout(Context*ctx);   // AOSP GridLayout(Context)
+    GridLayout(Context*ctx,const AttributeSet*attrs);
+    GridLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~GridLayout()override;
     int getOrientation()const;
     void setOrientation(int);

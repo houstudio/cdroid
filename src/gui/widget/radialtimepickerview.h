@@ -67,7 +67,7 @@ private:
 
     int mSelectionDegrees[2];
 
-    RadialPickerTouchHelper* mTouchHelper;
+    std::shared_ptr<RadialPickerTouchHelper> mTouchHelper;
 
     Path* mSelectorPath;
 
@@ -140,9 +140,12 @@ protected:
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
     void onDraw(Canvas& canvas)override;
 public:
-    RadialTimePickerView(Context* context,const AttributeSet& attrs);
+    RadialTimePickerView(Context*ctx);   // AOSP RadialTimePickerView(Context)
+    RadialTimePickerView(Context* context,const AttributeSet* attrs);
+    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    RadialTimePickerView(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~RadialTimePickerView()override;
-    void applyAttributes(const AttributeSet& attrs);
+    void applyAttributes(const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     void initialize(int hour, int minute, bool is24HourMode);
 
     void setCurrentItemShowing(int item, bool animate);

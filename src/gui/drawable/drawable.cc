@@ -15,15 +15,24 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/drawable.h>
 #include <porting/cdlog.h>
 #include <core/windowmanager.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <drawable/drawableinflater.h>
 
 using namespace Cairo;
 namespace cdroid {
+using namespace cdroid::internal;
 
 Drawable::ConstantState::~ConstantState() {
+}
+
+Drawable* Drawable::ConstantState::newDrawable(Resources* res) {
+    (void)res;
+    return newDrawable();
 }
 
 Drawable::Drawable() {
@@ -84,20 +93,55 @@ Drawable*Drawable::mutate() {
 void Drawable::clearMutated() {
 }
 
-void Drawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    mVisible = atts.getBoolean("visible", mVisible);
+void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    // AOSP: inflate(r, parser, attrs, null)
+    inflate(r, parser, atts, nullptr);
+}
+
+// AOSP Drawable.inflate(r, parser, attrs, @Nullable Theme): the default
+// resolves the base Drawable attrs only (AOSP 4-arg default body; no
+// re-dispatch).
+void Drawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::Drawable);
+    mVisible = ta->getBoolean(R::styleable::Drawable_visible, mVisible);
+}
+
+// AOSP Drawable.applyTheme(@NonNull Theme): no-op at this layer — the base
+// Drawable carries no pending attrs; subclasses owning mThemeAttrs
+// (ColorDrawable) re-resolve them here.
+void Drawable::applyTheme(const Resources::Theme& t){
+    (void)t;
+}
+
+// AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs)
+// (Drawable.java:1609-1615): a null theme means the THEME-LESS read —
+// Resources.obtainAttributes keeps ?attr values raw (TYPE_ATTRIBUTE) so
+// TypedArray.extractThemeAttrs() can record them as pending for a later
+// applyTheme(); only a non-null theme resolves through the theme.
+std::unique_ptr<TypedArray> Drawable::obtainAttributes(Resources& r,const Resources::Theme* theme,
+        const AttributeSet& set,const uint32_t* attrs){
+    if (theme) return theme->obtainStyledAttributes(&set, attrs);
+    return r.obtainAttributes(&set, attrs);
 }
 
 void Drawable::inflateWithAttributes(XmlPullParser&parser,const AttributeSet&atts){
-    mVisible = atts.getBoolean("visible",mVisible);
+    // visible already read from TA in inflate()
 }
 
-Drawable* Drawable::createFromXmlInner(XmlPullParser&parser,const AttributeSet&atts){
-    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&atts){
+    return DrawableInflater::inflateFromXml(r,parser.getName(),parser,atts);
 }
 
-Drawable* Drawable::createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&atts,int){
-    return DrawableInflater::inflateFromXml(parser.getName(),parser,atts);
+Drawable* Drawable::createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    return DrawableInflater::inflateFromXml(r,parser.getName(),parser,atts,theme);
+}
+
+Drawable* Drawable::createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&atts,int density){
+    return DrawableInflater::inflateFromXmlForDensity(r,parser.getName(),parser,atts,density);
+}
+
+Drawable* Drawable::createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&atts,int density,const Resources::Theme* theme){
+    return DrawableInflater::inflateFromXmlForDensity(r,parser.getName(),parser,atts,density,theme);
 }
 
 /*int Drawable::getDimensionOrFraction(const std::string&value,int base,int def){
@@ -357,10 +401,10 @@ int Drawable::resolveOpacity(int op1,int op2){
     return PixelFormat::OPAQUE;
 }
 
-int Drawable::resolveDensity(int parentDensity){
-    DisplayMetrics metrics;
-    WindowManager::getInstance().getDefaultDisplay().getMetrics(metrics);
-    const int densityDpi = /*r == null ? parentDensity :*/metrics.densityDpi;
+int Drawable::resolveDensity(Resources* r, int parentDensity){
+    // AOSP java:1669: a null Resources falls back to the parent density (keep
+    // the drawable's own density instead of drifting to the display's).
+    const int densityDpi = (r == nullptr) ? parentDensity : r->getDisplayMetrics().densityDpi;
     return densityDpi == 0 ? DisplayMetrics::DENSITY_DEFAULT : densityDpi;
 }
 

@@ -33,7 +33,7 @@
 #include <core/systemclock.h>
 #include <core/virtualkeymap.h>
 #include <core/windowmanager.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <private/keylayoutmap.h>
 #include <private/keycharactermap.h>
 

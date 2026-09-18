@@ -62,6 +62,11 @@ public:
     void drawScaledPart(const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void drawConstPart (const Rect& oldRect,const Rect& newRect,Cairo::Context&painter);
     void setImageSize(int width, int height);
+    // Decode-time density resample (AOSP BitmapFactory density scaling): resamples
+    // the source bitmap and scales every chunk-derived number (stretch regions,
+    // padding, optical insets, outline) by the same factor, so afterwards all
+    // pixel values are in the target density's space.
+    void applyDensityScale(float scale);
     Rect getContentArea(int  widht, int  height);
     Rect getPadding()const;
     Insets getOpticalInsets()const;

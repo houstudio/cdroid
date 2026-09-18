@@ -2,6 +2,8 @@
 #define __CDROID_WINDOW_H__
 #include <widget/framelayout.h>
 #include <core/handler.h>
+#include <core/windowmanager.h>
+#include <core/graphdevice.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
@@ -19,6 +21,8 @@ class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
 class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
+class ActivityOptions; // forward — scene-transition (shared element) options for startActivityForResult
+class ActivityTransitionCoordinator; // forward — the shared-element flight engine (B route)
 class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
@@ -42,6 +46,15 @@ protected:
     };
 private:
     class SendWindowContentChangedAccessibilityEvent;
+    // Liveness guard for the accessibility-state listener registered on the
+    // (static, longer-lived) AccessibilityManager: the manager fires listeners
+    // at exit-time service unregistration, after windows may be gone.
+    std::shared_ptr<bool> mA11yListenerAlive;
+    // The exact functor handed to addAccessibilityStateChangeListener (CallbackBase
+    // copies alias the shared functor, so this member compares equal to the vector
+    // entry) — ~Window unregisters by identity instead of leaving one dead
+    // closure per window in the manager's list.
+    AccessibilityManager::AccessibilityStateChangeListener mA11yStateListener;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
     bool mHandingLayoutInLayoutRequest;
@@ -64,15 +77,46 @@ private:
     ActivityTransition* mReturnTransition  = nullptr; // shown on close/back (null => use mExitTransition)
     ActivityTransition* mReenterTransition = nullptr; // shown returning to this Window (null => use mEnterTransition)
     Animator* mCurrentTransitionAnimator   = nullptr; // owned (cancel+delete on replace/~Window)
-    // Resting window position captured in setEnterTransition BEFORE snapEnterStart shifts the window
-    // offscreen — setPos rewrites mLeft/mTop, so getLeft()/getTop() read AFTER snap are the offscreen
-    // start, not the resting pos. The enter animation must slide back to this captured resting point.
-    int  mEnterRestX = 0;
-    int  mEnterRestY = 0;
-    bool mEnterRestValid = false;
+    // Compose-time visual translation — CDROID's SurfaceControl::setPosition. The SLIDE activity
+    // transition animates ONLY this offset (composeSurfaces adds it to the blit); the real frame
+    // (getBound/mLeft/mTop) stays at the resting position, so a11y bounds, input hit-testing and
+    // WMS placement are stable mid-animation — AOSP semantics (window animations are surface-side
+    // transforms; WindowState's frame never moves).
+    int  mSurfaceDx = 0;
+    int  mSurfaceDy = 0;
     bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
-    bool mInTransition      = false; // close()/re-enter re-entrancy guard
+    bool mInTransition      = false; // enter-transition re-entrancy flag (runActivityTransition)
     bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
+    bool mClosePending      = false; // close() idempotence: a second close must not post a second delete
+    // AOSP Window.java:316-317.
+    bool mCloseOnTouchOutside = false;
+    bool mSetCloseOnTouchOutside = false;
+    // AOSP Window.mCallback (Window.java:529-531): the owner installed via
+    // setCallback() — AOSP's Activity/Dialog implement Window.Callback and
+    // graft themselves onto their window this way. NOT owned. Window itself
+    // is the fallback WindowCallback (this class derives from it), so an
+    // unset callback means "Window plays its own Activity" — exactly the
+    // pre-graft behavior.
+    WindowCallback* mCallback = nullptr;
+    // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
+    // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
+    int mWindowAnimationStyle = 0;
+    bool mWindowExitAnimationsEnabled = true; // setWindowAnimations(enableExit=false) skips the exit pair
+    // B route (shared-element scene transitions): the whole flight engine lives in
+    // ActivityTransitionCoordinator (the android.app class owns it in AOSP too); the Window
+    // only hosts it — stamp at startActivity, hook the first traversal, consult at close().
+    // mSceneLiveness is the token OTHER windows' return flights watch (weak_ptr) to see this
+    // window die without dereferencing it; it is destroyed with the Window.
+    ActivityTransitionCoordinator* mSceneTransition = nullptr; // owned
+    std::shared_ptr<bool> mSceneLiveness;
+    // True when the Context ctor auto-wrapped the caller's plain context in a
+    // ContextThemeWrapper (AOSP: an Activity IS a themed context); freed in ~Window.
+    bool mOwnsContext       = false;
+    // Activity name stamped by REGISTER_ACTIVITY's factory; empty for anonymous
+    // windows. Window::recreate() relaunches through the ActivityFactory by it.
+    std::string mActivityName;
+    // AOSP ActivityInfo.configChanges bits (android:configChanges).
+    int mConfigChanges = 0;
 private:
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
@@ -93,8 +137,12 @@ private:
     View* getCommonPredecessor(View* first, View* second);
     void postSendWindowContentChangedCallback(View*source,int changeType);
     void removeSendWindowContentChangedCallback();
+    friend class AlertController;  // flushes pending posts before freeing swapped panels
     void drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas);
     bool getAccessibilityFocusedRect(Rect& bounds);
+    // CDROID-specific: detach-then-delete teardown (AlertController's panel
+    // swap) flushes the pending content-changed post BEFORE freeing the tree —
+    // the runnable holds a raw source pointer into it (AOSP: GC keeps it).
     Drawable* getAccessibilityFocusedDrawable();
     void handleWindowContentChangedEvent(AccessibilityEvent& event);
     ActionMode* startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type);
@@ -102,24 +150,73 @@ private:
     // one. onEnd (may be empty) runs when the animation completes (or immediately if NONE).
     void runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd);
     void startEnterAnimation();
-    void startExitAnimation(const std::function<void()>& onEnd);
+    // Ghost-exit support (AOSP: WMS animates the removed window's surface):
+    // snapshot this window's surface into a compositor ghost, then animate IT.
+    GraphDevice::GhostLayer* captureGhost();
+    void startGhostExit(ActivityTransition* t);
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
 protected:
+    // The teardown callback handed to close(cb): invoked at finishClose time
+    // (after the exit transition, view tree still intact). Stored as a member
+    // so the owner can CANCEL it (see PopupDecorView::detachOwner) when it
+    // dies before the animation ends - a pending notification must never fire
+    // into a freed owner chain.
+    std::function<void()> mTeardownCb;
+private:
+    // Build the default enter/exit ActivityTransitions from mWindowAnimationStyle or (when 0)
+    // the theme's windowAnimationStyle (AOSP PhoneWindow.generateLayout records the style;
+    // AppTransition resolves the actual animations from it — simplified to an enter/exit pair).
+    // Called from the Context-taking ctors, so a later programmatic setEnter/ExitTransition
+    // simply replaces these, like AOSP's overridePendingTransition over the theme.
+    void loadThemeWindowAnimations();
+    // Shared body of loadThemeWindowAnimations/setWindowAnimations: resolve enter/exit anims
+    // out of `styleRes` and install them (capturing the resting pos / snapping pre-first-frame).
+    void applyWindowAnimationStyle(int styleRes);
+    // AOSP PhoneWindow.generateLayout (getContainer()==null branch): resolve the theme's
+    // windowBackground and install it as the decor background — CDROID's Window IS the
+    // decor, so that is plain setBackground (DecorView.setWindowBackground). Loaded from
+    // the final themed context like the animations; popup decor windows opt out with the
+    // same flag (AOSP popup decors never take a theme window background).
+    void loadThemeWindowBackground();
+    // AOSP PhoneWindow.generateLayout's windowCloseOnTouchOutside read.
+    void loadThemeCloseOnTouchOutside();
+    // AOSP DecorView.setBackgroundFallback (its BackgroundFallback member folded into the
+    // fused Window). Owns the drawable — Java's GC becomes a delete.
+    void setBackgroundFallback(Drawable* fallbackDrawable);
+    // AOSP com.android.internal.widget.BackgroundFallback.draw, with boundsView/root being
+    // this Window and null content/covering views (no separate mContentRoot or status/nav
+    // bar views): fill the strips no opaque child covers with the fallback drawable.
+    void drawBackgroundFallback(Canvas& canvas);
+protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
-    /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
+    /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window
      *is resized or moved*/
     Cairo::RefPtr<Cairo::Region>mPendingRgn;
     int window_type = TYPE_APPLICATION;/*window type*/
+    // AOSP Window.mWindowAttributes: the WindowManager::LayoutParams this window
+    // is placed by (WindowManager::relayoutWindow — the WMS applyGravityAndUpdateFrame
+    // equivalent). Kept in sync with window_type in initWindow().
+    WindowManager::LayoutParams mWindowAttributes;
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
+    // AOSP PhoneWindow.mBackgroundFallbackDrawable — owned here (it is never attached
+    // to a View) and drawn by drawBackgroundFallback. The window background itself is
+    // View::mBackground (setBackground transfers ownership).
+    Drawable* mBackgroundFallbackDrawable = nullptr;
+    // True while the current View background came from the theme's
+    // windowBackground (loadThemeWindowBackground) — a later setTheme may swap
+    // it, but an app-installed background (setBackgroundDrawable) always wins.
+    bool mBackgroundFromTheme = false;
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;
+    // AOSP DecorView.onDraw: super, then the background fallback.
+    void onDraw(Canvas&)override;
     ViewGroup*invalidateChildInParent(int* location,Rect& dirty)override;
     int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
@@ -127,6 +224,18 @@ protected:
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
+    // The host of the accessibility-focused (virtual) view — the in-process
+    // AccessibilityService's FOCUS_ACCESSIBILITY query (AOSP goes through the
+    // interaction connection; here the window is the connection).
+    View* getAccessibilityFocusedHost() const { return mAccessibilityFocusedHost; }
+
+    // Terminal focus-search resolver (public like AOSP's ViewRootImpl.focusSearch —
+    // a ViewParent interface method). The Window IS the root view in CDROID
+    // (mParent == nullptr), so the ViewGroup parent-chain ends here — this
+    // override stands in for AOSP's ViewRootImpl.focusSearch, which is where
+    // the chain terminates on Android.
+    View* focusSearch(View* focused, int direction)override;
+
     using Callback = WindowCallback;
     typedef enum{
         TYPE_WALLPAPER    = 1,
@@ -139,19 +248,86 @@ public:
         TYPE_TOAST        = 2005,
     }WindowType;
     Window(int x,int y,int w,int h,int type=TYPE_APPLICATION);
-    Window(Context*,const AttributeSet&);
+    // AOSP PhoneWindow(context): themed (ContextThemeWrapper) dialog contexts
+    // drive inflation through this overload instead of the global App.
+    // themeWindowAnimations=false opts out of the theme window dressing loads (the
+    // windowAnimationStyle pair AND windowBackground/windowBackgroundFallback) —
+    // AOSP's windowAnimationStyle/windowBackground belong to app/activity windows only;
+    // popup decor windows (PopupDecorView) animate via their own popup window animation
+    // style, never the theme (and CDROID popups align to their anchor after creation, so
+    // a ctor-time snap would use a stale resting position — see loadThemeWindowAnimations).
+    Window(Context*ctx,int x,int y,int w,int h,int type=TYPE_APPLICATION,
+           bool themeWindowAnimations = true);
+    Window(Context*,const AttributeSet*);
     ~Window()override;
     void setRegion(const Cairo::RefPtr<Cairo::Region>&region);
     void draw();
     virtual void setText(const std::string&);
     const std::string getText()const;
     void setPos(int x,int y);
+    /* Visual-only surface translation (see mSurfaceDx). Real moves go through setPos. */
+    void setSurfaceTranslation(int dx,int dy);
+    // AOSP Window.getAttributes/setAttributes. getAttributes returns the LIVE
+    // object — mutate fields on it and call WindowManager::relayoutWindow,
+    // exactly how AOSP dialogs tune their window before showing.
+    WindowManager::LayoutParams& getAttributes();
+    const WindowManager::LayoutParams& getAttributes()const;
+    void setAttributes(const WindowManager::LayoutParams& a);
+    /* AOSP Window.setSoftInputMode: how this window reacts to the IME being
+     * shown (SOFT_INPUT_ADJUST_RESIZE / _PAN / _NOTHING, from android
+     * windowSoftInputMode). */
+    void setSoftInputMode(int mode);
+    int getSoftInputMode()const;
+    // AOSP Window.setFlags/addFlags/clearFlags (Window.java:1089-1113).
+    void setFlags(int flags, int mask);
+    void addFlags(int flags);
+    void clearFlags(int flags);
+    // AOSP Window close-on-touch-outside face (Window.java:316-317, :1618-1669):
+    // Dialog.setCanceledOnTouchOutside drives these; shouldCloseOnTouch is the
+    // consumption point (the ACTION_OUTSIDE clause — the UP-out-of-bounds
+    // clause serves touch-modal windows, kept for parity).
+    void setCloseOnTouchOutside(bool close);
+    void setCloseOnTouchOutsideIfNotSet(bool close);
+    bool shouldCloseOnTouchOutside() const;
+    bool shouldCloseOnTouch(Context* context, MotionEvent& event);
+    bool isOutOfBounds(Context* context, const MotionEvent& event);
+    // AOSP Window.setCallback / getCallback (Window.java:781-789): installs the
+    // owner that receives the window's input dispatch + lifecycle callbacks
+    // (AOSP Dialog: mWindow.setCallback(this) in the ctor). The dispatch entry
+    // points below consult it BEFORE the window's own fallback — DecorView's
+    // `cb != null ? cb.dispatchXxx(event) : super.dispatchXxx(event)` shape.
+    // Not owned; clear it (setCallback(nullptr)) before the consumer dies —
+    // dispatch may run from posted code.
+    void setCallback(WindowCallback* callback);
+    WindowCallback* getCallback();
+    // AOSP Window.superDispatchKeyEvent / ...Touch / ...GenericMotion / ...
+    // KeyShortcut / ...Trackball (Window.java:1364-1408): the callback's
+    // re-entry into the DECOR TREE dispatch, bypassing the callback seam the
+    // public dispatchXxx consults (AOSP Dialog.dispatchKeyEvent =
+    // onKeyListener -> superDispatchKeyEvent -> event.dispatch(this)).
+    // CDROID's Window is its own decor, so these jump straight to the
+    // FrameLayout/View dispatch.
+    bool superDispatchKeyEvent(KeyEvent& event);
+    bool superDispatchKeyShortcutEvent(KeyEvent& event);
+    bool superDispatchTouchEvent(MotionEvent& event);
+    bool superDispatchTrackballEvent(MotionEvent& event);
+    bool superDispatchGenericMotionEvent(MotionEvent& event);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
     void sendToBack();
     void bringToFront();
     void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType)override;
     bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event)override;
+    // AOSP ViewRootImpl.dispatchDetachedFromWindow drops the pending
+    // SendWindowContentChangedAccessibilityEvent before tearing the tree down —
+    // the posted runnable keeps a raw source-view pointer that would dangle.
+    void dispatchDetachedFromWindow()override;
+    // The remaining dispatch entries with a callback seam (see dispatchKeyEvent).
+    bool dispatchKeyShortcutEvent(KeyEvent& event)override;
+    bool dispatchGenericMotionEvent(MotionEvent& event)override;
+    // AOSP DecorView notifies the Window.Callback of attach/detach; the fused
+    // Window forwards at its own tree-attach/detach points.
+    void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();
@@ -164,7 +340,8 @@ public:
     virtual void onNewIntent(const Intent& /*intent*/) {}
     // android.app.Activity result API: startActivityForResult → target setResult → close →
     // caller.onActivityResult. App mediates the result delivery (see App::dispatchPendingResult).
-    void startActivityForResult(const Intent& intent, int requestCode);
+    // The options overload mirrors AOSP Activity.startActivityForResult(Intent, int, Bundle).
+    void startActivityForResult(const Intent& intent, int requestCode, ActivityOptions* options = nullptr);
     void setResult(int resultCode, Intent* data = nullptr) { mResultCode = resultCode; mResultData = data; }
     int getResultCode() const { return mResultCode; }
     Intent* getResultData() const { return mResultData; }
@@ -199,6 +376,33 @@ public:
     // by this Window and freed in ~Window(). Pass nullptr to clear.
     void setActionBar(Toolbar* toolbar);
     ActionBar* getActionBar();
+
+    // AOSP Activity.setTheme(@StyleRes int): ContextThemeWrapper.setTheme applies
+    // the style to the LIVE theme object, so views inflated afterwards — and lazy
+    // ?attr resolution — pick it up. Already-inflated views are NOT re-themed in
+    // place (AOSP behavior too); call recreate() to rebuild under the new theme.
+    void setTheme(int resid);
+    // AOSP Activity.recreate(): cause this Activity to be relaunched with a new
+    // instance (which inflates under the theme selected before recreation).
+    // CDROID: closes this window and instantiates a fresh one through the
+    // ActivityFactory (REGISTER_ACTIVITY name). Needs the name — only registered
+    // activities can relaunch themselves.
+    void recreate();
+    // Stamp used by REGISTER_ACTIVITY's factory so recreate() can relaunch by name.
+    void setActivityName(const std::string& name) { mActivityName = name; }
+
+    // AOSP ComponentCallbacks.onConfigurationChanged: override to receive
+    // configuration changes the activity declared it handles (setConfigChanges).
+    virtual void onConfigurationChanged(Configuration& newConfig);
+    // AOSP Activity.dispatchConfigurationChanged: delivered by the system
+    // (App::handleConfigurationChanged) — runs the callback and dispatches
+    // through the content view tree (AOSP ViewRootImpl does the tree walk).
+    void dispatchConfigurationChanged(Configuration& newConfig);
+    // AOSP ActivityInfo.configChanges (manifest android:configChanges): the
+    // CONFIG_* bits this activity handles itself — an activity keeps alive only
+    // when EVERY changed bit is declared; otherwise the system recreates it.
+    int  getConfigChanges() const { return mConfigChanges; }
+    void setConfigChanges(int configChanges) { mConfigChanges = configChanges; }
 
     // Options-menu dispatch chain. Override in subclasses to populate / handle items.
     virtual bool onCreateOptionsMenu(Menu& menu);
@@ -250,12 +454,42 @@ public:
     void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;
     void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delayMilliseconds)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    bool onTouchEvent(MotionEvent& event)override;
     ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;
+    // AOSP Window.setWindowAnimations: an explicit animation STYLE res id overriding the theme's
+    // windowAnimationStyle for this window's enter/exit (0 restores the theme resolution).
+    // enableExit=false installs the ENTER animation only. AOSP always installs the full pair
+    // (it survives animated popup exits on GC); popups also pass true now - the no-GC
+    // discipline for the deferred teardown (borrowed-content owners must detach their
+    // adapter before freeing it) is documented on PopupWindow::dismiss. The parameter stays
+    // for substrate callers that need the legacy synchronous-teardown behavior.
+    void setWindowAnimations(int resId, bool enableExit = true);
+    // Shared-element scene transition (ActivityOptions.makeSceneTransitionAnimation): App::
+    // startActivity stamps the captured caller sources here after creating the window. Creates
+    // mSceneTransition; an empty capture set is dropped by the doTraversal hook (prepareEnter
+    // returns false) and the window-level enter stays untouched (AOSP's app-transition fallback).
+    void setSharedElementEnter(Window* caller, const std::vector<std::pair<View*, std::string>>& sharedElements);
+    // Liveness token for OTHER windows' return flights (see mSceneLiveness): hold a weak_ptr to
+    // it to watch this window die without dereferencing it.
+    const std::shared_ptr<bool>& getSceneLiveness() const { return mSceneLiveness; }
+    // Shared-element return flight's "hide at once" (AOSP stopSharedElementAnimation hides the
+    // exiting decor — GONE). CDROID's compositor is damage-incremental: a hidden-but-listed
+    // window would keep its stale pixels on screen AND occlude the caller's visible region, so
+    // the hide is removeWindow — drop from the compose list, mark the caller's pending region
+    // with the vacated rect (the caller repaints over the stale pixels) and restart it (focus
+    // + onStart/onResume, the reenter semantics). Idempotent (membership-checked), so
+    // finishClose()'s own removeWindow stays a no-op.
+    void retireFromCompositor();
     // Window-level Activity transitions (android.app.Activity transition API names). Each setter
     // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
     void setEnterTransition(ActivityTransition* t);
+    // Undo an installed enter transition before anything composes — the scene-transition
+    // suppression (AOSP never starts the themed app transition when a scene transition won):
+    // deletes the transition, clears the pending flag and undoes the themed pre-snap
+    // (alpha 0 / offscreen translation).
+    void clearEnterTransition();
     void setExitTransition(ActivityTransition* t);
     void setReturnTransition(ActivityTransition* t);
     void setReenterTransition(ActivityTransition* t);
@@ -264,6 +498,12 @@ public:
     ActivityTransition* getReturnTransition()  const { return mReturnTransition; }
     ActivityTransition* getReenterTransition() const { return mReenterTransition; }
     void close();
+    // Substrate extension (not an AOSP mirror): close() with a teardown
+    // callback, invoked at finishClose time - after the exit transition (when
+    // one plays) but while the view tree is still intact, i.e. the caller's
+    // last safe point before the window teardown cascade. PopupWindow's exit
+    // branch uses it to return borrowed content at the AOSP-specified moment.
+    void close(const std::function<void()>& onTeardown);
 };
 using Activity=Window;
 

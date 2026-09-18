@@ -15,10 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/listpopupwindow.h>
+#include <widget/framework_styleable.h>
 #include <widget/linearlayout.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 class PopupDataSetObserver:public DataSetObserver{
 private:
@@ -38,20 +41,40 @@ public:
     }
 };
 
-ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet&atts)
-    :ListPopupWindow(context,atts,"android:attr/listPopupWindowStyle",""){
+ListPopupWindow::ListPopupWindow(Context*ctx)
+    :ListPopupWindow(ctx,nullptr){}
+
+ListPopupWindow::ListPopupWindow(Context*context,const AttributeSet*atts)
+    :ListPopupWindow(context,atts,R::attr::listPopupWindowStyle,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr)
-    :ListPopupWindow(context,atts,defStyleAttr,""){
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int defStyleAttr)
+    :ListPopupWindow(context,atts,defStyleAttr,0){
 }
 
-ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, const std::string&defStyleAttr, const std::string&defStyleRes){
+ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet* atts, int defStyleAttr, int defStyleRes){
     mContext = context;
     initPopupWindow();
-    mDropDownHorizontalOffset = atts.getDimensionPixelOffset("dropDownHorizontalOffet",0);
-    mDropDownVerticalOffset   = atts.getDimensionPixelOffset("dropDownVerticalOffet",0);
+    // AOSP: resolve dropDownHorizontalOffset/VerticalOffset through the defStyle
+    // chain via R.styleable.ListPopupWindow (no more hand-cobbled attr-id array).
+    auto ta = context->obtainStyledAttributes(atts, R::styleable::ListPopupWindow, defStyleAttr, defStyleRes);
+    if (ta) {
+        mDropDownHorizontalOffset = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownHorizontalOffset, 0);
+        mDropDownVerticalOffset   = ta->getDimensionPixelOffset(R::styleable::ListPopupWindow_dropDownVerticalOffset, 0);
+    }
     mPopup = new PopupWindow(mContext,atts,defStyleAttr,defStyleRes);
+    // The inner dismiss wrapper (ALWAYS installed - with or without an app
+    // listener): run this object's post-dismiss member cleanup, then hand
+    // control to the app listener (if any). By the time the app listener runs,
+    // deleting this ListPopupWindow inside it is safe end to end; see dismiss()
+    // for why nothing may follow the inner dismiss when it fired.
+    mPopup->setOnDismissListener([this, alive = mAliveFlag](){
+        if (!*alive) return;  // this ListPopupWindow died before teardown-complete
+        completeDismiss();
+        if (mOnDismissListener != nullptr) {
+            mOnDismissListener();
+        }
+    });
     mResizePopupRunnable =[this](){
         if ((mDropDownList != nullptr) && mDropDownList->isAttachedToWindow()
                 && (mDropDownList->getCount() > mDropDownList->getChildCount())
@@ -64,6 +87,7 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, cons
 }
 
 ListPopupWindow::~ListPopupWindow(){
+    *mAliveFlag = false;  // the dismiss wrapper must not run on a dead object
     LOGD("%p mPopup=%p",this,mPopup);
     delete mHandler;
     delete mPopup;
@@ -72,6 +96,7 @@ ListPopupWindow::~ListPopupWindow(){
 }
 
 void ListPopupWindow::initPopupWindow(){
+    mAliveFlag = std::make_shared<bool>(true);
     mOverlapAnchor = 0xFF;
     mDropDownAlwaysVisible  = false;
     mForceIgnoreOutsideTouch= false;
@@ -174,13 +199,13 @@ void ListPopupWindow::setBackgroundDrawable(Drawable* d) {
     mPopup->setBackgroundDrawable(d);
 }
 
-void ListPopupWindow::setAnimationStyle(const std::string&animationStyle){
-    //mPopup->setAnimationStyle(animationStyle);
+void ListPopupWindow::setAnimationStyle(int animationStyle){
+    mPopup->setAnimationStyle(animationStyle);
 }
 
 
-std::string ListPopupWindow::getAnimationStyle(){
-    return std::string();//mPopup->getAnimationStyle();
+int ListPopupWindow::getAnimationStyle() const{
+    return mPopup->getAnimationStyle();
 }
 
 View* ListPopupWindow::getAnchorView() {
@@ -375,17 +400,63 @@ void ListPopupWindow::show() {
 }
 
 void ListPopupWindow::dismiss() {
+    // AOSP dismiss() is synchronous: mPopup.dismiss() removes the window NOW
+    // (any exit animation plays on a compositor ghost), and the inner dismiss
+    // fires the wrapper — completeDismiss() (prompt view, content view,
+    // drop-down release, resize runnable) then the app listener — before
+    // returning. An app listener that DELETES this ListPopupWindow is safe:
+    // nothing follows mPopup->dismiss() here. The early drop-down release the
+    // deferred-exit world needed (a re-show racing the dying decor) is gone —
+    // the decor is already removed by the time the wrapper runs.
     mPopup->dismiss();
+}
+
+// Drop the borrowed adapter and our pointer to the drop-down list. The list
+// VIEW itself is owned by mPopup (setOwnsContentView) and dies with the
+// decor's teardown; the adapter is BORROWED (the menu chain's
+// ~CascadingMenuInfo owns and frees it after the dismiss cascade) - make the
+// list drop it NOW while it is guaranteed alive, or the later decor detach
+// (onDetachedFromWindow unregisters the observer) dereferences freed memory.
+// Idempotent: dismiss() runs it eagerly, completeDismiss() re-runs it as a
+// no-op guard for paths that reach the wrapper first.
+void ListPopupWindow::releaseDropDownList() {
+    if (mDropDownList != nullptr) {
+        mDropDownList->setAdapter(nullptr);
+        mDropDownList = nullptr;
+    }
+}
+
+// Post-dismiss member cleanup, factored out of dismiss() so the wrapper
+// listener can run it BEFORE the app-facing listener takes control: an app
+// that deletes this ListPopupWindow inside its dismiss listener would
+// otherwise leave dismiss() about to touch freed members.
+void ListPopupWindow::completeDismiss() {
     removePromptView();
     mPopup->setContentView(nullptr);
     // mDropDownList is owned by mPopup (setOwnsContentView): it is freed when the
     // popup window is torn down, so just drop our pointer here.
-    mDropDownList = nullptr;
+    // No-GC discipline BEFORE dropping the pointer: the adapter is BORROWED
+    // (the menu chain's ~CascadingMenuInfo owns and frees it after the dismiss
+    // cascade) - make the list drop it NOW while it is guaranteed alive. The
+    // later decor detach (onDetachedFromWindow unregisters the observer)
+    // otherwise dereferences freed memory. This also closes the window where
+    // ~CascadingMenuInfo's own discipline missed: it looks the list up via
+    // getListView(), which this very function nulls. (In the animated-exit
+    // flow the info dtor runs first and drops it there; setAdapter(nullptr)
+    // on an already-cleared list is a no-op.)
+    releaseDropDownList();
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
 
 void ListPopupWindow::setOnDismissListener(const PopupWindow::OnDismissListener& listener) {
-     mPopup->setOnDismissListener(listener);
+     // The app listener is stored here, NOT forwarded to the inner PopupWindow:
+     // the wrapper installed by initPopupWindow() runs this object's member
+     // cleanup first and hands control to the app only afterwards, so an owner
+     // deleting this ListPopupWindow inside the listener is safe end to end
+     // (the inner PopupWindow::dismiss fires its listener from a stack copy,
+     // and ~ListPopupWindow deleting mPopup mid-notification is covered by the
+     // PopupWindow delete-at-any-time teardown).
+     mOnDismissListener = listener;
 }
 
 void ListPopupWindow::removePromptView() {
@@ -611,7 +682,24 @@ int ListPopupWindow::buildDropDown() {
 
         mDropDownList = createDropDownListView(context, !mModal);
         if (mDropDownListHighlight != nullptr) {
-            mDropDownList->setSelector(mDropDownListHighlight);
+            // Clone per build: the drop-down list is rebuilt on every show and
+            // dies with the decor, and AbsListView deletes whatever setSelector
+            // received — so the MEMBER stays as ~ListPopupWindow's owned
+            // template and is re-installed as a fresh clone on every re-built
+            // list (AOSP: setSelector(mDropDownListHighlight) per build; the
+            // old null-the-member fix kept ownership safe but lost the themed
+            // selector on every second and later open).
+            Drawable* selector = nullptr;
+            auto cs = mDropDownListHighlight->getConstantState();
+            if (cs) selector = cs->newDrawable();
+            if (selector != nullptr) {
+                mDropDownList->setSelector(selector);
+            } else {
+                // No ConstantState support (cannot clone): install the member
+                // itself and surrender our reference — the list owns it now.
+                mDropDownList->setSelector(mDropDownListHighlight);
+                mDropDownListHighlight = nullptr;
+            }
         }
         mDropDownList->setAdapter(mAdapter);
         mDropDownList->setOnItemClickListener(mItemClickListener);
@@ -640,7 +728,7 @@ int ListPopupWindow::buildDropDown() {
         if (hintView != nullptr) {
             // if a hint has been specified, we accommodate more space for it and
             // add a text view in the drop down menu, at the bottom of the list
-            LinearLayout* hintContainer = new LinearLayout(context,AttributeSet());
+            LinearLayout* hintContainer = new LinearLayout(context);   // AOSP code construction
             hintContainer->setOrientation(LinearLayout::VERTICAL);
 
             LinearLayout::LayoutParams* hintParams = new LinearLayout::LayoutParams(

@@ -18,34 +18,25 @@
 #include <drawable/colorstatelist.h>
 #include <drawable/stateset.h>
 #include <core/color.h>
-#include <core/app.h>
+#include <content/resources.h>
+#include <content/typedarray.h>
 #include <core/sparsearray.h>
 #include <core/xmlpullparser.h>
 #include <attributeset.h>
-#include <exception>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <algorithm>
+#include <stdexcept>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 std::vector<std::vector<int>> ColorStateList::EMPTY={{}};
 
 ColorStateList::ColorStateList(){
     mChangingConfigurations=0;
-}
-
-ColorStateList::ColorStateList(int color)
-    :ColorStateList(EMPTY,{color}){
-}
-
-int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
-    std::vector<int>states;
-    const float alpha = atts.getFloat("alpha",1.f);
-    auto cls = atts.getColorStateList("color");
-    auto baseColor = atts.getColor("color");//cls->getDefaultColor();//cls?cls->getDefaultColor():atts.getColor("color");
-    StateSet::parseState(states,atts);
-    baseColor = modulateColorAlpha(baseColor,alpha);
-    return addStateColor(states,baseColor);
 }
 
 ColorStateList::ColorStateList(const ColorStateList&other)
@@ -64,57 +55,42 @@ ColorStateList::~ColorStateList(){
     LOGV("%p",this);
 }
 
-void ColorStateList::dump()const{
-    std::ostringstream oss;
-    oss <<"CLS:"<<std::hex <<this<<std::endl;
-    for(int i=0;i<mColors.size();i++){
-	const std::vector<int>&state=mStateSpecs[i];
-        oss<<"[";
-        for(auto s=state.begin();s!=state.end();s++){
-	    oss<<*s;
-	    if(s<state.end()-1)oss<<",";
-	}
-        oss<<"]="<<std::hex<<(unsigned int)mColors.at(i)<<" ";
-    }
-    LOG(DEBUG)<<oss.str();
-}
-
 int ColorStateList::getChangingConfigurations()const{
     return mChangingConfigurations;
 }
 
-int ColorStateList::addStateColor(const std::vector<int>&stateSet,int color){
-    mStateSpecs.push_back(stateSet);
-    if((mColors.size()==0)||(stateSet.size()==0)){
-        mDefaultColor = color;
-    }
-    mColors.push_back(color);
-    return mColors.size()-1;
-}
-
-int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod){
-    if (alphaMod == 1.0f)  return baseColor;
+int ColorStateList::modulateColor(int baseColor, float alphaMod, float lStar){
+    const bool validLStar = lStar >= 0.0f && lStar <= 100.0f;
+    if (alphaMod == 1.0f && !validLStar)  return baseColor;
 
     const int baseAlpha = Color::alpha(baseColor);
-    const int alpha = (int)(baseAlpha * alphaMod + 0.5f)&0xFF;
+    const int alpha = std::max(0, std::min(255, (int)(baseAlpha * alphaMod + 0.5f)));
+
+    if (validLStar) {
+        // DEFERRED: AOSP uses android.graphics.cam.Cam (ColorUtils.colorToCAM/
+        // CAMToColor) to set perceptual luminance; Cam is not ported to CDROID,
+        // so lStar modulation is a no-op until Cam lands.
+    }
     return (baseColor & 0xFFFFFF) | ((uint32_t)alpha << 24);
 }
 
 cdroid::RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
     std::vector<int>colors = mColors;
-    for(int i = 0 ; i < colors.size();i++)
+    for(int i = 0 ; i < (int)colors.size();i++)
         colors[i] = (colors[i] & 0x00FFFFFF) | ( alpha & 0xFF000000 );
     return std::make_shared<ColorStateList>(mStateSpecs,colors);
 }
 
-void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
+void ColorStateList::inflate(const Resources&r,XmlPullParser& parser,const AttributeSet&attrs,const Resources::Theme* theme){
+    // AOSP private inflate(Resources, XmlPullParser, AttributeSet, Theme): resolve
+    // each <item> through the arsc via obtainStyledAttributes(R.styleable.
+    // ColorStateListItem) and walk the raw AttributeSet by attribute resource id
+    // to collect state specifiers -- no string attribute lookup.
+
     const int innerDepth = parser.getDepth()+1;
     int depth, type;
 
-    int changingConfigurations = 0;
     int defaultColor = (int)DEFAULT_COLOR;
-
-    bool hasUnresolvedAttrs = false;
 
     while ((type = parser.next()) != XmlPullParser::END_DOCUMENT
            && ((depth = parser.getDepth()) >= innerDepth || type != XmlPullParser::END_TAG)) {
@@ -122,43 +98,85 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
                 || parser.getName().compare("item")) {
             continue;
         }
-        //changingConfigurations |= a.getChangingConfigurations();
 
-        // Parse all unrecognized attributes as state specifiers.
-        const int baseColor = attrs.getColor("color",Color::MAGENTA);
-        const float alphaMod = attrs.getFloat("alpha",1.f);
+        // AOSP: Resources.obtainAttributes(r, theme, attrs, R.styleable.ColorStateListItem)
+        // -- themed resolution so ?attr item colors (e.g. switch_track_material's
+        // ?attr/colorControlActivated) bake against the live theme; the themeless
+        // fallback collapses every ?attr to the TypedArray default.
+        std::unique_ptr<TypedArray> a = theme
+                ? theme->obtainStyledAttributes(&attrs, R::styleable::ColorStateListItem)
+                : r.obtainStyledAttributes(&attrs, R::styleable::ColorStateListItem);
+        const int baseColor = (int)a->getColor(R::styleable::ColorStateListItem_color, Color::MAGENTA);
+        const float alphaMod = a->getFloat(R::styleable::ColorStateListItem_alpha, 1.0f);
+        const float lStar = a->getFloat(R::styleable::ColorStateListItem_lStar, -1.0f);
+
+        // Parse all unrecognized attributes as state specifiers (AOSP inflate).
+        const int numAttrs = (int)attrs.getAttributeCount();
         std::vector<int>stateSpec;
-        StateSet::parseState(stateSpec,attrs);
+        for (int i = 0; i < numAttrs; i++) {
+            const int stateResId = attrs.getAttributeNameResource(i);
+            if (stateResId == R::attr::lStar) {
+                continue;
+            }
+            switch (stateResId) {
+            case R::attr::color:
+            case R::attr::alpha:
+                // Recognized item attribute, ignore.
+                break;
+            default:
+                stateSpec.push_back(attrs.getAttributeBooleanValue(i, false)
+                        ? stateResId : -stateResId);
+            }
+        }
 
-        // Apply alpha modulation. If we couldn't resolve the color or
-        // alpha yet, the default values leave us enough information to
-        // modulate again during applyTheme().
-        const int color = modulateColorAlpha(baseColor, alphaMod);
-        if (mColors.size() == 0 || mStateSpecs.size() == 0) {
+        // Apply alpha/lStar modulation. lStar is a no-op until Cam lands
+        // (see modulateColor); the defaults leave enough information to
+        // modulate again later.
+        const int color = modulateColor(baseColor, alphaMod, lStar);
+        if (mColors.size() == 0 || stateSpec.size() == 0) {
             defaultColor = color;
         }
-        addStateColor(stateSpec,color);
+        mStateSpecs.push_back(stateSpec);
+        mColors.push_back(color);
     }
-    
+
     mDefaultColor = defaultColor;
 
     onColorsChanged();
 }
 
-ColorStateList&ColorStateList::operator=(const ColorStateList&other){
-    mStateSpecs = other.mStateSpecs;
-    mColors = other.mColors;
-    mIsOpaque = other.mIsOpaque;
-    onColorsChanged();
-    return *this;
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,XmlPullParser& parser){
+    return createFromXml(r, parser, nullptr);
 }
 
-bool ColorStateList::operator!=(const ColorStateList&other)const{
-    return (mColors != other.mColors) || (mStateSpecs != other.mStateSpecs);
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(const Resources& r,XmlPullParser& parser,const Resources::Theme* theme){
+    const AttributeSet& attrs = parser; // AOSP Xml.asAttributeSet(parser)
+    int type;
+    while ((type = parser.next()) != XmlPullParser::START_TAG
+             && type != XmlPullParser::END_DOCUMENT) {
+        // Seek parser to start tag.
+    }
+    if (type != XmlPullParser::START_TAG) {
+        throw std::runtime_error("No start tag found");
+    }
+    return createFromXmlInner(r, parser, attrs, theme);
 }
 
-bool ColorStateList::operator==(const ColorStateList&other)const{
-    return (mColors == other.mColors) && (mStateSpecs != other.mStateSpecs);
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXmlInner(const Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
+    const std::string name = parser.getName();
+    if (name.compare("selector")) {
+        throw std::runtime_error(parser.getPositionDescription()
+                + ": invalid color state list tag " + name);
+    }
+    auto colorStateList = std::make_shared<ColorStateList>();
+    colorStateList->inflate(r, parser, attrs, theme);
+    return colorStateList;
+}
+
+bool ColorStateList::canApplyTheme()const{
+    // AOSP: mThemeAttrs != null. Theme-attribute preloading (mThemeAttrs) is not
+    // ported to CDROID, so a ColorStateList never carries unresolved theme attrs.
+    return false;
 }
 
 bool ColorStateList::isOpaque()const{
@@ -170,7 +188,7 @@ bool ColorStateList::isStateful()const{
 }
 
 bool ColorStateList::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateSpecs,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateSpecs,(int)cdroid::internal::R::attr::state_focused);
 }
 
 int ColorStateList::getDefaultColor()const{
@@ -205,7 +223,7 @@ void ColorStateList::onColorsChanged(){
         defaultColor = mColors[0];
     }
     mDefaultColor = defaultColor;
-    mIsOpaque = isOpaque;	
+    mIsOpaque = isOpaque;
 }
 
 int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaultColor)const{
@@ -219,7 +237,6 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
-#if 1
     static SparseArray<std::weak_ptr<ColorStateList>>sCache;
     const int index = sCache.indexOfKey(color);
     if(index >= 0){
@@ -227,21 +244,9 @@ cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
         if(cls) return cls;
         sCache.removeAt(index);
     }
-    auto cls =std::make_shared<ColorStateList>(color);
+    auto cls = std::make_shared<ColorStateList>(EMPTY, std::vector<int>{color});
     sCache.put(color,cls);
     return cls;
-#else
-    static std::unordered_map<int,std::weak_ptr<ColorStateList>>sCache;
-    const auto it = sCache.find(color);
-    if(it != sCache.end()){
-        auto cls = it->second.lock();
-        if( cls ) return cls;
-        sCache.erase(it);
-    }
-    auto cls = std::make_shared<ColorStateList>(color);
-    sCache.insert({color,cls});
-    return cls;
-#endif
 }
 
 const std::vector<int>& ColorStateList::getColors()const{
@@ -257,38 +262,27 @@ bool ColorStateList::hasState(int state)const{
     return false;
 }
 
-cdroid::RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::string&resname){
-    XmlPullParser parser(ctx,resname);
-    int type;
-    cdroid::RefPtr<ColorStateList> colorStateList = nullptr;
-    const int depth = parser.getDepth();
-    const AttributeSet& atts = parser;
-    // Only a literal hex color (e.g. "#fff") is short-circuited here. Resource
-    // names like "cdroid:color/foo" contain '/' and must fall through to the
-    // XmlPullParser below -- treating them as colors made parseColor throw and
-    // every explicit getColorStateList("...:color/X") log "not found".
-    if(resname.size() && resname[0]=='#'){
-        const int color = Color::parseColor(resname);
-        return ColorStateList::valueOf(color);
-    }
-
-    while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
-        const std::string tagName = parser.getName();
-        if((type!=XmlPullParser::START_TAG)||tagName.compare("item")){
-            continue;
+std::string ColorStateList::toString()const{
+    // AOSP toString (mThemeAttrs omitted -- not ported).
+    std::ostringstream oss;
+    oss << "ColorStateList{mChangingConfigurations=" << mChangingConfigurations
+        << " mStateSpecs=[";
+    for (size_t i = 0; i < mStateSpecs.size(); i++) {
+        oss << "[";
+        for (size_t j = 0; j < mStateSpecs[i].size(); j++) {
+            oss << mStateSpecs[i][j];
+            if (j + 1 < mStateSpecs[i].size()) oss << ",";
         }
-        std::vector<int>states;
-        const int baseColor = atts.getColor("color");
-        const float alphaMod = atts.getFloat("alpha", 1.0f);
-        const bool hasAlpha =atts.hasAttribute("alpha");
-        //const float lStar = atts.getFloat("lStar", -1.0f);
-        const int color = modulateColorAlpha(baseColor, alphaMod);
-        StateSet::parseState(states,atts);
-        if(colorStateList == nullptr)
-            colorStateList = std::make_shared<ColorStateList>();
-        colorStateList->addStateColor(states,color);
+        oss << "]";
+        if (i + 1 < mStateSpecs.size()) oss << ",";
     }
-    return colorStateList;
+    oss << "] mColors=[";
+    for (size_t i = 0; i < mColors.size(); i++) {
+        oss << std::hex << (unsigned int)mColors[i];
+        if (i + 1 < mColors.size()) oss << ",";
+    }
+    oss << "] mDefaultColor=" << std::hex << (unsigned int)mDefaultColor << "}";
+    return oss.str();
 }
 
 }

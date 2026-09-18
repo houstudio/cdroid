@@ -24,6 +24,7 @@
 #include <stdexcept>
 
 #include <animation/animator.h>
+#include <animation/animationutils.h>
 #include <animation/interpolators.h>
 #include <core/attributeset.h>
 #include <core/context.h>
@@ -33,6 +34,8 @@
 #include <view/viewgroup.h>
 #include <widget/abslistview.h>
 #include <widget/adapter.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 #include <widget/listview.h>
 
 namespace cdroid {
@@ -80,30 +83,22 @@ Transition::Transition() {
     mPathMotion = straightPathMotion();
 }
 
-Transition::Transition(Context* /*context*/, AttributeSet* attrs) {
+Transition::Transition(Context* context, AttributeSet* attrs) {
     mPathMotion = straightPathMotion();
-    // android uses context.obtainStyledAttributes(attrs, R.styleable.Transition).
-    // CDROID reads attributes directly from AttributeSet (TypedArray is rarely used).
-    if (attrs == nullptr) {
-        return;
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::AndroidTransition);
+    const int64_t duration = a->getInt(internal::R::styleable::AndroidTransition_duration, -1);
+    if (duration >= 0) {
+        setDuration(duration);
     }
-    std::string d = attrs->getAttributeValue("duration");
-    if (!d.empty()) {
-        long long duration = atoll(d.c_str());
-        if (duration >= 0) {
-            setDuration(duration);
-        }
+    const int64_t startDelay = a->getInt(internal::R::styleable::AndroidTransition_startDelay, -1);
+    if (startDelay > 0) {
+        setStartDelay(startDelay);
     }
-    std::string sd = attrs->getAttributeValue("startDelay");
-    if (!sd.empty()) {
-        long long startDelay = atoll(sd.c_str());
-        if (startDelay > 0) {
-            setStartDelay(startDelay);
-        }
+    const int resID = a->getResourceId(internal::R::styleable::AndroidTransition_interpolator, 0);
+    if (resID > 0) {
+        setInterpolator(AnimationUtils::loadInterpolator(context, resID));
     }
-    // interpolator: android loads via AnimationUtils.loadInterpolator(context, resID).
-    // CDROID resource->interpolator wiring is deferred (TODO: wire when needed).
-    std::string matchOrder = attrs->getAttributeValue("matchOrder");
+    const std::string matchOrder = a->getString(internal::R::styleable::AndroidTransition_matchOrder);
     if (!matchOrder.empty()) {
         setMatchOrder(parseMatchOrder(matchOrder));
     }
@@ -914,6 +909,12 @@ void Transition::start() {
     mNumInstances++;
 }
 
+// File-local registry of ended-but-not-yet-self-deleted clones (main thread only).
+// The handler is the one whose self-delete post a quitting queue may drop — the
+// orphan sweep must free it along with the clone.
+struct SelfDeleteEntry { Transition* clone; Handler* handler; };
+static std::vector<SelfDeleteEntry>& pendingSelfDelete();
+
 void Transition::end() {
     --mNumInstances;
     if (mNumInstances == 0) {
@@ -944,9 +945,45 @@ void Transition::end() {
         // delete runs after all end() frames unwind.
         if (mDeleteWhenEnded) {
             Handler* h = new Handler();
-            h->post([h, this](){ delete this; delete h; });
+            // Quit-order safety net: teardown paths (window sweep → endTransitions →
+            // forceToEnd → end) can end a clone AFTER the main queue is already
+            // quitting — enqueueMessage then DROPS the self-delete post, and only
+            // that post deletes the clone (and h). Register BOTH here; the post
+            // unregisters when it runs, and App's exit sweep
+            // (Transition::deleteOrphanedClones) frees whatever is left — a
+            // dropped post otherwise leaks the 72B Handler as well (recreateleak:
+            // definite 72B/1blk, Transition::end → forceToEnd on App teardown).
+            pendingSelfDelete().push_back({this, h});
+            Transition* self = this;
+            h->post([h, self](){
+                auto& v = pendingSelfDelete();
+                v.erase(std::remove_if(v.begin(), v.end(),
+                        [self](const SelfDeleteEntry& e){ return e.clone == self; }), v.end());
+                delete self;
+                delete h;
+            });
         }
     }
+}
+
+// File-local registry of ended-but-not-yet-self-deleted clones (main thread only).
+static std::vector<SelfDeleteEntry>& pendingSelfDelete(){
+    static std::vector<SelfDeleteEntry> v;
+    return v;
+}
+
+
+void Transition::deleteOrphanedClones(){
+    // App-exit tail, after WindowManager is gone: a clone whose self-delete post
+    // was dropped by the quitting queue is leaked otherwise (valgrind: 72B Handler
+    // + the clone with every captured TransitionValues, per late-ended clone).
+    // Safe here: every end() frame has long unwound.
+    auto& v = pendingSelfDelete();
+    for (SelfDeleteEntry& e : v) {
+        delete e.clone;
+        delete e.handler;
+    }
+    v.clear();
 }
 
 void Transition::forceToEnd(ViewGroup* sceneRoot) {
@@ -956,12 +993,16 @@ void Transition::forceToEnd(ViewGroup* sceneRoot) {
         return;
     }
     void* windowId = sceneRoot->getWindowId();
-    ArrayMap<Animator*, AnimationInfo> oldAnimators(runningAnimators);
-    runningAnimators.clear();
+    // AOSP iterates the LIVE map backwards (Animator.end() -> the runAnimator
+    // listener removes the entry). The port's copy-then-clear() unregistered
+    // every NON-matching animator too — other windows' animators kept ticking
+    // in AnimationHandler with no map entry, invisible to endAnimatorsOver
+    // until their target view was freed (valgrind --auto-test: SIGSEGV in
+    // View::setTransitionAlpha on a freed ImageView during window teardown).
     for (int i = numOldAnims - 1; i >= 0; i--) {
-        AnimationInfo* info = oldAnimators.valueAtPtr(i);
+        AnimationInfo* info = runningAnimators.valueAtPtr(i);
         if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId) {
-            Animator* anim = oldAnimators.keyAt(i);
+            Animator* anim = runningAnimators.keyAt(i);
             anim->end();
         }
     }
@@ -1020,11 +1061,11 @@ void Transition::setPathMotion(PathMotion* pathMotion) {
 PathMotion* Transition::getPathMotion() const {
     return mPathMotion;
 }
-void Transition::setPropagation(TransitionPropagation* transitionPropagation) {
+void Transition::setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation) {
     mPropagation = transitionPropagation;
 }
 TransitionPropagation* Transition::getPropagation() const {
-    return mPropagation;
+    return mPropagation.get();
 }
 
 void Transition::capturePropagationValues(TransitionValues& transitionValues) {

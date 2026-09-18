@@ -364,7 +364,7 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
                 x = right - indentWidth;
             }
         } else {
-            int max = (int)getLineExtent(lineNum, *tabStops, false);
+            int max = (int)getLineExtent(lineNum, tabStops, false);
             if (align == Alignment::ALIGN_OPPOSITE) {
                 if (dir == DIR_LEFT_TO_RIGHT) {
                     indentWidth = -getIndentAdjust(lineNum, Alignment::ALIGN_RIGHT);
@@ -399,6 +399,9 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     }
 
     TextLine::recycle(tl);
+    /*AOSP leaks the per-draw TabStops to GC; free it here (TextLine borrows
+      mTabs only across tl->draw, which has happened above).*/
+    delete tabStops;
 }
 
 void Layout::drawBackground(Canvas& canvas, Path* highlight,const Paint* highlightPaint,
@@ -537,7 +540,10 @@ int Layout::getLineStartPos(int line, int left, int right) const{
                 tabStops = new TabStops(TAB_INCREMENT, tabSpans);
             }
         }
-        int max = (int)getLineExtent(line, *tabStops, false);
+        int max = (int)getLineExtent(line, tabStops, false);
+        /*AOSP leaks this TabStops to GC; the pointer is no longer needed
+          once the extent is measured. Null (no tab spans) deletes safely.*/
+        delete tabStops;
         if (align == Alignment::ALIGN_OPPOSITE) {
             if (dir == DIR_LEFT_TO_RIGHT) {
                 x = right - max + getIndentAdjust(line, Alignment::ALIGN_RIGHT);
@@ -571,6 +577,12 @@ RectF Layout::computeDrawingBoundingBox() const{
         const int start = getLineStart(line);
         const int end = getLineVisibleEnd(line);
 
+        const Directions* directions = getLineDirections(line);
+        // Returned directions can actually be null. Checked BEFORE the
+        // per-line TabStops allocation (the old order leaked it on continue).
+        if (directions == nullptr) {
+            continue;
+        }
         const bool hasTabs = getLineContainsTab(line);
         TabStops* tabStops = nullptr;
         if (hasTabs && dynamic_cast<Spanned*>(mText)) {
@@ -578,13 +590,8 @@ RectF Layout::computeDrawingBoundingBox() const{
             // consistent across all lines in a paragraph.
             auto tabs = getParagraphSpans(dynamic_cast<Spanned*>(mText), start, end, make_span_filter<TabStopSpan>());
             if (tabs.size() > 0) {
-                tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
+                tabStops = new TabStops(TAB_INCREMENT, tabs);
             }
-        }
-        const Directions* directions = getLineDirections(line);
-        // Returned directions can actually be null
-        if (directions == nullptr) {
-            continue;
         }
         const int dir = getParagraphDirection(line);
 
@@ -620,6 +627,7 @@ RectF Layout::computeDrawingBoundingBox() const{
             top = std::min(top, lineTop);
             bottom = std::max(bottom, lineBottom);
         }
+        delete tabStops;  // per-line TabStops: TextLine only borrows it
     }
     TextLine::recycle(tl);
     return {left, top, right-left, bottom-top};
@@ -816,6 +824,7 @@ float Layout::getHorizontal(int offset, bool trailing, int line, bool clamped) c
             isFallbackLineSpacingEnabled());
     float wid = tl->measure(offset - start, trailing, nullptr);
     TextLine::recycle(tl);
+    delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
 
     if (clamped && wid > mWidth) {
         wid = mWidth;
@@ -856,6 +865,7 @@ std::vector<float> Layout::getLineHorizontals(int line, bool clamped, bool prima
     }
     std::vector<float> wid = tl->measureAllOffsets(trailings, nullptr);
     TextLine::recycle(tl);
+    delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
 
     if (clamped) {
         for (int offset = 0; offset < wid.size(); ++offset) {
@@ -977,25 +987,37 @@ float Layout::getLineWidth(int line) const {
 }
 
 float Layout::getLineExtent(int line, bool full) const{
-    const int start = getLineStart(line);
-    const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
-
+    /*AOSP's 2-arg overload builds the paragraph's TabStops and delegates to
+      the 3-arg one (Layout.java:1720-1736); the body here used to duplicate
+      the 3-arg measure (the twin-block review finding).*/
     const bool hasTabs = getLineContainsTab(line);
     TabStops* tabStops = nullptr;
     Spanned* spannedText = dynamic_cast<Spanned*>(mText);
     if (hasTabs && spannedText != nullptr) {
         // Just checking this line should be good enough, tabs should be
         // consistent across all lines in a paragraph.
-        auto tabs = getParagraphSpans(spannedText, start, end, TabStopSpanFilter);
+        const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
+        auto tabs = getParagraphSpans(spannedText, getLineStart(line), end, TabStopSpanFilter);
         if (tabs.size() > 0) {
-            tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
+            tabStops = new TabStops(TAB_INCREMENT, tabs);
         }
     }
-    const Directions* directions = getLineDirections(line);
-    // Returned directions can actually be null
-    if (directions == nullptr) {
+    // Returned directions can actually be null (the 3-arg overload has no
+    // such guard — AOSP never checks there either).
+    if (getLineDirections(line) == nullptr) {
+        delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
         return 0.f;
     }
+    const float width = getLineExtent(line, tabStops, full);
+    delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
+    return width;
+}
+
+float Layout::getLineExtent(int line, TabStops* tabStops, bool full) const{
+    const int start = getLineStart(line);
+    const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
+    const bool hasTabs = getLineContainsTab(line);
+    const Directions* directions = getLineDirections(line);
     const int dir = getParagraphDirection(line);
 
     TextLine* tl = TextLine::obtain();
@@ -1004,29 +1026,6 @@ float Layout::getLineExtent(int line, bool full) const{
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
     tl->set(&paint, mText, start, end, dir, directions, hasTabs, tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
-            isFallbackLineSpacingEnabled());
-    if (isJustificationRequired(line)) {
-        tl->justify(mJustificationMode, getJustifyWidth(line));
-    }
-    const float width = tl->metrics(nullptr, nullptr, mUseBoundsForWidth, nullptr);
-    TextLine::recycle(tl);
-    return width;
-}
-
-float Layout::getLineExtent(int line, TabStops& tabStops, bool full) const{
-    const int start = getLineStart(line);
-    const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
-    const bool hasTabs = getLineContainsTab(line);
-    const Directions* directions = getLineDirections(line);
-    const int dir = getParagraphDirection(line);
-
-    TextLine* tl = TextLine::obtain();
-    TextPaint& paint = mWorkPaint;
-    paint.set(*mPaint);
-    paint.setStartHyphenEdit(getStartHyphenEdit(line));
-    paint.setEndHyphenEdit(getEndHyphenEdit(line));
-    tl->set(&paint, mText, start, end, dir, directions, hasTabs, &tabStops,
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
             isFallbackLineSpacingEnabled());
     if (isJustificationRequired(line)) {
@@ -1375,7 +1374,7 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
         dest.moveTo(h1 - dist, bottom + dist - 0.5f);
         dest.lineTo(h1 + dist, bottom + dist - 0.5f);
 
-        dest.lineTo(h1 + dist, bottom + dist);
+        dest.moveTo(h1 + dist, bottom + dist);
         dest.lineTo(h1, bottom);
     }
 
@@ -1391,7 +1390,7 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
         dest.moveTo(h1 - dist, top - dist + 0.5f);
         dest.lineTo(h1 + dist, top - dist + 0.5f);
 
-        dest.lineTo(h1 + dist, top - dist);
+        dest.moveTo(h1 + dist, top - dist);
         dest.lineTo(h1, top);
     }
 }
@@ -1598,6 +1597,7 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
             false/* use fallback line spacing. unused*/);
     auto ret =margin + std::abs(tl->metrics(nullptr, nullptr, useBoundsForWidth, nullptr));
     TextLine::recycle(tl);
+    delete tabStops;  // AOSP leaks this to GC; TextLine only borrows it
     mt->recycle();
     if( (directions!=&DIRS_ALL_LEFT_TO_RIGHT) && (directions!=&DIRS_ALL_RIGHT_TO_LEFT) ){
         delete directions;

@@ -41,4 +41,3 @@
         android:layout_alignParentEnd="true"
         android:layout_below="@id/progress" />
 </RelativeLayout>
-

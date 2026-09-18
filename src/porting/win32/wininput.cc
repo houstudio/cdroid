@@ -27,9 +27,9 @@ typedef struct {
     HANDLE pipe[2];
     int fds[128];
     std::map<int,int>keymap;
-} INPUTDEVICE;
+} INPUTDEVICEMGR;
 
-static INPUTDEVICE dev= {0,0};
+static INPUTDEVICEMGR dev= {0,0};
 
 int32_t InputInit() {
     if(dev.pipe[0]!=0) return 0;

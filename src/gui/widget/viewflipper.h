@@ -34,9 +34,14 @@ private:
 private:
     void updateRunning(bool flipNow);
     void doFlip();
+protected:
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
+    void onWindowVisibilityChanged(int visibility)override;
 public:
-    ViewFlipper(int w,int h);
-    ViewFlipper(Context* context,const AttributeSet& attrs);
+    ViewFlipper(Context*ctx);   // AOSP ViewFlipper(Context)
+    ViewFlipper(Context* context,const AttributeSet* attrs);
+    ViewFlipper(Context* context,const AttributeSet* attrs,int defStyleAttr);
     void setFlipInterval(int milliseconds);
     int  getFlipInterval()const;
     void startFlipping();
@@ -44,6 +49,7 @@ public:
     bool isFlipping()const;
     void setAutoStart(bool autoStart);
     bool isAutoStart()const;
+    std::string getAccessibilityClassName()const override{return "ViewFlipper";}
 };
 }//endof namespace
 

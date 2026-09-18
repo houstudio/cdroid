@@ -68,9 +68,9 @@ private:
 
     int mPopupTheme;
 
-    std::string mTitleTextAppearance;
-    std::string mSubtitleTextAppearance;
-    std::string mNavButtonStyle;
+    int mTitleTextAppearance = 0;
+    int mSubtitleTextAppearance = 0;
+    int mNavButtonStyle = 0;
 
     int mButtonGravity;
 
@@ -145,7 +145,9 @@ protected:
     ActionMenuPresenter* getOuterActionMenuPresenter()const;
     Context*getPopupContext();
 public:
-    Toolbar(Context*,const AttributeSet&);
+    Toolbar(Context*ctx);   // AOSP Toolbar(Context)
+    Toolbar(Context*,const AttributeSet*);
+    Toolbar(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~Toolbar()override;
     void setTitleMargin(int start, int top, int end, int bottom);
     int getTitleMarginStart()const;
@@ -165,7 +167,7 @@ public:
     void setMenu(MenuBuilder* menu, ActionMenuPresenter& outerPresenter);
     void dismisssPopupMenus();
     bool isTitleTruncated()const;
-    void setLogo(const std::string& resId);
+    void setLogo(int resId);
     void setLogo(Drawable* drawable);
     Drawable* getLogo()const;
     void setLogoDescription(const std::string& description);

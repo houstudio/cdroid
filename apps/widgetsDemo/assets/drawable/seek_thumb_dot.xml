@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SeekBar thumb: white disc with a soft glow ring. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="#334EA1FF"/>
+        </shape>
+    </item>
+    <item android:left="4dp" android:right="4dp" android:top="4dp" android:bottom="4dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF"/>
+        </shape>
+    </item>
+</layer-list>

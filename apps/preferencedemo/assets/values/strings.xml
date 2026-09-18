@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bluetooth settings strings, ported from AOSP 12 Settings
+     res/values-zh-rCN/strings.xml (same names; the English fallbacks live
+     in values/ upstream — this demo ships the zh text directly). -->
+<resources>
+    <string name="bluetooth_settings">蓝牙</string>
+    <string name="bluetooth_pairing">正在配对…</string>
+    <string name="bluetooth_device">未命名的蓝牙设备</string>
+    <string name="bluetooth_no_devices_found">未在附近找到蓝牙设备。</string>
+    <string name="bluetooth_disconnect_title">要断开与该设备的连接吗？</string>
+    <string name="bluetooth_disconnect_all_profiles">您的设备将断开与%1$s的连接。</string>
+    <string name="bluetooth_pairing_error_message">无法与%1$s配对。</string>
+    <string name="bluetooth_footer_mac_message">设备的蓝牙地址：%1$s</string>
+    <string name="device_picker">选择蓝牙设备</string>
+    <string name="bluetooth_paired_device_title">已配对的设备</string>
+    <string name="bluetooth_device_name">设备名称</string>
+    <string name="bluetooth_pair_new_device">配对新设备</string>
+    <string name="bluetooth_show_received_files">已接收的文件</string>
+    <string name="summary_placeholder">…</string>
+    <string name="bluetooth_connected">已连接</string>
+    <string name="bluetooth_connecting">正在连接…</string>
+    <string name="bluetooth_disconnecting">正在断开连接…</string>
+    <string name="bluetooth_connected_noheadset">已连接（无手机）</string>
+</resources>

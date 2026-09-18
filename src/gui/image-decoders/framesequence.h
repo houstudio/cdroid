@@ -45,6 +45,12 @@ private:
     static uint32_t mHeaderBytesRequired;
 protected:
     std::istream& mStream;
+private:
+    // The stream create() opened (AssetInputStream / file), when this sequence
+    // owns one. Both current backends consume the stream entirely inside their
+    // ctor; owning it here keeps that reference from dangling instead of
+    // staying alive only by luck of nobody reading it later.
+    std::unique_ptr<std::istream> mOwnedStream;
 public:
     /**
      * Creates a FrameSequence using data from the data stream
@@ -61,7 +67,19 @@ public:
     virtual FrameSequenceState* createState() const = 0;
     static int registerFactory(const std::string&mime,uint32_t,Verifier,Factory);
     static size_t registerAllFrameSequences(std::map<const std::string,Registry>&entis);
-    static FrameSequence* create(cdroid::Context*,const std::string&resid);
+    /** AOSP ImageDecoder.createSource(Resources, resId): opens the raw resource
+        through an Asset and decodes from its zero-copy buffer. */
+    static FrameSequence* create(cdroid::Context*,int resid);
+    /** AOSP ImageDecoder.createSource(File): the path is a FILE (no Context). */
+    static FrameSequence* create(const std::string& path);
+    /** AOSP ImageDecoder.createSource(ByteBuffer) analog: zero-copy create over
+        a memory buffer. Every backend consumes the stream entirely inside its
+        ctor (gif DGifSlurp, png/webp read-through), so `data` only has to
+        outlive this CALL — the finished sequence never touches it again. */
+    static FrameSequence* create(const void* data, size_t size);
+    /** Magic sniff: does this buffer hold a format one of the registered
+        frame-sequence factories can decode? */
+    static bool isAnimated(const void* data, size_t size);
 };
 
 class FrameSequenceState {

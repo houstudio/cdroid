@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx navigationview attr id pinning (0x02 shared-lib). Source of truth;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable.
+     Watermark-allocated: next free 0x02010177 (wear block 0x0201016c-76) (0x0201014d = recyclerViewStyle;
+     0x02010150-58 = appbar block; width/height/marginX/color are generic
+     shared names pinned here for the ActiveIndicator styleable). -->
+<resources>
+    <public type="attr" name="menu" id="0x02010138"/>
+    <public type="attr" name="headerLayout" id="0x02010139"/>
+    <public type="attr" name="itemIconSize" id="0x0201013a"/>
+    <public type="attr" name="itemIconTint" id="0x0201013b"/>
+    <public type="attr" name="itemTextAppearance" id="0x0201013c"/>
+    <public type="attr" name="itemTextColor" id="0x0201013d"/>
+    <public type="attr" name="itemBackground" id="0x0201013e"/>
+    <public type="attr" name="itemHorizontalPadding" id="0x0201013f"/>
+    <public type="attr" name="itemVerticalPadding" id="0x02010140"/>
+    <public type="attr" name="itemIconPadding" id="0x02010141"/>
+    <public type="attr" name="itemMaxLines" id="0x02010142"/>
+    <public type="attr" name="subheaderColor" id="0x02010144"/>
+    <public type="attr" name="subheaderTextAppearance" id="0x02010145"/>
+    <public type="attr" name="subheaderInsetStart" id="0x02010146"/>
+    <public type="attr" name="subheaderInsetEnd" id="0x02010147"/>
+    <public type="attr" name="dividerInsetStart" id="0x02010148"/>
+    <public type="attr" name="dividerInsetEnd" id="0x02010149"/>
+    <public type="attr" name="itemTextAppearanceActiveBoldEnabled" id="0x0201014a"/>
+    <public type="attr" name="topInsetScrimEnabled" id="0x0201014b"/>
+    <public type="attr" name="bottomInsetScrimEnabled" id="0x0201014c"/>
+    <!-- NavigationBarView reuses NavigationView's pinned attrs; only the
+         BottomNavigationView-specific one needs an id. -->
+    <public type="attr" name="itemHorizontalTranslationEnabled" id="0x02010143"/>
+    <!-- NavigationBarView additions -->
+    <public type="attr" name="itemGravity" id="0x0201016a"/>
+    <public type="attr" name="itemIconGravity" id="0x0201016b"/>
+    <!-- 0x02010150-0x02010158 are the appbar block -->
+    <public type="attr" name="labelVisibilityMode" id="0x02010159"/>
+    <public type="attr" name="itemTextAppearanceInactive" id="0x0201015a"/>
+    <public type="attr" name="itemTextAppearanceActive" id="0x0201015b"/>
+    <public type="attr" name="horizontalItemTextAppearanceInactive" id="0x0201015c"/>
+    <public type="attr" name="horizontalItemTextAppearanceActive" id="0x0201015d"/>
+    <!-- itemTextAppearanceActiveBoldEnabled reuses the NavigationView attr (0x0201014a) -->
+    <public type="attr" name="itemRippleColor" id="0x0201015f"/>
+    <public type="attr" name="itemPaddingTop" id="0x02010160"/>
+    <public type="attr" name="itemPaddingBottom" id="0x02010161"/>
+    <public type="attr" name="activeIndicatorLabelPadding" id="0x02010162"/>
+    <public type="attr" name="iconLabelHorizontalSpacing" id="0x02010163"/>
+    <public type="attr" name="itemActiveIndicatorStyle" id="0x02010164"/>
+    <!-- BottomNavigationActiveIndicator (generic names, shared 0x02 space) -->
+    <public type="attr" name="width" id="0x02010165"/>
+    <public type="attr" name="height" id="0x02010166"/>
+    <public type="attr" name="marginX" id="0x02010167"/>
+    <public type="attr" name="color" id="0x02010168"/>
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Widget.Design.BottomNavigationView" id="0x02090003"/>
+    <public type="style" name="Widget.Design.NavigationView" id="0x02090004"/>
+</resources>

@@ -26,14 +26,23 @@ private:
     static constexpr int MODE_HOLO = 0;
     static constexpr int MODE_MATERIAL = 1;
 public:
+    /* CDROID extension (AOSP calendar headers hardcode narrow weekday
+       labels): select the weekday-name length shown in the header. */
+    enum WeekDayNameLength {
+        WEEK_DAY_NAME_SHORTEST = 0,  // narrow, AOSP default
+        WEEK_DAY_NAME_SHORT    = 1,  // abbreviated ("Sun" / "周日")
+        WEEK_DAY_NAME_LONG     = 2,  // wide ("Sunday" / "星期日")
+    };
     class CalendarViewDelegate;
     class AbstractCalendarViewDelegate;
     DECLARE_UIEVENT(void,OnDateChangeListener,CalendarView& view, int year, int month, int dayOfMonth);
 private:
     CalendarViewDelegate* mDelegate = nullptr;
 public:
-    CalendarView(int w,int h);
-    CalendarView(Context*,const AttributeSet&atts);
+    CalendarView(Context*ctx);   // AOSP CalendarView(Context)
+    CalendarView(Context*,const AttributeSet*atts);
+    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr);
+    CalendarView(Context*,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~CalendarView()override;
 
     void setShownWeekCount(int count);
@@ -53,14 +62,15 @@ public:
     void setWeekSeparatorLineColor(int color);
     int  getWeekSeparatorLineColor()const;
 
-    void setSelectedDateVerticalBar(const std::string& resourceId);
+    void setSelectedDateVerticalBar(int resourceId);
     void setSelectedDateVerticalBar(Drawable* drawable);
     Drawable* getSelectedDateVerticalBar()const;
 
-    void setWeekDayTextAppearance(const std::string&resid);
-    std::string getWeekDayTextAppearance()const;
-    void setDateTextAppearance(const std::string&resid);
-    std::string getDateTextAppearance()const;
+    void setWeekDayTextAppearance(int resourceId);
+    int  getWeekDayTextAppearance()const;
+    void setWeekDayNameLength(int length);
+    void setDateTextAppearance(int resourceId);
+    int  getDateTextAppearance()const;
 
     void setMinDate(int64_t minDate);/*date from 1970.1.1*/
     int64_t getMinDate()const;
@@ -79,6 +89,10 @@ public:
     void setDate(int64_t date, bool animate, bool center);
     bool getBoundsForDate(int64_t date,Rect& outBounds);
 
+protected:
+    void onConfigurationChanged(Configuration& newConfig) override;
+
+public:
     std::string getAccessibilityClassName() const override;
     static bool parseDate(const std::string& date, Calendar& outDate);
 };
@@ -104,15 +118,18 @@ public:
     virtual void setWeekSeparatorLineColor(int color)=0;
     virtual int getWeekSeparatorLineColor()const=0;
 
-    virtual void setSelectedDateVerticalBar(const std::string& resourceId)=0;
+    virtual void setSelectedDateVerticalBar(int resourceId)=0;
     virtual void setSelectedDateVerticalBar(Drawable* drawable)=0;
     virtual Drawable* getSelectedDateVerticalBar()const=0;
 
-    virtual void setWeekDayTextAppearance(const std::string& resourceId)=0;
-    virtual std::string getWeekDayTextAppearance()const=0;
+    virtual void setWeekDayTextAppearance(int resourceId)=0;
+    virtual int getWeekDayTextAppearance()const=0;
 
-    virtual void setDateTextAppearance(const std::string&resourceId)=0;
-    virtual std::string getDateTextAppearance()const=0;
+    /* CDROID extension; default keeps the AOSP narrow header. */
+    virtual void setWeekDayNameLength(int length){(void)length;}
+
+    virtual void setDateTextAppearance(int resourceId)=0;
+    virtual int getDateTextAppearance()const=0;
 
     virtual void setMinDate(int64_t minDate)=0;
     virtual int64_t getMinDate()=0;
@@ -134,7 +151,7 @@ public:
 
     virtual void setOnDateChangeListener(const OnDateChangeListener& listener)=0;
 
-    virtual void onConfigurationChanged(int newConfig)=0;
+    virtual void onConfigurationChanged(Configuration& newConfig)=0;
 };
 
 class CalendarView::AbstractCalendarViewDelegate:public CalendarViewDelegate {
@@ -147,22 +164,27 @@ protected:
 
     CalendarView* mDelegator;
     Context* mContext;
-    //Locale mCurrentLocale;
+    Locale mCurrentLocale;
+
+    /**
+     * Sets the current locale.
+     *
+     * @param locale The current locale.
+     */
+    virtual void setCurrentLocale(const Locale& locale) {
+        if (locale == mCurrentLocale) {
+            return;
+        }
+        mCurrentLocale = locale;
+    }
 public:
     AbstractCalendarViewDelegate(CalendarView* delegator, Context* context) {
         mDelegator = delegator;
         mContext = context;
 
         // Initialization based on locale
-        //setCurrentLocale(Locale.getDefault());
+        setCurrentLocale(Locale::getDefault());
     }
-
-    /*void setCurrentLocale(Locale locale) {
-        if (locale.equals(mCurrentLocale)) {
-            return;
-        }
-        mCurrentLocale = locale;
-    }*/
 
     void setShownWeekCount(int count) override{
         // Deprecated.
@@ -215,7 +237,7 @@ public:
         return 0;
     }
 
-    void setSelectedDateVerticalBar(const std::string& resId) override{
+    void setSelectedDateVerticalBar(int resId) override{
         // Deprecated.
     }
 
@@ -237,9 +259,10 @@ public:
         return false;
     }
 
-    void onConfigurationChanged(int newConfig) override{
+    void onConfigurationChanged(Configuration& newConfig) override{
         // Nothing to do here, configuration changes are already propagated
         // by ViewGroup.
+        (void)newConfig;
     }
 };
 

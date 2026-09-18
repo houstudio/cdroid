@@ -16,22 +16,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/badgedrawable.h>
+#include <content/numberformat.h>
 #include <drawable/badgeutils.h>
 #include <drawable/badgestate.h>
 #include <animation/animationutils.h>
 #include <widget/framelayout.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+using namespace cdroid::internal;
 #include <core/xmlpullparser.h>
 #include <core/typeface.h>
 #include <text/textutils.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 BadgeState::State*BadgeDrawable::getSavedState()const{
     return mState->getOverridingState();
 }
 
 BadgeDrawable* BadgeDrawable::createFromState(Context* context, BadgeState::State* savedState) {
-    BadgeDrawable* badge = new BadgeDrawable(context,"","","",savedState);
+    BadgeDrawable* badge = new BadgeDrawable(context, 0, 0, 0, savedState);
     return badge;
 }
 
@@ -41,20 +47,20 @@ BadgeDrawable::~BadgeDrawable(){
 }
 
 BadgeDrawable* BadgeDrawable::create(Context* context) {
-    return new BadgeDrawable(context,"","","", nullptr);
+    return new BadgeDrawable(context, 0, 0, 0, nullptr);
 }
 
-BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::string& id) {
+BadgeDrawable* BadgeDrawable::createFromResource(Context* context, int id) {
     int type;
-    XmlPullParser parser(context,id);
-    const AttributeSet& attrs = parser;
-    if(!parser)return nullptr;
-    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    if(!*parser)return nullptr;
+    while( ((type=parser->next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    const std::string tag=parser.getName();
-    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),id.c_str());
-    return new BadgeDrawable(context, id, "","", 0/*style*/);
+    const std::string tag=parser->getName();
+    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[0x%x] ",tag.c_str(),id);
+    return new BadgeDrawable(context, id, 0, 0, nullptr/*style*/);
 }
 
 void BadgeDrawable::setVisible(bool visible) {
@@ -90,8 +96,8 @@ void BadgeDrawable::restoreState() {
     onVisibilityUpdated();
 }
 
-BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
-            const std::string&defStyleAttr,const std::string&defStyleRes,BadgeState::State*savedState) {
+BadgeDrawable::BadgeDrawable(Context* context,int badgeResId,
+            int defStyleAttr,int defStyleRes,BadgeState::State*savedState) {
     mContext = context;
     mAnchorView = nullptr;
     mCustomBadgeParent = nullptr;
@@ -106,14 +112,15 @@ BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
     mShapeDrawable = new GradientDrawable();
 
     mState =new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
-    mBadgeRadius = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_radius",mBadgeRadius);
-    mBadgeWidePadding = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding",0);
-    mBadgeWithTextRadius = context->getDimensionPixelSize("cdroid::dimen/mtrl_badge_with_text_radius",mBadgeWithTextRadius);
-  
+    mBadgeWidePadding = context->getDimensionPixelSize(R::dimen::mtrl_badge_long_text_horizontal_padding);
+
     mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     //setBackgroundColor(mState->mBackgroundColor);
     //mTextPaint.setTextAlign(Paint::Align::CENTER);
-    setTextAppearance("@cdroid:style/TextAppearance.MaterialComponents.Badge");
+    // AOSP default: R.style.TextAppearance_MaterialComponents_Badge (not shipped
+    // in the CDROID framework res; resolve by name, 0 keeps the paint defaults).
+    setTextAppearance(context->getResources().getIdentifier(
+            "TextAppearance.MaterialComponents.Badge", "style", "cdroid"));
     restoreState();
 }
 
@@ -145,7 +152,7 @@ void BadgeDrawable::tryWrapAnchorInCompatParent(View* anchorView) {
     updateAnchorParentToNotClip(anchorView);
   
     // Create FrameLayout and configure it to wrap the anchor.
-    FrameLayout* frameLayout = new FrameLayout(-1,-1);//anchorView->getContext());
+    FrameLayout* frameLayout = new FrameLayout(anchorView->getContext());
     frameLayout->setId(R::id::mtrl_anchor_parent);
     frameLayout->setClipChildren(false);
     frameLayout->setClipToPadding(false);
@@ -477,21 +484,24 @@ int BadgeDrawable::getAdditionalVerticalOffset() const{
     return mState->getAdditionalVerticalOffset();
 }
 
-void BadgeDrawable::setTextAppearance(const std::string& id) {
-    const AttributeSet atts = mContext->obtainStyledAttributes(id);
-    const int textSize = atts.getInt("textSize",12);
-    Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);
+void BadgeDrawable::setTextAppearance(int resId) {
+    // AOSP resolves the @StyleRes id directly (TextAppearance helper); no
+    // string→AttributeSet round-trip.
+    auto ta = mContext->obtainStyledAttributes(resId, R::styleable::TextAppearance);
+    if (!ta) return;
+    const int textSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 12);
+    Typeface* tf = Typeface::create(ta->getString(R::styleable::TextAppearance_fontFamily), 0);
     mTextPaint.setTypeface(tf);
     mTextPaint.setTextSize(textSize);
-    atts.getColor("textColor");
+    ta->getColor(R::styleable::TextAppearance_textColor, 0);
 }
 
 void BadgeDrawable::onBadgeTextAppearanceUpdated() {
     if (mContext == nullptr) {
         return;
     }
-    const AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
-    const int fontSize = atts.getInt("textSize",mTextPaint.getTextSize());
+    auto ta = mContext->obtainStyledAttributes(mState->getTextAppearanceResId(), R::styleable::TextAppearance);
+    const int fontSize = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, mTextPaint.getTextSize());
     mTextPaint.setTextSize(fontSize);
     /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
     if (textDrawableHelper.getTextAppearance() == textAppearance) {
@@ -810,7 +820,9 @@ std::string BadgeDrawable::getTextBadgeText() const{
 std::string BadgeDrawable::getNumberBadgeText() const{
     // If number exceeds max count, show badgeMaxCount+ instead of the number.
     if (mMaxBadgeNumber == BADGE_CONTENT_NOT_TRUNCATED || getNumber() <= mMaxBadgeNumber) {
-        return std::to_string(getNumber());//NumberFormat.getInstance(state.getNumberLocale()).format(getNumber());
+        // material master: NumberFormat.getInstance(numberLocale).format —
+        // the badge number localizes with everything else now.
+        return NumberFormat::getInstance()->format(getNumber());
     } else {
         if(mContext==nullptr){
             return "";

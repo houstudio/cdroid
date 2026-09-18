@@ -32,7 +32,7 @@ please see styles_device_defaults.xml.
     <!-- Preference styles -->
     <eat-comment/>
 
-    <!--style name="Preference.Material">
+    <style name="Preference.Material">
         <item name="layout">@layout/preference_material</item>
     </style>
 
@@ -62,6 +62,7 @@ please see styles_device_defaults.xml.
 
     <style name="Preference.Material.Category">
         <item name="layout">@layout/preference_category_material</item>
+        <!-- The title should not dim if the category is disabled, instead only the preference children should dim. -->
         <item name="shouldDisableView">false</item>
         <item name="selectable">false</item>
     </style>
@@ -111,11 +112,14 @@ please see styles_device_defaults.xml.
         <item name="showDefault">true</item>
     </style>
 
+    <!-- No margins or background by default. Could be different for x-large screens -->
     <style name="PreferencePanel.Material">
         <item name="layout_marginStart">0dip</item>
         <item name="layout_marginEnd">0dip</item>
     </style>
 
+    <!-- The attributes are overridden here because the x-large or large resources may have
+         changed the margins and background in the parent PreferencePanel style. -->
     <style name="PreferencePanel.Material.Dialog">
         <item name="layout_marginStart">0dip</item>
         <item name="layout_marginEnd">0dip</item>
@@ -142,7 +146,7 @@ please see styles_device_defaults.xml.
         <item name="paddingEnd">@dimen/preference_fragment_padding_side_material</item>
         <item name="paddingTop">@dimen/preference_fragment_padding_vertical_material</item>
         <item name="paddingBottom">@dimen/preference_fragment_padding_vertical_material</item>
-    </style-->
+    </style>
 
     <!-- Begin Material theme styles -->
 
@@ -709,7 +713,7 @@ please see styles_device_defaults.xml.
     </style>
 
     <style name="Widget.Material.NumberPicker" parent="Widget.NumberPicker">
-        <item name="internalLayout">@layout/number_picker</item>
+        <item name="internalLayout">@layout/number_picker_material</item>
         <item name="solidColor">@color/transparent</item>
         <item name="selectionDivider">@drawable/number_picker_divider_material</item>
         <item name="selectionDividerHeight">2dp</item>
@@ -1190,14 +1194,24 @@ please see styles_device_defaults.xml.
     <style name="Widget.Material.Light.ScrollView" parent="Widget.Material.ScrollView"/>
     <style name="Widget.Material.Light.HorizontalScrollView" parent="Widget.Material.HorizontalScrollView"/>
     <style name="Widget.Material.Light.Spinner" parent="Widget.Material.Spinner" />
-    <style name="Widget.Material.Light.Spinner.DropDown" parent="Widget.Material.Spinner.DropDown"/>
+    <style name="Widget.Material.Light.Spinner.DropDown" parent="Widget.Material.Spinner.DropDown">
+        <!-- The slim-res trim left the parent empty (no popupBackground at
+             all), which fell back to the raw popup window's dark surface.
+             Material Light dropdown card: light surface + amber selector. -->
+        <item name="spinnerMode">dropdown</item>
+        <item name="popupBackground">@drawable/spinner_dropdown_background_material_light</item>
+        <item name="dropDownSelector">@drawable/list_selector_background</item>
+    </style>
+
+    <style name="Widget.Material.Light.DropDownItem.Spinner" parent="Widget.DropDownItem.Spinner">
+        <item name="textColor">#DE000000</item>
+    </style>
     <style name="Widget.Material.Light.Spinner.DropDown.ActionBar" parent="Widget.Material.Spinner.DropDown.ActionBar"/>
     <style name="Widget.Material.Light.Spinner.Underlined" parent="Widget.Material.Spinner.Underlined" />
     <style name="Widget.Material.Light.TabWidget" parent="Widget.Material.TabWidget"/>
     <style name="Widget.Material.Light.WebTextView" parent="Widget.Material.WebTextView"/>
     <style name="Widget.Material.Light.WebView" parent="Widget.Material.WebView"/>
     <style name="Widget.Material.Light.DropDownItem" parent="Widget.Material.DropDownItem"/>
-    <style name="Widget.Material.Light.DropDownItem.Spinner" parent="Widget.Material.DropDownItem.Spinner"/>
     <style name="Widget.Material.Light.KeyboardView" parent="Widget.Material.KeyboardView"/>
     <style name="Widget.Material.Light.QuickContactBadge.WindowSmall" parent="Widget.Material.QuickContactBadge.WindowSmall"/>
     <style name="Widget.Material.Light.QuickContactBadge.WindowMedium" parent="Widget.Material.QuickContactBadge.WindowMedium"/>
@@ -1314,5 +1328,6 @@ please see styles_device_defaults.xml.
         <item name="paddingEnd">@dimen/notification_content_margin_end</item>
         <item name="gravity">top</item>
     </style>
+
 
 </resources>

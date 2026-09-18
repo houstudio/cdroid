@@ -234,6 +234,7 @@ b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd,
         e->mWidth = b.mEllipsizedWidth;
         e->mMethod = b.mEllipsize;
         mColumns = COLUMNS_ELLIPSIZE;
+        mOwnsText = true;   // the Ellipsizer wrapper came from our own lambda above
     } else {
         mColumns = COLUMNS_NORMAL;
     }
@@ -285,6 +286,9 @@ StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextP
 }
 
 StaticLayout::~StaticLayout(){
+    // Layout never frees mText (callers normally own it); the Builder ellipsize
+    // path is the one case where the layout itself allocated the text wrapper.
+    if (mOwnsText) delete getText();
     for(auto dir:mLineDirections){
         if((dir!=&Layout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&Layout::DIRS_ALL_RIGHT_TO_LEFT)){
             delete dir;

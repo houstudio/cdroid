@@ -18,25 +18,34 @@
 #ifndef __STATELIST_DRAWABLE_H__
 #define __STATELIST_DRAWABLE_H__
 #include <drawable/drawablecontainer.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class StateListDrawable:public DrawableContainer{
 protected:
     class StateListState:public DrawableContainerState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         std::vector<std::vector<int>>mStateSets;
-        StateListState(const StateListState*orig,StateListDrawable*own);
+        StateListState(const StateListState*orig,StateListDrawable*own,Resources*res);
         void mutate()override;
         StateListDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         int addStateSet(const std::vector<int>&stateSet, Drawable*drawable);
         int indexOfStateSet(const std::vector<int>&stateSet);
         bool hasFocusStateSpecified()const;
     };
 private:
     std::shared_ptr<StateListState>mStateListState;
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
-    StateListDrawable(std::shared_ptr<StateListState>state);
+    StateListDrawable(std::shared_ptr<StateListState>state,Resources*res);
+    // AOSP StateListDrawable.extractStateSet (package-private, shared with the
+    // AnimatedStateListDrawable subclass): extracts state_ attributes from an
+    // item's AttributeSet. AnimatorInflater inlines its own loop instead (the
+    // android:animation attr needs the load-animator side effect).
+    std::vector<int> extractStateSet(const AttributeSet& attrs) const;
     int indexOfStateSet(const std::vector<int>&states)const;
     bool onStateChange(const std::vector<int>&stateSet)override;
     std::shared_ptr<DrawableContainerState>cloneConstantState()override;
@@ -47,8 +56,10 @@ public:
     void addState(const std::vector<int>&stateSet,Drawable*drawable);
     bool isStateful()const override{return true;}
     bool hasFocusStateSpecified()const override;
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
-    void inflateChildElements(XmlPullParser&parser,const AttributeSet&atts);
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
+    void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme);
     StateListDrawable*mutate()override;
     void clearMutated()override;
     int getStateCount()const;

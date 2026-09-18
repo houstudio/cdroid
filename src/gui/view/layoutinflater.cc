@@ -15,14 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <utils/atexit.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <fstream>
 #include <iomanip>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 static constexpr const char* TAG_MERGE = "merge";
 static constexpr const char* TAG_INCLUDE = "include";
@@ -30,8 +32,10 @@ static constexpr const char* TAG_1995 = "blink";
 static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
 static constexpr const char* TAG_TAG = "tag";
 static constexpr const char* ATTR_LAYOUT = "layout";
+// AOSP LayoutInflater.ATTRS_THEME = { android.R.attr.theme } — sentinel-terminated
+// attr-id array (trailing 0), the C++ analog of AOSP's int[].
+static const uint32_t ATTRS_THEME[] = { (uint32_t)cdroid::internal::R::attr::theme, 0 };
 
-static std::unordered_map<std::string,std::string> mDefaultStyle;
 static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
 static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>> mInflaters;
 
@@ -50,25 +54,62 @@ LayoutInflater*LayoutInflater::from(Context*context) {
     return it->second.get();
 }
 
-const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
-    auto& maps = mDefaultStyle;
-    auto it = maps.find(name);
-    return it==maps.end()?std::string():it->second;
-}
-
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
-    const size_t  pt = name.rfind('.');
-    auto &maps = mFlateMapper;
-    const std::string sname = (pt!=std::string::npos)?name.substr(pt+1):name;
-    auto it = maps.find(sname);
-    return (it!=maps.end())?it->second:nullptr;
+    auto& maps = mFlateMapper;
+    /* AOSP createViewFromTag: a dotted tag names a precise class and is never
+       stripped — an exact registration under any spelling wins first. This is
+       what lets an app register its own class under the upstream FQCN while
+       the framework keeps the bare simple-name key. */
+    auto it = maps.find(name);
+    if (it != maps.end()) return it->second;
+
+    const size_t pt = name.rfind('.');
+    const std::string sname = (pt != std::string::npos) ? name.substr(pt + 1) : name;
+
+    if (pt != std::string::npos) {
+        /* Library packages — the android./androidx./support/material families
+           the core itself ports, plus app aliases riding the same simple name
+           (e.g. androidx.swiperefreshlayout... folding onto an app-registered
+           "SwipeRefreshLayout") — fold onto the simple-name key silently. Any
+           OTHER dotted tag folding onto a simple-name registration leaves a
+           porting fingerprint: upstream such a tag is the app's own subclass,
+           and folding silently drops its overridden behavior. */
+        static const std::string kFoldingPackages[] = {
+            "android.", "androidx.", "com.google.android.material.",
+            "com.android.internal."
+        };
+        bool folding = false;
+        for (const auto& prefix : kFoldingPackages) {
+            if (name.compare(0, prefix.size(), prefix) == 0) { folding = true; break; }
+        }
+        auto it2 = maps.find(sname);
+        if (it2 != maps.end()) {
+            if (!folding) {
+                LOGW("inflater: '%s' has no exact registration; folding onto '%s'"
+                     " (register the FQCN if this is a custom view)",
+                     name.c_str(), sname.c_str());
+            }
+            return it2->second;
+        }
+        return nullptr;
+    }
+
+    /* Bare name the registry does not know: PhoneLayoutInflater's
+       sClassPrefixList — android.widget., android.webkit., android.app., then
+       the base LayoutInflater's android.view. — first registered key wins. */
+    static const char* const kClassPrefixes[] = {
+        "android.widget.", "android.webkit.", "android.app.", "android.view."
+    };
+    for (const char* prefix : kClassPrefixes) {
+        auto it3 = maps.find(prefix + name);
+        if (it3 != maps.end()) return it3->second;
+    }
+    return nullptr;
 }
 
-bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
+bool LayoutInflater::registerInflater(const std::string&name,LayoutInflater::ViewInflater inflater) {
     auto& maps = mFlateMapper;
-    auto& smap = mDefaultStyle;
     auto flaterIter = maps.find(name);
-    auto styleIter = smap.find(name);
 
     /*disable widget inflater's hack*/
     if(flaterIter!=maps.end() ){
@@ -76,7 +117,24 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
         return false;
     }
     maps.insert({name,inflater});
-    smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
+    /* Library FQCNs also answer to their simple name (XML shorthand) — the
+       registry analog of PhoneLayoutInflater's prefix list. Only for packages
+       the core itself ports, and only while the simple name is free: insert
+       is a no-op on an existing key, and an occupied simple name is the
+       same-name collision case where the FQCN key above is the exact
+       reference. App-package FQCNs stay single-key on purpose. */
+    static const std::string kLibraryPrefixes[] = {
+        "android.", "androidx.", "com.google.android.material."
+    };
+    const size_t pt = name.rfind('.');
+    if (pt != std::string::npos) {
+        for (const auto& prefix : kLibraryPrefixes) {
+            if (name.compare(0, prefix.size(), prefix) == 0) {
+                maps.insert({name.substr(pt + 1), inflater});
+                break;
+            }
+        }
+    }
     return true;
 }
 
@@ -150,12 +208,6 @@ void LayoutInflater::setFilter(const Filter& f){
     mFilter = f;
 }
 
-View* LayoutInflater::inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*){
-    auto strm = std::make_unique<std::istream>(stream.rdbuf());
-    XmlPullParser parser(mContext,std::move(strm));
-    return inflate(parser,root,attachToRoot);
-}
-
 void LayoutInflater::advanceToRootNode(XmlPullParser& parser){
     // Look for the root node.
     int type;
@@ -176,7 +228,7 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot){
     int type;
     View*result = root;
-    AttributeSet& attrs = parser;
+    const AttributeSet& attrs = parser;
     if(!parser){
         return nullptr;
     }
@@ -212,24 +264,25 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
     return result;
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root){
+View* LayoutInflater::inflate(int resource, ViewGroup* root){
     return inflate(resource,root,root!=nullptr);
 }
 
-View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool attachToRoot){
-    XmlPullParser parser(mContext,resource);
-    return inflate(parser,root,attachToRoot);
+View* LayoutInflater::inflate(int resource, ViewGroup* root, bool attachToRoot){
+    auto parser = mContext->getResources().getXml(resource);
+    return inflate(*parser,root,attachToRoot);
 }
 
-View* LayoutInflater::createView(const std::string& name, const std::string& prefix,AttributeSet& attrs){
+View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
     return createView(mContext,name,prefix,attrs);
 }
 
-View* LayoutInflater::createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs){
+View* LayoutInflater::createView(Context* viewContext, const std::string& name, const std::string& prefix,const AttributeSet& attrs){
     LayoutInflater::ViewInflater inflater;
 
     if(name.compare("view")==0){
-        const std::string clsName =  attrs.getString("class");
+        // AOSP createViewFromTag: name = attrs.getAttributeValue(null, "class").
+        const std::string clsName =  attrs.getClassAttribute();
         inflater = LayoutInflater::getInflater(clsName);
     }else{
         inflater = LayoutInflater::getInflater(name);
@@ -258,16 +311,10 @@ View* LayoutInflater::createView(Context* viewContext, const std::string& name, 
             }
         }
     }
-    std::string styleName = attrs.getString("style");
-    if(!styleName.empty()) {
-        AttributeSet style = viewContext->obtainStyledAttributes(styleName);
-        attrs.inherit(style);
-    }
-    styleName = LayoutInflater::from(viewContext)->getDefaultStyle(name);
-    if(!styleName.empty()) {
-        AttributeSet defstyle = viewContext->obtainStyledAttributes(styleName);
-        attrs.inherit(defstyle);
-    }
+    // AOSP createView applies no style here: the tag's style= attribute is
+    // resolved natively inside obtainStyledAttributes (binary AXML ResXMLTree
+    // path), and each widget's default style comes from the defStyleAttr its
+    // constructor resolves (registered via DECLARE_WIDGET2).
     View*view = inflater(viewContext,attrs);
     return view;
 }
@@ -278,20 +325,28 @@ void LayoutInflater::failNotAllowed(const std::string& name, const std::string& 
             ": Class not allowed to be inflated "+ (!prefix.empty() ? (prefix + name) : name));
 }
 
-View* LayoutInflater::onCreateView(const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(const std::string& name,const AttributeSet& attrs){
     return createView(name, "android.view.", attrs);
 }
 
-View* LayoutInflater::onCreateView(View* parent, const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(View* parent, const std::string& name,const AttributeSet& attrs){
     return onCreateView(name,attrs);
 }
 
-View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs){
+View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std::string& name,const AttributeSet& attrs){
     return onCreateView(parent,name,attrs);
 }
 
-View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
-#if 10
+View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,const AttributeSet& attrs,bool ignoreThemeAttr) {
+    if (!ignoreThemeAttr) {
+        // AOSP: apply a theme wrapper if the tag carries android:theme.
+        auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
+        const int themeResId = ta->getResourceId(0, 0);
+        if (themeResId != 0) {
+            mThemeContexts.emplace_back(new ContextThemeWrapper(context, themeResId));
+            context = mThemeContexts.back().get();
+        }
+    }
     try{
         View* view = tryCreateView(parent, name, context, attrs);
 
@@ -310,32 +365,12 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
         }
         return view;
     }catch(std::exception&e){
+        LOGE("%s:Error %s",name.c_str(),e.what());
         throw e;
     }
-#else
-    LayoutInflater::ViewInflater inflater;
-    if(name.compare("view")==0){
-        const std::string clsName =  attrs.getString("class");
-        inflater = LayoutInflater::getInflater(clsName);
-    }else{
-        inflater = LayoutInflater::getInflater(name);
-    }
-    std::string styleName = attrs.getString("style");
-    if(!styleName.empty()) {
-        AttributeSet style = context->obtainStyledAttributes(styleName);
-        attrs.inherit(style);
-    }
-    styleName = LayoutInflater::from(context)->getDefaultStyle(name);
-    if(!styleName.empty()) {
-        AttributeSet defstyle = context->obtainStyledAttributes(styleName);
-        attrs.inherit(defstyle);
-    }
-    View*view = inflater(context,attrs);
-    return view;
-#endif
 }
 
-View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attrs) {
+View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,const AttributeSet& attrs) {
     if (name.compare(TAG_1995)==0) {
         // Let's party like it's 1995!
         return nullptr;//new BlinkLayout(context, attrs);
@@ -357,11 +392,11 @@ View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Contex
     return view;
 }
 
-void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate){
+void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,const AttributeSet& attrs,bool finishInflate){
     rInflate(parser, parent, parent->getContext(), attrs, finishInflate);
 }
 
-void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate){
+void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* context,const AttributeSet& attrs, bool finishInflate){
     int type;
     const int depth = parser.getDepth();
     bool pendingRequestFocus = false;
@@ -405,9 +440,15 @@ void LayoutInflater::rInflate(XmlPullParser& parser, View* parent, Context* cont
 }
 
 void LayoutInflater::parseViewTag(XmlPullParser& parser, View* view,const AttributeSet& attrs){
-    const int key = attrs.getResourceId("id", 0);
-    const std::string value = attrs.getString("value");
-    //view->setTag(key, value);
+    // AOSP View.parseViewTag: R.styleable.ViewTag (id ref + value string).
+    Context* context = view->getContext();
+    auto ta = context->obtainStyledAttributes(&attrs, R::styleable::ViewTag);
+    const int key = ta->getResourceId(R::styleable::ViewTag_id, 0);
+    const std::string value = ta->getString(R::styleable::ViewTag_value);
+    // CDROID setTag is (int, void*); AOSP stores a CharSequence value object.
+    if (key != 0 && !value.empty()) {
+        view->setTag(key, new std::string(value), [](void*p){ delete (std::string*)p; });
+    }
     consumeChildElements(parser);
 }
 
@@ -420,34 +461,45 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
 
         // If the layout is pointing to a theme attribute, we have to
         // massage the value to get a resource identifier out of it.
-        const bool hasThemeOverride = false;
-        const std::string layout = attrs.getString("layout");
-        if (layout.empty()) {
+        auto ta = context->obtainStyledAttributes(&attrs, ATTRS_THEME);
+        int themeResId = ta->getResourceId(0, 0);
+        bool hasThemeOverride = themeResId != 0;
+        int layout = attrs.getAttributeResourceValue(std::string(), ATTR_LAYOUT, 0);
+        if (layout==0) {
             throw std::logic_error("You must specify a layout in the include tag: <include layout=\"@layout/layoutID\" />");
             // Attempt to resolve the "?attr/name" string to an attribute within the default (e.g. application) package.
             // layout = context.getResources().getIdentifier(value.substring(1), "attr", context.getPackageName());
         }
         int type;
-        XmlPullParser childParser(context,layout);
-        while ((type = childParser.next()) != XmlPullParser::START_TAG &&
+        auto childParser = context->getResources().getXml(layout);
+        while ((type = childParser->next()) != XmlPullParser::START_TAG &&
                 type != XmlPullParser::END_DOCUMENT) {
             // Empty.
         }
 
         if (type != XmlPullParser::START_TAG) {
-            throw std::logic_error(childParser.getPositionDescription()+": No start tag found!");
+            throw std::logic_error(childParser->getPositionDescription()+": No start tag found!");
         }
 
-        const std::string childName = childParser.getName();
-        AttributeSet& childAttrs = childParser;
+        const std::string childName = childParser->getName();
+        const AttributeSet& childAttrs = *childParser;
 
         if (childName.compare(TAG_MERGE)==0){
             // The <merge> tag doesn't support android:theme, so nothing special to do here.
-            rInflate(childParser, parent, context, childAttrs, false);
+            rInflate(*childParser, parent, context, childAttrs, false);
         } else {
-            childAttrs.inherit(attrs);
             View* view = createViewFromTag(parent, childName,context, childAttrs, hasThemeOverride);
             ViewGroup* group = (ViewGroup*) parent;
+
+            // AOSP: read id/visibility off the <include /> tag itself and apply
+            // them to the included root AFTER inflation (setId/setVisibility).
+            // The old CDROID inherit() merge only reached the text-XML string
+            // map — invisible to the binary AXML typed path — so the include
+            // tag's android:id/visibility were silently dropped in binary mode.
+            auto ta = context->obtainStyledAttributes(&attrs, R::styleable::Include);
+            const int id = ta->getResourceId(R::styleable::Include_id, View::NO_ID);
+            const int visibility = ta->getInt(R::styleable::Include_visibility, -1);
+
             // We try to load the layout params set in the <include /> tag.
             // If the parent can't generate layout params (ex. missing width
             // or height for the framework ViewGroups, though this is not
@@ -456,11 +508,52 @@ void LayoutInflater::parseInclude(XmlPullParser& parser, Context* context, View*
             // We catch this exception and set localParams accordingly: true
             // means we successfully loaded layout params from the <include>
             // tag, false means we need to rely on the included layout params.
-            ViewGroup::LayoutParams* params = group->generateLayoutParams(childAttrs);
+            // AOSP: generateLayoutParams(include-attrs) THROWS when the
+            // <include> tag lacks layout_width/height (TypedArray
+            // .getLayoutDimension throws on a missing dimension) and the
+            // catch falls back to the included root's LayoutParams — that's
+            // how an attribute-less <include> keeps the root's 110dp/
+            // match_parent. CDROID's getLayoutDimension returns a default
+            // instead of throwing, so the fallback never fired and the
+            // include inherited junk dimensions (the status bar stretched
+            // over the whole page and its centered content drifted to the
+            // middle). Detect the missing pair explicitly instead.
+            ViewGroup::LayoutParams* params = nullptr;
+            {
+                auto lta = context->obtainStyledAttributes(&attrs, R::styleable::Layout);
+                const bool hasSize = lta && lta->hasValue(R::styleable::Layout_layout_width)
+                        && lta->hasValue(R::styleable::Layout_layout_height);
+                if (hasSize) {
+                    try {
+                        params = group->generateLayoutParams(attrs);
+                    } catch (std::exception&) {
+                        // Ignore, just fail over to child attrs.
+                    }
+                }
+            }
+            if (params == nullptr) {
+                params = group->generateLayoutParams(childAttrs);
+            }
             view->setLayoutParams(params);
 
             // Inflate all children.
-            rInflateChildren(childParser, view, childAttrs, true);
+            rInflateChildren(*childParser, view, childAttrs, true);
+
+            if (id != View::NO_ID) {
+                view->setId(id);
+            }
+
+            switch (visibility) {
+                case 0:
+                    view->setVisibility(View::VISIBLE);
+                    break;
+                case 1:
+                    view->setVisibility(View::INVISIBLE);
+                    break;
+                case 2:
+                    view->setVisibility(View::GONE);
+                    break;
+            }
             group->addView(view);
         }
     } else {

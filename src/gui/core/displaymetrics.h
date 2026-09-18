@@ -63,7 +63,7 @@ public:
     float noncompatXdpi;
     float noncompatYdpi;
 public:
-    DisplayMetrics();
+    DisplayMetrics() {}   // inline: lets androidfw use DisplayMetrics without linking core .o
     void setTo(const DisplayMetrics&);
     void setToDefaults();
     bool equals(const DisplayMetrics& other)const;

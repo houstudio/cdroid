@@ -33,6 +33,7 @@
 // indeterminate memory and are NOT asserted here.
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/NinePatchDrawableTest.java (Apache 2.0)
+#include "R.h"
 #include <gtest/gtest.h>
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/drawables.h>
@@ -72,7 +73,7 @@ TEST_F(CtsNinePatchDrawableTest, testGetConstantState) {
 // CTS ninepatch_0: 7x7 source (1px border) → 5x5 content, xDivs/yDivs=[0,2,3,5], padding=0.
 // CTS asserts getIntrinsicWidth/Height == 5.
 TEST_F(CtsNinePatchDrawableTest, testNinePatch0IntrinsicAndSegments) {
-    Drawable* d = App::getInstance().getDrawable("@drawable/ninepatch_0");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::ninepatch_0);
     ASSERT_NE(nullptr, d);
     auto* npd = dynamic_cast<NinePatchDrawable*>(d);
     ASSERT_NE(nullptr, npd);
@@ -86,7 +87,7 @@ TEST_F(CtsNinePatchDrawableTest, testNinePatch0IntrinsicAndSegments) {
 // CTS ninepatch_1: 11x11 source → 9x9 content, xDivs/yDivs=[0,4,5,9], padding (L3,R5,T5,B3).
 // CTS asserts getIntrinsicWidth/Height == 9 and getPadding(r) is true.
 TEST_F(CtsNinePatchDrawableTest, testNinePatch1IntrinsicPaddingAndSegments) {
-    Drawable* d = App::getInstance().getDrawable("@drawable/ninepatch_1");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::ninepatch_1);
     ASSERT_NE(nullptr, d);
     auto* npd = dynamic_cast<NinePatchDrawable*>(d);
     ASSERT_NE(nullptr, npd);
@@ -105,7 +106,7 @@ TEST_F(CtsNinePatchDrawableTest, testNinePatch1IntrinsicPaddingAndSegments) {
 // npTc (divs [0,1,24,25], padding 3,3,3,3) + npOl outline (inset 5, radius ~6) + npLb optical
 // (3,3,3,3). Exercises every NinePatchDrawable data accessor on one real asset.
 TEST_F(CtsNinePatchDrawableTest, testNinePatchOddInsetsFullData) {
-    Drawable* d = App::getInstance().getDrawable("@drawable/nine_patch_odd_insets");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::nine_patch_odd_insets);
     ASSERT_NE(nullptr, d);
     auto* npd = dynamic_cast<NinePatchDrawable*>(d);
     ASSERT_NE(nullptr, npd);

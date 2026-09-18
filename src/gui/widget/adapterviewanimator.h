@@ -92,8 +92,11 @@ protected:
     void checkForAndHandleDataChanged();
     void onLayout(bool changed, int left, int top, int width, int height)override;
 public:
-    AdapterViewAnimator(Context* context,const AttributeSet& attrs);
+    AdapterViewAnimator(Context*ctx);   // AOSP AdapterViewAnimator(Context)
+    AdapterViewAnimator(Context* context,const AttributeSet* attrs);
+    AdapterViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~AdapterViewAnimator()override;
+    std::string getAccessibilityClassName()const override;
     void setDisplayedChild(int whichChild);
     int getDisplayedChild();
     virtual void showNext();
@@ -104,8 +107,8 @@ public:
     void setInAnimation(ObjectAnimator* inAnimation);
     ObjectAnimator* getOutAnimation();
     void setOutAnimation(ObjectAnimator* outAnimation);
-    void setInAnimation(Context* context,const std::string& resourceID);
-    void setOutAnimation(Context* context,const std::string& resourceID);
+    void setInAnimation(Context* context,int resourceID);
+    void setOutAnimation(Context* context,int resourceID);
     void setAnimateFirstView(bool animate);
     int getBaseline()override;
     Adapter* getAdapter()override;
@@ -114,6 +117,16 @@ public:
     View* getSelectedView()override;
     void deferNotifyDataSetChanged();
     virtual void advance();
+
+    class SavedState : public View::BaseSavedState {
+    public:
+        int whichChild;
+        SavedState(Parcelable& superState, int whichChild);
+        SavedState(Parcel& in);
+        void writeToParcel(Parcel& dest, int flags) override;
+    };
+    Parcelable* onSaveInstanceState() override;
+    void onRestoreInstanceState(Parcelable& state) override;
 };
 
 }//namepace

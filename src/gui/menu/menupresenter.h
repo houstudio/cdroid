@@ -25,11 +25,13 @@ public:
          * of menu state so that it does not attempt to hide the action bar
          * while a submenu is open or similar.
          *
-         * @param subMenu Submenu currently being opened
+         * @param subMenu Submenu currently being opened; may be null — ActionMenuPresenter
+         *                 passes null to advertise that the overflow menu is opening
+         *                 (upstream contract: `if (subMenu == null) return false;`)
          * @return true if the Callback will handle presenting the submenu, false if
          *         the presenter should attempt to do so.
          */
-        std::function<bool(MenuBuilder& subMenu)> onOpenSubMenu;
+        std::function<bool(MenuBuilder* subMenu)> onOpenSubMenu;
     };
 
     /**

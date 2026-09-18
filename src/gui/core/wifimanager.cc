@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <core/wifimanager.h>
 #include <core/process.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <sstream>
 #include <iostream>
 

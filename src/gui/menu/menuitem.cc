@@ -155,7 +155,7 @@ MenuItem& MenuItem::setActionView(View* view){
     return *this;
 }
 
-MenuItem& MenuItem::setActionView(const std::string& resId){
+MenuItem& MenuItem::setActionView(int resId){
     return *this;
 }
 

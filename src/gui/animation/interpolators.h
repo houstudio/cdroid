@@ -21,6 +21,7 @@
 #include <vector>
 #include <core/path.h>
 #include <core/attributeset.h>
+#include <content/resources.h>   // Resources::Theme (the themed ctor face)
 namespace cdroid{
 class Context;
 /* Interploater is owned by caller.
@@ -56,7 +57,7 @@ private:
     double mDoubleFactor;
 public:
     static const AccelerateInterpolator*const Instance;
-    AccelerateInterpolator(Context*ctx,const AttributeSet&);
+    AccelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     AccelerateInterpolator(double f=1.0);
     float getInterpolation(float input)const override;
 };
@@ -66,7 +67,7 @@ private:
     float mFactor;
 public:
     static const DecelerateInterpolator*const Instance;
-    DecelerateInterpolator(Context*ctx,const AttributeSet&);
+    DecelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     DecelerateInterpolator(float factor=1.0f);
     float getInterpolation(float input)const override;
 };
@@ -76,7 +77,7 @@ private:
     float mTension;
 public:
     static const AnticipateInterpolator*const Instance;
-    AnticipateInterpolator(Context*ctx,const AttributeSet&);
+    AnticipateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     AnticipateInterpolator(float tension=2.0f);
     float getInterpolation(float t)const override;
 };
@@ -85,7 +86,7 @@ class CycleInterpolator:public BaseInterpolator{
 private:
     float mCycles;
 public:
-    CycleInterpolator(Context*ctx,const AttributeSet&);
+    CycleInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     CycleInterpolator(float cycles);
     float getInterpolation(float input)const override;
 };
@@ -95,7 +96,7 @@ private:
     float mTension;
 public:
     static const OvershootInterpolator*const Instance;
-    OvershootInterpolator(Context*ctx,const AttributeSet&);
+    OvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     OvershootInterpolator(float tension=2.0f);
     float getInterpolation(float t)const override;
 };
@@ -110,7 +111,7 @@ private:
     static float a(float t, float s);
     static float o(float t, float s);
 public:
-    AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&);
+    AnticipateOvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     AnticipateOvershootInterpolator(float tension=2.5f, float extraTension=1.5f);
 
     float getInterpolation(float t)const override;
@@ -145,7 +146,7 @@ public:
     PathInterpolator(float controlX, float controlY);
     PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     PathInterpolator(cdroid::Path&path);
-    PathInterpolator(Context*,const AttributeSet&);
+    PathInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&);
     float getInterpolation(float t)const override;
 };
 
@@ -183,12 +184,11 @@ public:
     FastOutLinearInInterpolator();
 };
 
-class BezierSCurveInterpolator:public TimeInterpolator {
+class BezierSCurveInterpolator:public LookupTableInterpolator{
 public:
     static const BezierSCurveInterpolator*const Instance;
 public:
     BezierSCurveInterpolator();
-    float getInterpolation(float input)const override;
 };
 }//namespace 
 

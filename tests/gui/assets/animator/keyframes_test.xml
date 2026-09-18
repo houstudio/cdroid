@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keyframes test asset: propertyValuesHolder with nested <keyframe> elements
+     (non-uniform fractions). Loaded by ANIMATORINFLATOR.keyframes_xml. -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:propertyName="translationX"
+>
+    <propertyValuesHolder android:propertyName="translationX">
+        <keyframe android:fraction="0" android:value="0"/>
+        <keyframe android:fraction="0.5" android:value="100"/>
+        <keyframe android:fraction="1" android:value="50"/>
+    </propertyValuesHolder>
+</objectAnimator>

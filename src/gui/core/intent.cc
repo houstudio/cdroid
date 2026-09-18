@@ -118,7 +118,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     if ((flags&(URI_INTENT_SCHEME|URI_ANDROID_APP_SCHEME)) != 0) {
         if (!uri.compare(0,7,"intent:") && !androidApp) {
             Intent* intent = new Intent(ACTION_VIEW);
-            intent->setData(new Uri(uri));
+            intent->setData(Uri::parse(uri));
             return intent;
         }
     }
@@ -127,7 +127,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
     // simple case
     if (i == std::string::npos) {
         if (!androidApp) {
-            return new Intent(ACTION_VIEW, new Uri(uri));
+            return new Intent(ACTION_VIEW, Uri::parse(uri));
         }
 
     // old format Intent URI
@@ -293,7 +293,7 @@ Intent* Intent::parseUri(const std::string& uri,int flags) {
         }
 
         if (data.length() > 0) {
-            intent->mData = new Uri(data);
+            intent->mData = Uri::parse(data);
         }
     }
 
@@ -445,9 +445,9 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
         if (isIntentFragment) {
-            intent->mData = new Uri(uri.substr(0, intentFragmentStart));
+            intent->mData = Uri::parse(uri.substr(0, intentFragmentStart));
         } else {
-            intent->mData = new Uri(uri);
+            intent->mData = Uri::parse(uri);
         }
 
         if (intent->mAction.empty()) {
@@ -456,7 +456,7 @@ Intent* Intent::getIntentOld(const std::string& uri, int flags) {
         }
 
     } else {
-        intent = new Intent(ACTION_VIEW, new Uri(uri));
+        intent = new Intent(ACTION_VIEW, Uri::parse(uri));
     }
 
     return intent;
@@ -1037,7 +1037,12 @@ double Intent::getDoubleExtra(const std::string& name, double defaultValue) {
 }
 
 std::string Intent::getStringExtra(const std::string& name) {
-    return mExtras == nullptr ? nullptr : mExtras->getValue<std::string>(name);
+    // AOSP returns null when absent; "" is CDROID's null for string payloads.
+    // The two-arg getValue covers both the missing-extras and missing-key cases
+    // (the single-arg form threw out_of_range, and the old nullptr literal
+    // constructed a std::string from a null char* — UB on that path).
+    return mExtras == nullptr ? std::string()
+                              : mExtras->getValue<std::string>(name, std::string());
 }
 
 Parcelable* Intent::getParcelableExtra(const std::string& name) {
@@ -1067,16 +1072,19 @@ std::vector<std::string> getStringArrayListExtra(const std::string& name) {
 }
 
 std::vector<bool> Intent::getBooleanArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<bool>() : mExtras->getBooleanArray(name);
-    return std::vector<bool>();
+    // AOSP null -> empty vector; two-arg getValue tolerates a missing key
+    return mExtras == nullptr ? std::vector<bool>()
+                              : mExtras->getValue<std::vector<bool>>(name, {});
 }
 
 std::vector<int8_t> Intent::getByteArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<int8_t>() : mExtras->getByteArray(name);
+    return mExtras == nullptr ? std::vector<int8_t>()
+                              : mExtras->getValue<std::vector<int8_t>>(name, {});
 }
 
 std::vector<int16_t> Intent::getShortArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<int16_t>() : mExtras->getShortArray(name);
+    return mExtras == nullptr ? std::vector<int16_t>()
+                              : mExtras->getValue<std::vector<int16_t>>(name, {});
 }
 
 /*char[] Intent::getCharArrayExtra(const std::string& name) {
@@ -1084,23 +1092,28 @@ std::vector<int16_t> Intent::getShortArrayExtra(const std::string& name) {
 }*/
 
 std::vector<int> Intent::getIntArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<int>() : mExtras->getIntArray(name);
+    return mExtras == nullptr ? std::vector<int>()
+                              : mExtras->getValue<std::vector<int>>(name, {});
 }
 
 std::vector<int64_t> Intent::getLongArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<int64_t>() : mExtras->getLongArray(name);
+    return mExtras == nullptr ? std::vector<int64_t>()
+                              : mExtras->getValue<std::vector<int64_t>>(name, {});
 }
 
 std::vector<float> Intent::getFloatArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<float>() : mExtras->getFloatArray(name);
+    return mExtras == nullptr ? std::vector<float>()
+                              : mExtras->getValue<std::vector<float>>(name, {});
 }
 
 std::vector<double> Intent::getDoubleArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<double>() : mExtras->getDoubleArray(name);
+    return mExtras == nullptr ? std::vector<double>()
+                              : mExtras->getValue<std::vector<double>>(name, {});
 }
 
 std::vector<std::string> Intent::getStringArrayExtra(const std::string& name) {
-    return mExtras == nullptr ? std::vector<std::string>() : mExtras->getStringArray(name);
+    return mExtras == nullptr ? std::vector<std::string>()
+                              : mExtras->getValue<std::vector<std::string>>(name, {});
 }
 
 Bundle* Intent::getBundleExtra(const std::string& name) {
@@ -1359,6 +1372,11 @@ Intent& Intent::putExtra(const std::string& name,const std::string& value) {
     }
     mExtras->putString(name, value);
     return *this;
+}
+
+Intent& Intent::putExtra(const std::string& name, const char* value) {
+    // see the header: keeps string literals out of the bool overload
+    return putExtra(name, value == nullptr ? std::string() : std::string(value));
 }
 
 Intent& Intent::putExtra(const std::string& name, Parcelable* value) {
@@ -2187,14 +2205,14 @@ void Intent::readFromParcel(Parcel& in) {
 Intent* Intent::parseIntent(XmlPullParser& parser,const AttributeSet& attrs){
     Intent* intent = new Intent();
 
-    intent->setAction(sa.getString("action"));
+    intent->setAction(sa.getAttributeValue("action"));
 
-    std::string data = sa.getString("data");
-    std::string mimeType = sa.getString("mimeType");
+    std::string data = sa.getAttributeValue("data");
+    std::string mimeType = sa.getAttributeValue("mimeType");
     intent.setDataAndType(data != null ? Uri.parse(data) : null, mimeType);
 
-    std::string packageName = sa.getString("targetPackage");
-    std::string className = sa.getString("targetClass");
+    std::string packageName = sa.getAttributeValue("targetPackage");
+    std::string className = sa.getAttributeValue("targetClass");
     if (packageName != null && className != nullptr) {
         intent.setComponent(new ComponentName(packageName, className));
     }

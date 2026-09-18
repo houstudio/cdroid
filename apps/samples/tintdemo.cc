@@ -27,15 +27,17 @@ int main(int argc,const char*argv[]){
     w->setId(1);
     w->setBackgroundColor(0xFF10141c);
 
-    ScrollView*scroller=new ScrollView(-1,-1);
+    ScrollView*scroller=new ScrollView(&app);
     scroller->setVerticalScrollBarEnabled(true);
     w->addView(scroller);
-    LinearLayout*content=new LinearLayout(-1,-2); // MATCH_PARENT w, WRAP_CONTENT h
+    LinearLayout*content=new LinearLayout(&app); // MATCH_PARENT w, WRAP_CONTENT h
     content->setOrientation(LinearLayout::VERTICAL);
     scroller->addView(content);
 
     const int tintColor=0xFFFF4040; /* red */
-    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:mipmap/ic_search");
+    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:drawable/ic_search");
+    // name@runtime -> id (getIdentifier), then the typed int APIs
+    const int resId = app.getResources().getIdentifier(res.substr(res.rfind('/')+1), "drawable", "cdroid");
     const int sz=78, gap=6, labelH=18, cols=8;
 
     auto lp=[&](int ww,int hh,int lmargin=0,int tmargin=0){
@@ -43,32 +45,30 @@ int main(int argc,const char*argv[]){
         p->leftMargin=lmargin; p->topMargin=tmargin; return p;
     };
     auto addSection=[&](const char*title){
-        TextView*h=new TextView(0,0);
-        h->setText(title);
+        TextView*h=new TextView(&app); h->setText(title);
         h->setTextSize(14);
         h->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         h->setTextColor(0xFF8aa0b4);
         content->addView(h, lp(-1,22,24,8));
     };
     auto newRow=[&](){
-        LinearLayout*r=new LinearLayout(-1,-2);
+        LinearLayout*r=new LinearLayout(&app);
         r->setOrientation(LinearLayout::HORIZONTAL);
         content->addView(r, lp(-1,-2,0,2));
         return r;
     };
     auto addCell=[&](LinearLayout*row,const char*name,std::function<void(Drawable*)>apply){
-        LinearLayout*cell=new LinearLayout(sz,sz+labelH);
+        LinearLayout*cell=new LinearLayout(&app);
         cell->setOrientation(LinearLayout::VERTICAL);
-        ImageView*iv=new ImageView(sz,sz);
-        Drawable*dr=app.getDrawable(res);
+        ImageView*iv=new ImageView(&app);
+        Drawable*dr=app.getDrawable(resId);
         if(dr) dr=dr->mutate();
         iv->setImageDrawable(dr);
         if(dr) apply(dr);
         iv->setBackgroundColor(0xFF1b2330);
         iv->setScaleType(ScaleType::FIT_CENTER);
         cell->addView(iv, lp(sz,sz));
-        TextView*lbl=new TextView(0,0);
-        lbl->setText(name);
+        TextView*lbl=new TextView(&app); lbl->setText(name);
         lbl->setTextSize(12);
         lbl->setGravity(Gravity::CENTER);
         lbl->setTextColor(0xFFcfd8dc);

@@ -7,7 +7,7 @@ public:
 private:
     OnInflateListener mInflateListener;
     int mInflatedId;
-    std::string mLayoutResource;
+    int mLayoutResource = 0;   // AOSP: @LayoutRes int (0 == unset)
     View* mInflatedViewRef;
 private:
     View*inflateViewNoAdd(ViewGroup* parent);
@@ -16,9 +16,12 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void dispatchDraw(Canvas& canvas)override;
 public:
-    ViewStub(Context* context,const AttributeSet& attrs);
+    ViewStub(Context*ctx);   // AOSP ViewStub(Context)
+    ViewStub(Context* context,const AttributeSet* attrs);
+    ViewStub(Context* context,const AttributeSet* attrs,int defStyleAttr);
     int getInflatedId()const;
-    const std::string& getLayoutResource()const;
+    int getLayoutResource()const;
+    void setLayoutResource(int layoutResource);
     void draw(Canvas&)override;
     void setVisibility(int visibility)override;
     View*inflate();

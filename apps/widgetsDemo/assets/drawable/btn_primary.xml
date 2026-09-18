@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Primary button: blue gradient, darkens on press. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/grad_blue_b" android:endColor="@color/accent_pressed" android:angle="90" />
+            <corners android:radius="@dimen/btn_corner" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <gradient android:startColor="@color/grad_blue_a" android:endColor="@color/grad_blue_b" android:angle="90" />
+            <corners android:radius="@dimen/btn_corner" />
+        </shape>
+    </item>
+</selector>

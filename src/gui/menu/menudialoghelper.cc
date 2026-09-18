@@ -18,6 +18,7 @@
 #include <menu/menubuilder.h>
 #include <menu/menudialoghelper.h>
 #include <menu/listmenupresenter.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
 MenuDialogHelper::MenuDialogHelper(MenuBuilder* menu) {
@@ -31,13 +32,13 @@ void MenuDialogHelper::show() {
     // Get the builder for the dialog
     AlertDialog::Builder* builder = new AlertDialog::Builder(menu->getContext());
 
-    mPresenter = new ListMenuPresenter(builder->getContext(),"android:layout/list_menu_item_layout");
+    mPresenter = new ListMenuPresenter(builder->getContext(),cdroid::internal::R::layout::list_menu_item_layout);
 
     MenuPresenter::Callback mpc;
     mpc.onCloseMenu=[this](MenuBuilder& menu, bool allMenusAreClosing){
         onCloseMenu(menu,allMenusAreClosing);
     };
-    mpc.onOpenSubMenu =[this](MenuBuilder& menu){
+    mpc.onOpenSubMenu =[this](MenuBuilder* menu){
         return onOpenSubMenu(menu);
     };
     mPresenter->setCallback(mpc);
@@ -61,6 +62,7 @@ void MenuDialogHelper::show() {
 
     // Show the menu
     mDialog = builder->create();
+    delete builder;  // the shell only: create() moved P into the dialog (GC in AOSP)
     mDialog->setOnDismissListener([this](DialogInterface& dialog){
             onDismiss(dialog);
         });
@@ -140,7 +142,8 @@ void MenuDialogHelper::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {
     }
 }
 
-bool MenuDialogHelper::onOpenSubMenu(MenuBuilder& subMenu) {
+bool MenuDialogHelper::onOpenSubMenu(MenuBuilder* subMenu) {
+    if (subMenu == nullptr) return false;
     if (mPresenterCallback.onOpenSubMenu != nullptr) {
         return mPresenterCallback.onOpenSubMenu(subMenu);
     }

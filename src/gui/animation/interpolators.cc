@@ -20,6 +20,11 @@
 #include <cairomm/surface.h>
 #include <core/pathmeasure.h>
 #include <drawable/pathparser.h>
+#include <core/context.h>
+#include <content/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 
 namespace cdroid{
 BaseInterpolator::BaseInterpolator(){
@@ -34,9 +39,10 @@ int BaseInterpolator::getChangingConfiguration(){
     return mChangingConfiguration;
 }
 
-AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    mFactor = atts.getFloat("factor",1.f);
-    mDoubleFactor = mFactor*2.f;   
+AccelerateInterpolator::AccelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AccelerateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AccelerateInterpolator);
+    mFactor = ta->getFloat(R::styleable::AccelerateInterpolator_factor, 1.f);
+    mDoubleFactor = mFactor*2.f;
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
@@ -52,8 +58,9 @@ float AccelerateInterpolator::getInterpolation(float input)const{
     }
 }
 
-DecelerateInterpolator::DecelerateInterpolator(Context*ctx,const AttributeSet&atts){
-    mFactor = atts.getFloat("factor",1.f);
+DecelerateInterpolator::DecelerateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::DecelerateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::DecelerateInterpolator);
+    mFactor = ta->getFloat(R::styleable::DecelerateInterpolator_factor, 1.f);
 }
 
 DecelerateInterpolator::DecelerateInterpolator(float factor) {
@@ -70,8 +77,9 @@ float DecelerateInterpolator::getInterpolation(float input)const{
     return result;
 }
 
-AnticipateInterpolator::AnticipateInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f);
+AnticipateInterpolator::AnticipateInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AnticipateInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AnticipateInterpolator);
+    mTension = ta->getFloat(R::styleable::AnticipateInterpolator_tension, 2.f);
 }
 
 AnticipateInterpolator::AnticipateInterpolator(float tension){
@@ -82,8 +90,9 @@ float AnticipateInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t - mTension);
 }
 
-CycleInterpolator::CycleInterpolator(Context*ctx,const AttributeSet&atts){
-    mCycles = atts.getFloat("cycles",1.f);
+CycleInterpolator::CycleInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::CycleInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::CycleInterpolator);
+    mCycles = ta->getFloat(R::styleable::CycleInterpolator_cycles, 1.f);
 }
 
 CycleInterpolator::CycleInterpolator(float cycles) {
@@ -94,8 +103,9 @@ float CycleInterpolator::getInterpolation(float input)const{
     return (float)(sin(2 * mCycles * M_PI * input));
 }
 
-OvershootInterpolator::OvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f);
+OvershootInterpolator::OvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::OvershootInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::OvershootInterpolator);
+    mTension = ta->getFloat(R::styleable::OvershootInterpolator_tension, 2.f);
 }
 
 OvershootInterpolator::OvershootInterpolator(float tension) {
@@ -107,8 +117,9 @@ float OvershootInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t + mTension) + 1.0f;
 }
 
-AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&atts){
-    mTension = atts.getFloat("tension",2.f)*atts.getFloat("extraTension",1.5f);
+AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&atts){
+    auto ta = theme ? theme->obtainStyledAttributes(&atts, R::styleable::AnticipateOvershootInterpolator) : res->obtainStyledAttributes(&atts, R::styleable::AnticipateOvershootInterpolator);
+    mTension = ta->getFloat(R::styleable::AnticipateOvershootInterpolator_tension, 2.f) * ta->getFloat(R::styleable::AnticipateOvershootInterpolator_extraTension, 1.5f);
 }
 
 AnticipateOvershootInterpolator::AnticipateOvershootInterpolator(float tension, float extraTension) {
@@ -152,6 +163,7 @@ float AccelerateDecelerateInterpolator::getInterpolation(float input)const{
 }
 
 PathInterpolator::PathInterpolator(cdroid::Path&path){
+    initPath(path);
 }
 
 PathInterpolator::PathInterpolator(float controlX, float controlY) {
@@ -162,25 +174,27 @@ PathInterpolator::PathInterpolator(float controlX1, float controlY1, float contr
     initCubic(controlX1, controlY1, controlX2, controlY2);
 }
 
-PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
-    if(a.hasAttribute("pathData")){
-        std::string pathData = a.getString("pathData");
+PathInterpolator::PathInterpolator(Resources* res,const Resources::Theme* theme,const AttributeSet&a){
+    // AOSP PathInterpolator.parseInterpolatorFromTypeArray.
+    auto ta = theme ? theme->obtainStyledAttributes(&a, R::styleable::PathInterpolator) : res->obtainStyledAttributes(&a, R::styleable::PathInterpolator);
+    if(ta->hasValue(R::styleable::PathInterpolator_pathData)){
+        std::string pathData = ta->getString(R::styleable::PathInterpolator_pathData);
         auto path = PathParser::createPathFromPathData(pathData);
         if (path == nullptr) {
             throw std::runtime_error("The path is null, which is created from " + pathData);
         }
         initPath(*path);
     }else{
-        if (!a.hasAttribute("controlX1")) {
+        if (!ta->hasValue(R::styleable::PathInterpolator_controlX1)) {
             throw "pathInterpolator requires the controlX1 attribute";
-        } else if (!a.hasAttribute("controlY1")) {
+        } else if (!ta->hasValue(R::styleable::PathInterpolator_controlY1)) {
             throw "pathInterpolator requires the controlY1 attribute";
         }
-        const float x1 = a.getFloat("controlX1", 0);
-        const float y1 = a.getFloat("controlY1", 0);
+        const float x1 = ta->getFloat(R::styleable::PathInterpolator_controlX1, 0);
+        const float y1 = ta->getFloat(R::styleable::PathInterpolator_controlY1, 0);
 
-        const bool hasX2 = a.hasAttribute("controlX2");
-        const bool hasY2 = a.hasAttribute("controlY2");
+        const bool hasX2 = ta->hasValue(R::styleable::PathInterpolator_controlX2);
+        const bool hasY2 = ta->hasValue(R::styleable::PathInterpolator_controlY2);
 
         if (hasX2 != hasY2) {
             throw "pathInterpolator requires both controlX2 and controlY2 for cubic Beziers.";
@@ -189,8 +203,8 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
         if (!hasX2) {
             initQuad(x1, y1);
         } else {
-            float x2 = a.getFloat("controlX2", 0);
-            float y2 = a.getFloat("controlY2", 0);
+            float x2 = ta->getFloat(R::styleable::PathInterpolator_controlX2, 0);
+            float y2 = ta->getFloat(R::styleable::PathInterpolator_controlY2, 0);
             initCubic(x1, y1, x2, y2);
         }
     }
@@ -248,6 +262,10 @@ float PathInterpolator::getInterpolation(float t)const {
         return 0;
     } else if (t >= 1) {
         return 1;
+    }
+    // An uninitialized path (empty samples) has nothing to interpolate.
+    if (mX.size() < 2) {
+        return t;
     }
     // Do a binary search for the correct x to interpolate between.
     int startIndex = 0;
@@ -435,27 +453,9 @@ static const float BEZIERSCURVE_VALUES[] ={
         0.9981f, 0.9986f, 0.9992f, 0.9995f, 0.9998f, 1.0f, 1.0f
 };
 #define BEZIERSCURVE_LENGH (sizeof(BEZIERSCURVE_VALUES)/sizeof(BEZIERSCURVE_VALUES[0]))
-#define BEZIERSCURVE_STEP_SIZE (1.0f / float(BEZIERSCURVE_LENGH - 1))
 
-BezierSCurveInterpolator::BezierSCurveInterpolator() {
-}
-
-float BezierSCurveInterpolator::getInterpolation(float input)const{
-    if (input >= 1.0f) {
-        return 1.0f;
-    }
-
-    if (input <= 0.f) {
-        return 0.f;
-    }
-
-    int position = std::min( int(input * (BEZIERSCURVE_LENGH - 1)), int(BEZIERSCURVE_LENGH - 2));
-
-    float quantized = position * BEZIERSCURVE_STEP_SIZE;
-    float difference = input - quantized;
-    float weight = difference / BEZIERSCURVE_STEP_SIZE;
-
-    return BEZIERSCURVE_VALUES[position] + weight * (BEZIERSCURVE_VALUES[position + 1] - BEZIERSCURVE_VALUES[position]);
+BezierSCurveInterpolator::BezierSCurveInterpolator()
+    :LookupTableInterpolator(BEZIERSCURVE_VALUES, BEZIERSCURVE_LENGH) {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

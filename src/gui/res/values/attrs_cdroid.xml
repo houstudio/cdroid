@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID-private attributes. These are CDROID-original widget attrs not in the
+     AOSP framework subset. Declared here so aapt2 assigns them real 0x01 resource
+     IDs (compiled into cdroid.pak), and gen_styleable generates styleable IDS
+     arrays so widget code can use obtainStyledAttributes instead of the string-key
+     bridge. -->
+<resources>
+
+    <!-- CandidateView (CDROID-original) -->
+    <declare-styleable name="CandidateView">
+        <attr name="candidate_background" format="reference|color" />
+        <attr name="candidate_normal" format="color" />
+        <attr name="candidate_other" format="color" />
+        <attr name="candidate_recommand" format="color" />
+    </declare-styleable>
+
+    <!-- PlotView (CDROID-original) -->
+    <declare-styleable name="PlotView">
+        <attr name="showGrid" format="boolean" />
+        <attr name="gridColor" format="color|reference" />
+        <attr name="tickLabelSize" format="dimension" />
+        <attr name="tickMarks" format="integer" />
+        <attr name="tickLabels" format="string|reference" />
+    </declare-styleable>
+
+    <!-- NumberPicker CDROID-specific additions (separate from the framework
+         NumberPicker styleable to avoid index shift). -->
+    <declare-styleable name="NumberPickerCdroid">
+        <attr name="selectedfontFamily" format="string" />
+        <attr name="selectedTextColor" format="color" />
+        <attr name="textColor2" format="color" />
+        <attr name="updateInputTextInFling" format="boolean" />
+        <attr name="wheelItemCount" format="integer" />
+        <attr name="wrapSelectorWheel" format="boolean" />
+        <attr name="selectedTextSize" format="dimension" />
+    </declare-styleable>
+
+    <!-- Chronometer CDROID addition -->
+    <declare-styleable name="ChronometerCdroid">
+        <attr name="colonBlinking" format="boolean" />
+    </declare-styleable>
+
+    <!-- SimpleMonthView CDROID addition -->
+    <declare-styleable name="SimpleMonthViewCdroid">
+        <attr name="dayTextAppearance" format="reference" />
+    </declare-styleable>
+
+    <!-- ScrollView CDROID addition -->
+    <declare-styleable name="ScrollViewCdroid">
+        <attr name="scrollDuration" format="integer" />
+    </declare-styleable>
+
+    <!-- StateSet CDROID-specific state flags (separate from framework StateSet) -->
+    <declare-styleable name="StateSetCdroid">
+        <attr name="state_drag_acceptable" format="boolean" />
+        <attr name="state_drag_hoved" format="boolean" />
+    </declare-styleable>
+
+    <!-- DrawableContainer base attrs (framework attrs reused). -->
+    <declare-styleable name="DrawableContainerState">
+        <attr name="constantSize" />
+        <attr name="variablePadding" />
+    </declare-styleable>
+    <!-- CDROID gradient image pattern (CDROID-only attr). -->
+    <!-- CDROID gradient image pattern (replaces "bitmap" attr name clash). -->
+    <declare-styleable name="GradientDrawablePattern">
+        <attr name="pattern" format="reference|color" />
+    </declare-styleable>
+
+    <!-- Material BadgeDrawable (com.google.android.material.badge styleable Badge).
+         badgeGravity enum values are Gravity masks (TOP|END etc.). -->
+    <declare-styleable name="Badge">
+        <attr name="backgroundColor" format="color" />
+        <attr name="badgeRadius" format="dimension" />
+        <attr name="badgeWithTextRadius" format="dimension" />
+        <attr name="badgeWidth" format="dimension" />
+        <attr name="badgeHeight" format="dimension" />
+        <attr name="badgeWithTextWidth" format="dimension" />
+        <attr name="badgeWithTextHeight" format="dimension" />
+        <attr name="badgeTextAppearance" format="reference" />
+        <attr name="badgeText" format="string" />
+        <attr name="badgeTextColor" format="color" />
+        <attr name="badgeGravity" format="enum">
+            <enum name="TOP_END" value="8388661" />
+            <enum name="TOP_START" value="8388659" />
+            <enum name="BOTTOM_END" value="8388693" />
+            <enum name="BOTTOM_START" value="8388691" />
+        </attr>
+        <attr name="badgeFixedEdge" format="enum">
+            <enum name="start" value="0" />
+            <enum name="end" value="1" />
+        </attr>
+        <attr name="offsetAlignmentMode" format="enum">
+            <enum name="edge" value="0" />
+            <enum name="legacy" value="1" />
+        </attr>
+        <attr name="badgeWidePadding" format="dimension" />
+        <attr name="badgeVerticalPadding" format="dimension" />
+        <attr name="horizontalOffset" format="dimension" />
+        <attr name="verticalOffset" format="dimension" />
+        <attr name="horizontalOffsetWithText" format="dimension" />
+        <attr name="verticalOffsetWithText" format="dimension" />
+        <attr name="largeFontVerticalOffsetAdjustment" format="dimension" />
+        <attr name="maxCharacterCount" format="integer" />
+        <attr name="maxNumber" format="integer" />
+        <attr name="number" format="integer" />
+        <attr name="badgeShapeAppearance" format="reference" />
+        <attr name="badgeShapeAppearanceOverlay" format="reference" />
+        <attr name="badgeWithTextShapeAppearance" format="reference" />
+        <attr name="badgeWithTextShapeAppearanceOverlay" format="reference" />
+        <attr name="autoAdjustToWithinGrandparentBounds" format="boolean" />
+    </declare-styleable>
+
+    <!-- androidx.preference port: attrs added by androidx that the framework
+         preference library never had. Format definitions live here (id block
+         0x01011040+); the framework-side declare-styleables reference them by
+         name from values/attrs.xml. -->
+    <attr name="isPreferenceVisible" format="boolean" />
+    <attr name="allowDividerAbove" format="boolean" />
+    <attr name="allowDividerBelow" format="boolean" />
+    <attr name="enableCopying" format="boolean" />
+    <attr name="initialExpandedChildrenCount" format="integer" />
+    <attr name="seekBarIncrement" format="integer" />
+    <attr name="updatesContinuously" format="boolean" />
+    <attr name="allowDividerAfterLastItem" format="boolean" />
+    <attr name="useSimpleSummaryProvider" format="boolean" />
+
+    <!-- androidx.preference styleable EditTextPreference. -->
+    <declare-styleable name="EditTextPreference">
+        <attr name="useSimpleSummaryProvider" />
+    </declare-styleable>
+
+    <!-- androidx.preference internal PreferenceImageView. -->
+    <declare-styleable name="PreferenceImageView">
+        <attr name="maxWidth" />
+        <attr name="maxHeight" />
+    </declare-styleable>
+
+    <!-- androidx CardView (androidx.cardview.widget styleable CardView);
+         minWidth/minHeight reuse the framework attrs (android:minWidth). -->
+    <declare-styleable name="CardView">
+        <attr name="cardBackgroundColor" format="color|reference" />
+        <attr name="cardCornerRadius" format="dimension" />
+        <attr name="cardElevation" format="dimension" />
+        <attr name="cardMaxElevation" format="dimension" />
+        <attr name="cardUseCompatPadding" format="boolean" />
+        <attr name="cardPreventCornerOverlap" format="boolean" />
+        <attr name="contentPadding" format="dimension" />
+        <attr name="contentPaddingLeft" format="dimension" />
+        <attr name="contentPaddingTop" format="dimension" />
+        <attr name="contentPaddingRight" format="dimension" />
+        <attr name="contentPaddingBottom" format="dimension" />
+        <attr name="minWidth" />
+        <attr name="minHeight" />
+    </declare-styleable>
+</resources>

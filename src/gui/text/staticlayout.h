@@ -115,6 +115,7 @@ private:
     mutable RectF mDrawingBounds;
 
     bool mEllipsized;
+    bool mOwnsText = false;   // Builder ellipsize path allocates the Ellipsizer wrapper itself
     int mMaxLineHeight = DEFAULT_MAX_LINE_HEIGHT;
 
     static constexpr int COLUMNS_NORMAL = 5;

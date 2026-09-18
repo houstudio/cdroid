@@ -17,11 +17,11 @@ int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* win = new Window(0, 0, -1, -1);
 
-    ConstraintLayout* cl = new ConstraintLayout(-1, -1); // fills window
+    ConstraintLayout* cl = new ConstraintLayout(&app); // fills window
     cl->setBackgroundColor(0xFF1B1B2F);
 
     // 1. Centered red box (width 200, height 80)
-    TextView* centered = new TextView("Centered", 200, 80);
+    TextView* centered =new TextView(&app); centered->setText("Centered" );
     centered->setBackgroundColor(0xFFEF5350);
     centered->setGravity(Gravity::CENTER);
     centered->setTextColor(0xFFFFFFFF);
@@ -34,7 +34,7 @@ int main(int argc, const char* argv[]) {
     cl->addView(centered, lp1);
 
     // 2. Match_constraint green bar (0dp, fills width, below the red)
-    TextView* fill = new TextView("0dp Fill", 0, 60);
+    TextView* fill =new TextView(&app); fill->setText("0dp Fill" );
     fill->setBackgroundColor(0xFF66BB6A);
     fill->setGravity(Gravity::CENTER);
     fill->setTextColor(0xFFFFFFFF);
@@ -47,7 +47,7 @@ int main(int argc, const char* argv[]) {
     cl->addView(fill, lp2);
 
     // 3. Guideline at 66% vertical + a blue box constrained to it
-    View* gl = new View(0, 0);
+    View* gl = new View(&app);
     gl->setId(10);
     auto* glp = new ConstraintLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
     glp->orientation = ConstraintWidget::VERTICAL;
@@ -55,7 +55,7 @@ int main(int argc, const char* argv[]) {
     glp->validate();
     cl->addView(gl, glp);
 
-    TextView* guided = new TextView("Guideline 66%", 0, 60);
+    TextView* guided =new TextView(&app); guided->setText("Guideline 66%" );
     guided->setBackgroundColor(0xFF42A5F5);
     guided->setGravity(Gravity::CENTER);
     guided->setTextColor(0xFFFFFFFF);

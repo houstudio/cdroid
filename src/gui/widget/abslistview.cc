@@ -1,9 +1,11 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/abslistview.h>
+#include <widget/framework_styleable.h>
 #include <widget/checkable.h>
 #include <widget/recyclebin.h>
 #include <widget/fastscroller.h>
 #include <widget/edittext.h>
-#include <widget/R.h>
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
@@ -11,17 +13,24 @@
 #include <porting/cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-AbsListView::AbsListView(int w,int h):AdapterView(w,h) {
-    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/absListViewStyle");
-    initAbsListView(atts);
+AbsListView::AbsListView(Context*ctx)
+    :AbsListView(ctx,nullptr){
 }
 
-AbsListView::AbsListView(Context*ctx,const AttributeSet&atts):AdapterView(ctx,atts) {
-    initAbsListView(atts);
+AbsListView::AbsListView(Context*ctx,const AttributeSet* atts)
+    :AbsListView(ctx,atts,cdroid::internal::R::attr::absListViewStyle){
 }
 
-void AbsListView::initAbsListView(const AttributeSet&atts) {
+AbsListView::AbsListView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):AdapterView(ctx,pAttrs, defStyleAttr) {
+    mEdgeGlowBottom = new EdgeEffect(mContext,pAttrs);
+    mEdgeGlowTop = new EdgeEffect(mContext,pAttrs);
+    initAbsListView();
+    readAbsListViewAttrs(pAttrs);
+}
+
+void AbsListView::initAbsListView() {
     setClickable(true);
     setFocusableInTouchMode(true);
     setWillNotDraw(false);
@@ -54,9 +63,6 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
 
-    mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
-    mEdgeGlowTop = new EdgeEffect(mContext,&atts);
-
     mPendingCheckForLongPress = new CheckForLongPress(this);
     mPendingCheckForTap = new CheckForTap(this);;
     mPendingCheckForKeyLongPress = new CheckForKeyLongPress(this);
@@ -66,7 +72,9 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mGlobalLayoutListener =[this](){
         onGlobalLayout();
     };
-    mTouchModeChangeListener=[this](bool isInTouchMode){
+    mAliveFlag = std::make_shared<bool>(true);
+    mTouchModeChangeListener=[this, flag = mAliveFlag](bool isInTouchMode){
+        if (!*flag) return;   // stale registration: the list is destroyed
         onTouchModeChanged(isInTouchMode);
     };
 
@@ -105,36 +113,45 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mIsScrap[0] = mIsScrap[1] = 0;
     mDensityScale = getContext()->getDisplayMetrics().density;
 
-    Drawable* selector = atts.getDrawable("listSelector");
+}
+
+// Styled-attribute reads (AOSP AbsListView ctor body, verbatim order/methods).
+// Text-XML ctor path is dropped: this resolves only through the binary-AXML
+// TypedArray; a==null (text XML / no arsc) leaves the widget at its defaults.
+void AbsListView::readAbsListViewAttrs(const AttributeSet* atts) {
+    auto a = mContext->obtainStyledAttributes(atts, R::styleable::AbsListView);
+    if (!a) return;
+
+    Drawable* selector = a->getDrawable(R::styleable::AbsListView_listSelector);
     if (selector != nullptr) {
         setSelector(selector);
     }
-    mDrawSelectorOnTop = atts.getBoolean("drawSelectorOnTop",false);
-    setStackFromBottom(atts.getBoolean("stackFromBottom",false));
-    setScrollingCacheEnabled(atts.getBoolean("scrollingCache",true));
-    setSmoothScrollbarEnabled(atts.getBoolean("smoothScrollbar",true));
-    setTextFilterEnabled(atts.getBoolean("textFilterEnabled",false));
-    setChoiceMode(atts.getInt("choiceMode",std::unordered_map<std::string,int> {
-        {"none",(int)CHOICE_MODE_NONE},
-        {"singleChoice",(int)CHOICE_MODE_SINGLE},
-        {"multipleChoice",(int)CHOICE_MODE_MULTIPLE}
-    },(int)CHOICE_MODE_NONE));
-    setTranscriptMode(atts.getInt("transcriptMode",std::unordered_map<std::string,int>{
-        {"disabled",(int)TRANSCRIPT_MODE_DISABLED},
-        {"normal",(int)TRANSCRIPT_MODE_NORMAL},
-        {"alwaysScroll",(int)TRANSCRIPT_MODE_ALWAYS_SCROLL}},(int)TRANSCRIPT_MODE_DISABLED));
-    setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
-    setFastScrollStyle(atts.getString("fastScrollStyle"));
-    setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
-    mGlobalLayoutListener = [this](){
-        onGlobalLayout();
-    };
-    mTouchModeChangeListener = [this](bool isInTouchMode){
-        onTouchModeChanged(isInTouchMode);
-    };
+
+    mDrawSelectorOnTop = a->getBoolean(R::styleable::AbsListView_drawSelectorOnTop, false);
+    setStackFromBottom(a->getBoolean(R::styleable::AbsListView_stackFromBottom, false));
+    setScrollingCacheEnabled(a->getBoolean(R::styleable::AbsListView_scrollingCache, true));
+    setTextFilterEnabled(a->getBoolean(R::styleable::AbsListView_textFilterEnabled, false));
+    setTranscriptMode(a->getInt(R::styleable::AbsListView_transcriptMode, (int)TRANSCRIPT_MODE_DISABLED));
+    setCacheColorHint(a->getColor(R::styleable::AbsListView_cacheColorHint, 0));
+    setSmoothScrollbarEnabled(a->getBoolean(R::styleable::AbsListView_smoothScrollbar, true));
+    setChoiceMode(a->getInt(R::styleable::AbsListView_choiceMode, (int)CHOICE_MODE_NONE));
+    setFastScrollEnabled(a->getBoolean(R::styleable::AbsListView_fastScrollEnabled, false));
+    int fsStyle = a->getResourceId(R::styleable::AbsListView_fastScrollStyle, 0);
+    setFastScrollAlwaysVisible(a->getBoolean(R::styleable::AbsListView_fastScrollAlwaysVisible, false));
 }
 
 AbsListView::~AbsListView() {
+    *mAliveFlag = false;   // stale listener copies become no-ops
+    // Death-belt (same pattern as ~TextView's preDraw unregister): paths that
+    // delete the tree without the detach dispatch leave the tree-observer
+    // touchMode listener registered — it fired on a freed ListView
+    // ("pure virtual method called" in AdapterView::removeViewAt, UAF in
+    // layoutChildren, crashing the NEXT popup's layout). While still
+    // attached we resolve the real observer via mAttachInfo.
+    if (mTouchObserverRegistered != nullptr) {
+        mTouchObserverRegistered->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+        mTouchObserverRegistered = nullptr;
+    }
     // 结束仍在活跃的多选 ActionMode: wrapper 的 lambda 捕获了 this, 且 ActionMode 由 Window
     // 持有, 先 finish (经 wrapper.onDestroyActionMode 清 mChoiceActionMode + 让 Window 释放)。
     if (mChoiceActionMode != nullptr) {
@@ -267,13 +284,13 @@ void AbsListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInf
     AdapterView::onInitializeAccessibilityNodeInfoInternal(info);
     if (isEnabled()) {
         if (canScrollUp()) {
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD.getId());
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP.getId());
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
             info.setScrollable(true);
         }
         if (canScrollDown()) {
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD.getId());
-            info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN.getId());
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
             info.setScrollable(true);
         }
     }
@@ -321,28 +338,33 @@ void AbsListView::onInitializeAccessibilityNodeInfoForItem(View* view, int posit
 
     if (position == getSelectedItemPosition()) {
         info.setSelected(true);
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_SELECTION);
     } else {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_SELECT);
     }
 
     if (isItemClickable(view)) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK.getId());
+        // A disabled item is a separator which should not be clickable.
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
         info.setClickable(isItemActionable);
     }
 
     if (isLongClickable()) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK.getId());
+        addAccessibilityActionIfEnabled(&info, isItemActionable,
+                &AccessibilityNodeInfo::AccessibilityAction::ACTION_LONG_CLICK);
         info.setLongClickable(isItemActionable);
     }
 }
 
-/*void AbsListView::addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
-        AccessibilityAction* action) {
+void AbsListView::addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
+        AccessibilityNodeInfo::AccessibilityAction* action) {
     if (enabled) {
         info->addAction(action);
     }
-}*/
+}
 
 void AbsListView::setScrollingCacheEnabled(bool enabled) {
     if (mScrollingCacheEnabled && !enabled) {
@@ -394,7 +416,7 @@ void AbsListView::setFastScrollEnabled(bool enabled) {
 }
 
 
-void AbsListView::setFastScrollStyle(const std::string& styleResId) {
+void AbsListView::setFastScrollStyle(int styleResId) {
     if (mFastScroll == nullptr) {
         mFastScrollStyle = styleResId;
     } else {
@@ -791,6 +813,12 @@ bool AbsListView::MultiChoiceModeWrapper::hasWrappedCallback() const {
 void AbsListView::resetList() {
     std::vector<View*>children = mChildren;
     removeAllViewsInLayout();
+    // The deletes below make this the sole owner of the old children — the
+    // recycler must forget them first. AOSP leaves the stale references (the
+    // previous layout's fillActiveViews mirrored these views into
+    // mActiveViews) alive to GC; here a survivor would be handed back by
+    // getActiveView as a "recycled" convertView and re-attached as a corpse.
+    mRecycler->forgetViews(children);
     for(auto child:children){
         delete child;
     }
@@ -880,7 +908,7 @@ int AbsListView::computeVerticalScrollRange() {
 }
 
 void AbsListView::useDefaultSelector() {
-    setSelector(getContext()->getDrawable("cdroid:drawable/list_selector_background"));
+    setSelector(getContext()->getDrawable(R::drawable::list_selector_background));
 }
 
 bool AbsListView::isStackFromBottom()const {
@@ -933,7 +961,7 @@ bool AbsListView::acceptFilter() const {
 
 void AbsListView::createTextFilter(bool animateEntrance) {
     if (mPopup == nullptr) {
-        PopupWindow* p = new PopupWindow(getContext(),AttributeSet(getContext(),"cdroid"));
+        PopupWindow* p = new PopupWindow(getContext(),nullptr);
         p->setFocusable(false);
         p->setTouchable(false);
         p->setInputMethodMode(PopupWindow::INPUT_METHOD_NOT_NEEDED);
@@ -955,7 +983,7 @@ void AbsListView::createTextFilter(bool animateEntrance) {
 EditText* AbsListView::getTextFilterInput() {
     if (mTextFilter == nullptr) {
         LayoutInflater* layoutInflater = LayoutInflater::from(getContext());
-        mTextFilter = (EditText*) layoutInflater->inflate("cdroid:layout/typing_filter", nullptr);
+        mTextFilter = (EditText*) layoutInflater->inflate(cdroid::internal::R::layout::typing_filter, nullptr);
         // For some reason setting this as the "real" input type changes
         // the text view in some way that it doesn't work, and I don't
         // want to figure out why this is.
@@ -1100,7 +1128,7 @@ void AbsListView::setSelector(Drawable*sel) {
     updateSelectorState();
 }
 
-void AbsListView::setSelector(const std::string&resid) {
+void AbsListView::setSelector(int resid) {
     setSelector(mContext->getDrawable(resid));
 }
 
@@ -1778,9 +1806,11 @@ View*AbsListView::obtainView(int position, bool*outMetadata) {
 
     if (AccessibilityManager::getInstance(mContext).isEnabled()) {
         if (mAccessibilityDelegate == nullptr) {
-            //TODO mAccessibilityDelegate = new ListItemAccessibilityDelegate();
+            mAccessibilityDelegate = std::make_shared<ListItemAccessibilityDelegate>(this);
         }
         if (child->getAccessibilityDelegate() == nullptr) {
+            // Owning set (shared_ptr overload): one delegate instance goes to
+            // every child, so children must share the refcount, not borrow.
             child->setAccessibilityDelegate(mAccessibilityDelegate);
         }
     }
@@ -2132,6 +2162,7 @@ void AbsListView::onAttachedToWindow() {
     AdapterView::onAttachedToWindow();
 
     ViewTreeObserver* treeObserver = getViewTreeObserver();
+    mTouchObserverRegistered = treeObserver;
     treeObserver->addOnTouchModeChangeListener(mTouchModeChangeListener);
     if (mTextFilterEnabled && mPopup  && !mGlobalLayoutListenerAddedFilter) {
         treeObserver->addOnGlobalLayoutListener(mGlobalLayoutListener);
@@ -2165,10 +2196,12 @@ void AbsListView::onDetachedFromWindow() {
     if(mSelector)
         unscheduleDrawable(*mSelector);
 
-    ViewTreeObserver* treeObserver = getViewTreeObserver();
-    treeObserver->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+    if (mTouchObserverRegistered != nullptr) {
+        mTouchObserverRegistered->removeOnTouchModeChangeListener(mTouchModeChangeListener);
+        mTouchObserverRegistered = nullptr;
+    }
     if (mTextFilterEnabled && mPopup != nullptr) {
-        treeObserver->removeOnGlobalLayoutListener(mGlobalLayoutListener);
+        getViewTreeObserver()->removeOnGlobalLayoutListener(mGlobalLayoutListener);
         mGlobalLayoutListenerAddedFilter = false;
     }
 
@@ -4645,75 +4678,71 @@ void AbsListView::FlingRunnable::checkFlyWheel() {
 
 void AbsListView::ListItemAccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
     AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, info);
-#if 0
-    const int position = getPositionForView(host);
-    onInitializeAccessibilityNodeInfoForItem(host, position, info);
-#endif
+    const int position = mHost->getPositionForView(&host);
+    mHost->onInitializeAccessibilityNodeInfoForItem(&host, position, info);
 }
 
 
 bool AbsListView::ListItemAccessibilityDelegate::performAccessibilityAction(View& host, int action, Bundle* arguments) {
-#if 0
     if (AccessibilityDelegate::performAccessibilityAction(host, action, arguments)) {
         return true;
     }
 
-    const int position = getPositionForView(host);
-    if (position == INVALID_POSITION || mAdapter == null) {
+    const int position = mHost->getPositionForView(&host);
+    if (position == AdapterView::INVALID_POSITION || mHost->mAdapter == nullptr) {
         // Cannot perform actions on invalid items.
         return false;
     }
 
-    if (position >= mAdapter.getCount()) {
+    if (position >= mHost->mAdapter->getCount()) {
         // The position is no longer valid, likely due to a data set
         // change. We could fail here for all data set changes, since
         // there is a chance that the data bound to the view may no
-        // longer exist at the same position within the adapter, but
-        // it's more consistent with the standard touch interaction to
-        // click at whatever may have moved into that position.
+        // longer exist at the same position, but it's more consistent
+        // with the standard touch interaction to click at whatever may
+        // have moved into that position.
         return false;
     }
 
     bool isItemEnabled;
     const ViewGroup::LayoutParams* lp = host.getLayoutParams();
-    if (dynamic_cast<AbsListView::LayoutParams*>(lp)) {
+    if (dynamic_cast<AbsListView::LayoutParams*>((ViewGroup::LayoutParams*)lp)) {
         isItemEnabled = ((AbsListView::LayoutParams*) lp)->isEnabled;
     } else {
         isItemEnabled = false;
     }
 
-    if (!isEnabled() || !isItemEnabled) {
+    if (!mHost->isEnabled() || !isItemEnabled) {
         // Cannot perform actions on disabled items.
         return false;
     }
 
     switch (action) {
     case AccessibilityNodeInfo::ACTION_CLEAR_SELECTION:
-        if (getSelectedItemPosition() == position) {
-            setSelection(INVALID_POSITION);
+        if (mHost->getSelectedItemPosition() == position) {
+            mHost->setSelection(INVALID_POSITION);
             return true;
         }
         return false;
     case AccessibilityNodeInfo::ACTION_SELECT:
-        if (getSelectedItemPosition() != position) {
-            setSelection(position);
+        if (mHost->getSelectedItemPosition() != position) {
+            mHost->setSelection(position);
             return true;
         }
         return false;
     case AccessibilityNodeInfo::ACTION_CLICK:
-        if (isItemClickable(host)) {
-            const long id = getItemIdAtPosition(position);
-            return performItemClick(host, position, id);
+        if (isItemClickable(&host)) {
+            const long id = mHost->getItemIdAtPosition(position);
+            return mHost->performItemClick(host, position, id);
         }
         return false;
     case AccessibilityNodeInfo::ACTION_LONG_CLICK:
-        if (isLongClickable()) {
-            const long id = getItemIdAtPosition(position);
-            return performLongPress(host, position, id);
+        if (mHost->isLongClickable()) {
+            const long id = mHost->getItemIdAtPosition(position);
+            return mHost->performLongPress(&host, position, id);
         }
         return false;
     }
-#endif
     return false;
 }
 }//namespace

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID port of com.wm.remusic (NetEase-UI local music player).
+     Trimmed from the original: Youmi ad SDK (AdBrowser/AdService/AdReceiver,
+     FileProvider), the dead UiMonitorActivity, DownService (download manager
+     stubbed offline), the :main remote-process MediaService (in-process
+     singleton instead), receivers (no broadcast framework) and all
+     Baidu-ting online activities. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.remusic">
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme">
+
+        <activity
+            android:name=".activity.MainActivity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".activity.PlayingActivity" android:launchMode="singleTask" />
+        <activity android:name=".activity.LocalSearchActivity" />
+        <activity android:name=".activity.SelectActivity" />
+        <activity android:name=".activity.PlaylistSelectActivity" />
+        <activity android:name=".activity.PlaylistManagerActivity" />
+        <activity android:name=".activity.TabActivity" />
+        <activity android:name=".activity.DownActivity" />
+        <activity android:name=".activity.PlaylistActivity" />
+        <activity android:name=".activity.RecentActivity" />
+        <activity android:name=".activity.DetailActivity" />
+
+    </application>
+</manifest>

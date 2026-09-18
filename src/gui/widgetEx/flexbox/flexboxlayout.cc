@@ -15,82 +15,52 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/flexbox/flexboxlayout.h>
+#include <widgetEx/widgetex_styleable.h>
 //REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(FlexboxLayout)
+DECLARE_WIDGET2(FlexboxLayout, "com.google.android.flexbox.FlexboxLayout");
 
-FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
+FlexboxLayout::FlexboxLayout(Context*ctx):FlexboxLayout(ctx,nullptr){}
+
+FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* attrs):FlexboxLayout(context,attrs,0){}
+
+FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(context,pAttrs, defStyleAttr){
     init();
-}
-
-FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
-    init();
-    mFlexDirection = attrs.getInt("flexDirection",std::unordered_map<std::string,int>{
-            {"column",FlexDirection::COLUMN},
-            {"column_reverse",FlexDirection::COLUMN_REVERSE},
-            {"row",FlexDirection::ROW},
-            {"row_reverse",FlexDirection::ROW_REVERSE},
-        }, (int)FlexDirection::ROW);
-    mFlexWrap = attrs.getInt("flexWrap",std::unordered_map<std::string,int>{
-            {"nowrap" , FlexWrap::NOWRAP},
-            {"wrap" , FlexWrap::WRAP},
-            {"wrap_reverse" , FlexWrap::WRAP_REVERSE}
-        }, (int)FlexWrap::NOWRAP);
-    mJustifyContent = attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
-            {"flex_start",(int)JustifyContent::FLEX_START},
-            {"flex_end", (int)JustifyContent::FLEX_END},
-            {"center"  , (int)JustifyContent::CENTER},
-            {"space_between", (int)JustifyContent::SPACE_BETWEEN},
-            {"space_around" , (int)JustifyContent::SPACE_AROUND},
-            {"space_evenly" , (int)JustifyContent::SPACE_EVENLY}
-        }, (int)JustifyContent::FLEX_START);
-    mAlignItems = attrs.getInt("alignItems",std::unordered_map<std::string,int>{
-            {"flex_start",(int)AlignItems::FLEX_START},
-            {"flex_end", (int)AlignItems::FLEX_END},
-            {"center"  , (int)AlignItems::CENTER},
-            {"baseline", (int)AlignItems::BASELINE},
-            {"stretch" , (int)AlignItems::STRETCH}
-        }, (int)AlignItems::FLEX_START);
-    mAlignContent = attrs.getInt("alignContent",std::unordered_map<std::string,int>{
-            {"flex_start", (int)AlignContent::FLEX_START},
-            {"flex_end"  , (int)AlignContent::FLEX_END},
-            {"center" , (int)AlignContent::CENTER},
-            {"space_between",(int)AlignContent::SPACE_BETWEEN},
-            {"space_around" ,(int)AlignContent::SPACE_AROUND},
-            {"stretch" , (int)AlignContent::STRETCH}
-        }, (int)AlignContent::FLEX_START);
-    mMaxLine = attrs.getInt("maxLine", NOT_SET);
-    Drawable* drawable = attrs.getDrawable("dividerDrawable");
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::FlexboxLayout, defStyleAttr);
+    mFlexDirection = ta->getInt(R::styleable::FlexboxLayout_flexDirection, (int)FlexDirection::ROW);
+    mFlexWrap = ta->getInt(R::styleable::FlexboxLayout_flexWrap, (int)FlexWrap::NOWRAP);
+    mJustifyContent = ta->getInt(R::styleable::FlexboxLayout_justifyContent, (int)JustifyContent::FLEX_START);
+    mAlignItems = ta->getInt(R::styleable::FlexboxLayout_alignItems, (int)AlignItems::FLEX_START);
+    mAlignContent = ta->getInt(R::styleable::FlexboxLayout_alignContent, (int)AlignContent::FLEX_START);
+    mMaxLine = ta->getInt(R::styleable::FlexboxLayout_maxLine, NOT_SET);
+    Drawable* drawable = ta->getDrawable(R::styleable::FlexboxLayout_dividerDrawable);
     if (drawable != nullptr) {
         setDividerDrawableHorizontal(drawable);
         setDividerDrawableVertical(drawable);
     }
-    Drawable* drawableHorizontal = attrs.getDrawable("dividerDrawableHorizontal");
+    Drawable* drawableHorizontal = ta->getDrawable(R::styleable::FlexboxLayout_dividerDrawableHorizontal);
     if (drawableHorizontal != nullptr) {
         setDividerDrawableHorizontal(drawableHorizontal);
     }
-    Drawable* drawableVertical = attrs.getDrawable("dividerDrawableVertical");
+    Drawable* drawableVertical = ta->getDrawable(R::styleable::FlexboxLayout_dividerDrawableVertical);
     if (drawableVertical != nullptr) {
         setDividerDrawableVertical(drawableVertical);
     }
-    std::unordered_map<std::string,int>divs={
-            {"beginning",(int)SHOW_DIVIDER_BEGINNING},
-            {"middle",(int)SHOW_DIVIDER_MIDDLE},
-            {"end",(int)SHOW_DIVIDER_END},
-            {"none",(int)SHOW_DIVIDER_NONE}
-        };
-    int dividerMode = attrs.getInt("showDivider",divs,SHOW_DIVIDER_NONE);
+    int dividerMode = ta->getInt(R::styleable::FlexboxLayout_showDivider, SHOW_DIVIDER_NONE);
     if (dividerMode != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerMode;
         mShowDividerHorizontal = dividerMode;
     }
-    int dividerModeVertical = attrs.getInt("showDividerVertical",divs, SHOW_DIVIDER_NONE);
+    int dividerModeVertical = ta->getInt(R::styleable::FlexboxLayout_showDividerVertical, SHOW_DIVIDER_NONE);
     if (dividerModeVertical != SHOW_DIVIDER_NONE) {
         mShowDividerVertical = dividerModeVertical;
     }
-    int dividerModeHorizontal = attrs.getInt("showDividerHorizontal",divs, SHOW_DIVIDER_NONE);
+    int dividerModeHorizontal = ta->hasValue(R::styleable::FlexboxLayout_showDividerHorizontal) ? ta->getInt(R::styleable::FlexboxLayout_showDividerHorizontal,SHOW_DIVIDER_NONE) : SHOW_DIVIDER_NONE;
     if (dividerModeHorizontal != SHOW_DIVIDER_NONE) {
         mShowDividerHorizontal = dividerModeHorizontal;
     }
@@ -1195,24 +1165,19 @@ int FlexboxLayout::getPaddingEnd() {
 
 FlexboxLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context,attrs){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::FlexboxLayoutLayout);
 
-    mOrder = attrs.getInt("layout_order", (int)ORDER_DEFAULT);
-    mFlexGrow = attrs.getFloat("layout_flexGrow", (int)FLEX_GROW_DEFAULT);
-    mFlexShrink = attrs.getFloat("layout_flexShrink",(float)FLEX_SHRINK_DEFAULT);
-    mAlignSelf = attrs.getInt("layout_alignSelf",std::unordered_map<std::string,int>{
-            {"auto" , (int)AlignSelf::AUTO},
-            {"flex_start",(int)AlignSelf::FLEX_START},
-            {"flex_end", (int)AlignSelf::FLEX_END},
-            {"center"  , (int)AlignSelf::CENTER},
-            {"baseline", (int)AlignSelf::BASELINE},
-            {"stretch" , (int)AlignSelf::STRETCH},
-        }, (int)AlignSelf::AUTO);
-    mFlexBasisPercent = attrs.getFraction("layout_flexBasisPercent", 1, 1,(float)FLEX_BASIS_PERCENT_DEFAULT);
-    mMinWidth = attrs.getDimensionPixelSize("layout_minWidth"  ,(int)NOT_SET);
-    mMinHeight = attrs.getDimensionPixelSize("layout_minHeight",(int)NOT_SET);
-    mMaxWidth  = attrs.getDimensionPixelSize("layout_maxWidth" ,(int)MAX_SIZE);
-    mMaxHeight = attrs.getDimensionPixelSize("layout_maxHeight",(int)MAX_SIZE);
-    mWrapBefore= attrs.getBoolean("layout_wrapBefore", false);
+    mOrder = ta->hasValue(R::styleable::FlexboxLayoutLayout_layout_order) ? ta->getInt(R::styleable::FlexboxLayoutLayout_layout_order, (int)ORDER_DEFAULT) : (int)ORDER_DEFAULT;
+    mFlexGrow = ta->getFloat(R::styleable::FlexboxLayoutLayout_layout_flexGrow, (float)FLEX_GROW_DEFAULT);
+    mFlexShrink = ta->getFloat(R::styleable::FlexboxLayoutLayout_layout_flexShrink, (float)FLEX_SHRINK_DEFAULT);
+    mAlignSelf = ta->getInt(R::styleable::FlexboxLayoutLayout_layout_alignSelf, (int)AlignSelf::AUTO);
+    mFlexBasisPercent = ta->getFraction(R::styleable::FlexboxLayoutLayout_layout_flexBasisPercent, 1, 1, (float)FLEX_BASIS_PERCENT_DEFAULT);
+    mMinWidth = ta->getDimensionPixelSize(R::styleable::FlexboxLayoutLayout_layout_minWidth, (int)NOT_SET);
+    mMinHeight = ta->getDimensionPixelSize(R::styleable::FlexboxLayoutLayout_layout_minHeight, (int)NOT_SET);
+    mMaxWidth  = ta->getDimensionPixelSize(R::styleable::FlexboxLayoutLayout_layout_maxWidth, (int)MAX_SIZE);
+    mMaxHeight = ta->getDimensionPixelSize(R::styleable::FlexboxLayoutLayout_layout_maxHeight, (int)MAX_SIZE);
+    mWrapBefore = ta->getBoolean(R::styleable::FlexboxLayoutLayout_layout_wrapBefore, false);
 }
 
 FlexboxLayout::LayoutParams::LayoutParams(const LayoutParams& source):ViewGroup::MarginLayoutParams(source){

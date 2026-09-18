@@ -28,7 +28,6 @@ class Context;
 class Handler;
 class LayoutInflater;
 class Window;
-namespace fragment{
 
 class FragmentHostCallback : public FragmentContainer{
 public:
@@ -45,6 +44,5 @@ public:
     bool onHasView() override = 0;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

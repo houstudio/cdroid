@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Demo manifest: exercises App's manifest-driven resource orientation.
+     android:screenOrientation is what CDROID's App::applyOrientationConfig
+     reads (screen shape is the fallback). "portrait" here proves the chain:
+     on a widescreen display the auto path would pick landscape, so a
+     portrait layout means the manifest won. The MAIN/LAUNCHER filter only
+     feeds getLauncherActivity(); the auto-launch runnable skips because
+     main() already created the window. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.preferencedemo">
+
+    <!-- Without uses-sdk aapt2 assumes minSdk=1 and synthesizes -v1/-v17
+         compatibility copies of layouts that use newer attrs (paddingStart
+         etc.); the runtime then selects the -v17 variant, which never made
+         it into the pak, and every layout inflates empty. pakbuilder now
+         injects this line when an app manifest forgets it. -->
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36" />
+
+    <application android:label="Preference Demo">
+        <activity android:name=".SettingsActivity"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

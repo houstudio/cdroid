@@ -21,6 +21,7 @@
  */
 #include <widgetEx/constraintlayout/core/motion/easing.h>
 
+#include <animation/interpolators.h>
 #include <porting/cdlog.h>
 #include <widgetEx/constraintlayout/core/motion/schlick.h>
 #include <widgetEx/constraintlayout/core/motion/stepcurve.h>
@@ -161,6 +162,16 @@ double Easing::CubicEasing::get(double x) const {
     double y1 = getY(t - range);
     double y2 = getY(t + range);
     return (y2 - y1) * (x - x1) / (x2 - x1) + y1;
+}
+
+// ---- InterpolatorEasing ----
+
+double InterpolatorEasing::get(double x) const {
+    return mInterpolator ? mInterpolator->getInterpolation((float)x) : x;
+}
+
+std::string InterpolatorEasing::toString() const {
+    return "interpolator";
 }
 
 } // namespace cdroid

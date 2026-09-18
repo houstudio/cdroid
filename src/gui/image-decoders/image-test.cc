@@ -4,8 +4,7 @@
 #include <cdlog.h>
 #include <framesequence.h>
 #include <gui/cdroid.h>
-#include <core/app.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <image-decoders/framesequence.h>
 #include <dirent.h>
 #include <sys/stat.h>
@@ -18,7 +17,7 @@ int main(int argc,const char*argv[]){
     image->write_to_png("111.png");
 #else
     std::ifstream file(argv[1]);
-    cdroid::FrameSequence*seq=cdroid::FrameSequence::create(nullptr,argv[1]);
+    cdroid::FrameSequence*seq=cdroid::FrameSequence::create(argv[1]);
     LOGD("%dx%dx%d",seq->getWidth(),seq->getHeight(),seq->getFrameCount());
     Cairo::RefPtr<Cairo::ImageSurface>img=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,seq->getWidth(),seq->getHeight());
     cdroid::FrameSequenceState*state=seq->createState();

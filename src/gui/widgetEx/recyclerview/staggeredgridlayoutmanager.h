@@ -140,7 +140,7 @@ protected:
     int getFirstChildPosition();
 
 public:
-    StaggeredGridLayoutManager(Context* context,const AttributeSet& attrs);//, int defStyleAttr,int defStyleRes);
+    StaggeredGridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     StaggeredGridLayoutManager(int spanCount, int orientation);
 	~StaggeredGridLayoutManager()override;
     bool isAutoMeasureEnabled()const override;
@@ -174,9 +174,11 @@ public:
     int computeVerticalScrollRange(RecyclerView::State& state)override;
     void onRestoreInstanceState(Parcelable& state)override;
     Parcelable* onSaveInstanceState()override;
+    void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
+            RecyclerView::State& state, View* host, AccessibilityNodeInfo& info)override;
     //void onInitializeAccessibilityNodeInfoForItem(RecyclerView::Recycler& recycler,
     //      RecyclerView::State& state, View host, AccessibilityNodeInfoCompat info)override;
-    //void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
+    void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     int getRowCountForAccessibility(RecyclerView::Recycler& recycler, RecyclerView::State& state)override;
     int getColumnCountForAccessibility(RecyclerView::Recycler& recycler,RecyclerView::State& state)override;
 
@@ -199,7 +201,7 @@ public:
     void collectAdjacentPrefetchPositions(int dx, int dy, RecyclerView::State& state,
           LayoutPrefetchRegistry& layoutPrefetchRegistry)override;
     LayoutParams* generateDefaultLayoutParams()const override;
-    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;
     int getOrientation()const;

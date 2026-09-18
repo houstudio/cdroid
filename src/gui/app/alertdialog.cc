@@ -16,25 +16,90 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <app/alertdialog.h>
+#include <core/looper.h>
+#include <core/messagequeue.h>
+#include <content/contextthemewrapper.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
-AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,false,nullptr){
+AlertDialog::AlertDialog(Context*ctx):AlertDialog(ctx,0,true){
 }
 
-AlertDialog::AlertDialog(Context*ctx,const std::string&resid):Dialog(ctx,resid){
+// AOSP AlertDialog(Context, int themeResId, boolean createContextThemeWrapper).
+AlertDialog::AlertDialog(Context*ctx,int themeResId,bool createContextThemeWrapper)
+  : Dialog(ctx, createContextThemeWrapper ? resolveDialogTheme(ctx,themeResId) : 0,
+             createContextThemeWrapper){
     mAlert = AlertController::create(getContext(), this, getWindow());
     P = nullptr;
 }
 
 AlertDialog::AlertDialog(Context*ctx,bool cancelable,DialogInterface::OnCancelListener listener)
-   :AlertDialog(ctx,"@cdroid:layout/alert_dialog"){
+   :AlertDialog(ctx,0){
     setCancelable(cancelable);
     setOnCancelListener(listener);
 }
 
+// AOSP AlertDialog.resolveDialogTheme: THEME_* selectors map to the framework
+// alert-dialog styles, real resource ids pass through, 0 resolves
+// ?attr/alertDialogTheme from the context theme.
+int AlertDialog::resolveDialogTheme(Context* context,int themeResId){
+    using namespace cdroid::internal;
+    if (themeResId == THEME_TRADITIONAL) {
+        return R::style::Theme_Dialog_Alert;
+    } else if (themeResId == THEME_HOLO_DARK) {
+        return R::style::Theme_Holo_Dialog_Alert;
+    } else if (themeResId == THEME_HOLO_LIGHT) {
+        return R::style::Theme_Holo_Light_Dialog_Alert;
+    } else if (themeResId == THEME_DEVICE_DEFAULT_DARK) {
+        return R::style::Theme_DeviceDefault_Dialog_Alert;
+    } else if (themeResId == THEME_DEVICE_DEFAULT_LIGHT) {
+        return R::style::Theme_DeviceDefault_Light_Dialog_Alert;
+    } else if (themeResId >= 0x01000000) {
+        // start of real resource IDs.
+        return themeResId;
+    }
+    TypedValue outValue;
+    context->getTheme().resolveAttribute(R::attr::alertDialogTheme, &outValue, true);
+    return outValue.resourceId;
+}
+
 AlertDialog::~AlertDialog(){
+    // Tear the dialog window's view tree down before the controller frees the
+    // list adapter. AOSP keeps the adapter alive until GC reclaims it, i.e.
+    // past ListView's own detach (ListView.mAdapter is a strong reference);
+    // in this port the controller owns the adapter, so without this the
+    // ListView can onDetachedFromWindow() after the adapter is gone (app
+    // teardown path) and call through freed memory. removeWindow is
+    // membership-checked and never dereferences a window that's no longer
+    // listed, so the dismiss path — where the window was already deleted by
+    // close()'s posted delete — falls straight through. Dialog::~Dialog's own
+    // removeWindow re-run is idempotent for the same reason.
+    if (Window* w = getWindow()) {
+        WindowManager::getInstance().removeWindow(w);
+    } else if (mDismissedWindow && Looper::getMainLooper()->getQueue()->isQuitting()) {
+        // Dismissed earlier and we're quitting: close()'s exit animation + posted
+        // deletes were dropped by the dying looper, so the window may still be
+        // listed with its tree attached — unlist + detach it NOW, before
+        // delete mAlert frees the list adapter the dialog ListView still points
+        // at (the quit-path shape of the crash e3aad50eb fixed for the
+        // never-dismissed case). Runtime never consults the stash — the post
+        // may have freed the window and the address reused by an unrelated one.
+        WindowManager::getInstance().removeWindow(mDismissedWindow);
+    }
     delete mAlert;
     delete P;
+}
+
+void AlertDialog::onStop(){
+    // Runs synchronously inside dismissDialog() — the window and its view tree
+    // are still alive here, before close() posts the removeWindow teardown.
+    // Unbinding the list ListView from the controller's adapter closes the
+    // dismiss/teardown race: the posted finishClose may run after ~AlertDialog
+    // freed the adapter, and AbsListView::onDetachedFromWindow would then
+    // unregister its DataSetObserver through freed memory (deskclock auto-test
+    // crashed on the select_dialog_listview of a dismissed item dialog).
+    mAlert->unbindListAdapter();
+    Dialog::onStop();
 }
 
 void AlertDialog::setTitle(const std::string& title){
@@ -71,7 +136,7 @@ ListView* AlertDialog::getListView() {
     return mAlert->getListView();
 }
 
-void AlertDialog::setIcon(const std::string&iconId){
+void AlertDialog::setIcon(int iconId){
     mAlert->setIcon(iconId);
 }
 
@@ -89,8 +154,12 @@ void AlertDialog::onCreate(){
 }
 
 bool AlertDialog::onKeyDown(int keyCode, KeyEvent& event){
-    if (mAlert->onKeyUp(keyCode, event)) return true;
-    return Dialog::onKeyUp(keyCode, event);
+    // AOSP AlertDialog.onKeyDown (AlertDialog.java:443-446): the DOWN side
+    // forwards to the controller's onKeyDown and the Dialog's onKeyDown —
+    // both were misrouted to the UP pair before, so the Dialog's
+    // BACK-startTracking never ran and BACK-to-cancel stayed dead.
+    if (mAlert->onKeyDown(keyCode, event)) return true;
+    return Dialog::onKeyDown(keyCode, event);
 }
 
 bool AlertDialog::onKeyUp(int keyCode, KeyEvent& event){
@@ -100,8 +169,16 @@ bool AlertDialog::onKeyUp(int keyCode, KeyEvent& event){
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-AlertDialog::Builder::Builder(Context* context){
+// AOSP Builder(Context) / Builder(Context, int themeResId): the params hold a
+// ContextThemeWrapper carrying the resolved alert-dialog theme (owned by the
+// AlertParams; the dialog created by create() borrows it as its base context).
+AlertDialog::Builder::Builder(Context* context):Builder(context, 0){
+}
+
+AlertDialog::Builder::Builder(Context* context,int themeResId){
     P = new  AlertController::AlertParams(context);
+    P->mContext = new ContextThemeWrapper(context, resolveDialogTheme(context, themeResId));
+    P->mOwnsContext = true;
 }
 
 AlertDialog::Builder::~Builder(){
@@ -112,14 +189,14 @@ Context* AlertDialog::Builder::getContext(){
     return P->mContext;
 }
 
-const std::string AlertDialog::Builder::getString(const std::string&resid)const{
-    const std::string text = P->mContext->getString(resid);
-    if(text.size())return text;
-    return resid;
+AlertDialog::Builder& AlertDialog::Builder::setTitle(const std::string& title){
+    // AOSP CharSequence form — the literal text, no resource resolution.
+    P->mTitle = title;
+    return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setTitle(const std::string& title){
-    P->mTitle = getString(title);
+AlertDialog::Builder& AlertDialog::Builder::setTitle(int titleId){
+    P->mTitle = P->mContext->getString(titleId);
     return *this;
 }
 
@@ -128,12 +205,18 @@ AlertDialog::Builder& AlertDialog::Builder::setCustomTitle(View* customTitleView
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMessage(const std::string&messageId){
-    P->mMessage = getString(messageId);
+AlertDialog::Builder& AlertDialog::Builder::setMessage(const std::string& message){
+    // AOSP CharSequence form.
+    P->mMessage = message;
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setIcon(const std::string&iconId){
+AlertDialog::Builder& AlertDialog::Builder::setMessage(int messageId){
+    P->mMessage = P->mContext->getString(messageId);
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setIcon(int iconId){
     P->mIconId = iconId;
     return *this;
 }
@@ -144,19 +227,40 @@ AlertDialog::Builder& AlertDialog::Builder::setIcon(Drawable*icon){
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setPositiveButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mPositiveButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mPositiveButtonText = text;
+    P->mPositiveButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setPositiveButton(int textId, DialogInterface::OnClickListener listener){
+    P->mPositiveButtonText = P->mContext->getString(textId);
     P->mPositiveButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNegativeButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNegativeButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mNegativeButtonText = text;
+    P->mNegativeButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setNegativeButton(int textId, DialogInterface::OnClickListener listener){
+    P->mNegativeButtonText = P->mContext->getString(textId);
     P->mNegativeButtonListener = listener;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setNeutralButton(const std::string& text, DialogInterface::OnClickListener listener){
-    P->mNeutralButtonText = getString(text);
+    // AOSP CharSequence form.
+    P->mNeutralButtonText = text;
+    P->mNeutralButtonListener = listener;
+    return *this;
+}
+
+AlertDialog::Builder& AlertDialog::Builder::setNeutralButton(int textId, DialogInterface::OnClickListener listener){
+    P->mNeutralButtonText = P->mContext->getString(textId);
     P->mNeutralButtonListener = listener;
     return *this;
 }
@@ -181,9 +285,8 @@ AlertDialog::Builder& AlertDialog::Builder::setOnKeyListener(DialogInterface::On
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setItems(const std::string& itemsId,OnClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
-    P->mContext->getArray(itemsId,P->mItems);
+AlertDialog::Builder& AlertDialog::Builder::setItems(int itemsId,OnClickListener listener){
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnClickListener = listener;
     return *this;
 }
@@ -200,9 +303,9 @@ AlertDialog::Builder& AlertDialog::Builder::setAdapter(ListAdapter* adapter,Dial
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::string&itemsId,
+AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(int itemsId,
       const std::vector<bool>& checkedItems,DialogInterface::OnMultiChoiceClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnCheckboxClickListener = listener;
     P->mCheckedItems = checkedItems;
     P->mIsMultiChoice = true;
@@ -218,9 +321,9 @@ AlertDialog::Builder& AlertDialog::Builder::setMultiChoiceItems(const std::vecto
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(const std::string&itemsId, 
+AlertDialog::Builder& AlertDialog::Builder::setSingleChoiceItems(int itemsId,
       int checkedItem, DialogInterface::OnClickListener listener){
-    P->mContext->getArray(itemsId,P->mItems);
+    P->mItems = P->mContext->getResources().getStringArray(itemsId);
     P->mOnClickListener = listener;
     P->mCheckedItem = checkedItem;
     P->mIsSingleChoice = true;
@@ -248,16 +351,16 @@ AlertDialog::Builder& AlertDialog::Builder::setOnItemSelectedListener(AdapterVie
     return *this;
 }
 
-AlertDialog::Builder& AlertDialog::Builder::setView(const std::string&layoutResId){
+AlertDialog::Builder& AlertDialog::Builder::setView(int themeResId){
     P->mView = nullptr;
-    P->mViewLayoutResId = layoutResId;
+    P->mViewLayoutResId = themeResId;
     P->mViewSpacingSpecified = false;
     return *this;
 }
 
 AlertDialog::Builder& AlertDialog::Builder::setView(View* view){
     P->mView = view;
-    P->mViewLayoutResId ="";
+    P->mViewLayoutResId = 0;
     P->mViewSpacingSpecified = false;
     return *this;
 }
@@ -268,7 +371,9 @@ AlertDialog::Builder& AlertDialog::Builder::setRecycleOnMeasureEnabled(bool enab
 }
 
 AlertDialog* AlertDialog::Builder::create(){
-    AlertDialog* dialog = new AlertDialog(P->mContext,"@cdroid:layout/alert_dialog");
+    // AOSP: the params context is already theme-wrapped, so the dialog takes
+    // it as its base context without wrapping again.
+    AlertDialog* dialog = new AlertDialog(P->mContext, 0, false);
     P->apply(dialog->mAlert);
     dialog->setCancelable(P->mCancelable);
     if (P->mCancelable) {

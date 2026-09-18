@@ -16,6 +16,7 @@
 */
 -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/floating_popup_container"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:padding="0dp"
@@ -23,4 +24,4 @@
     android:elevation="@android:dimen/text_edit_floating_toolbar_elevation"
     android:focusable="true"
     android:focusableInTouchMode="true"
-    android:background="?attr/floatingToolbarPopupBackgroundDrawable"/>
+    android:background="@drawable/floating_popup_background"/>

@@ -34,7 +34,12 @@ public:
     public:
         virtual ~AnimationFrameCallbackProvider()=default;
         virtual void postFrameCallback(const Choreographer::FrameCallback& callback)=0;
-        virtual void postCommitCallback(Runnable& runnable)=0;
+        // token = the animator the commit runner captures: removeCommitCallbacks
+        // must be able to drop every posted runner for a dying animator before
+        // it is freed (a drained runner calling into freed memory is the
+        // dangling-commit crash family).
+        virtual void postCommitCallback(Runnable& runnable, void* token)=0;
+        virtual void removeCommitCallbacks(void* token)=0;
         virtual int64_t getFrameTime()=0;
         virtual long getFrameDelay()=0;
         virtual void setFrameDelay(long delay)=0;
@@ -43,7 +48,8 @@ private:
     class MyFrameCallbackProvider :public AnimationFrameCallbackProvider {
     public:
         void postFrameCallback(const Choreographer::FrameCallback& callback)override;
-        void postCommitCallback(Runnable& runnable)override;
+        void postCommitCallback(Runnable& runnable, void* token)override;
+        void removeCommitCallbacks(void* token)override;
         int64_t getFrameTime()override;
         long getFrameDelay()override;
         void setFrameDelay(long delay)override;

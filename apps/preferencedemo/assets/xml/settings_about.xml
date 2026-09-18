@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/my_device_info.xml fragments. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="about_device_screen"
+    android:title="About phone">
+
+    <PreferenceCategory android:title="Device">
+
+        <EditTextPreference
+            android:key="device_name"
+            android:title="Device name"
+            android:summary="Android Phone" />
+
+        <Preference android:key="device_model" android:title="Model" android:summary="Android Phone (CDROID demo)" android:selectable="false" />
+        <Preference android:key="device_memory" android:title="Memory" android:summary="8 GB RAM" android:selectable="false" />
+        <Preference android:key="device_imei" android:title="IMEI" android:summary="358724061234567" android:selectable="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Software information">
+
+        <Preference android:key="check_for_updates" android:title="System update" android:summary="Tap to check for updates" />
+        <Preference android:key="android_version" android:title="Android version" android:summary="12 (CDROID port)" android:selectable="false" />
+        <Preference android:key="build_number" android:title="Build number" android:summary="cdroid.demo.20260827" android:selectable="false" />
+        <Preference android:key="kernel_version" android:title="Kernel version" android:summary="5.15.0-cdroid" android:selectable="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Legal">
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="legal_licenses" android:title="Open source licenses" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="legal_terms" android:title="Terms of service" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

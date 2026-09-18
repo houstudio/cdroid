@@ -16,6 +16,7 @@ void SpannableStringInternal::addSpan(const ParcelableSpan* span, int start, int
     ParcelableSpan* s = const_cast<ParcelableSpan*>(span);
     const bool owned = (dynamic_cast<NoCopySpan*>(s) == nullptr);
     mSpans.push_back({s, start, end, flags, owned});
+    ++mMutationEpoch;
 }
 
 bool SpannableStringInternal::removeSpanRecord(const ParcelableSpan* span) {
@@ -23,6 +24,7 @@ bool SpannableStringInternal::removeSpanRecord(const ParcelableSpan* span) {
         if (it->span == span) {
             disposeSpan(*it);
             mSpans.erase(it);
+            ++mMutationEpoch;
             return true;
         }
     }
@@ -34,6 +36,7 @@ void SpannableStringInternal::deleteAllOwnedSpans() {
         disposeSpan(r);
     }
     mSpans.clear();
+    ++mMutationEpoch;
 }
 
 void SpannableStringInternal::appendSpanCopy(std::vector<SpanRecord>& dest,
@@ -114,9 +117,13 @@ SpannableStringInternal::SpannableStringInternal(const CharSequence* source, int
             int newStart = std::max(start, spanStart) - start;
             int newEnd = std::min(end, spanEnd) - start;
 
-            if (newStart < newEnd) {
-                appendSpanCopy(mSpans, span, newStart, newEnd, spanFlags, ignoreNoCopySpan);
-            }
+            /*AOSP copySpansFromSpanned keeps EVERYTHING getSpans() returned —
+              including ZERO-LENGTH spans (Selection markers) at any offset in
+              [start, end]; the old `newStart < newEnd` test silently dropped
+              them. getSpans above already applied AOSP's isOutOfCopyRange
+              predicate (out-of-range or boundary-touching non-empty spans),
+              so no further filtering is needed here.*/
+            appendSpanCopy(mSpans, span, newStart, newEnd, spanFlags, ignoreNoCopySpan);
         }
     }
 }
@@ -152,6 +159,13 @@ int SpannableStringInternal::charAt(int idx) const {
 }
 
 std::vector<const ParcelableSpan*> SpannableStringInternal::getSpans(int queryStart, int queryEnd, const SpanFilter& filter) const {
+    /*Zero-priority spans come back in storage order, priority spans jump
+      ahead of lower priorities — AOSP walks its interval-tree ARRAY linearly,
+      and the tree layout (built by insertions + rotations) yields insertion
+      order for the simple cases (its CTS test asserts priority-then-insertion;
+      the sortsByPriorityEvenWhenSortParamIsFalse case additionally depends on
+      the tree's rotation layout, which the flat vector does not replicate —
+      that one test stays a known red until the interval tree is ported).*/
     std::vector<const ParcelableSpan*> result;
 
     for (const auto& r : mSpans) {
@@ -222,11 +236,23 @@ void SpannableStringInternal::getChars(int start, int end, char16_t* dest, int d
     }
 }
 
+/*AOSP's sendSpan* snapshots the watchers and calls them all — safe because
+  GC keeps a detached watcher's Java object alive. Under raw pointers a
+  watcher removed (and freed) by an earlier callback leaves dangling entries
+  in the snapshot, so each recipient is re-checked against the live span set
+  first (the same isRecorded guard SpannableStringBuilder uses for its
+  TextWatcher phases). Divergence: a watcher detached mid-notification does
+  not receive the remaining events; a deleted C++ span cannot be called.
+  The O(spans) getSpanStart rescan is skipped while mMutationEpoch is
+  unchanged since the snapshot (no callback has touched the span set).*/
+
 void SpannableString::sendSpanAdded(const ParcelableSpan* what, int start, int end) {
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanAdded(self, what, start, end);
@@ -238,7 +264,9 @@ void SpannableString::sendSpanRemoved(const ParcelableSpan* what, int start, int
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanRemoved(self, what, start, end);
@@ -250,7 +278,9 @@ void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, in
     Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(std::min(ostart,nstart), std::max(oend,nend), watcherFilter);
+    const uint64_t epoch0 = mMutationEpoch;
     for (const ParcelableSpan* w : watchers) {
+        if (mMutationEpoch != epoch0 && getSpanStart(w) < 0) continue;
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
             watcher->onSpanChanged(self, what, ostart, oend, nstart, nend);
@@ -295,7 +325,10 @@ void SpannableString::setSpan(const ParcelableSpan* what, int start, int end, in
         throw std::out_of_range("setSpan starts before 0");
     }
 
-    if (start >= end) return;
+    // Zero-length spans (start == end) are legal and MUST be stored
+    // (SpannableStringInternal.setSpan / checkRange only rejects start > end):
+    // Selection's SELECTION_START/SELECTION_END markers are zero-length, so
+    // dropping them made every Selection on a SpannableString a silent no-op.
 
     for (auto& r : mSpans) {
         if (r.span == what) {
@@ -317,6 +350,7 @@ void SpannableString::removeSpan(const ParcelableSpan* what) {
             this->sendSpanRemoved(what, it->start, it->end);
             disposeSpan(*it);
             mSpans.erase(it);
+            ++mMutationEpoch;
             return;
         }
     }

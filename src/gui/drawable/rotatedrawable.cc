@@ -15,12 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/rotatedrawable.h>
 #include <utils/mathutils.h>
+#include <content/typedvalue.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 
 RotateDrawable::RotateState::RotateState()
     :DrawableWrapperState(){
@@ -43,7 +47,11 @@ RotateDrawable::RotateState::RotateState(const RotateState& orig)
 }
 
 RotateDrawable*RotateDrawable::RotateState::newDrawable(){
-    return new RotateDrawable(std::dynamic_pointer_cast<RotateState>(shared_from_this()));
+    return (RotateDrawable*)newDrawable(nullptr);
+}
+
+Drawable*RotateDrawable::RotateState::newDrawable(Resources* res){
+    return new RotateDrawable(std::dynamic_pointer_cast<RotateState>(shared_from_this()), res);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,12 +60,12 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> RotateDrawable::mutateCon
     return mState;
 }
 
-RotateDrawable::RotateDrawable(std::shared_ptr<RotateState>state):DrawableWrapper(state){
+RotateDrawable::RotateDrawable(std::shared_ptr<RotateState>state,Resources*res):DrawableWrapper(state,res){
     mState = state;
 }
 
 RotateDrawable::RotateDrawable(Drawable*d)
-    :RotateDrawable(std::make_shared<RotateState>()){
+    :RotateDrawable(std::make_shared<RotateState>(), nullptr){
     setDrawable(d);
 }
 
@@ -138,25 +146,19 @@ std::shared_ptr<Drawable::ConstantState>RotateDrawable::getConstantState(){
 
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
-    const Rect bounds = getBounds();
+    // AOSP pivots on the WRAPPED drawable's bounds (equal while bounds
+    // propagate, wrong when the child's bounds are set independently).
+    const Rect bounds = (d != nullptr) ? d->getBounds() : getBounds();
     const float px = bounds.left + (mState->mPivotXRel ? (bounds.width * mState->mPivotX) : mState->mPivotX);
     const float py = bounds.top  + (mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY);
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mState->mCurrentDegrees);
-#if 0
-    auto sdot = [](float a,float b,float c,float d){
-        return a * b + c * d;
-    };
-    const float radians = M_PI*mState->mCurrentDegrees/180.f;
-    const float fsin = sin(radians);
-    const float fcos = cos(radians);
-    Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
-#else
+
     Matrix mtx=identity_matrix();
     mtx.translate(px,py);
     mtx.rotate(MathUtils::toRadians(mState->mCurrentDegrees));
     mtx.translate(-px,-py);
-#endif
+
     if(d){
         canvas.save();
         canvas.transform(mtx);
@@ -166,20 +168,48 @@ void RotateDrawable::draw(Canvas& canvas) {
     LOGV("pos=%d,%d/%.f,%.f level=%d degress=%d",bounds.left,bounds.top,px,py,getLevel(),int(mState->mCurrentDegrees));
 }
 
-void RotateDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
-    DrawableWrapper::inflate(parser,atts);
+void RotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::RotateDrawable);
+    DrawableWrapper::inflate(r,parser,atts, theme);
+    if (ta) updateStateFromTypedArray(*ta);
 }
 
-void RotateDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mPivotX = atts.getFraction("pivotX",1,1,mState->mPivotX);
-    mState->mPivotXRel = (mState->mPivotX <=1.f);
+void RotateDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::RotateDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
+}
 
-    mState->mPivotY = atts.getFraction("pivotY",1,1.0f,mState->mPivotY);
-    mState->mPivotYRel = (mState->mPivotY <=1.0f);
+void RotateDrawable::updateStateFromTypedArray(const TypedArray& a){
+    // Extract the theme attributes, if any.
+    mState->mThemeAttrs = a.extractThemeAttrs();
 
-    mState->mFromDegrees = atts.getFloat("fromDegrees", mState->mFromDegrees);
-    mState->mToDegrees = atts.getFloat("toDegrees", mState->mToDegrees);
+    // AOSP fidelity: pivotX/pivotY are relative fractions when the raw value
+    // is TYPE_FRACTION, absolute pixels when TYPE_FLOAT. Avoids the prior
+    // "<=1.f" heuristic that misclassified small absolute pivots.
+    if (a.hasValue(R::styleable::RotateDrawable_pivotX)) {
+        const bool rel = (a.getType(R::styleable::RotateDrawable_pivotX) == TypedValue::TYPE_FRACTION);
+        mState->mPivotXRel = rel;
+        mState->mPivotX = rel ? a.getFraction(R::styleable::RotateDrawable_pivotX, 1, 1, mState->mPivotX)
+                              : a.getFloat(R::styleable::RotateDrawable_pivotX, mState->mPivotX);
+    }
+
+    if (a.hasValue(R::styleable::RotateDrawable_pivotY)) {
+        const bool rel = (a.getType(R::styleable::RotateDrawable_pivotY) == TypedValue::TYPE_FRACTION);
+        mState->mPivotYRel = rel;
+        mState->mPivotY = rel ? a.getFraction(R::styleable::RotateDrawable_pivotY, 1, 1, mState->mPivotY)
+                              : a.getFloat(R::styleable::RotateDrawable_pivotY, mState->mPivotY);
+    }
+
+    mState->mFromDegrees = a.getFloat(R::styleable::RotateDrawable_fromDegrees, mState->mFromDegrees);
+    mState->mToDegrees = a.getFloat(R::styleable::RotateDrawable_toDegrees, mState->mToDegrees);
     mState->mCurrentDegrees = mState->mFromDegrees;
 }
 }/*endof namespace*/

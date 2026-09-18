@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- TabLayout integers (androidx material-components port). -->
+<resources>
+
+  <integer name="design_tab_indicator_anim_duration_ms">300</integer>
+  <integer name="mtrl_tab_indicator_anim_duration_ms">250</integer>
+
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-theme black-cartridge fill: the light-theme near-black is invisible
+     on the dark track, so dark mode uses a light slate instead. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="#FFAEB6C2"/>
+    <corners android:radius="4dp"/>
+</shape>

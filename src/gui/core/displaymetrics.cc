@@ -24,9 +24,6 @@ namespace cdroid{
 int DisplayMetrics::DENSITY_DEVICE = getDeviceDensity();//DENSITY_DEFAULT;
 int DisplayMetrics::DENSITY_DEVICEE_STABLE = getDeviceDensity();//DENSITY_DEFAULT;
 
-DisplayMetrics::DisplayMetrics(){
-}
-
 void DisplayMetrics::setTo(const DisplayMetrics& o) {
     if (this == &o)return;
 

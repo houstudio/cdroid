@@ -7,6 +7,7 @@
 // by DrawableContainer's public getChildCount()/getChild(i).
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/StateListDrawableTest.java (Apache 2.0)
+#include "R.h"
 #include <gtest/gtest.h>
 #include <memory>
 #include <drawable/drawables.h>
@@ -196,7 +197,7 @@ TEST_F(CtsStateListDrawableTest, testOnStateChangeWithWildCardAtFirst) {
 TEST_F(CtsStateListDrawableTest, testInflate) {
     // cts_selector_correct.xml: <selector visible=false constantSize=true variablePadding=true>
     // with item[0]=focused+!pressed and a default item[1] (png refs replaced by <color>).
-    Drawable* d = App::getInstance().getDrawable("@drawable/cts_selector_correct");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::cts_selector_correct);
     ASSERT_NE(nullptr, d);
     auto* sd = dynamic_cast<StateListDrawable*>(d);
     ASSERT_NE(nullptr, sd);

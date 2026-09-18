@@ -50,6 +50,10 @@ public:
     virtual void dispatchMessage(Message&);
     virtual void handleMessage(Message& message)=0;
     virtual void handleIdle();
+    // CDROID: called by ~Looper for every registered handler. The Looper owns
+    // the MessageQueue, so handlers still holding back-pointers must drop them
+    // here or a handler destroyed after the Looper reads freed memory.
+    virtual void onLooperDestroyed(){}
 };
 
 class EventHandler{
@@ -125,7 +129,6 @@ private:
 private:
     static Looper*sMainLooper;
     int doEventHandlers();
-    void drainMessageQueue();
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
     void awoken();
@@ -170,6 +173,10 @@ public:
     static Looper* getForThread();
     bool getAllowNonCallbacks() const;
     MessageQueue* getQueue();
+    /* Dispatch every DUE message + idle handlers, once. Normal pumps reach
+       this through pollInner; quit-time teardown (WindowManager's sweep) calls
+       it directly so deferred posts still run before their owners die. */
+    void drainMessageQueue();
     int  pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
         return pollOnce(timeoutMillis, NULL, NULL, NULL);
@@ -181,6 +188,11 @@ public:
     bool loopOnce();
     void loop();
     void wake();
+    // Looper.java:382 — shut down this looper (drops pending messages).
+    // The main thread's queue is not allowed to quit (MessageQueue guard).
+    void quit();
+    // Looper.java:391 — process already-due messages, then shut down.
+    void quitSafely();
     int  addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
     int  addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
     int  removeFd(int fd);

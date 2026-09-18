@@ -15,8 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
+#include <content/dateformat.h>
 #include <widget/timepickerspinnerdelegate.h>
+#include <text/format/dateutils.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
 #include <widget/numberpicker.h>
 #include <widget/button.h>
 #include <widget/edittext.h>
@@ -26,14 +30,19 @@
 #include <widget/timepicker.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
+TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     :AbstractTimePickerDelegate(delegator, context) {
 
-    const std::string layoutResourceId = attrs.getString("legacyLayout", "cdroid:layout/time_picker_legacy");
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
+    const int layoutResourceId = a->getResourceId(R::styleable::TimePicker_legacyLayout, 0);
+    const int layoutRes = layoutResourceId ? layoutResourceId
+            : R::layout::time_picker_legacy;
 
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    View* view = inflater->inflate(layoutResourceId, mDelegator, true);
+    View* view = inflater->inflate(layoutRes, mDelegator, true);
     view->setSaveFromParentEnabled(false);
 
     // hour
@@ -63,6 +72,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     mMinuteSpinner->setMinValue(0);
     mMinuteSpinner->setMaxValue(59);
     mMinuteSpinner->setOnLongPressUpdateInterval(100);
+    mMinuteSpinner->setFormatter(NumberPicker::getTwoDigitFormatter());
     mMinuteSpinner->setOnValueChangedListener([this](NumberPicker& spinner, int oldVal, int newVal) {
         updateInputState();
         int minValue = mMinuteSpinner->getMinValue();
@@ -129,10 +139,10 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     updateAmPmControl();
 
     // set to current time (mTempCalendar is default-constructed to now)
-    // AOSP uses Calendar.getInstance(locale) which carries the local time zone;
-    // CDROID has no locale dispatch, so mirror the local-TZ part here (the
-    // default ctor leaves zone=0/UTC, which would show the hour in UTC).
-    mTempCalendar.setTimeZone(Calendar::getInstance()->getTimeZone());
+    // Calendar.getInstance(mLocale) carries the local time zone (CDROID's
+    // calendar libc is single-Gregorian, so the locale itself is a no-op
+    // selector — see Calendar::getInstance(const Locale&)).
+    mTempCalendar = *Calendar::getInstance(mLocale);
     setHour(mTempCalendar.get(Calendar::HOUR_OF_DAY));
     setMinute(mTempCalendar.get(Calendar::MINUTE));
 
@@ -149,21 +159,48 @@ bool TimePickerSpinnerDelegate::validateInput() {
 }
 
 void TimePickerSpinnerDelegate::getHourFormatData() {
-    // DEFERRED: android.text.format.DateFormat.getBestDateTimePattern not ported.
-    // Default to a 24-hour, two-digit style; updateHourControl uses mIs24HourView too.
-    mHourFormat = 'H';
-    mHourWithTwoDigit = true;
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, mIs24HourView ? "Hm" : "hm");
+    const size_t lengthPattern = bestDateTimePattern.length();
+    mHourWithTwoDigit = false;
+    // Check if the returned pattern is single or double 'H', 'h', 'K', 'k' —
+    // we also save the hour format that we found (AOSP).
+    for (size_t i = 0; i < lengthPattern; i++) {
+        const char c = bestDateTimePattern[i];
+        if (c == 'H' || c == 'h' || c == 'K' || c == 'k') {
+            mHourFormat = c;
+            if (i + 1 < lengthPattern && c == bestDateTimePattern[i + 1]) {
+                mHourWithTwoDigit = true;
+            }
+            break;
+        }
+    }
 }
 
 bool TimePickerSpinnerDelegate::isAmPmAtStart() {
-    // DEFERRED: needs DateFormat; assume am/pm at end.
-    return false;
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, "hm" /* skeleton */);
+    return !bestDateTimePattern.empty() && bestDateTimePattern[0] == 'a';
 }
 
 void TimePickerSpinnerDelegate::setDividerText() {
-    // DEFERRED: locale time separator via DateFormat; default ':'.
+    const std::string bestDateTimePattern = DateFormat::getBestDateTimePattern(
+            mLocale, mIs24HourView ? "Hm" : "hm");
+    std::string separatorText = ":";
+    size_t hourIndex = bestDateTimePattern.rfind('H');
+    if (hourIndex == std::string::npos) {
+        hourIndex = bestDateTimePattern.rfind('h');
+    }
+    if (hourIndex != std::string::npos) {
+        const size_t minuteIndex = bestDateTimePattern.find('m', hourIndex + 1);
+        if (minuteIndex == std::string::npos) {
+            separatorText = std::string(1, bestDateTimePattern[hourIndex + 1]);
+        } else {
+            separatorText = bestDateTimePattern.substr(hourIndex + 1, minuteIndex - hourIndex - 1);
+        }
+    }
     if (mDivider != nullptr) {
-        mDivider->setText(":");
+        mDivider->setText(separatorText);
     }
 }
 
@@ -283,13 +320,23 @@ void TimePickerSpinnerDelegate::onRestoreInstanceState(Parcelable& state) {
     }
 }
 
-bool TimePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: accessibility.
+bool TimePickerSpinnerDelegate::dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    onPopulateAccessibilityEvent(event);  // AOSP formats the selected time here
     return true;
 }
 
-void TimePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent&) {
-    // DEFERRED: DateUtils.formatDateTime not ported.
+void TimePickerSpinnerDelegate::onPopulateAccessibilityEvent(AccessibilityEvent& event) {
+    int flags = DateUtils::FORMAT_SHOW_TIME;
+    if (mIs24HourView) {
+        flags |= DateUtils::FORMAT_24HOUR;
+    } else {
+        flags |= DateUtils::FORMAT_12HOUR;
+    }
+    mTempCalendar.set(Calendar::HOUR_OF_DAY, getHour());
+    mTempCalendar.set(Calendar::MINUTE, getMinute());
+    const std::string selectedDateUtterance = DateUtils::formatDateTime(mDelegator->getContext(),
+            mTempCalendar.getTimeInMillis(), flags);
+    event.getText().push_back(selectedDateUtterance);
 }
 
 View* TimePickerSpinnerDelegate::getHourView() { return mHourSpinnerInput; }
@@ -318,9 +365,22 @@ void TimePickerSpinnerDelegate::updateAmPmControl() {
             mAmPmButton->setVisibility(View::VISIBLE);
         }
     }
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
+}
+
+void TimePickerSpinnerDelegate::onConfigurationChanged(Configuration& newConfig) {
+    (void)newConfig;
+    // CDROID runtime-locale extension (AOSP rebuilds the activity instead):
+    // re-localize the AM/PM strings and the control showing them.
+    mAmPmStrings = TimePicker::getAmPmStrings(mContext);
+    if (mAmPmSpinner != nullptr) {
+        mAmPmSpinner->setDisplayedValues(mAmPmStrings);
+    }
+    updateAmPmControl();
 }
 
 void TimePickerSpinnerDelegate::onTimeChanged() {
+    mDelegator->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
     if (mOnTimeChangedListener) {
         mOnTimeChangedListener(*mDelegator, getHour(), getMinute());
     }

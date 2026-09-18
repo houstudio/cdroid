@@ -569,6 +569,10 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         }
     } else if (data != nullptr && chunkLen >= 32) {
         nptc = data; nptcLen = chunkLen;  // legacy raw npTc
+        // A raw npTc chunk only exists in an aapt-processed (border-stripped)
+        // image — same as a cdNp bundle — so treat it as borderless and use the
+        // full image dimensions as content (no 1px guide border to subtract).
+        isCd9p = true;
     }
 
     if (nptc != nullptr) {

@@ -16,23 +16,23 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        state_window_focused="false" state_enabled="true"
-        drawable="@mipmap/btn_dropdown_normal" />
+        android:state_window_focused="false" android:state_enabled="true"
+        android:drawable="@drawable/btn_dropdown_normal" />
     <item
-        state_window_focused="false" state_enabled="false"
-        drawable="@mipmap/btn_dropdown_disabled" />
+        android:state_window_focused="false" android:state_enabled="false"
+        android:drawable="@drawable/btn_dropdown_disabled" />
     <item
-        state_pressed="true"
-        drawable="@mipmap/btn_dropdown_pressed" />
+        android:state_pressed="true"
+        android:drawable="@drawable/btn_dropdown_pressed" />
     <item
-        state_focused="true" state_enabled="true"
-        drawable="@mipmap/btn_dropdown_selected" />
+        android:state_focused="true" android:state_enabled="true"
+        android:drawable="@drawable/btn_dropdown_selected" />
     <item
-        state_enabled="true"
-        drawable="@mipmap/btn_dropdown_normal" />
+        android:state_enabled="true"
+        android:drawable="@drawable/btn_dropdown_normal" />
     <item
-        state_focused="true"
-        drawable="@mipmap/btn_dropdown_disabled_focused" />
+        android:state_focused="true"
+        android:drawable="@drawable/btn_dropdown_disabled_focused" />
     <item
-        drawable="@mipmap/btn_dropdown_disabled" />
+        android:drawable="@drawable/btn_dropdown_disabled" />
 </selector>

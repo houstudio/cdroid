@@ -37,7 +37,7 @@ public:
      * @param iconRes The resource identifier used for the icon.
      * @return This ContextMenu so additional setters can be called.
      */
-    virtual ContextMenu& setHeaderIcon(const std::string& iconRes)=0;
+    virtual ContextMenu& setHeaderIcon(int iconRes)=0;
 
     /**
      * Sets the context menu header's icon to the icon given in <var>icon</var>

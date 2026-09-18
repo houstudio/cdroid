@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Distinctive thumb for the scrollbar theme-override probe: 4px wide so the
+     test can tell it apart from the framework scrollbar_handle_material. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <size android:width="4px" android:height="4px"/>
+    <solid android:color="#FF00FF00"/>
+</shape>

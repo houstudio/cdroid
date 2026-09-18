@@ -36,7 +36,11 @@ public:
 class ImageSpan:public DynamicDrawableSpan{
 protected:
     Context*mContext = nullptr;
-    std::string mContentUri;
+    int mContentUri=0;
+    /*AOSP mSource (String): the src/uri the span was built from; empty when
+      the span came from a bare Drawable or a resource id (Java null). Carried
+      for the Html round-trip — toHtml emits <img src="getSource()">.*/
+    std::string mSource;
 public:
     ImageSpan(Drawable* drawable) :DynamicDrawableSpan(ALIGN_BOTTOM) {
         mContext = nullptr;
@@ -45,11 +49,18 @@ public:
     ImageSpan(Drawable* drawable,int verticalAlignment):DynamicDrawableSpan(verticalAlignment){
         mDrawable = drawable;
     }
-    ImageSpan(Context* context, const std::string& resourceId);
-    ImageSpan(Context* context, const std::string&resourceId,int verticalAlignment);
+    // AOSP ImageSpan(drawable, source[, verticalAlignment]).
+    ImageSpan(Drawable* drawable, const std::string& source)
+        :ImageSpan(drawable, source, ALIGN_BOTTOM) {}
+    ImageSpan(Drawable* drawable, const std::string& source, int verticalAlignment)
+        :DynamicDrawableSpan(verticalAlignment), mSource(source) {
+        mDrawable = drawable;
+    }
+    ImageSpan(Context* context, int resourceId);
+    ImageSpan(Context* context, int resourceId,int verticalAlignment);
     Drawable* getDrawable()const override;
-    std::string getSource()const{
-        return mContentUri;
+    const std::string& getSource()const{
+        return mSource;
     }
     // mContext/mDrawable are BORROWED (lifetime managed elsewhere; ImageSpan
     // never deletes them), so the implicit copy ctor's shallow pointer copy is

@@ -41,10 +41,10 @@ private:
     bool mPopUpToInclusive;
     std::string mPopUpTo;            // also serves as popUpToRoute (modern)
     int mPopUpToId = -1;             // popUpTo by destination id (-1 = none); mutually exclusive with mPopUpTo
-    std::string mEnterAnim;
-    std::string mExitAnim;
-    std::string mPopEnterAnim;
-    std::string mPopExitAnim;
+    int mEnterAnim = 0;
+    int mExitAnim = 0;
+    int mPopEnterAnim = 0;
+    int mPopExitAnim = 0;
     bool mShouldRestoreState = false;
     bool mShouldPopUpToSaveState = false;
     Bundle* toBundle();
@@ -54,22 +54,20 @@ public:
     static void addPopAnimationsToIntent(Intent& intent, NavOptions* navOptions);
     static void applyPopAnimationsToPendingTransition(Activity& activity);
     NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
-        const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim,
+        int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim,
         int popUpToId = -1);
     NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
-        const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim,
+        int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim,
         bool shouldRestoreState, bool shouldPopUpToSaveState, int popUpToId = -1);
     bool shouldLaunchSingleTop() const;
     bool shouldLaunchDocument() const;
     bool shouldClearTask() const;
     const std::string getPopUpTo() const;
     bool isPopUpToInclusive() const;
-    const std::string getEnterAnim() const;
-    const std::string getExitAnim() const;
-    const std::string getPopEnterAnim() const;
-    const std::string getPopExitAnim() const;
+    int getEnterAnim() const;
+    int getExitAnim() const;
+    int getPopEnterAnim() const;
+    int getPopExitAnim() const;
     bool shouldRestoreState() const { return mShouldRestoreState; }
     bool shouldPopUpToSaveState() const { return mShouldPopUpToSaveState; }
     const std::string& getPopUpToRoute() const { return mPopUpTo; }
@@ -81,10 +79,10 @@ class NavOptions::Builder {
     std::string mPopUpTo;
     int mPopUpToId = -1;
     bool mPopUpToInclusive = false;
-    std::string mEnterAnim;
-    std::string mExitAnim;
-    std::string mPopEnterAnim;
-    std::string mPopExitAnim;
+    int mEnterAnim = 0;
+    int mExitAnim = 0;
+    int mPopEnterAnim = 0;
+    int mPopExitAnim = 0;
     bool mShouldRestoreState = false;
     bool mShouldPopUpToSaveState = false;
 public:
@@ -97,10 +95,10 @@ public:
     Builder& setPopUpTo(int destinationId, bool inclusive);
     Builder& setPopUpTo(int destinationId, bool inclusive, bool saveState);
     Builder& setRestoreState(bool restoreState);
-    Builder& setEnterAnim(const std::string& enterAnim);
-    Builder& setExitAnim(const std::string& exitAnim);
-    Builder& setPopEnterAnim(const std::string& popEnterAnim);
-    Builder& setPopExitAnim(const std::string& popExitAnim);
+    Builder& setEnterAnim(int enterAnim);
+    Builder& setExitAnim(int exitAnim);
+    Builder& setPopEnterAnim(int popEnterAnim);
+    Builder& setPopExitAnim(int popExitAnim);
     NavOptions* build();
 };
 

@@ -29,6 +29,12 @@ ExploreByTouchHelper::ExploreByTouchHelper(View* forView) {
     mManager = &AccessibilityManager::getInstance(mContext);
 }
 
+ExploreByTouchHelper::~ExploreByTouchHelper() {
+    // The lazily created provider is owned by the helper (AOSP: GC).
+    delete mNodeProvider;
+    mNodeProvider = nullptr;
+}
+
 AccessibilityNodeProvider* ExploreByTouchHelper::getAccessibilityNodeProvider(View& host) {
     if (mNodeProvider == nullptr) {
         mNodeProvider = new ExploreByTouchNodeProvider(this);
@@ -68,9 +74,10 @@ bool ExploreByTouchHelper::sendEventForVirtualView(int virtualViewId, int eventT
         return false;
     }
 
-    //AccessibilityEvent* event = createEvent(virtualViewId, eventType);
-    //return parent->requestSendAccessibilityEvent(mView, *event);
-    return false;
+    AccessibilityEvent* event = createEvent(virtualViewId, eventType);
+    const bool sent = parent->requestSendAccessibilityEvent(mView, *event);
+    if (!sent) event->recycle();  // AOSP drops the unsent event for GC
+    return sent;
 }
 
 void ExploreByTouchHelper::invalidateRoot() {
@@ -88,7 +95,9 @@ void ExploreByTouchHelper::invalidateVirtualView(int virtualViewId, int changeTy
             AccessibilityEvent* event = createEvent(virtualViewId,
                     AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
             event->setContentChangeTypes(changeTypes);
-            //parent->requestSendAccessibilityEvent(mView, *event);
+            if (!parent->requestSendAccessibilityEvent(mView, *event)) {
+                event->recycle();  // AOSP drops the unsent event for GC
+            }
         }
     }
 }
@@ -226,10 +235,10 @@ AccessibilityNodeInfo* ExploreByTouchHelper::createNodeForChild(int virtualViewI
     // Manage internal accessibility focus state.
     if (mFocusedVirtualViewId == virtualViewId) {
         node->setAccessibilityFocused(true);
-        node->addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId());
+        node->addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS);
     } else {
         node->setAccessibilityFocused(false);
-        node->addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS.getId());
+        node->addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_ACCESSIBILITY_FOCUS);
     }
 
     // Set the visibility based on the parent bound.
@@ -309,8 +318,12 @@ bool ExploreByTouchHelper::intersectVisibleToUser(Rect* localRect) {
         viewParent = view->getParent();
     }
 
-    // A null parent implies the view is not visible.
-    if (viewParent == nullptr) {
+    // AOSP requires the ancestor chain to end at ViewRootImpl (= attached to
+    // a window). CDROID's Window is itself a View, so the walk above always
+    // ends at a null parent — checking attachment is the faithful translation
+    // (the old "null parent implies invisible" made every virtual node of
+    // every ExploreByTouchHelper invisible).
+    if (!mView->isAttachedToWindow()) {
         return false;
     }
 

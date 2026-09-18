@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx coordinatorlayout attr id pinning (0x02 shared-lib). Source of truth for these ids;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable. -->
+<resources>
+    <public type="attr" name="keylines" id="0x02010000"/>
+    <public type="attr" name="layout_anchor" id="0x02010003"/>
+    <public type="attr" name="layout_anchorGravity" id="0x02010005"/>
+    <public type="attr" name="layout_behavior" id="0x02010002"/>
+    <public type="attr" name="layout_dodgeInsetEdges" id="0x02010007"/>
+    <public type="attr" name="layout_insetEdge" id="0x02010006"/>
+    <public type="attr" name="layout_keyline" id="0x02010004"/>
+    <public type="attr" name="statusBarBackground" id="0x02010001"/>
+</resources>

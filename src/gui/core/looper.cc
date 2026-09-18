@@ -113,9 +113,15 @@ Looper::Looper(bool allowNonCallbacks) :
 #define FLAG_REMOVED 1
 Looper::~Looper() {
     LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
+    if (sMainLooper == this) sMainLooper = nullptr; // getMainLooper() must not dangle
     delete mQueue;
     mQueue = nullptr;
     closeWakeFds();
+    // Detach registered Handlers before dying: C++ has no GC, and Handlers can
+    // outlive the Looper (function-local statics like App's sLaunchHandler are
+    // destroyed at exit(), long after ~App freed the main Looper). Nulling their
+    // back-pointers turns a late ~Handler() into a no-op instead of a UAF.
+    for(MessageHandler* handler : mHandlers) handler->onLooperDestroyed();
     mHandlers.clear();
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
@@ -280,6 +286,17 @@ void Looper::loop(){
     while(loopOnce()) {}
 }
 
+// Looper.java:382-395
+void Looper::quit(){
+    MessageQueue* queue = getQueue();
+    if (queue) queue->quit(false);
+}
+
+void Looper::quitSafely(){
+    MessageQueue* queue = getQueue();
+    if (queue) queue->quit(true);
+}
+
 void Looper::drainMessageQueue(){
     if (mQueue == nullptr) return;
     while (auto* msg = mQueue->nextDue()) {
@@ -296,40 +313,58 @@ void Looper::drainMessageQueue(){
 int Looper::doEventHandlers(){
     int count = 0;
     if(mNextMessageUptime>(nsecs_t)SystemClock::uptimeMillis()){
-        for(auto it = mHandlers.begin();it != mHandlers.end();){
-            MessageHandler*hdl = (*it);
-            uint32_t eFlags = (*it)->mFlags;
-            if((eFlags&FLAG_REMOVED)==0){
-                hdl->handleIdle(); count++;
-                eFlags = hdl->mFlags;
+        // Restart-on-removal, same as the EventHandler walk below: an externally
+        // owned handler that removes itself inside handleIdle() is already erased
+        // by removeHandler, so erase(it) here would unlink a freed node.
+        bool removed = true;
+        while(removed){
+            removed = false;
+            for(auto it = mHandlers.begin();it != mHandlers.end();++it){
+                MessageHandler*hdl = (*it);
+                uint32_t eFlags = hdl->mFlags;
+                if((eFlags&FLAG_REMOVED)==0){
+                    hdl->handleIdle(); count++;
+                    eFlags = hdl->mFlags;
+                }
+                if(eFlags&FLAG_REMOVED){
+                    if(eFlags&FLAG_OWNED){
+                        delete hdl;
+                    }
+                    mHandlers.remove(hdl);
+                    removed = true;
+                    break;
+                }
+            }
+        }
+    }
+    // Walk with restart-on-removal: an externally owned handler that removes itself
+    // inside handleEvents() is erased right there by removeEventHandler, which leaves
+    // the iterator we hold dangling — the old `it = erase(it)` then unlinked a freed
+    // node (double-erase, heap corruption). std::list::remove(value) is a no-op when
+    // the node is already gone, so unlink by value and restart the walk from begin().
+    // Every restart removes exactly one handler, so this terminates; the walk covers
+    // a handful of handlers at most.
+    bool removed = true;
+    while(removed){
+        removed = false;
+        for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();++it){
+            EventHandler*es=(*it);
+            uint32_t eFlags = es->mFlags;
+            if(es&&((eFlags&FLAG_REMOVED)==0)){
+                if(es->checkEvents()>0){
+                    es->handleEvents();  count++;
+                }
+                eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
             }
             if(eFlags&FLAG_REMOVED){
                 if(eFlags&FLAG_OWNED){
-                    delete hdl;
+                    delete es;//EventHandler owned by looper must be freed here
                 }
-                it = mHandlers.erase(it);
-                continue;
+                mEventHandlers.remove(es);
+                removed = true;
+                break;
             }
-            it++;
-        }        
-    }
-    for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();){
-        EventHandler*es=(*it);
-        uint32_t eFlags = es->mFlags;
-        if(es&&((eFlags&FLAG_REMOVED)==0)){
-            if(es->checkEvents()>0){
-                es->handleEvents();  count++;
-            }
-            eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
         }
-        if(eFlags&FLAG_REMOVED){
-            if(eFlags&FLAG_OWNED){
-                delete es;//EventHandler owned by looper must be freed here
-            }
-            it = mEventHandlers.erase(it);
-            continue;
-        }
-        it++;
     }
     return count;
 }
@@ -833,7 +868,12 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
 
         std::list<MessageEnvelope>::const_iterator it;
         for(it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();++it){
-            if(it->uptime >= uptime)break;
+            // AOSP native advances only while when < uptime (its clock is ns, so equal
+            // stamps are rare). Our clock is SystemClock::uptimeMillis — messages sent
+            // within the same millisecond all share an uptime, and stopping on equality
+            // would enqueue each ahead of its predecessors (LIFO). Advance past equals
+            // instead, i.e. the Java MessageQueue.enqueueMessage tie-break.
+            if(it->uptime > uptime)break;
             i += 1;
         }
 
@@ -861,12 +901,16 @@ void Looper::addHandler(MessageHandler*handler){
 void Looper::removeHandler(MessageHandler*handler){
     for(auto it = mHandlers.begin();it != mHandlers.end();it++){
         if( (*it) == handler){
+            // Always flag REMOVED, even for externally owned handlers: a doEventHandlers()
+            // walk may hold an iterator to this node while handleIdle()/handleMessage()
+            // lands here, and without the flag the walk would ++it over the node erased
+            // below.
+            handler->mFlags |= FLAG_REMOVED;
             if(handler->mFlags & FLAG_OWNED){
                 // Looper-owned: defer delete+erase to doEventHandlers. The caller may be on this
                 // handler's own dispatch stack (e.g. SelfDestroyHandler::handleMessage
                 // -> removeHandler(this)); deleting now would leave the return path accessing freed
                 // memory (UAF).
-                handler->mFlags |= FLAG_REMOVED;
             }else{
                 // Externally owned: erase the pointer now. Otherwise an external delete leaves a
                 // dangling entry in mHandlers, and a later doEventHandlers reading freed memory
@@ -888,9 +932,12 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
+            // Always flag REMOVED, even for externally owned handlers: a doEventHandlers()
+            // walk may hold an iterator to this node while handleEvents() lands here, and
+            // without the flag the walk would ++it over the node erased below.
+            (*it)->mFlags |=FLAG_REMOVED;
             if((*it)->mFlags & FLAG_OWNED){
                 // Looper-owned: defer delete+erase to doEventHandlers (same reason as removeHandler).
-                (*it)->mFlags |=FLAG_REMOVED;
             }else{
                 // Externally owned: erase now to avoid a dangling entry after an external delete
                 // causing a doEventHandlers UAF.

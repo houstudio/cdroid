@@ -128,8 +128,9 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
         static constexpr float UNSET_FLOAT = -1.0f;
     };
 
-    ConstraintLayout(Context* ctx, const AttributeSet& attrs);
-    ConstraintLayout(int width, int height);
+    ConstraintLayout(Context*ctx);   // AOSP ConstraintLayout(Context)
+    ConstraintLayout(Context* ctx, const AttributeSet* attrs);
+    ConstraintLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
     ~ConstraintLayout() override;
     static constexpr int PARENT_ID = 0;
 
@@ -155,12 +156,20 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     // Adaptive layouts (<StateSet>): load a state-set resource so setState can swap ConstraintSets
     // when the layout's size or a logical state changes. (MotionLayout overrides layoutDescription
     // for <MotionScene> and does not use this.)
-    void loadLayoutDescription(const std::string& resource);
+    void loadLayoutDescription(int resource);
     // Apply the ConstraintSet selected by (id, screenWidth, screenHeight) from the loaded StateSet.
     void setState(int id, int screenWidth, int screenHeight);
 
     // Process-wide registry of shared integer values (for ViewTransition sharedValue triggers).
     static SharedValues& getSharedValues();
+    // AndroidX getViewById (ConstraintLayout.java:2157): a DIRECT child by id from the
+    // mChildrenByIds mirror. The helper lookups route through this (androidX
+    // ConstraintHelper.getViews/updatePreLayout, Layer, CircularFlow, Carousel all call
+    // it); Placeholder keeps the recursive View::findViewById (androidX does the same).
+    // The one historical red case (GridArrangesTwoByTwo) was an id collision in the test
+    // itself: manually-set ids 1..4 vs the Grid box views' generateViewId() allocations,
+    // which start at 1 (AOSP sNextGeneratedId) — the map resolves the box, not the view.
+    View* getViewById(int id);
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
@@ -183,6 +192,14 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
   private:
     ConstraintWidgetContainer mLayoutWidget;
     std::unordered_map<int, ConstraintWidget*> mIdToWidget; // id -> widget (PARENT_ID/own id -> mLayoutWidget)
+    // AndroidX mChildrenByIds (ConstraintLayout.java:1116-1136): the View-level id map kept
+    // by onViewAdded/onViewRemoved. findViewById consults it first — helpers resolving many
+    // referenced ids (Layer/Barrier reCacheViews) skip the per-id tree DFS.
+    std::unordered_map<int, View*> mChildrenByIds;
+    // AndroidX mDirtyHierarchy (ConstraintLayout.java:565): set on child add/remove (or any
+    // child requesting layout, scanned in onMeasure) — gates the setChildrenConstraints()
+    // capture so repeated measure passes don't rebuild the constraint hierarchy.
+    bool mDirtyHierarchy = true;
     std::vector<ConstraintHelper*> mConstraintHelpers; // Barrier/Group/... children
     std::unique_ptr<ConstraintLayoutStates> mConstraintLayoutStates; // <StateSet> adaptive layout
     int mMinWidth = 0;

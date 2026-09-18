@@ -29,7 +29,6 @@
 #include <drawable/layerdrawable.h>
 #include <drawable/drawables.h>
 #include <drawable/statelistdrawable.h>
-#include <core/app.h>
 #include <core/rect.h>
 #include <view/view.h>
 #include <view/gravity.h>
@@ -507,4 +506,30 @@ TEST_F(CtsLayerDrawableTest, testMutate) {
     LayerDrawable ld(std::vector<Drawable*>{new ColorDrawable(0xFF111111), new ColorDrawable(0xFF222222)});
     // mutate() returns the drawable itself and must not throw.
     EXPECT_EQ(&ld, ld.mutate());
+}
+
+TEST_F(CtsLayerDrawableTest, testNewDrawableChildrenIsolation) {
+    // AOSP ResourcesImpl's needsNewDrawableAfterCache concern (RI.java:784):
+    // a container's cached ConstantState must not hand its child INSTANCES to
+    // a second consumer. CDROID covers that in the LayerState copy ctor —
+    // instantiated children revert to futures — so every clone materializes
+    // independent children (and the first consumer keeps its own).
+    LayerDrawable* first = new LayerDrawable(std::vector<Drawable*>{
+            new ColorDrawable(0xFF0000FF), new ColorDrawable(0xFFFF0000)});
+    auto cs = first->getConstantState();
+    ASSERT_NE(nullptr, cs);
+
+    LayerDrawable* second = (LayerDrawable*)cs->newDrawable();
+    LayerDrawable* third  = (LayerDrawable*)cs->newDrawable();
+    ASSERT_NE(nullptr, second);
+    ASSERT_NE(nullptr, third);
+
+    EXPECT_NE(first->getDrawable(0), second->getDrawable(0));
+    EXPECT_NE(first->getDrawable(1), second->getDrawable(1));
+    EXPECT_NE(second->getDrawable(0), third->getDrawable(0));
+    EXPECT_NE(second->getDrawable(1), third->getDrawable(1));
+
+    delete third;
+    delete second;
+    delete first;
 }

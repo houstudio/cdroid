@@ -1,7 +1,9 @@
 #include <text/spannablestringbuilder.h>
+#include <text/String.h>
 #include <text/inputfilter.h>
 #include <text/textwatcher.h>
 #include <porting/cdlog.h>
+#include <unordered_set>
 namespace cdroid{
 // Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
 SpannableStringBuilder::SpannableStringBuilder(const std::u16string& text)
@@ -44,15 +46,18 @@ void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
     // Fire sendSpanRemoved for each matching record (Android fires it per span),
     // then drop it. disposeSpan frees owned spans and no-ops borrowed ones
     // (NoCopySpan, e.g. Selection markers). Loop covers legacy duplicate records.
+    bool removed = false;
     for (auto it = mSpans.begin(); it != mSpans.end();) {
         if (it->span == what) {
             sendSpanRemoved(what, it->start, it->end);
             disposeSpan(*it);
             it = mSpans.erase(it);
+            removed = true;
         } else {
             ++it;
         }
     }
+    if (removed) ++mMutationEpoch;
 }
 
 void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta) {
@@ -74,6 +79,16 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
     // TextView and the selection highlight never repainted. (selectAll still
     // worked because its query starts at offset 0, which overlaps even [0, 0].)
     const int newEnd = end + delta;
+    // Same-length in-place replacement: every offset maps to itself. Android's
+    // change() anchors edges at the region start (SPAN_*_AT_START) or at the
+    // new region end (end + nbNewChars == end when nbNewChars == 0), so each
+    // in-region edge keeps its own position — the geometric POINT-push below
+    // would instead move a POINT start edge from `start` to `end`, collapsing a
+    // 1-char selection and killing the multi-tap cycle on the second press
+    // (CTS MultiTapKeyListenerTest: the third press started a fresh session).
+    if (delta == 0) {
+        return;
+    }
     for (auto& r : mSpans) {
         const int oldStart = r.start;
         const int oldEnd = r.end;
@@ -98,33 +113,45 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text,int flags){
-     mText.append(text);
-     return *this;
+    /*AOSP append(text) == replace(length(), length(), text): route through
+      replace so TextWatchers fire and span edges adjust (MARK/POINT). The old
+      raw mText.append bypassed both — a whole-text watcher span registered on
+      an empty builder stayed degenerate [0,0] forever, so DynamicLayout never
+      heard about appended text or spans added past offset 0.*/
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    return *this;
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text, const ParcelableSpan* what, int flags){
-    const size_t start=mText.length();
-    const size_t end=start+text.length();
-    mText.append(text);
-    setSpan(what,start,end,flags);
+    /*Route the text through replace (TextWatchers fire, filters run — see
+      the plain u16string overload above); the old raw mText.append bypassed
+      the whole mutation pipeline. Mirrors the CharSequence span-variants
+      below, which already append-then-setSpan.*/
+    const int start = (int)mText.length();
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    if (what) {
+        setSpan(what, start, (int)mText.length(), flags);
+    }
     return *this;
 }
 
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string& text, const std::vector<const ParcelableSpan*>& whats, int flags){
-    const size_t start=mText.length();
-    const size_t end=start+text.length();
-    mText.append(text);
-    for(auto span:whats){
-        setSpan(span,start,end,flags);
+    const int start = (int)mText.length();
+    String s(text);
+    replace((int)mText.length(), (int)mText.length(), s);
+    const int end = (int)mText.length();
+    for(const ParcelableSpan* what : whats){
+        if (what) setSpan(what, start, end, flags);
     }
     return *this;
 }
 
 Editable& SpannableStringBuilder::append(const CharSequence& text) {
-    const int textLen = (int)text.length();
-    for (int i = 0; i < textLen; i++) {
-        mText += (char16_t)text.charAt(i);
-    }
+    // AOSP append(text) == replace(length(), length(), text) — see the
+    // std::u16string overload above for why the raw mText path is wrong.
+    replace((int)mText.length(), (int)mText.length(), text);
     return *this;
 }
 
@@ -153,9 +180,8 @@ Editable& SpannableStringBuilder::append(const CharSequence& text, int start, in
     if (start < 0) start = 0;
     if (end > (int)text.length()) end = (int)text.length();
     if (start >= end) return *this;
-    for (int i = start; i < end; i++) {
-        mText += (char16_t)text.charAt(i);
-    }
+    // AOSP: append(text, start, end) == replace(length(), length(), text, start, end)
+    replace((int)mText.length(), (int)mText.length(), text, start, end);
     return *this;
 }
 
@@ -238,25 +264,133 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     auto asWatcher = [](const ParcelableSpan* p) -> TextWatcher* {
         return dynamic_cast<TextWatcher*>(const_cast<ParcelableSpan*>(p));
     };
+    /*AOSP change() walks its cached TextWatcher[] across all the notify phases and
+      relies on GC to keep a watcher alive even after a callback removed it from the
+      buffer. Under the raw-pointer span model a removed NoCopySpan can also be
+      DELETED by its owner mid-change: Selection::removeMemory deletes its
+      MemoryTextWatcher from inside a re-entrant setSelection (e.g. TextView's
+      updateAfterEdit -> bringPointIntoView clamp runs synchronously inside
+      onTextChanged), which would leave this snapshot dangling and crash the later
+      dynamic_cast passes on freed memory. Skip entries that are no longer recorded
+      in mSpans — a pure pointer lookup that never dereferences p — before every
+      cast/call. (Divergence from AOSP: a watcher detached during this change does
+      not receive the remaining phases; Java's object stays callable, a deleted C++
+      one cannot.)
+      getSpanStart() is O(spans) and fires per watcher per keystroke, so the
+      guard baselines mMutationEpoch against the value captured when the
+      SNAPSHOT was taken (bumped by every structural mSpans change): while no
+      callback has touched the span set the phases skip the rescan. A
+      per-phase baseline is NOT sufficient — a callback inside an earlier
+      phase can free a watcher and leave the phase-local epoch untouched
+      afterwards, wrongly validating the stale snapshot entry.*/
+    auto isRecorded = [this](uint64_t epoch, const ParcelableSpan* p) {
+        return mMutationEpoch == epoch || getSpanStart(p) >= 0;
+    };
+    /*Baseline the guard against the SNAPSHOT's epoch, not per-phase epochs: a
+      phase-3 onTextChanged callback may tear down the TextView layout chain,
+      whose ~DynamicLayout removes and deletes its ChangeWatcher span, and then
+      take a fresh baseline at phase 4 — the phase-local epoch would match with
+      no further mutation, short-circuit the membership check, and cast the
+      dead watcher from the snapshot (CTS BaseKeyListenerTest.Backspace_withAlt
+      crashed exactly there). Comparing against snapEpoch makes "no structural
+      change since the snapshot" the shortcut condition; any mid-change
+      mutation falls back to the getSpanStart liveness lookup. The common
+      no-mutation edit still skips every rescan.*/
+    const uint64_t snapEpoch = mMutationEpoch;
 
     // 1) beforeTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
+    {
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(snapEpoch, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
+            }
         }
     }
 
     // 2) mutate the buffer + adjust span ranges
     if (insertLen > 0) {
-        std::u16string ins;
-        ins.reserve(insertLen);
-        for (int i = tbstart; i < tbend; i++) ins += (char16_t)tb->charAt(i);
+        /*AOSP TextUtils.getChars(cs, csStart, csEnd, mText, start): one bulk
+          virtual getChars (String/SSB copy their whole buffer in a stroke)
+          instead of insertLen charAt() virtual calls per replace() call —
+          append() funnels every keystroke through here.*/
+        std::u16string ins(insertLen, u'\0');
+        tb->getChars(tbstart, tbend, &ins[0], 0);   // data() is const until C++17
         if (st < en) mText.replace(st, replacedLen, ins);
         else mText.insert(st, ins);
     } else if (st < en) {
         mText.erase(st, replacedLen);
     }
+    /*AOSP change() -> removeSpansForChange (SpannableStringBuilder.java): when
+      text is replaced, a span whose range lies entirely inside the replaced
+      region and collapses to empty is REMOVED, and removeSpan broadcasts
+      onSpanRemoved before the text watchers run (onSpanAdded/Changed go after).
+      DynamicLayout depends on this: deleting the text that carried a
+      ReplacementSpan must un-flag the block (getBlocksAlwaysNeedToBeRedrawn).
+      Candidates are captured with pre-adjustment coordinates (the sweep must
+      see the original range — post-adjust it is already degenerate and
+      indistinguishable from a span that was always empty), then the ranges are
+      adjusted, then the doomed spans are removed and notified so the span set
+      is already consistent when the watcher's reflow reads the new text.
+      Spans that were already zero-length before the edit (Selection markers)
+      only moved; they are kept. A span exactly covering the replaced region
+      survives the non-empty-replacement case (it ends up covering the
+      replacement text), per AOSP's (textIsRemoved || spanStart > start ||
+      spanEnd < end) guard.*/
+    std::vector<std::pair<const ParcelableSpan*, std::pair<int, int>>> doomed;
+    if (replacedLen > 0) {
+        for (const auto& r : mSpans) {
+            /* AOSP removeSpansForChange gates on
+               (flags & SPAN_EXCLUSIVE_EXCLUSIVE) == SPAN_EXCLUSIVE_EXCLUSIVE:
+               ONLY exclusive-exclusive spans are ever removed here. The first
+               cut of this sweep dropped the gate, so a select-all + DEL erased
+               the INCLUSIVE_INCLUSIVE whole-text ChangeWatchers (and any other
+               flag flavour) along with the text — the buffer kept editing with
+               zero watchers: no reflow, no invalidate, frozen UI until the
+               next setText. AOSP has no "was non-empty" requirement either —
+               a collapsed exclusive-exclusive span inside the region goes
+               too; the zero-length spans that must survive (Selection
+               markers, watchers) are MARK/POINT-anchored and never
+               exclusive-exclusive. */
+            const bool exclusiveExclusive = (r.flags & Spanned::SPAN_EXCLUSIVE_EXCLUSIVE)
+                    == Spanned::SPAN_EXCLUSIVE_EXCLUSIVE;
+            const bool inside = r.start >= st && r.end <= en;
+            const bool collapses = insertLen == 0 || r.start > st || r.end < en;
+            if (exclusiveExclusive && inside && collapses) {
+                doomed.push_back({r.span, {r.start, r.end}});
+            }
+        }
+    }
     adjustSpansForReplace(st, en, insertLen - replacedLen);
+    if (!doomed.empty()) {
+        /*Order matters under the raw-pointer span model: notify FIRST (the
+          watcher's dynamic_cast touches the span object), free LAST — AOSP
+          relies on GC here and orders freely. The records are detached from
+          mSpans up front so the span set is already consistent when the
+          watcher's reflow reads it back. The doomed set is hashed: the old
+          nested scan was O(spans x doomed) per edit.*/
+        std::vector<SpanRecord> removed;
+        removed.reserve(doomed.size());
+        std::unordered_set<const ParcelableSpan*> doomedSet;
+        for (const auto& d : doomed) doomedSet.insert(d.first);
+        bool erasedAny = false;
+        for (auto it = mSpans.begin(); it != mSpans.end();) {
+            if (doomedSet.count(it->span) > 0) {
+                removed.push_back(*it);
+                it = mSpans.erase(it);
+                erasedAny = true;
+            } else {
+                ++it;
+            }
+        }
+        if (erasedAny) ++mMutationEpoch;
+        for (const auto& d : doomed) {
+            sendSpanRemoved(d.first, d.second.first, d.second.second);
+        }
+        for (auto& r : removed) {
+            disposeSpan(r);
+        }
+    }
 
     // Copy spans carried by the source CharSequence (when it is a Spanned) into this builder,
     // mapping source[tbstart..tbend) coords to dest[st..st+insertLen). Mirrors AOSP
@@ -279,23 +413,48 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
                         continue;  // invalid paragraph span in the destination context -> discard
                     }
                 }
-                if (ParcelableSpan* clone = span->clone()) {
-                    setSpan(clone, ndStart, ndEnd, flags);
+                /*AOSP change(): "Add span only if this object is not yet used
+                  as a span in this string" — getSpanStart(spans[i]) < 0. For
+                  insert(src) of text whose spans are already in this builder,
+                  the adjust pass has just MOVED the existing records, and
+                  propagating again would duplicate them (AOSP's SpannedTest
+                  .testAppend: insert(0, ss) leaves the span at [4,8) with no
+                  copy at [0,4)).*/
+                if (getSpanStart(span) >= 0) {
+                    continue;
+                }
+                /*AOSP change() propagates the source's span REFERENCES for
+                  every span type — safe under GC, impossible under raw
+                  pointers: a NoCopySpan (watcher, selection marker) carried
+                  here by pointer would dangle as soon as the source object
+                  dies or drops the span. Only clone()-able spans propagate;
+                  NoCopySpans stay behind with their owner (the copy
+                  constructors' ignoreNoCopySpan flag makes the same call).*/
+                if (dynamic_cast<const NoCopySpan*>(span) == nullptr) {
+                    ParcelableSpan* clone = span->clone();
+                    assert(clone && "owned span subclass forgot to override clone()");
+                    if (clone) setSpan(clone, ndStart, ndEnd, flags);
                 }
             }
         }
     }
 
     // 3) onTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
+    {
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(snapEpoch, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
+            }
         }
     }
     // 4) afterTextChanged
-    for (const ParcelableSpan* p : watchers) {
-        if (TextWatcher* w = asWatcher(p)) {
-            if (w->afterTextChanged) w->afterTextChanged(*this);
+    {
+        for (const ParcelableSpan* p : watchers) {
+            if (!isRecorded(snapEpoch, p)) continue;
+            if (TextWatcher* w = asWatcher(p)) {
+                if (w->afterTextChanged) w->afterTextChanged(*this);
+            }
         }
     }
     delete ownedFilterResult;

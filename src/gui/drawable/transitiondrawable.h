@@ -28,30 +28,34 @@ private:
     static constexpr int TRANSITION_NONE = 2;
 private:
     int  mTransitionState;
-    bool mReverse;
+    bool mReverse = false;
+    bool mCrossFade = false;
     int64_t mStartTimeMillis;
-    int  mFrom;
-    int  mTo;
-    int  mDuration;
-    int  mOriginalDuration;
-    int  mAlpha;
-    bool mCrossFade;
+    int  mFrom = 0;
+    int  mTo = 0;
+    int  mDuration = 0;
+    int  mOriginalDuration = 0;
+    int  mAlpha = 0;        // no-arg ctor path leaves these uninit otherwise
 
     class TransitionState:public LayerDrawable::LayerState{
     public:
-        TransitionState(TransitionState* orig, TransitionDrawable* owner);
+        TransitionState(TransitionState* orig, TransitionDrawable* owner, Resources* res);
         TransitionDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         // Mirrors AOSP TransitionDrawable.TransitionState: reports only this state's own
         // changing configurations (drops the children aggregate folded in by LayerState).
         int getChangingConfigurations()const override;
     };
 
-    TransitionDrawable(std::shared_ptr<TransitionState> state);
-    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,const AttributeSet*)override;
+    TransitionDrawable(std::shared_ptr<TransitionState> state, Resources* res);
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerState* state,Resources* res)override;
 public:
     TransitionDrawable();
     TransitionDrawable(const std::vector<Drawable*>drawables);
     void startTransition(int durationMillis);
+    // @hide AOSP API (TransitionDrawable.java): snap to the second layer with
+    // no transition — framework/SystemUI callers migrating from Android need it.
+    void showSecondLayer();
     void resetTransition();
     void reverseTransition(int duration);
     bool isCrossFadeEnabled()const;

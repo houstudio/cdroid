@@ -24,6 +24,10 @@ Animator::~Animator(){
 }
 
 Animator*Animator::clone()const{
+    // Java's Object.clone() has no C++ equivalent for an abstract base; every
+    // concrete subclass (ValueAnimator/ObjectAnimator/AnimatorSet/
+    // StateListAnimator) overrides clone(). Returning null here would break
+    // AnimatorConstantState::newInstance for any animator that forgets to.
     return nullptr;
 }
 
@@ -77,7 +81,13 @@ bool Animator::isStarted() {
 }
 
 std::shared_ptr<Animator::AnimatorConstantState> Animator::createConstantState(){
-    return std::make_shared<AnimatorConstantState>(this);
+    // Ownership transfer: the constant state adopts this animator. The weak
+    // back-ref must be assigned here, after construction — shared_from_this()
+    // inside the constructor throws bad_weak_ptr (weak_this is only set once
+    // the shared_ptr has taken ownership, i.e. after the ctor returns).
+    std::shared_ptr<AnimatorConstantState> cs = std::make_shared<AnimatorConstantState>(this);
+    mConstantState = cs;
+    return cs;
 }
 
 void Animator::addListener(const AnimatorListener& listener) {
@@ -176,8 +186,6 @@ AnimatorListenerAdapter::AnimatorListenerAdapter(){
 
 Animator::AnimatorConstantState::AnimatorConstantState(Animator* animator)
     :mAnimator(animator){
-    // ensure a reference back to here so that constante state is not gc'ed.
-    mAnimator->mConstantState = shared_from_this();
     mChangingConf = mAnimator->getChangingConfigurations();
 }
 

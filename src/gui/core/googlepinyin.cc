@@ -18,7 +18,7 @@
 #include <core/googlepinyin.h>
 #ifdef ENABLE_PINYIN2HZ
 #include <utf16char.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 #include <pinyinime.h>

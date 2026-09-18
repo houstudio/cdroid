@@ -21,7 +21,6 @@
 #include <unordered_map>
 
 namespace cdroid{
-namespace fragment{
 
 namespace{
 // Lazily-initialized global registry (single UI thread in CDROID).
@@ -51,5 +50,4 @@ Fragment* FragmentFactory::instantiate(const std::string& className){
     return f;
 }
 
-}//namespace fragment
 }//namespace cdroid

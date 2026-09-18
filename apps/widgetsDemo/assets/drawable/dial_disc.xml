@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rotary-dial plate: the disc the finger holes sit on. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#232042" />
+    <stroke android:width="2dp" android:color="#33FFFFFF" />
+</shape>

@@ -18,7 +18,11 @@
 #include <animation/scaleanimation.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
     mFromX  = o.mFromX;
@@ -43,16 +47,25 @@ ScaleAnimation::ScaleAnimation(const ScaleAnimation&o):Animation(o){
 
 ScaleAnimation::ScaleAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
-    mFromX= attrs.getFloat("fromXScale",0.f);
-    mToX  = attrs.getFloat("toXScale",0.f);
-    mFromY= attrs.getFloat("fromYScale",0.f);
-    mToY  = attrs.getFloat("toYScale",0.f);
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::ScaleAnimation);
 
-    Description d = Description::parseValue(attrs.getString("pivotX"));
+    // AOSP defaults are 1.0f (identity scale).
+    mFromX= a->getFloat(R::styleable::ScaleAnimation_fromXScale, 1.f);
+    mToX  = a->getFloat(R::styleable::ScaleAnimation_toXScale,   1.f);
+    mFromY= a->getFloat(R::styleable::ScaleAnimation_fromYScale, 1.f);
+    mToY  = a->getFloat(R::styleable::ScaleAnimation_toYScale,   1.f);
+
+    // AOSP: Description.parseValue(a.peekValue(pivotX), context); an absent
+    // attr (tv stays TYPE_NULL) resolves to ABSOLUTE/0 like AOSP's null.
+    TypedValue tv;
+    a->peekValue(R::styleable::ScaleAnimation_pivotX, &tv);
+    Description d = Description::parseValue(&tv, context);
     mPivotXType = d.type;
     mPivotXValue= d.value;
 
-    d = Description::parseValue(attrs.getString("pivotY"));
+    tv = TypedValue();
+    a->peekValue(R::styleable::ScaleAnimation_pivotY, &tv);
+    d = Description::parseValue(&tv, context);
     mPivotYType = d.type;
     mPivotYValue= d.value;
 

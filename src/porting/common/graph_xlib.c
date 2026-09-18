@@ -23,6 +23,8 @@
 #include <time.h>
 #include <pixman.h>
 static Display*x11Display= NULL;
+static pthread_t xEventThreadId = 0;      // X11EventProc thread; joined in onExit()
+static volatile int xEventRunning = 0;    // its loop flag; cleared by onExit()
 static Window x11Window = 0;
 static Visual *x11Visual = NULL;
 static Atom WM_DELETE_WINDOW;
@@ -90,6 +92,24 @@ static void InjectREL(unsigned long time,int type,int axis,int value) {
 static void onExit() {
     LOGD("X11 Graph shutdown(x11Display=%p)!",x11Display);
     if(x11Display) {
+        // Stop the X11 event thread BEFORE tearing the display down: it sits
+        // blocked in XNextEvent, and XCloseDisplay below frees the xcb state
+        // it dereferences (valgrind: invalid write in xcb_wait_for_event).
+        // pthread_cancel alone hangs the join (XNextEvent blocks inside xcb
+        // mutexes, away from cancellation points) — clear the loop flag and
+        // WAKE the blocked read with a self-addressed ClientMessage instead.
+        if (xEventThreadId) {
+            xEventRunning = 0;
+            XEvent wake;
+            memset(&wake, 0, sizeof(wake));
+            wake.type = ClientMessage;
+            wake.xclient.window = x11Window;
+            wake.xclient.format = 32;
+            XSendEvent(x11Display, x11Window, False, NoEventMask, &wake);
+            XFlush(x11Display);
+            pthread_join(xEventThreadId, NULL);
+            xEventThreadId = 0;
+        }
         XFreePixmap(x11Display,x11Pixmap);
         XFreeGC(x11Display,mainGC);
         XSelectInput(x11Display,x11Window,0);
@@ -104,7 +124,9 @@ int32_t GFXInit() {
     XInitThreads();
     x11Display = XOpenDisplay(NULL);
     if(x11Display) {
-        pthread_t xThreadId;
+        /* xEventThreadId is joinable: onExit() cancels+joins it before
+           XCloseDisplay (the detached variant raced the exit handlers and
+           died on freed xcb state). */
         XSetWindowAttributes winattrs;
         XGCValues values;
         XSizeHints sizehints;
@@ -145,8 +167,7 @@ int32_t GFXInit() {
 #endif
         XFlush(x11Display);
         LOGI("screenMargin=(%d,%d,%d,%d)[%s]",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin);
-        pthread_create(&xThreadId,NULL,X11EventProc,NULL);
-        pthread_detach(xThreadId);
+        pthread_create(&xEventThreadId,NULL,X11EventProc,NULL);
     }
     atexit(onExit);
     return E_OK;
@@ -350,13 +371,20 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         }
         img = XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,width*4);
     } else {
-        img = (XImage*)malloc(sizeof(XImage));
+        // Offscreen (no X connection): a bare XImage shell over a malloc'd
+        // buffer. calloc so f.destroy_image stays NULL — GFXDestroySurface
+        // recognizes that and frees directly instead of calling the X11
+        // destroy function pointer (which was never initialized here).
+        img = (XImage*)calloc(1, sizeof(XImage));
         img->width = width;
         img->height= height;
         img->bits_per_pixel = 32;
         img->bytes_per_line = width*4;
     }
-    img->data= (char*)malloc(height*img->bytes_per_line);
+    /* Zero-initialized like an AOSP Bitmap (nativeCreate calloc's the
+       buffer): uninitialized bytes propagate through pixman composites and
+       XPutImage (valgrind: uninit reads in sse2_composite_over_*, writev). */
+    img->data= (char*)calloc(1,height*img->bytes_per_line);
     *surface = img;
     LOGD("%p  size=%dx%dx%d %db",img,width,height,img->bytes_per_line,img->bits_per_pixel);
     if(hwsurface) {
@@ -421,7 +449,17 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 }
 
 int32_t GFXDestroySurface(GFXHANDLE surface) {
-    XDestroyImage((XImage*)surface);
+    XImage* img = (XImage*)surface;
+    if (img == NULL) return 0;
+    if (img->f.destroy_image) {
+        // Created via XCreateImage: XDestroyImage frees data + the image.
+        XDestroyImage(img);
+    } else {
+        // Offscreen shell from GFXCreateSurface's no-display branch: the
+        // function pointers were never initialized, free directly.
+        if (img->data) free(img->data);
+        free(img);
+    }
     return 0;
 }
 
@@ -446,22 +484,31 @@ static struct{int xkey;int key;}X11KEY2CD[]={
    {XK_Tab,61/*TAB*/},{XK_space,62/*SPACE*/}
 };
 
+static int xKeyboardFocusTaken = 0;
 static void* X11EventProc(void*p) {
     XEvent event;
     int i,keysym,key=0,down;
-    bool mRunning = true;
+    xEventRunning = 1;
 #if HAVE_PRCTL
     prctl(PR_SET_NAME,"X11Thread",0,0,0);
 #elif HAVE_PTHREAD_SETNAME_NP
     pthread_setname_np(pthread_self(), "X11Thread");
 #endif
-    while(mRunning) {
+    while(xEventRunning) {
         const int rc = XNextEvent(x11Display, &event);
         switch(event.type) {
         case Expose:
             if(mainSurface) {
                 XExposeEvent e = event.xexpose;
                 XCopyArea(x11Display, x11Pixmap, x11Window, mainGC,e.x,e.y,e.width,e.height,e.x,e.y);
+            }
+            // No WM runs on the target: nothing would ever grant keyboard focus,
+            // so key events reached the window only by luck. The window is
+            // viewable by first Expose — take focus once (at map time
+            // XSetInputFocus fails with BadMatch on an unviewable window).
+            if (!xKeyboardFocusTaken) {
+                XSetInputFocus(x11Display, x11Window, RevertToPointerRoot, CurrentTime);
+                xKeyboardFocusTaken = 1;
             }
             break;
         case ConfigureNotify:
@@ -483,6 +530,9 @@ static void* X11EventProc(void*p) {
         case ButtonRelease:
             if(1==event.xbutton.button) {
                 InjectABS(event.xbutton.time,EV_KEY,BTN_TOUCH,(event.type==ButtonPress)?1:0);
+                // Window-local coords ARE the virtual-screen coords here: CDROID models
+                // its single top-level window as the full (SCREEN_SIZE) display, whatever
+                // position the WM gives the X window on the host screen.
                 SENDMOUSE(event.xbutton.time,event.xbutton.x - screenMargin.x, event.xbutton.y - screenMargin.y);
             }
             break;
@@ -497,7 +547,16 @@ static void* X11EventProc(void*p) {
         case ClientMessage:
             if ( (Atom) event.xclient.data.l[0] == WM_DELETE_WINDOW) {
                 LOGD("GraphX11.Terminated(WM_DELETE_WINDOW)");
-                mRunning = false;
+                // The hal never calls up into the app. Closing the host window
+                // is the desktop's power-off gesture, so behave exactly like
+                // the power button hardware: inject a POWER key pair down the
+                // input pipe (which also wakes the app's event loop) and stop
+                // reading X events. The framework decides what POWER means —
+                // WindowManager::interceptKeyBeforeQueueing answers it with
+                // the orderly Looper::quitSafely exit.
+                xEventRunning = 0;
+                SENDKEY(26/*AKEYCODE_POWER*/,1);
+                SENDKEY(26/*AKEYCODE_POWER*/,0);
             }
             break;
         case UnmapNotify:
@@ -509,6 +568,7 @@ static void* X11EventProc(void*p) {
         };
     }
     LOGD("X11EventProc exit");
-    exit(0);
+    return NULL;   /* onExit() joins us — exit(0) here would preempt the process
+                      exit code (e.g. --test-script's failure count) with 0. */
 }
 

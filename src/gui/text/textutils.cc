@@ -9,6 +9,7 @@
 #include <unicode/uchar.h>
 #include <porting/cdlog.h>
 #include <text/measuredparagraph.h>
+#include <view/gravity.h>  // LayoutDirection (getLayoutDirectionFromLocale result)
 namespace cdroid{
 
 const auto ObjectFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParcelableSpan*>(span) != nullptr;});
@@ -647,6 +648,14 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
         }
     }
 
+    /* Ownership contract: this function returns an OWNED CharSequence* the
+       caller deletes (InputFilter::AllCaps does `upper = toUpperCase(slice);
+       delete slice; return upper;`). AOSP CaseMap/Edits can return the SAME
+       source on no change because Java has GC; under raw pointers a borrowed
+       return made AllCaps hand back freed memory whenever the input had no
+       uppercase mapping (myicu leaves e.g. U+FB01 ligatures, astral Ll
+       letters unchanged) — so the no-change path also builds a fresh object.
+       The content is then identical to the source; only the identity differs. */
     if (spanned != nullptr) {
         // Clone owned spans into the result (copySpansFrom handles ownership) so
         // the source and this transformed CharSequence never share an owned span.
@@ -868,6 +877,17 @@ CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
         return new String();   // AOSP: "" for no args
     }
     if (text.size() == 1) {
+        /*AOSP returns text[0] itself, keeping a Spanned input a Spanned (the
+          CTS test asserts the span is still there). Under the owned-return
+          contract a fresh SpannableString copy is the equivalent: owned spans
+          are cloned so the type and span contents survive. NoCopySpans are
+          NOT carried (ignoreNoCopySpan=true): sharing them by raw pointer
+          would dangle once the caller deletes text[0] — the multi-piece path
+          below only propagates clone()-able spans for the same reason. A
+          plain input still yields a plain String copy as before.*/
+        if (dynamic_cast<Spanned*>(text[0])) {
+            return new SpannableString(text[0], /*ignoreNoCopySpan=*/true);
+        }
         return new String(text[0]->toUTF8());
     }
     // If any piece is a Spanned, preserve spans via SpannableStringBuilder (AOSP does the same);
@@ -1120,5 +1140,47 @@ bool TextUtils::isPunctuation(int codePoint) {
             || type == Character::INITIAL_QUOTE_PUNCTUATION
             || type == Character::OTHER_PUNCTUATION
             || type == Character::START_PUNCTUATION;
+}
+
+// Port of android.text.TextUtils.getLayoutDirectionFromLocale (android-36).
+// AOSP: ((locale != null && !locale.equals(Locale.ROOT)
+//                  && ULocale.forLocale(locale).isRightToLeft())
+//         || DisplayProperties.debug_force_rtl()) ? RTL : LTR.
+// ICU's isRightToLeft() consults the locale's (likely) script; translated here
+// as an RTL-script set plus a language fallback for script-less locales
+// (debug_force_rtl is a debug-property toggle CDROID does not have).
+int TextUtils::getLayoutDirectionFromLocale(const Locale& locale) {
+    if (!(locale == Locale::ROOT)) {
+        const std::string script = locale.getScript();
+        // ICU's RTL script set (u_isRTL): Arab, Hebr, Thaa, Nkoo (the nqo
+        // language's own script — the language fallback below already lists
+        // nqo, so an explicit Nkoo script must agree), Samr, Mand, Adlm,
+        // Aran. Syrc/Rohg are ICU-RTL too but have no likely-subtag entry
+        // in kLikelyScripts; left out until the tables carry them.
+        if (script == "Arab" || script == "Hebr" || script == "Thaa"
+                || script == "Nkoo" || script == "Aran" || script == "Samr"
+                || script == "Mand" || script == "Adlm") {
+            return LayoutDirection::RTL;
+        }
+        if (script.empty()) {
+            const std::string language = locale.getLanguage();
+            // Languages whose default script is RTL — kept in lock-step with
+            // kLikelyScripts (content/LocaleList.cc): every language mapping
+            // to an RTL script there must appear here. "ks" (Kashmiri →
+            // Arab) was missing; iw/nqo are Java/ISO legacy codes ICU keeps.
+            for (const char* rtl : {"ar", "dv", "fa", "he", "iw", "ks", "nqo",
+                                    "ps", "sd", "ug", "ur", "yi"}) {
+                if (language == rtl) return LayoutDirection::RTL;
+            }
+            // Likely-subtag pairs whose maximal form resolves to an RTL script
+            // (ICU supplemental data): "az-IR" maximizes to az-Arab-IR, so the
+            // region — not the language, whose default script is Latn — decides.
+            // ICU's ULocale.isRightToLeft() consults exactly that expansion.
+            if (language == "az" && locale.getCountry() == "IR") {
+                return LayoutDirection::RTL;
+            }
+        }
+    }
+    return LayoutDirection::LTR;
 }
 }/*endof namespace*/

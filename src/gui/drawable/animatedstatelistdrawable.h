@@ -47,12 +47,12 @@ private:
     bool mMutated;
 private:
     bool selectTransition(int toIndex);
-    AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListState> state);
+    AnimatedStateListDrawable(std::shared_ptr<AnimatedStateListState> state, Resources* res);
     void init();
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void inflateChildElement(XmlPullParser&,const AttributeSet&);
-    int parseItem(XmlPullParser&,const AttributeSet&);
-    int parseTransition(XmlPullParser&,const AttributeSet&);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void inflateChildElement(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme);
+    int parseItem(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme);
+    int parseTransition(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void setConstantState(std::shared_ptr<DrawableContainerState> state)override;
@@ -67,7 +67,7 @@ public:
     void jumpToCurrentState()override;
     AnimatedStateListDrawable* mutate()override;
     void clearMutated()override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 
 class AnimatedStateListDrawable::AnimatedStateListState:public StateListState{
@@ -78,7 +78,7 @@ protected:
     LongSparseLongArray mTransitions;
     SparseIntArray mStateIds;
 public:
-    AnimatedStateListState(const AnimatedStateListState* orig,AnimatedStateListDrawable* owner);
+    AnimatedStateListState(const AnimatedStateListState* orig,AnimatedStateListDrawable* owner,Resources* res);
     void mutate()override;
     int addTransition(int fromId, int toId,Drawable* anim, bool reversible);
     int addStateSet(std::vector<int> stateSet,Drawable*drawable, int id);
@@ -88,6 +88,7 @@ public:
     bool isTransitionReversed(int fromId, int toId);
     bool transitionHasReversibleFlag(int fromId, int toId);
     AnimatedStateListDrawable* newDrawable()override;
+    Drawable* newDrawable(Resources* res)override;
     static int64_t generateTransitionKey(int fromId, int toId);
 };
 
@@ -99,7 +100,7 @@ private:
 public:
     FrameInterpolator(AnimationDrawable* d, bool reversed);
     int updateFrames(AnimationDrawable* d, bool reversed);
-    int getTotalDuration();
+    int getTotalDuration()const;
     float getInterpolation(float input)const override;
 };
 

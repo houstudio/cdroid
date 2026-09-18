@@ -17,9 +17,10 @@
  *********************************************************************************/
 #include <navigation/navigation.h>
 #include <navigation/navcontroller.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 Navigation::Navigation() {
 }

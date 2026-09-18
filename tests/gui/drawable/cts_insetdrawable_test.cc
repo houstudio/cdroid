@@ -195,10 +195,11 @@ TEST_F(CtsInsetDrawableTest, testOnBoundsChange_dimension) {
     const Rect& bounds = child->getBounds();
     EXPECT_EQ(5, bounds.left);
     EXPECT_EQ(5, bounds.top);
-    // CDROID subtracts the right/bottom insets into the child bounds' width/height fields
-    // (CTS asserts bounds.right==-5 / bounds.bottom==-5).
-    EXPECT_EQ(-5, bounds.width);
-    EXPECT_EQ(-5, bounds.height);
+    // AOSP ltrb rect (5,5,-5,-5) = cdroid l/t/w/h (5,5,-10,-10): BOTH insets come
+    // off each axis (420f5543d), so the empty 0-size bounds minus insets(5,5,5,5)
+    // leave width = right()-left() = -10 (CTS asserts right/bottom == -5).
+    EXPECT_EQ(-10, bounds.width);
+    EXPECT_EQ(-10, bounds.height);
     // testOnBoundsChange_fraction (float-inset ctor) NOT ported.
 }
 

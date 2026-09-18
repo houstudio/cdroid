@@ -15,14 +15,16 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(12,23,640,480);
     w->setId(10000);
     w->setBackgroundColor(0xFF4488cc);
+#if ENABLE(WEARABLE_WIDGETS)
     ConfirmationOverlay* cfo=new ConfirmationOverlay();
     cfo->setMessage("Hello world from ConfirmationOverlay").showAbove(w);
+#endif
     AsyncLayoutInflater al(&app);
-    auto cbk = [](View*view,const std::string&res, ViewGroup*parent){
-        LOGD("view=%p,res=%s parent=%p",view,res.c_str(),parent);
+    auto cbk = [](View*view,int res, ViewGroup*parent){
+        LOGD("view=%p,res=%d parent=%p",view,res,parent);
         if(parent&&view)parent->addView(view);
     };
-    al.inflate("@layout/notexists",nullptr,cbk);
-    al.inflate("cdroid:layout/alert_dialog",w,cbk);
+    al.inflate(app.getResources().getIdentifier("notexists","layout",""),nullptr,cbk);
+    al.inflate(app.getResources().getIdentifier("alert_dialog","layout","cdroid"),w,cbk);
     return app.exec();
 }

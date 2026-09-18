@@ -35,8 +35,8 @@ class ConstraintLayout;
 
 class Placeholder : public View {
   public:
-    Placeholder(Context* ctx, const AttributeSet& attrs);
-    explicit Placeholder(int width, int height);
+    Placeholder(Context* ctx, const AttributeSet* attrs);
+    Placeholder(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     int  getEmptyVisibility() const;
     void setEmptyVisibility(int visibility);
@@ -55,7 +55,7 @@ class Placeholder : public View {
     void updatePostMeasure(ConstraintLayout* container);
 
   private:
-    void init(const AttributeSet& attrs);
+    void init(const AttributeSet* attrs);
 
     int   mContentId = -1;
     View* mContent = nullptr;

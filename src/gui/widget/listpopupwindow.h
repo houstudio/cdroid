@@ -18,6 +18,7 @@
 #ifndef __LISTPOPUP_WINDOW_H__
 #define __LISTPOPUP_WINDOW_H__
 #include <widget/dropdownlistview.h>
+#include <memory>
 #include <widget/popupwindow.h>
 namespace cdroid{
 
@@ -29,18 +30,20 @@ public:
 private:
     Context*mContext;
     Handler*mHandler;
+    std::shared_ptr<bool> mAliveFlag;  // gates the inner dismiss wrapper (dtor lowers it)
     ListAdapter* mAdapter;
     DropDownListView*mDropDownList;
-    int mDropDownHeight;
-    int mDropDownWidth;
-    int mDropDownHorizontalOffset;
-    int mDropDownVerticalOffset;
-    int mDropDownWindowLayoutType;
-    int mDropDownGravity;
-    int mPromptPosition;
-    int mListItemExpandMaximum;
-    bool mDropDownAlwaysVisible;
-    bool mForceIgnoreOutsideTouch;
+    int mDropDownHeight = LayoutParams::WRAP_CONTENT;
+    int mDropDownWidth = LayoutParams::WRAP_CONTENT;
+    int mDropDownHorizontalOffset = 0;
+    int mDropDownVerticalOffset = 0;
+    int mDropDownWindowLayoutType = 0;
+    int mDropDownGravity = Gravity::NO_GRAVITY;
+    int mPromptPosition = POSITION_PROMPT_BELOW;
+    int mListItemExpandMaximum = 0;
+    bool mModal = true;
+    bool mDropDownAlwaysVisible = false;
+    bool mForceIgnoreOutsideTouch = false;
     DataSetObserver*mObserver;
     View*mPromptView;
     View*mDropDownAnchorView;
@@ -49,22 +52,29 @@ private:
     AdapterView::OnItemSelectedListener mItemSelectedListener;
     ListView::OnScrollListener mScrollListener;
     Rect mEpicenterBounds;
-    bool mModal;
     uint8_t mOverlapAnchor;/*0xFF unset 1:true,0:false*/
     Runnable mResizePopupRunnable;
     Runnable mShowDropDownRunnable;
     Runnable mHideSelector;
     View::OnTouchListener mTouchInterceptor;
+    // The app-facing dismiss listener, kept HERE (not forwarded to the inner
+    // PopupWindow): the wrapper installed on mPopup runs this ListPopupWindow's
+    // post-dismiss member cleanup before handing control to the app, so an
+    // owner deleting it inside the listener no longer leaves dismiss() about to
+    // touch freed members (delete-at-any-time).
+    PopupWindow::OnDismissListener mOnDismissListener;
 protected:
     PopupWindow*mPopup;
 private:
     void initPopupWindow();
     void removePromptView();
+    void completeDismiss();
     int  buildDropDown();
 public:
-    ListPopupWindow(Context*context,const AttributeSet&atts);
-    ListPopupWindow(Context* context,const AttributeSet& attrs, const std::string&defStyleAttr);
-    ListPopupWindow(Context* context,const AttributeSet& attrs, const std::string&defStyleAttr, const std::string&defStyleRes);
+    ListPopupWindow(Context*ctx);   // AOSP ListPopupWindow(Context)
+    ListPopupWindow(Context*context,const AttributeSet*atts);
+    ListPopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr);
+    ListPopupWindow(Context* context,const AttributeSet* attrs, int defStyleAttr, int defStyleRes);
     virtual ~ListPopupWindow();
     void setAdapter(Adapter*adapter);
     void setPromptPosition(int position);
@@ -79,8 +89,8 @@ public:
     void setListSelector(Drawable* selector);
     Drawable* getBackground();
     void setBackgroundDrawable(Drawable* d);
-    void setAnimationStyle(const std::string&);
-    std::string getAnimationStyle();
+    void setAnimationStyle(int animationStyle);
+    int getAnimationStyle() const;
     View* getAnchorView();
     void setAnchorView(View* anchor);
     int getHorizontalOffset()const;
@@ -102,6 +112,7 @@ public:
     void postShow();
     void show();
     void dismiss();
+    void releaseDropDownList();
     void setOnDismissListener(const PopupWindow::OnDismissListener& listener);
     void setInputMethodMode(int mode);
     int getInputMethodMode()const;

@@ -1,0 +1,19 @@
+# Ported AOSP androidfw GTest suite — validates our androidfw port against
+# AOSP's own test expectations. Links the androidfw static lib (not cdroid).
+project(androidfw_test CXX)
+
+file(GLOB SRCS CONFIGURE_DEPENDS *.cpp)
+
+# restable.cc (the legacy ResTable engine) is fully retired: the AM1
+# retirement converted the reconcile tests to AM2-direct + golden values,
+# so nothing compiles it anymore.
+
+add_executable(androidfw_test ${SRCS})
+target_include_directories(androidfw_test PRIVATE
+    ${CMAKE_SOURCE_DIR}/src/gui/androidfw
+    ${CMAKE_SOURCE_DIR}/src/gui
+    ${CMAKE_BINARY_DIR}/include/gui
+    ${GTEST_INCLUDE_DIRS})
+target_link_libraries(androidfw_test PRIVATE cdroid ${GTEST_LIBRARIES})
+
+install(TARGETS androidfw_test DESTINATION bin/tests)

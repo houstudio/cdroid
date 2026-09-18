@@ -20,6 +20,7 @@
 #include <view/keyevent.h>
 #include <menu/menuitemimpl.h>
 #include <menu/menubuilder.h>
+#include <text/textutils.h>
 #include <menu/submenubuilder.h>
 #include <menu/menupresenter.h>
 #include <view/actionprovider.h>
@@ -109,20 +110,22 @@ bool MenuBuilder::dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter*
     }
     return result;
 }
-#if 0
-void MenuBuilder::dispatchSaveInstanceState(Bundle outState) {
+// AOSP MenuBuilder instance-state dispatch. The states are borrowed pointers
+// kept alive by the producing presenter (CDROID has no view-state lifecycle
+// that would free them, mirroring the pointer-semantic Bundle getters).
+void MenuBuilder::dispatchSaveInstanceState(Bundle& outState) {
     if (mPresenters.empty()) return;
 
-    SparseArray<Parcelable> presenterStates = new SparseArray<Parcelable>();
-    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+    SparseArray<Parcelable*> presenterStates;
+    for (auto it = mPresenters.begin(); it != mPresenters.end();) {
         MenuPresenter* presenter = *it;
         if (presenter == nullptr) {
             it = mPresenters.erase(it);
         } else {
-            const int id = presenter.getId();
+            const int id = presenter->getId();
             it++;
             if (id > 0) {
-                Parcelable state = presenter.onSaveInstanceState();
+                Parcelable* state = presenter->onSaveInstanceState();
                 if (state != nullptr) {
                     presenterStates.put(id, state);
                 }
@@ -132,35 +135,38 @@ void MenuBuilder::dispatchSaveInstanceState(Bundle outState) {
     outState.putSparseParcelableArray(PRESENTER_KEY, presenterStates);
 }
 
-void MenuBuilder::dispatchRestoreInstanceState(Bundle state) {
-    SparseArray<Parcelable> presenterStates = state.getSparseParcelableArray(PRESENTER_KEY);
+void MenuBuilder::dispatchRestoreInstanceState(Bundle& state) {
+    SparseArray<Parcelable*> presenterStates = state.getSparseParcelableArray(PRESENTER_KEY);
 
-    if (presenterStates == null || mPresenters.iempty()) return;
-    for (auto it = mPresenters.begin();it!=mPresenters.end();) {
+    if (presenterStates.size() == 0 || mPresenters.empty()) return;
+    for (auto it = mPresenters.begin(); it != mPresenters.end();) {
         MenuPresenter* presenter = *it;
-        if (presenter == null) {
+        if (presenter == nullptr) {
             it = mPresenters.erase(it);
         } else {
             const int id = presenter->getId();
             it++;
             if (id > 0) {
-                Parcelable parcel = presenterStates.get(id);
+                Parcelable* parcel = presenterStates.get(id);
                 if (parcel != nullptr) {
-                    presenter->onRestoreInstanceState(parcel);
+                    presenter->onRestoreInstanceState(*parcel);
                 }
             }
         }
     }
 }
 
-void MenuBuilder::savePresenterStates(Bundle outState) {
+void MenuBuilder::savePresenterStates(Bundle& outState) {
     dispatchSaveInstanceState(outState);
 }
 
-void MenuBuilder::restorePresenterStates(Bundle state) {
+void MenuBuilder::restorePresenterStates(Bundle& state) {
     dispatchRestoreInstanceState(state);
 }
 
+#if 0
+// The action-view halves stay unported: they need ParcelableSparseArray
+// per-action-view hierarchy states, which CDROID views do not produce.
 void MenuBuilder::saveActionViewStates(Bundle outStates) {
     SparseArray<Parcelable> viewStates = null;
 
@@ -781,19 +787,19 @@ void MenuBuilder::clearHeader() {
     onItemsChanged(false);
 }
 
-void MenuBuilder::setHeaderInternal(const std::string& titleRes, const std::string& title, const std::string& iconRes,Drawable* icon, View* view) {
+void MenuBuilder::setHeaderInternal(int titleRes, const std::string& title, int iconRes,Drawable* icon, View* view) {
     if (view != nullptr) {
         mHeaderView = view;
         // If using a custom view, then the title and icon aren't used
         mHeaderTitle.clear();
         mHeaderIcon = nullptr;
     } else {
-        if (!titleRes.empty()) {
-            //mHeaderTitle = r.getText(titleRes);
+        if (titleRes != 0) {
+            mHeaderTitle = TextUtils::utf16_utf8(getContext()->getText(titleRes));
         } else if (!title.empty()) {
             mHeaderTitle = title;
         }
-        if (!iconRes.empty()) {
+        if (iconRes != 0) {
             mHeaderIcon = getContext()->getDrawable(iconRes);
         } else if (icon != nullptr) {
             mHeaderIcon = icon;
@@ -807,27 +813,22 @@ void MenuBuilder::setHeaderInternal(const std::string& titleRes, const std::stri
 }
 
 MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& title) {
-    setHeaderInternal("", title, "", nullptr, nullptr);
+    setHeaderInternal(0, title, 0, nullptr, nullptr);
     return *this;
 }
-
-/*MenuBuilder& MenuBuilder::setHeaderTitleInt(const std::string& titleRes) {
-    setHeaderInternal(titleRes, nullptr, "", nullptr, nullptr);
-    return *this;
-}*/
 
 MenuBuilder& MenuBuilder::setHeaderIconInt(Drawable* icon) {
-    setHeaderInternal("", nullptr, "", icon, nullptr);
+    setHeaderInternal(0, std::string(), 0, icon, nullptr);
     return *this;
 }
 
-MenuBuilder& MenuBuilder::setHeaderIconInt(const std::string& iconRes) {
-    setHeaderInternal("", nullptr, iconRes, nullptr, nullptr);
+MenuBuilder& MenuBuilder::setHeaderIconInt(int iconRes) {
+    setHeaderInternal(0, std::string(), iconRes, nullptr, nullptr);
     return *this;
 }
 
 MenuBuilder& MenuBuilder::setHeaderViewInt(View* view) {
-    setHeaderInternal("", nullptr, "", nullptr, view);
+    setHeaderInternal(0, std::string(), 0, nullptr, view);
     return *this;
 }
 

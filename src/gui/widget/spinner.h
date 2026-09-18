@@ -54,9 +54,12 @@ private:
 
     class DialogPopup:public SpinnerPopup{
     private:
-        class AlertDialog*mPopup;
-        Spinner *mSpinner; 
-        Adapter *mListAdapter;
+        Spinner *mSpinner;
+        Adapter *mListAdapter = nullptr;
+        class AlertDialog*mPopup = nullptr;
+        // Wrap replaced while a popup was up: freed AFTER the dialog's tree
+        // dies (the popup ListView keeps dereferencing mAdapter until then).
+        Adapter* mPendingAdapterDelete = nullptr;
         std::string mPrompt;
         void onClick(DialogInterface& dialog, int which);
     public:
@@ -83,9 +86,13 @@ private:
         std::string mHintText;
         Spinner *mSpinner;
         Adapter *mAdapter;
+        // Wrap replaced while the dropdown tree was up: freed after the tree
+        // dies (the popup ListView dereferences mAdapter until then) — the
+        // same contract DialogPopup::mPendingAdapterDelete implements.
+        Adapter* mPendingAdapterDelete = nullptr;
         ViewTreeObserver::OnGlobalLayoutListener mLayoutListener;
     public:
-        DropdownPopup(Context*context,Spinner*spinner,const std::string&defStyleAttr);
+        DropdownPopup(Context*context,Spinner*spinner,int defStyleAttr);
         ~DropdownPopup()override;
         void setAdapter(Adapter* adapter)override;
         void show(int textDirection, int textAlignment)override; 
@@ -115,8 +122,12 @@ public:
     static constexpr int  MODE_DIALOG   = 0;
     static constexpr int  MODE_DROPDOWN = 1;
 private:
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     int  mGravity;
     Context*mPopupContext;
+    // true when mPopupContext is a ContextThemeWrapper we new'd (popupTheme);
+    // AOSP relies on GC, CDROID tracks the ownership explicitly.
+    bool mOwnsPopupContext = false;
     ForwardingListener* mForwardingListener;
     SpinnerAdapter* mTempAdapter;
     bool mDisableChildrenWhenDisabled;
@@ -131,13 +142,14 @@ protected:
     void layout(int delta, bool animate)override;
     void computeContentWidth();
 public:
-    Spinner(int w,int h,int mode=0);
-    Spinner(Context*ctx,const AttributeSet&atts);
+    Spinner(Context*ctx);   // AOSP Spinner(Context)
+    Spinner(Context*ctx,const AttributeSet*atts);
+    Spinner(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~Spinner()override;
     Context* getPopupContext()const;
     int measureContentWidth(Adapter* adapter, Drawable* background);
     void setPopupBackgroundDrawable(Drawable* background);
-    void setPopupBackgroundResource(const std::string& resId);
+    void setPopupBackgroundResource(int resId);
     Drawable* getPopupBackground();
     void setDropDownVerticalOffset(int pixels);
     int getDropDownVerticalOffset();

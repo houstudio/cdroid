@@ -9,8 +9,8 @@ public:
 
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            tv=new TextView("",600,40);
-            tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
+            tv=new TextView(&App::getInstance());
+            tv->setBackgroundResource(tv->getContext()->getResources().getIdentifier("progress_horizontal","drawable","cdroid"));
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
@@ -28,7 +28,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=new ListView(460,500);
+    ListView*lv=new ListView(&App::getInstance());
     w->addView(lv);
     lv->layout(10,10,460,500);
     lv->setDivider(new ColorDrawable(0x66008800));

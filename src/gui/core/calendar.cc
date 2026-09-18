@@ -26,20 +26,26 @@
 #include <cdlog.h>
 using namespace cdroid;
 
+#if defined(_WIN32) || defined(_WIN64) || defined(_MSVC_VER)
+static time_t timegm(struct tm* tm);  // shimmed to _mkgmtime near the foot of the file
+#endif
+
 static int getLocalTimeZoneOffsetSeconds() {
+    // Offset of the local zone at `now`, in seconds east of UTC
+    // (java.util.Calendar.getInstance() uses TimeZone.getDefault()).
+    // Interpret the LOCAL wall clock as UTC and diff against the real epoch:
+    // the previous form (mktime(localtime(now)) - timegm(gmtime(now))) is
+    // identically zero because both terms encode the same instant, which
+    // pinned every Calendar::getInstance() to UTC.
     time_t now = time(nullptr);
     struct tm localTm = {};
-    struct tm utcTm = {};
 #ifdef _WIN32
     localtime_s(&localTm, &now);
-    gmtime_s(&utcTm, &now);
 #else
     localtime_r(&now, &localTm);
-    gmtime_r(&now, &utcTm);
 #endif
-    time_t localTime = mktime(&localTm);
-    time_t utcTime = timegm(&utcTm);
-    return static_cast<int>(difftime(localTime, utcTime));
+    time_t localAsUtc = timegm(&localTm);  // _WIN32: shimmed to _mkgmtime below
+    return static_cast<int>(difftime(localAsUtc, now));
 }
 
 
@@ -148,6 +154,13 @@ std::unique_ptr<Calendar> Calendar::getInstance() {
     auto cal = std::make_unique<GregorianCalendar>();
     cal->setTimeZone(getLocalTimeZoneOffsetSeconds());
     return cal;
+}
+
+std::unique_ptr<Calendar> Calendar::getInstance(const Locale& locale) {
+    // Single Gregorian implementation (see calendar.h) — the locale is only a
+    // selector upstream; nothing differs here.
+    (void)locale;
+    return getInstance();
 }
 
 std::unique_ptr<Calendar> Calendar::getInstance(int zoneOffsetSeconds) {

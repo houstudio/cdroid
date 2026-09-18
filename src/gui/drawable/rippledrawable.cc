@@ -15,20 +15,23 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/rippledrawable.h>
 #include <drawable/colorstatelist.h>
 #include <stdexcept>
-#include <widget/R.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner)
-    :LayerDrawable::LayerState(orig,owner){
+RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner, Resources* res)
+    :LayerDrawable::LayerState(orig,owner,res){
     //mTouchThemeAttrs = orig->mTouchThemeAttrs;
     mColor = nullptr;
     mEffectColor = ColorStateList::valueOf(RippleDrawable::DEFAULT_EFFECT_COLOR);
     mMaxRadius = RADIUS_AUTO;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
+        mTouchThemeAttrs = origs->mTouchThemeAttrs;
         mColor = origs->mColor;
         mEffectColor = origs->mEffectColor;
         mMaxRadius = origs->mMaxRadius;
@@ -54,7 +57,11 @@ void RippleDrawable::RippleState::applyDensityScaling(int sourceDensity, int tar
 }
 
 RippleDrawable* RippleDrawable::RippleState::newDrawable(){
-    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()));//, nullptr);
+    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()), nullptr);
+}
+
+Drawable* RippleDrawable::RippleState::newDrawable(Resources* res) {
+    return new RippleDrawable(std::dynamic_pointer_cast<RippleState>(shared_from_this()), res);
 }
 
 int RippleDrawable::RippleState::getChangingConfigurations()const{
@@ -64,10 +71,10 @@ int RippleDrawable::RippleState::getChangingConfigurations()const{
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
-    mState.reset(new RippleState(state.get(), this));
+RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state, Resources* res) {
+    mState.reset(new RippleState(state.get(), this, res));
     mLayerState = mState;
-    mDensity = Drawable::resolveDensity(mState->mDensity);
+    mDensity = Drawable::resolveDensity(res, mState->mDensity);
     mRipple  = nullptr;
     mBackground = nullptr;
     mHasPending = false;
@@ -80,13 +87,13 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     updateLocalState();
 }
 
-RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nullptr,this)){
+RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nullptr,this,nullptr), nullptr){
 }
 
 RippleDrawable::RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask)
-  :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
+  :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr,nullptr), nullptr){
     if(content)addLayer(content,{0},-1,0,0,0,0);
-    if(mask)addLayer(mask,{0},cdroid::R::id::mask,0,0,0,0);
+    if(mask)addLayer(mask,{0},R::id::mask,0,0,0,0);
     setColor(color);
     ensurePadding();
     refreshPadding();
@@ -103,11 +110,11 @@ RippleDrawable::~RippleDrawable(){
 }
 
 std::shared_ptr<LayerDrawable::LayerState> RippleDrawable::createConstantState(
-        LayerDrawable::LayerState* state, const AttributeSet*) {
+        LayerDrawable::LayerState* state, Resources* res) {
     // LayerDrawable::mutate() / getConstantState() route through this factory; producing a
     // RippleState keeps the ripple-specific fields (mColor/mEffectColor/mMaxRadius) live in the
     // copied state and makes newDrawable() yield a RippleDrawable.
-    return std::make_shared<RippleState>(state, this);
+    return std::make_shared<RippleState>(state, this, res);
 }
 
 RippleDrawable* RippleDrawable::mutate(){
@@ -121,7 +128,7 @@ RippleDrawable* RippleDrawable::mutate(){
     LayerDrawable::mutate();
     mState = std::dynamic_pointer_cast<RippleState>(mLayerState);
     // AOSP: the locally cached mask drawable may have changed after the state rebuild.
-    mMask = findDrawableByLayerId(cdroid::R::id::mask);
+    mMask = findDrawableByLayerId(R::id::mask);
     return this;
 }
 
@@ -164,13 +171,13 @@ bool RippleDrawable::onStateChange(const std::vector<int>&stateSet){
     bool hovered = false;
 
     for (int state : stateSet) {
-        if (state == StateSet::ENABLED) {
+        if (state == (int)cdroid::internal::R::attr::state_enabled) {
             enabled = true;
-        } else if (state == StateSet::FOCUSED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_focused) {
             focused = true;
-        } else if (state == StateSet::PRESSED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_pressed) {
             pressed = true;
-        } else if (state == StateSet::HOVERED) {
+        } else if (state == (int)cdroid::internal::R::attr::state_hovered) {
             hovered = true;
         }
     }
@@ -308,7 +315,7 @@ RefPtr<ColorStateList> RippleDrawable::getEffectColor()const{
 
 bool RippleDrawable::setDrawableByLayerId(int id, Drawable* drawable){
     if (LayerDrawable::setDrawableByLayerId(id, drawable)) {
-        if (id == cdroid::R::id::mask) {
+        if (id == R::id::mask) {
             mMask = drawable;
             mHasValidMask = false;
         }
@@ -321,8 +328,35 @@ void RippleDrawable::setPaddingMode(int mode) {
     LayerDrawable::setPaddingMode(mode);
 }
 
+bool RippleDrawable::RippleState::canApplyTheme(){
+    return !mTouchThemeAttrs.empty()
+            || (mColor != nullptr && mColor->canApplyTheme())
+            || LayerDrawable::LayerState::canApplyTheme();
+}
+
 bool RippleDrawable::canApplyTheme() {
-    return false;//(mState && mState->canApplyTheme()) || LayerDrawable::canApplyTheme();
+    return (mState != nullptr && mState->canApplyTheme()) || LayerDrawable::canApplyTheme();
+}
+
+// AOSP RippleDrawable.applyTheme(Theme): super (layers + own attrs) first,
+// then re-resolve the ripple's recorded ?attr ids and refresh the local
+// state. The color-list obtainForTheme hop is not ported (theme-preloaded
+// ColorStateLists do not exist, canApplyTheme() is always false).
+void RippleDrawable::applyTheme(const Resources::Theme& t) {
+    LayerDrawable::applyTheme(t);
+
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+
+    if (!state->mTouchThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mTouchThemeAttrs, R::styleable::RippleDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mTouchThemeAttrs.clear();
+    }
+
+    updateLocalState();
 }
 
 void RippleDrawable::tryRippleEnter(){
@@ -464,7 +498,7 @@ void RippleDrawable::drawContent(Canvas& canvas) {
     std::vector<ChildDrawable*> &array = mLayerState->mChildren;
     const int count = (int)mLayerState->mChildren.size();
     for (int i = 0; i < count; i++) {
-        if (array[i]->mId != cdroid::R::id::mask) {
+        if (array[i]->mId != R::id::mask) {
             array[i]->mDrawable->draw(canvas);
         }
     }
@@ -482,16 +516,20 @@ void RippleDrawable::drawBackgroundAndRipples(Canvas& canvas) {
     canvas.translate(x, y);
     int color = Color::MAGENTA;
     if(mState->mColor)
-        color = mState->mColor->getColorForState(getState(),0xFF888888);
+        color = mState->mColor->getColorForState(getState(),0xFF000000);// AOSP falls back to Color.BLACK
     canvas.set_color(color);
 
     if (mBackground  && mBackground->isVisible()) {
         mBackground->draw(canvas, 1.f);
     }
     for (auto ripple:mExitingRipples) {
-        const int alpha = int(ripple->getOpacity()*0x80);
-        color = (color&0x00FFFFFF) | (alpha<<24);
-        canvas.set_color(color);
+        // AOSP RippleForeground.drawSoftware: alpha = original paint alpha
+        // (the ripple color's own alpha) * ripple opacity. The old code
+        // stripped the color's alpha and scaled by 0x80, so fading-out
+        // ripples never exceeded ~50% opacity.
+        const int origAlpha = (color >> 24) & 0xFF;
+        const int alpha = int(origAlpha * ripple->getOpacity() + 0.5f);
+        canvas.set_color((color & 0x00FFFFFF) | (alpha << 24));
         ripple->draw(canvas,1.f);
     }
 
@@ -598,25 +636,34 @@ Rect RippleDrawable::getDirtyBounds() const{
     }
 }
 
-void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
+void RippleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::RippleDrawable);
 
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
-    // Read our own root-element attrs BEFORE LayerDrawable::inflate advances the parser into the
-    // child <item>s. The AttributeSet reads the parser's current tag lazily, so reading "color" /
-    // "radius" after super.inflate() (which calls parser.next()) would miss the <ripple> tag's
-    // attributes and silently fall back to the defaults (AOSP takes an attributes snapshot first;
-    // CDROID's AttributeSet has no snapshot, so the read order must precede super.inflate()).
-    mState->mColor = atts.getColorStateList("color");
-    const RefPtr<ColorStateList> effectColor = atts.getColorStateList("effectColor");
-    if(effectColor) mState->mEffectColor = effectColor;
-    mState->mMaxRadius = atts.getDimensionPixelSize("radius", mState->mMaxRadius);
-    LayerDrawable::inflate(parser,atts);
+
+    LayerDrawable::inflate(r,parser,atts, theme);
+
+    if (ta) updateStateFromTypedArray(*ta);
+
     updateLocalState();
+}
+
+void RippleDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    // Extract the theme attributes, if any.
+    mState->mTouchThemeAttrs = a.extractThemeAttrs();
+
+    const RefPtr<ColorStateList> color = a.getColorStateList(R::styleable::RippleDrawable_color);
+    if (color) mState->mColor = color;
+
+    const RefPtr<ColorStateList> effectColor = a.getColorStateList(R::styleable::RippleDrawable_effectColor);
+    if (effectColor) mState->mEffectColor = effectColor;
+
+    mState->mMaxRadius = a.getDimensionPixelSize(R::styleable::RippleDrawable_radius, mState->mMaxRadius);
 }
 
 void RippleDrawable::updateLocalState() {
     // Initialize from constant state.
-    mMask = findDrawableByLayerId(cdroid::R::id::mask);
+    mMask = findDrawableByLayerId(R::id::mask);
 }
 }

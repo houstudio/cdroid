@@ -15,11 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <view/viewstub.h>
 #include <app/alertcontroller.h>
 #include <app/alertdialog.h>
-#include <widget/R.h>
+#include <core/handler.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 bool AlertController::shouldCenterSingleButton(Context* context){
     return true;
@@ -51,16 +55,17 @@ AlertController::AlertController(Context* context, Dialog* di, Window* window){
     mViewSpacingRight= 0;
     mForceInverseBackground = false;
     mButtonPanelLayoutHint  = AlertDialog::LAYOUT_HINT_NONE;
-    AttributeSet atts=context->obtainStyledAttributes("cdroid:style/AlertDialog");
+    // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
+    auto atts = context->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
 
-    mAlertDialogLayout = atts.getString("layout","@cdroid:layout/alert_dialog");
-    mButtonPanelSideLayout = atts.getString("buttonPanelSideLayout");
-    mListLayout = atts.getString("listLayout","cdroid:layout/select_dialog");
+    mAlertDialogLayout = atts->getResourceId(R::styleable::AlertDialog_layout, R::layout::alert_dialog);
+    mButtonPanelSideLayout = atts->getResourceId(R::styleable::AlertDialog_buttonPanelSideLayout, 0);
+    mListLayout = atts->getResourceId(R::styleable::AlertDialog_listLayout, R::layout::select_dialog);
 
-    mMultiChoiceItemLayout = atts.getString("multiChoiceItemLayout","cdroid:layout/select_dialog_multichoice");
-    mSingleChoiceItemLayout= atts.getString("singleChoiceItemLayout","cdroid:layout/select_dialog_singlechoice");
-    mListItemLayout = atts.getString("listItemLayout","cdroid:layout/select_dialog_item");
-    mShowTitle = atts.getBoolean("showTitle", true);
+    mMultiChoiceItemLayout = atts->getResourceId(R::styleable::AlertDialog_multiChoiceItemLayout, R::layout::select_dialog_multichoice);
+    mSingleChoiceItemLayout = atts->getResourceId(R::styleable::AlertDialog_singleChoiceItemLayout, R::layout::select_dialog_singlechoice);
+    mListItemLayout = atts->getResourceId(R::styleable::AlertDialog_listItemLayout, R::layout::select_dialog_item);
+    mShowTitle = atts->getBoolean(R::styleable::AlertDialog_showTitle, true);
 
     //mDialogInterface.OnCancelListener=nullptr;
     /* We use a custom title so never request a window title */
@@ -94,14 +99,14 @@ void AlertController::installContent(AlertParams* params) {
 }
 
 void AlertController::installContent() {
-    const std::string contentView = selectContentView();
+    int contentView = selectContentView();
     //mWindow->setContentView(contentView);
     LayoutInflater::from(mContext)->inflate(contentView,mWindow,true);
     setupView();
 }
 
-const std::string& AlertController::selectContentView() {
-    if (mButtonPanelSideLayout.empty()) {
+int AlertController::selectContentView() {
+    if (mButtonPanelSideLayout == 0) {
         return mAlertDialogLayout;
     }
     if (mButtonPanelLayoutHint == (int)AlertDialog::LAYOUT_HINT_SIDE) {
@@ -109,7 +114,7 @@ const std::string& AlertController::selectContentView() {
     }
     // TODO: use layout hint side for long messages/lists
     return mAlertDialogLayout;
- 
+
 }
 
 void AlertController::setTitle(const std::string& title) {
@@ -131,7 +136,7 @@ void AlertController::setMessage(const std::string& message) {
     }
 }
 
-void AlertController::setView(const std::string&layoutResId) {
+void AlertController::setView(int layoutResId) {
     mView = nullptr;
     mViewLayoutResId = layoutResId;
     mViewSpacingSpecified = false;
@@ -142,13 +147,13 @@ void AlertController::setView(const std::string&layoutResId) {
  */
 void AlertController::setView(View* view) {
     mView = view;
-    mViewLayoutResId.clear();
+    mViewLayoutResId = 0;
     mViewSpacingSpecified = false;
 }
 
 void AlertController::setView(View* view, int viewSpacingLeft, int viewSpacingTop, int viewSpacingRight,int viewSpacingBottom){
     mView = view;
-    mViewLayoutResId.clear();
+    mViewLayoutResId = 0;
     mViewSpacingSpecified = true;
     mViewSpacingLeft = viewSpacingLeft;
     mViewSpacingTop = viewSpacingTop;
@@ -178,12 +183,12 @@ void AlertController::setButton(int whichButton,const std::string&text,DialogInt
     }
 }
 
-void AlertController::setIcon(const std::string& resId){
+void AlertController::setIcon(int resId){
     mIcon = nullptr;
     mIconId = resId;
 
     if (mIconView != nullptr) {
-        if (resId.size()) {
+        if (resId) {
             mIconView->setVisibility(View::VISIBLE);
             mIconView->setImageResource(mIconId);
         } else {
@@ -194,7 +199,7 @@ void AlertController::setIcon(const std::string& resId){
 
 void AlertController::setIcon(Drawable* icon) {
     mIcon = icon;
-    mIconId.clear();
+    mIconId = 0;
 
     if (mIconView != nullptr) {
         if (icon != nullptr) {
@@ -206,8 +211,11 @@ void AlertController::setIcon(Drawable* icon) {
     }
 }
 
-std::string AlertController::getIconAttributeResId(const std::string&attrId){
-    return "";
+// AOSP: resolve the theme attribute (R.attr.dialogIcon etc.) to its icon res id.
+int AlertController::getIconAttributeResId(int attrId){
+    static const uint32_t kAttr[] = { (uint32_t)attrId, 0 };
+    auto ta = mContext->obtainStyledAttributes(kAttr);
+    return ta->getResourceId(0, 0);
 }
 
 void AlertController::setInverseBackgroundForced(bool forceInverseBackground){
@@ -235,12 +243,26 @@ bool AlertController::onKeyUp(int keyCode, KeyEvent& event){
 }
 
 ViewGroup* AlertController::resolvePanel(View* customPanel,View* defaultPanel){
+    // AOSP AlertController.resolvePanel: panels in the material alert layout are
+    // ViewStubs (button bar / title) that must be inflated here before use.
     if(customPanel==nullptr){
+        // Inflate the default panel, if needed.
+        if(dynamic_cast<ViewStub*>(defaultPanel)!=nullptr){
+            defaultPanel=((ViewStub*)defaultPanel)->inflate();
+        }
         return (ViewGroup*)defaultPanel;
     }
     if(defaultPanel){
         ViewGroup*parent=defaultPanel->getParent();
-        parent->removeView(defaultPanel);
+        if(parent){
+            parent->removeView(defaultPanel);
+            mWindow->removeSendWindowContentChangedCallback();  // same flush rule
+            delete defaultPanel;  // AOSP relies on GC for the replaced default panel
+        }
+    }
+    // Inflate the custom panel, if needed.
+    if(dynamic_cast<ViewStub*>(customPanel)!=nullptr){
+        customPanel=((ViewStub*)customPanel)->inflate();
     }
     return (ViewGroup*)customPanel;
 }
@@ -330,8 +352,9 @@ void AlertController::setupView() {
         }
     }
 
-    AttributeSet atts=mContext->obtainStyledAttributes("cdroid:attr/alertDialogStyle");
-    setBackground(atts, topPanel, contentPanel, customPanel, buttonPanel,
+    // AOSP: obtainStyledAttributes(null, R.styleable.AlertDialog, R.attr.alertDialogStyle, 0).
+    auto atts = mContext->obtainStyledAttributes(nullptr, R::styleable::AlertDialog, R::attr::alertDialogStyle, 0);
+    setBackground(atts.get(), topPanel, contentPanel, customPanel, buttonPanel,
             hasTopPanel, hasCustomPanel, hasButtonPanel);
 }
 
@@ -339,7 +362,7 @@ void AlertController::setupCustomContent(ViewGroup* customPanel){
     View* customView=nullptr;
     if (mView != nullptr) {
         customView = mView;
-    } else if (mViewLayoutResId.size()) {
+    } else if (mViewLayoutResId != 0) {
         LayoutInflater* inflater = LayoutInflater::from(mContext);
         customView = inflater->inflate(mViewLayoutResId,customPanel,false);
     } 
@@ -372,10 +395,10 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
         topPanel->addView(mCustomTitleView, 0, lp);
 
             // Hide the title template
-        View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
+        View* titleTemplate = mWindow->findViewById(R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
     } else {
-        mIconView = (ImageView*) mWindow->findViewById(cdroid::R::id::icon);
+        mIconView = (ImageView*) mWindow->findViewById(R::id::icon);
 
         const bool hasTextTitle = mTitle.length();//!TextUtils.isEmpty(mTitle);
         if (hasTextTitle && mShowTitle) {
@@ -386,7 +409,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             // Do this last so that if the user has supplied any icons we
             // use them instead of the default ones. If the user has
             // specified 0 then make it disappear.
-            if (mIconId.length()) {
+            if (mIconId != 0) {
                  mIconView->setImageResource(mIconId);
             } else if (mIcon) {
                  mIconView->setImageDrawable(mIcon);
@@ -399,7 +422,7 @@ void AlertController::setupTitle(ViewGroup* topPanel) {
             }
         } else {
             // Hide the title template
-            View* titleTemplate = mWindow->findViewById(cdroid::R::id::title_template);
+            View* titleTemplate = mWindow->findViewById(R::id::title_template);
             titleTemplate->setVisibility(View::GONE);
             mIconView->setVisibility(View::GONE);
             topPanel->setVisibility(View::GONE);
@@ -422,11 +445,16 @@ void AlertController::setupContent(ViewGroup* contentPanel){
     } else {
         mMessageView->setVisibility(View::GONE);
         mScrollView->removeView(mMessageView);
+        mWindow->removeSendWindowContentChangedCallback();  // same flush rule
+        delete mMessageView;    // AOSP relies on GC after the detach
+        mMessageView = nullptr;
 
         if (mListView != nullptr) {
             ViewGroup* scrollParent = (ViewGroup*) mScrollView->getParent();
             const int childIndex = scrollParent->indexOfChild(mScrollView);
             scrollParent->removeViewAt(childIndex);
+            delete mScrollView; // AOSP relies on GC; frees the detached subtree
+            mScrollView = nullptr;
             mListView->setMinimumHeight(200); 
             scrollParent->addView(mListView, childIndex,new LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
             //scrollParent->requestLayout();
@@ -443,6 +471,19 @@ void AlertController::onButtonClick(DialogInterface::OnClickListener listener,Vi
     case R::id::button3: if(listener)listener(*mDialogInterface,DialogInterface::BUTTON_NEUTRAL)  ; break;
     default :break;
     }
+    // AOSP mButtonHandler (AlertController.java:134) posts MSG_DISMISS_DIALOG after the
+    // click listener ran: "Post a message so we dismiss after the above handlers are
+    // executed". The posted dismiss keeps the window teardown (Window::close runs
+    // removeWindow inline) off the button's click dispatch stack. Dialog::dismiss is
+    // mShowing-guarded, so a listener that already dismissed makes this a no-op.
+    // Standalone heap Handler, NOT View::post — mirrors Window::finishClose: the dialog's
+    // teardown purges view queues that would drop this very post.
+    Handler* handler = new Handler();
+    Dialog* dialog = mDialogInterface;
+    handler->post([handler, dialog](){
+        dialog->dismiss();
+        delete handler;
+    });
 }
 
 void AlertController::setupButtons(cdroid::ViewGroup*buttonPanel){
@@ -515,37 +556,37 @@ void AlertController::centerButton(Button* button) {
     }
 }
 
-void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* contentPanel, View* customPanel,
+void AlertController::setBackground(TypedArray* a,View* topPanel, View* contentPanel, View* customPanel,
     View* buttonPanel, bool hasTitle, bool hasCustomView, bool hasButtons){
-    std::string fullDark;
-    std::string topDark;
-    std::string centerDark;
-    std::string bottomDark;
-    std::string fullBright;
-    std::string topBright;
-    std::string centerBright;
-    std::string bottomBright;
-    std::string bottomMedium;
+    int fullDark = 0;
+    int topDark = 0;
+    int centerDark = 0;
+    int bottomDark = 0;
+    int fullBright = 0;
+    int topBright = 0;
+    int centerBright = 0;
+    int bottomBright = 0;
+    int bottomMedium = 0;
 
     // If the needsDefaultBackgrounds attribute is set, we know we're
     // inheriting from a framework style.
-    bool needsDefaultBackgrounds = a.getBoolean("needsDefaultBackgrounds", true);
+    bool needsDefaultBackgrounds = a->getBoolean(R::styleable::AlertDialog_needsDefaultBackgrounds, true);
     if (needsDefaultBackgrounds) {
-        fullDark = "cdroid:mipmap/popup_full_dark";
-        topDark = "cdroid:mipmap/popup_top_dark";
-        centerDark = "cdroid:mipmap/popup_center_dark";
-        bottomDark = "cdroid:mipmap/popup_bottom_dark";
-        fullBright = "cdroid:mipmap/popup_full_bright";
-        topBright = "cdroid:mipmap/popup_top_bright";
-        centerBright = "cdroid:mipmap/popup_center_bright";
-        bottomBright = "cdroid:mipmap/popup_bottom_bright";
-        bottomMedium = "cdroid:mipmap/popup_bottom_medium";
+        fullDark = R::drawable::popup_full_dark;
+        topDark = R::drawable::popup_top_dark;
+        centerDark = R::drawable::popup_center_dark;
+        bottomDark = R::drawable::popup_bottom_dark;
+        fullBright = R::drawable::popup_full_bright;
+        topBright = R::drawable::popup_top_bright;
+        centerBright = R::drawable::popup_center_bright;
+        bottomBright = R::drawable::popup_bottom_bright;
+        bottomMedium = R::drawable::popup_bottom_medium;
     }
 
-    topBright = a.getString("topBright", topBright);
-    topDark   = a.getString("topDark", topDark);
-    centerBright= a.getString("centerBright", centerBright);
-    centerDark  = a.getString("centerDark", centerDark);
+    topBright = a->getResourceId(R::styleable::AlertDialog_topBright, topBright);
+    topDark   = a->getResourceId(R::styleable::AlertDialog_topDark, topDark);
+    centerBright = a->getResourceId(R::styleable::AlertDialog_centerBright, centerBright);
+    centerDark   = a->getResourceId(R::styleable::AlertDialog_centerDark, centerDark);
 
     /* We now set the background of all of the sections of the alert.
      * First collect together each section that is being displayed along
@@ -607,17 +648,17 @@ void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* c
 
     if (lastView) {
         if (setView) {
-            bottomBright = a.getString("bottomBright", bottomBright);
-            bottomMedium = a.getString("bottomMedium", bottomMedium);
-            bottomDark   = a.getString("bottomDark", bottomDark);
+            bottomBright = a->getResourceId(R::styleable::AlertDialog_bottomBright, bottomBright);
+            bottomMedium = a->getResourceId(R::styleable::AlertDialog_bottomMedium, bottomMedium);
+            bottomDark   = a->getResourceId(R::styleable::AlertDialog_bottomDark, bottomDark);
 
             // ListViews will use the Bright background, but buttons use the
             // Medium background.
             lastView->setBackgroundResource(
                     lastLight ? (hasButtons ? bottomMedium : bottomBright) : bottomDark);
         } else {
-            fullBright = a.getString("fullBright", fullBright);
-            fullDark   = a.getString("fullDark", fullDark);
+            fullBright = a->getResourceId(R::styleable::AlertDialog_fullBright, fullBright);
+            fullDark   = a->getResourceId(R::styleable::AlertDialog_fullDark, fullDark);
 
             lastView->setBackgroundResource(lastLight ? fullBright : fullDark);
         }
@@ -629,11 +670,30 @@ void AlertController::setBackground(const AttributeSet&a,View* topPanel, View* c
         if (mCheckedItem > -1) {
             mListView->setItemChecked(mCheckedItem, true);
             mListView->setSelectionFromTop(mCheckedItem,
-                    a.getDimensionPixelSize("selectionScrollOffset", 0));
+                    a->getDimensionPixelSize(R::styleable::AlertDialog_selectionScrollOffset, 0));
         }
     }
 }
 
+
+AlertController::~AlertController() {
+    // The adapter's lifetime vs. the window's view tree is arbitrated by
+    // ~AlertDialog (window teardown happens there, before this runs), so this
+    // destructor must not touch mListView — on the dismiss path the tree is
+    // already deleted and the pointer is dangling.
+    if (mOwnsAdapter) delete mAdapter;  // AOSP relies on GC for the list adapter
+}
+
+void AlertController::unbindListAdapter() {
+    // Runs synchronously inside dismissDialog() (via AlertDialog::onStop),
+    // while the window and its view tree are unquestionably alive: the
+    // ListView drops the adapter reference here, so the window's later posted
+    // teardown cannot reach through mAdapter after ~AlertController freed it
+    // (AbsListView::onDetachedFromWindow unregisters its DataSetObserver).
+    if (mListView != nullptr && mAdapter != nullptr) {
+        mListView->setAdapter(nullptr);
+    }
+}
 
 AlertController::AlertParams::AlertParams(Context*context){
     mContext = context;
@@ -650,15 +710,19 @@ AlertController::AlertParams::AlertParams(Context*context){
     LOGD("%p",this);
 }
 
+AlertController::AlertParams::~AlertParams(){
+    if (mOwnsContext) delete mContext;
+}
+
 void AlertController::AlertParams::apply(AlertController* dialog){
     if (mCustomTitleView) {
         dialog->setCustomTitle(mCustomTitleView);
     } else {
         if (mTitle.length())dialog->setTitle(mTitle);
         if (mIcon) dialog->setIcon(mIcon);
-        if (mIconId.length())dialog->setIcon(mIconId);
+        if (mIconId != 0)dialog->setIcon(mIconId);
         
-        if (mIconAttrId.length())
+        if (mIconAttrId != 0)
             dialog->setIcon(dialog->getIconAttributeResId(mIconAttrId));
         if (mMessage.length())dialog->setMessage(mMessage);
             
@@ -689,7 +753,7 @@ void AlertController::AlertParams::apply(AlertController* dialog){
             } else {
                 dialog->setView(mView);
             }
-        } else if (mViewLayoutResId.length()) {
+        } else if (mViewLayoutResId != 0) {
             dialog->setView(mViewLayoutResId);
         }
 }
@@ -698,22 +762,25 @@ class AlertListAdapter:public ArrayAdapter<std::string>{
 private:
     AlertController::AlertParams*mParams;
     ListView*LV;
+    int mLayoutResource;
 public:
-    AlertListAdapter(Context*ctx,const std::string&resource,int field)
-       :ArrayAdapter<std::string>::ArrayAdapter(ctx,resource,field),mParams(nullptr),LV(nullptr){
+    AlertListAdapter(Context*ctx,int resource,int field)
+       :ArrayAdapter<std::string>::ArrayAdapter(ctx,0,field),mParams(nullptr),LV(nullptr),mLayoutResource(resource){
     }
     void setParams(AlertController::AlertParams*param,ListView*lv){
         mParams=param;
         LV=lv;
     }
     View*getView(int position, View* convertView, ViewGroup* parent)override{
-        View* view=ArrayAdapter<std::string>::getView(position, convertView, parent);
+        if(convertView==nullptr){
+            convertView=LayoutInflater::from(mContext)->inflate(mLayoutResource,nullptr,false);
+        }
         if ( (position<mParams->mCheckedItems.size()) && mParams->mCheckedItems[position]){
             LV->setItemChecked(position, true);
         }
-        TextView*tv=(TextView*)view->findViewById(mFieldId);
+        TextView*tv=(TextView*)convertView->findViewById(mFieldId);
         if(tv)tv->setText(getItemAt(position));
-        return view;  
+        return convertView;
     }
 };
 
@@ -724,6 +791,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
     if (mIsMultiChoice) {
         if (mCursor == nullptr) {
             AlertListAdapter*alertadapter = new AlertListAdapter(mContext, dialog->mMultiChoiceItemLayout, R::id::text1);
+            dialog->mOwnsAdapter = true;
             alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter=alertadapter; 
@@ -747,7 +815,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
              };*/
         }
     } else {
-        const std::string layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
+        const int layout=mIsSingleChoice?dialog->mSingleChoiceItemLayout:dialog->mListItemLayout;
 
         if (mCursor) {
             //adapter = new SimpleCursorAdapter(mContext, layout, mCursor,
@@ -756,6 +824,7 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
             adapter = mAdapter;
         } else {
             AlertListAdapter*alertadapter =new AlertListAdapter(mContext, layout, R::id::text1);
+            dialog->mOwnsAdapter = true;
             alertadapter->setParams(this,listView);
             alertadapter->addAll(mItems);
             adapter = alertadapter;
@@ -801,16 +870,22 @@ void AlertController::AlertParams::createListView(AlertController* dialog){
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-DECLARE_WIDGET3(AlertController::RecycleListView,AlertController$RecycleListView,"");
+typedef AlertController::RecycleListView RecycleListView;
+DECLARE_WIDGET2(RecycleListView, "androidx.appcompat.app.AlertController$RecycleListView");
 
 bool AlertController::RecycleListView::recycleOnMeasure() {
     return mRecycleOnMeasure;
 }
 
-AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet& attrs)
+AlertController::RecycleListView::RecycleListView(Context* context,const AttributeSet* attrs)
     :ListView(context, attrs){
-    mPaddingBottomNoButtons = attrs.getDimensionPixelOffset("paddingBottomNoButtons", -1);
-    mPaddingTopNoTitle = attrs.getDimensionPixelOffset("paddingTopNoTitle", -1);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.RecycleListView) — the
+    // padding attrs carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t RECYCLE_LIST_VIEW_ATTRS[] = {
+        (uint32_t)R::attr::paddingBottomNoButtons, (uint32_t)R::attr::paddingTopNoTitle, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, RECYCLE_LIST_VIEW_ATTRS);
+    mPaddingBottomNoButtons = ta->getDimensionPixelOffset(0, -1);
+    mPaddingTopNoTitle = ta->getDimensionPixelOffset(1, -1);
 }
 
 void AlertController::RecycleListView::setHasDecor(bool hasTitle, bool hasButtons) {

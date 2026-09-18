@@ -19,7 +19,10 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.helper.widget.MotionEffect.
  */
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/constraintlayout/motion/motioneffect.h>
+#include <widgetEx/widgetex_styleable.h>
 
 #include <cmath>
 
@@ -28,32 +31,31 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 
-DECLARE_WIDGET(MotionEffect)
+DECLARE_WIDGET2(MotionEffect, "androidx.constraintlayout.helper.widget.MotionEffect");
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-MotionEffect::MotionEffect(Context* ctx, const AttributeSet& attrs)
-    : MotionHelper(ctx, attrs) {
-    init(attrs);
+MotionEffect::MotionEffect(Context* ctx,const AttributeSet* attrs):MotionEffect(ctx,attrs,0){}
+
+MotionEffect::MotionEffect(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : MotionHelper(ctx, pAttrs, defStyleAttr) {
+    init(pAttrs);
 }
 
-MotionEffect::MotionEffect(int width, int height)
-    : MotionHelper(width, height) {
-}
-
-void MotionEffect::init(const AttributeSet& attrs) {
+void MotionEffect::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
-    mMotionEffectStart = std::max(0, std::min(99, attrs.getInt("motionEffect_start", mMotionEffectStart)));
-    mMotionEffectEnd   = std::max(0, std::min(99, attrs.getInt("motionEffect_end", mMotionEffectEnd)));
-    mMotionEffectTranslationX = attrs.getDimensionPixelOffset("motionEffect_translationX", mMotionEffectTranslationX);
-    mMotionEffectTranslationY = attrs.getDimensionPixelOffset("motionEffect_translationY", mMotionEffectTranslationY);
-    mMotionEffectAlpha  = attrs.getFloat("motionEffect_alpha", mMotionEffectAlpha);
-    mMotionEffectStrictMove = attrs.getBoolean("motionEffect_strict", mMotionEffectStrictMove);
-    mViewTransitionId  = attrs.getResourceId("motionEffect_viewTransition", UNSET);
-    mFadeMove = attrs.getInt("motionEffect_move", std::unordered_map<std::string,int>{
-        {"auto", (int) AUTO}, {"north", (int) NORTH}, {"south", (int) SOUTH},
-        {"east", (int) EAST}, {"west", (int) WEST}
-    }, mFadeMove);
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP getContext().obtainStyledAttributes).
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::MotionEffect);
+    mMotionEffectStart = std::max(0, std::min(99, ta->getInt(R::styleable::MotionEffect_motionEffect_start, mMotionEffectStart)));
+    mMotionEffectEnd   = std::max(0, std::min(99, ta->getInt(R::styleable::MotionEffect_motionEffect_end, mMotionEffectEnd)));
+    mMotionEffectTranslationX = ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationX, mMotionEffectTranslationX);
+    mMotionEffectTranslationY = ta->getDimensionPixelOffset(R::styleable::MotionEffect_motionEffect_translationY, mMotionEffectTranslationY);
+    mMotionEffectAlpha  = ta->getFloat(R::styleable::MotionEffect_motionEffect_alpha, mMotionEffectAlpha);
+    mMotionEffectStrictMove = ta->getBoolean(R::styleable::MotionEffect_motionEffect_strict, mMotionEffectStrictMove);
+    mViewTransitionId  = ta->hasValue(R::styleable::MotionEffect_motionEffect_viewTransition) ? (int)ta->getResourceId(R::styleable::MotionEffect_motionEffect_viewTransition, UNSET) : UNSET;
+    mFadeMove = ta->hasValue(R::styleable::MotionEffect_motionEffect_move) ? ta->getInt(R::styleable::MotionEffect_motionEffect_move, mFadeMove) : mFadeMove;
     if (mMotionEffectStart == mMotionEffectEnd) {
         if (mMotionEffectStart > 0) mMotionEffectStart--;
         else mMotionEffectEnd++;

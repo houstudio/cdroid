@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ConstraintSetXmlParse: one fully-loaded <Constraint> (anchors, bias, margin, chain
+     style, ratio, visibility + transform props). View ids are @+id resources (px units
+     keep the expected values density-independent). -->
+<ConstraintSet xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+               xmlns:android="http://schemas.android.com/apk/res/android">
+    <Constraint android:id="@+id/cs_target"
+                android:layout_width="100px"
+                android:layout_height="60px"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintHorizontal_bias="0.25"
+                android:layout_marginLeft="8px"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintDimensionRatio="2:1"
+                android:visibility="invisible"
+                android:alpha="0.5"
+                android:rotation="45"
+                android:scaleX="2" />
+</ConstraintSet>

@@ -45,7 +45,7 @@
 #include <menu/menuinflater.h>
 
 namespace cdroid{
-namespace fragment{ struct FragmentState; }
+struct FragmentState;
 class Context;
 class Bundle;
 class View;
@@ -54,7 +54,6 @@ class LayoutInflater;
 class AttributeSet;
 class Handler;
 
-namespace fragment{
 class FragmentManager;
 class Window;
 class FragmentHostCallback;
@@ -91,6 +90,9 @@ public:
     cdroid::Bundle* mArguments = nullptr;
     std::string mTag;
     std::string mTargetWho;
+    // Runtime target-fragment pointer (androidx Fragment.setTargetFragment
+    // keeps the object reference; mTargetWho is the save-state who-string).
+    Fragment* mTargetFragment = nullptr;
     std::string mPreviousWho;
     int mFragmentId = 0;
     int mContainerId = 0;
@@ -121,9 +123,8 @@ public:
     bool mBeingSaved = false;
     // Custom transition animations pushed by FragmentTransaction.executeOps (androidx
     // Fragment.setAnimations -> AnimationInfo). Empty = use the default Fade transition.
-    std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
-    void setAnimations(const std::string& enter, const std::string& exit,
-                       const std::string& popEnter, const std::string& popExit){
+    int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
+    void setAnimations(int enter, int exit, int popEnter, int popExit){
         mEnterAnim = enter; mExitAnim = exit; mPopEnterAnim = popEnter; mPopExitAnim = popExit;
     }
     // Fragment Transition API (androidx Fragment.enterTransition etc.). nullptr = not set.
@@ -196,6 +197,15 @@ public:
     cdroid::View* getView() const { return mView; }
     cdroid::Bundle* getArguments() const { return mArguments; }
     void setArguments(cdroid::Bundle* args);
+    // androidx Fragment.setTargetFragment/getTargetFragment (Fragment.java):
+    // optional target for result-flow between fragments. Borrowed pointer —
+    // the target fragment must outlive this fragment's dialog use of it.
+    void setTargetFragment(Fragment* fragment, int requestCode) {
+        mTargetFragment = fragment;
+        mTargetRequestCode = requestCode;
+    }
+    Fragment* getTargetFragment() const { return mTargetFragment; }
+    int getTargetRequestCode() const { return mTargetRequestCode; }
     FragmentManager* getParentFragmentManager();
     FragmentManager* getChildFragmentManager();
     Fragment* getParentFragment() const { return mParentFragment; }
@@ -206,6 +216,26 @@ public:
     bool isMenuVisible() const;
     void setHasOptionsMenu(bool hasMenu);
     void setMenuVisibility(bool menuVisible);
+    /* @deprecated androidx Fragment.setUserVisibleHint: flag-only port — the hint-driven
+     * menu/loader machinery is superseded by FragmentTransaction.setMaxLifecycle. */
+    void setUserVisibleHint(bool isVisibleToUser);
+    bool getUserVisibleHint() const { return mUserVisibleHint; }
+
+    /* androidx Fragment.SavedState: state captured by FragmentManager.saveFragmentInstanceState,
+     * re-applied with setInitialSavedState before the fragment is (re)added. CDROID backs it
+     * with the FragmentState DTO (the port's round-trip unit) instead of a Bundle. */
+    class SavedState{
+    public:
+        explicit SavedState(FragmentState* state);
+        ~SavedState();
+    private:
+        friend class Fragment;
+        friend class FragmentManager;
+        FragmentState* mState;
+    };
+    /*androidx: set the initial saved state before the fragment is added (mState must be
+     * INITIALIZING). Takes ownership of the wrapped state (androidx shares the Bundle).*/
+    void setInitialSavedState(SavedState* state);
     bool isDetached() const { return mDetached; }
     bool isRemoving() const { return mRemoving; }
     bool isResumed() const { return mState == RESUMED; }
@@ -251,6 +281,5 @@ private:
     static std::string generateWho();
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

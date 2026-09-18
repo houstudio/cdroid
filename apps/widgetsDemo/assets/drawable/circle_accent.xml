@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Round gradient badge used as the animation-page target. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient
+        android:type="radial"
+        android:startColor="@color/grad_violet_a"
+        android:endColor="@color/grad_blue_b"
+        android:gradientRadius="48dp" />
+</shape>

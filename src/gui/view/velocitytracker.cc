@@ -443,7 +443,10 @@ VelocityTracker*VelocityTracker::obtain(const char*strategy){
 void VelocityTracker::recycle(){
     if(mStrategy ==VELOCITY_TRACKER_STRATEGY_DEFAULT){
         clear();
-        sPool.release(this);
+        // AOSP drops a tracker when the pool is full (GC reclaims it); without a
+        // GC the last holder must free it or every overflow tracker leaks.
+        if(!sPool.release(this))
+            delete this;
     }
 }
 

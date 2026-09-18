@@ -16,18 +16,28 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/imageview.h>
+#include <widget/internal_R.h>
 #include <widget/stackview.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(StackView);
+DECLARE_WIDGET2(StackView, "android.widget.StackView");
 
 std::shared_ptr<StackView::HolographicHelper> StackView::sHolographicHelper;
 
-StackView::StackView(Context* context,const  AttributeSet& attrs)
+StackView::StackView(Context*ctx)
+    :StackView(ctx,nullptr){}
+
+StackView::StackView(Context* context,const  AttributeSet* attrs)
     :AdapterViewAnimator(context, attrs){
 
-    mResOutColor = attrs.getColor("resOutColor", 0);
-    mClickColor = attrs.getColor("clickColor", 0);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.StackView) — resOutColor /
+    // clickColor carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t STACK_VIEW_ATTRS[] = {
+        (uint32_t)R::attr::resOutColor, (uint32_t)R::attr::clickColor, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, STACK_VIEW_ATTRS);
+    mResOutColor = ta->getColor(0, 0);
+    mClickColor  = ta->getColor(1, 0);
 
     initStackView();
 }
@@ -41,11 +51,11 @@ void StackView::initStackView() {
     mActivePointerId = INVALID_POINTER;
 
     mVelocityTracker = nullptr;
-    mHighlight = new ImageView(1,1);
+    mHighlight = new ImageView(getContext());
     mHighlight->setLayoutParams(new LayoutParams(mHighlight));
     addViewInLayout(mHighlight, -1, new LayoutParams(mHighlight));
 
-    mClickFeedback = new ImageView(1,1);
+    mClickFeedback = new ImageView(getContext());
     mClickFeedback->setLayoutParams(new LayoutParams(mClickFeedback));
     addViewInLayout(mClickFeedback, -1, new LayoutParams(mClickFeedback));
     mClickFeedback->setVisibility(INVISIBLE);
@@ -306,7 +316,7 @@ void StackView::updateChildTransforms() {
 /////////////////////////////////////////////////////////////////////////////////////////
 //private static class StackFrame:public FrameLayout {
 
-StackView::StackFrame::StackFrame(Context* context):FrameLayout(context,AttributeSet(context,"")){
+StackView::StackFrame::StackFrame(Context* context):FrameLayout(context){
 }
 
 void StackView::StackFrame::setTransformAnimator(ObjectAnimator* oa) {
@@ -1035,24 +1045,24 @@ std::string StackView::getAccessibilityClassName() const{
 void StackView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
     AdapterViewAnimator::onInitializeAccessibilityNodeInfoInternal(info);
     info.setScrollable(getChildCount() > 1);
-    /*if (isEnabled()) {
+    if (isEnabled()) {
         if (getDisplayedChild() < getChildCount() - 1) {
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_SCROLL_FORWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_FORWARD);
             if (mStackMode == ITEMS_SLIDE_UP) {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_DOWN);
             } else {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_UP);
             }
         }
         if (getDisplayedChild() > 0) {
-            info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_SCROLL_BACKWARD);
+            info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_BACKWARD);
             if (mStackMode == ITEMS_SLIDE_UP) {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_UP);
             } else {
-                info.addAction(AccessibilityNodeInfo.AccessibilityAction::ACTION_PAGE_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_PAGE_DOWN);
             }
         }
-    }*/
+    }
 }
 
 bool StackView::goForward() {
@@ -1085,20 +1095,20 @@ bool StackView::performAccessibilityActionInternal(int action, Bundle& arguments
     case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {
         return goBackward();
     }
-    /*case R.id.accessibilityActionPageUp: {
+    case R::id::accessibilityActionPageUp: {
         if (mStackMode == ITEMS_SLIDE_UP) {
             return goBackward();
         } else {
             return goForward();
         }
     }
-    case R.id.accessibilityActionPageDown: {
+    case R::id::accessibilityActionPageDown: {
         if (mStackMode == ITEMS_SLIDE_UP) {
             return goForward();
         } else {
             return goBackward();
         }
-    }*/
+    }
     }
     return false;
 }

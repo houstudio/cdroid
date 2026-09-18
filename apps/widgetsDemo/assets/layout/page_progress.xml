@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <!-- Page header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ph_energy_t"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="@string/ph_energy_d"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- Progress taxonomy: horizontal/circular × determinate/indeterminate -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_prog_modes"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <!-- Horizontal · determinate (static values, seek-bar-driven copy below) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="112dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/prog_h_determinate"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:layout_width="0dp"
+                    android:layout_height="14dp"
+                    android:layout_weight="1"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:progressDrawable="@drawable/progress_blue"
+                    android:max="100"
+                    android:progress="65"
+                    android:secondaryProgress="85" />
+            </LinearLayout>
+
+            <!-- Horizontal · indeterminate · Material two-segment vector (AVD) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="112dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/prog_h_indet_vec"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:id="@+id/indeterminate_material"
+                    android:layout_width="0dp"
+                    android:layout_height="10dp"
+                    android:layout_weight="1"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:indeterminate="true" />
+            </LinearLayout>
+
+            <!-- Horizontal · indeterminate · classic frame animation (style default) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:layout_width="112dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/prog_h_indet_anim"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:id="@+id/indeterminate_classic"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    style="@android:style/Widget.ProgressBar.Horizontal"
+                    android:indeterminate="true" />
+            </LinearLayout>
+
+            <!-- Circular · determinate (level-driven ring) / indeterminate (spinner) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <!-- progressBarStyleHorizontal turns off indeterminateOnly;
+                         the level-driven ring drawable makes it circular. -->
+                    <ProgressBar
+                        android:id="@+id/ring_determinate"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:progressDrawable="@drawable/progress_ring"
+                        android:max="100"
+                        android:progress="65" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/prog_c_determinate"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <ProgressBar
+                        android:id="@+id/spin_medium"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:indeterminate="true" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/prog_c_indeterminate"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="32dp"
+                    android:orientation="vertical"
+                    android:gravity="center_horizontal">
+                    <ProgressBar
+                        android:id="@+id/spin_large_top"
+                        style="?android:attr/progressBarStyleLarge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:indeterminate="true" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="@string/prog_c_indet_large"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Horizontal progress driven by the seek bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_progress"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <ProgressBar
+                android:id="@+id/progress_h"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="40"
+                android:secondaryProgress="60" />
+
+            <SeekBar
+                android:id="@+id/seekbar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:max="100"
+                android:progress="40"
+                android:contentDescription="Demo seek bar" />
+        </LinearLayout>
+
+        <!-- Progress style variants: tinted capsule bars, thin line, circles -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_prog_styles"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:layout_marginTop="@dimen/row_gap"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progress_blue"
+                android:max="100" android:progress="72"
+                android:secondaryProgress="88" />
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:layout_marginTop="10dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progress_green"
+                android:max="100" android:progress="45" />
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:layout_marginTop="10dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progress_amber"
+                android:max="100" android:progress="60" />
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="14dp"
+                android:layout_marginTop="10dp"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progress_purple"
+                android:max="100" android:progress="30" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ProgressBar
+                    android:id="@+id/spin_small"
+                    style="?android:attr/progressBarStyleSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Small"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/body_size" />
+                <ProgressBar
+                    android:id="@+id/spin_large"
+                    style="?android:attr/progressBarStyleLarge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="22dp"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Large"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/body_size" />
+            </LinearLayout>
+
+            <!-- Material AVD rings and classic Inverse PNG spinners: same
+                 indeterminate family, different drawable generations. -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <ProgressBar
+                    android:id="@+id/spin_material_m"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Material M"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:id="@+id/spin_material_l"
+                    android:layout_width="52dp"
+                    android:layout_height="52dp"
+                    android:layout_marginStart="20dp"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Material L"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:id="@+id/spin_inverse_m"
+                    style="@android:style/Widget.ProgressBar.Inverse"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="20dp"
+                    android:background="@drawable/circle_light"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Inverse M"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+                <ProgressBar
+                    android:id="@+id/spin_inverse_s"
+                    style="@android:style/Widget.ProgressBar.Small.Inverse"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="20dp"
+                    android:background="@drawable/circle_light"
+                    android:indeterminate="true" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:text="Inverse S"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginTop="@dimen/row_gap"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:progressDrawable="@drawable/progress_blue"
+                android:max="100" android:progress="55" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/prog_thin_hint"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- SeekBar style variants -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_seek_styles"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/title_size" />
+
+            <SeekBar
+                android:id="@+id/seek_styled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:progressDrawable="@drawable/seek_track_grad"
+                android:thumb="@drawable/seek_thumb_dot"
+                android:thumbOffset="2dp"
+                android:max="100" android:progress="70" />
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:progressDrawable="@drawable/progress_purple"
+                android:max="100" android:progress="35"
+                android:contentDescription="Seek bar (purple track)" />
+            <SeekBar
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:enabled="false"
+                android:max="100" android:progress="80"
+                android:contentDescription="Seek bar (disabled)" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/seek_disabled_hint"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <!-- Indeterminate spinner + chronometer -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <ProgressBar
+                android:id="@+id/spinner"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:indeterminate="true" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="@dimen/card_padding"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sec_chrono"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="@dimen/title_size" />
+                <Chronometer
+                    android:id="@+id/chrono"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/row_gap"
+                    android:textColor="@color/accent"
+                    android:textSize="@dimen/body_size"
+                    android:format="Elapsed: %s" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/chrono_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/btn_demo"
+                android:textColor="@color/text_primary"
+                android:text="Start" />
+        </LinearLayout>
+
+        <!-- Rating -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+
+            <RatingBar
+                android:id="@+id/rating2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:rating="3"
+                android:stepSize="1"
+                android:contentDescription="Star rating" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

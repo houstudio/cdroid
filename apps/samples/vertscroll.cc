@@ -1,4 +1,5 @@
 #include<cdroid.h>
+#include<widget/internal_R.h>
 #include<cdlog.h>
 
 class MyAdapter:public ArrayAdapter<std::string>{
@@ -12,8 +13,8 @@ class MyAdapter:public ArrayAdapter<std::string>{
  
           TextView*tv=(TextView*)convertView;
           if(convertView==nullptr){
-              if(itemType==0) tv=new TextView("",600,20);
-              else tv=new CheckBox("",600,20);
+              if(itemType==0) tv=new TextView(&App::getInstance());
+              else tv=new CheckBox(&App::getInstance());
               tv->setPadding(20,0,0,0);
               tv->setFocusable(false);
           }
@@ -30,7 +31,7 @@ class MyAdapter:public ArrayAdapter<std::string>{
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    ScrollView*scroller=new ScrollView(-1,-1);
+    ScrollView*scroller=new ScrollView(&App::getInstance());
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setVerticalScrollbarThumbDrawable(new ColorDrawable(0xFF334455));
@@ -38,7 +39,7 @@ int main(int argc,const char*argv[]){
     w->addView(scroller);
     scroller->setId(100);
 
-    LinearLayout*layout=new LinearLayout(-1,-1);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     layout->setOrientation(LinearLayout::VERTICAL);
     scroller->addView(layout,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,(LayoutParams::WRAP_CONTENT)));
     layout->setId(200);
@@ -46,9 +47,9 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<50;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,100);//(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
-        EditText*edit=new EditText(std::string("String")+std::to_string(i),680,200);
-        edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
-        //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
+        EditText*edit=new EditText(&App::getInstance());   // editTextStyle default style
+        edit->setText(std::string("String")+std::to_string(i));
+        edit->setTextColor(0xFFFFFFFF);
         edit->setSingleLine(true);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         edit->setBackgroundColor(0xFF000000|((i*8)<<16)|((i*8)<<8)|(i*8));
@@ -57,7 +58,7 @@ int main(int argc,const char*argv[]){
         layout->addView(edit,lp);
     }
 
-    /*ListView*lv=new ListView(0,300);
+    /*ListView*lv=new ListView(&App::getInstance());
     MyAdapter*adapter=new MyAdapter();
     lv->setAdapter(adapter);
     lv->setSelector(new ColorDrawable(0x8000FF00));

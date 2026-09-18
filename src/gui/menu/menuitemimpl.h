@@ -48,7 +48,7 @@ private:
     int mShortcutAlphabeticModifiers = KeyEvent::META_CTRL_ON;
 
     Drawable* mIconDrawable;
-    std::string mIconResId;
+    int mIconResId = NO_ICON;
 
     RefPtr<ColorStateList> mIconTintList;
     int mIconTintMode;
@@ -131,7 +131,7 @@ public:
 
     Drawable* getIcon()override;
     MenuItem& setIcon(Drawable* icon)override;
-    MenuItem& setIcon(const std::string& iconResId)override;
+    MenuItem& setIcon(int iconResId)override;
 
     MenuItem& setIconTintList(const RefPtr<ColorStateList>& iconTintList)override;
     const RefPtr<ColorStateList> getIconTintList()override;
@@ -176,7 +176,7 @@ public:
     void setShowAsAction(int actionEnum) override;
 
     MenuItem& setActionView(View* view)override;
-    MenuItem& setActionView(const std::string& resId)override;
+    MenuItem& setActionView(int resId)override;
 
     View* getActionView()override;
 

@@ -30,15 +30,17 @@
 #include <memory>
 #include <lifecycle/lifecycle.h>
 #include <core/handler.h>
+#include <fragment/fragment.h>
 #include <core/callbackbase.h>
 #include <fragment/fragmentstate.h>
+#include <view/layoutinflater.h>
 namespace cdroid{
+class AttributeSet;
 class LayoutInflater;
 class View;
 class Menu;
 class MenuInflater;
 class MenuItem;
-namespace fragment{
 
 class Fragment;
 class FragmentHostCallback;
@@ -134,6 +136,13 @@ public:
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }
 
+    // androidx FragmentManager.getLayoutInflaterFactory(): the Factory2 this manager hands
+    // to the host's LayoutInflater (androidx composes it as FragmentLayoutInflaterFactory,
+    // whose body is onCreateView below — the <fragment> XML tag handler).
+    LayoutInflater::Factory2 getLayoutInflaterFactory();
+    View* onCreateView(View* parent, const std::string& name, Context* context,
+                       const AttributeSet& attrs);
+
     // Alive-guard for posted fragment-reclaim hooks: a shared_ptr<bool> whose weak alias is captured
     // into each SEC reclaim hook. ~FragmentManager releases the shared_ptr, expiring the weak, so a
     // hook posted during navigation but fired after Activity/host teardown (FM already destroyed) is
@@ -148,6 +157,10 @@ public:
     // Shared-element transition: the active BackStackRecord declares shared element names;
     // FragmentManager resolves them to target views (by transitionName) in the entering fragment.
     void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
+
+    // androidx FragmentManager.saveFragmentInstanceState(Fragment): capture a live fragment's
+    // state as Fragment::SavedState; null if the fragment is not yet added.
+    Fragment::SavedState* saveFragmentInstanceState(Fragment* fragment);
 
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine
@@ -218,6 +231,5 @@ private:
     std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);  // see getAlive()
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

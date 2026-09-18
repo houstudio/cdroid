@@ -19,6 +19,8 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.ViewTransition.
  */
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
@@ -45,23 +47,10 @@
 #include <view/view.h>
 
 #include <limits>
+#include <unordered_map>
 
 namespace cdroid {
-
-namespace {
-const std::unordered_map<std::string, int> kOnState = {
-    {"actionDown",      (int) ViewTransition::ONSTATE_ACTION_DOWN},
-    {"actionUp",        (int) ViewTransition::ONSTATE_ACTION_UP},
-    {"actionDownUp",    (int) ViewTransition::ONSTATE_ACTION_DOWN_UP},
-    {"sharedValueSet",  (int) ViewTransition::ONSTATE_SHARED_VALUE_SET},
-    {"sharedValueUnset",(int) ViewTransition::ONSTATE_SHARED_VALUE_UNSET}
-};
-const std::unordered_map<std::string, int> kViewTransitionMode = {
-    {"currentState", (int) ViewTransition::VIEWTRANSITIONMODE_CURRENTSTATE},
-    {"allStates",    (int) ViewTransition::VIEWTRANSITIONMODE_ALLSTATES},
-    {"noState",      (int) ViewTransition::VIEWTRANSITIONMODE_NOSTATE}
-};
-} // namespace
+using namespace cdroid::internal;
 
 ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& parser)
     : mScene(scene) {
@@ -71,39 +60,58 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "ViewTransition") {
-                mId = mScene.getId(parser.getAttributeValue("id"));
-                const int targetId = parser.getResourceId("motionTarget", UNSET);
-                if (targetId != UNSET && targetId != 0) {
-                    mTargetId = targetId;
-                } else {
-                    mTargetString = parser.getAttributeValue("motionTarget");
+                // TypedArray reads typed binary AXML values directly (AOSP pattern, same as
+                // MotionScene::Transition/OnClick/OnSwipe); the default arg covers an absent
+                // attr, so no name-based fallback is needed. Enums (onStateTransition,
+                // viewTransitionMode, pathMotionArc) are compiled to their int values by aapt2.
+                auto ta = ctx->obtainStyledAttributes(parser, R::styleable::ViewTransition);
+                if (ta) {
+                    namespace VT = R::styleable;
+                    mId = (int)ta->getResourceId(VT::ViewTransition_id, UNSET);
+                    // motionTarget is reference|string: a @id/... ref resolves to a resource id;
+                    // a bare string is a constraintTag regex matched later in matchesView().
+                    const int targetId = (int)ta->getResourceId(VT::ViewTransition_motionTarget, UNSET);
+                    if (targetId != UNSET && targetId != 0) {
+                        mTargetId = targetId;
+                    } else {
+                        mTargetString = ta->getString(VT::ViewTransition_motionTarget);
+                    }
+                    mOnStateTransition = ta->getInt(VT::ViewTransition_onStateTransition, mOnStateTransition);
+                    mDisabled           = ta->getBoolean(VT::ViewTransition_transitionDisable, mDisabled);
+                    mPathMotionArc      = ta->getInt(VT::ViewTransition_pathMotionArc, mPathMotionArc);
+                    mDuration           = ta->getInt(VT::ViewTransition_duration, mDuration);
+                    mUpDuration         = ta->getInt(VT::ViewTransition_upDuration, mUpDuration);
+                    mViewTransitionMode = ta->getInt(VT::ViewTransition_viewTransitionMode, mViewTransitionMode);
+                    mDefaultInterpolatorString = ta->getString(VT::ViewTransition_motionInterpolator);
+                    mSetsTag     = (int)ta->getResourceId(VT::ViewTransition_setsTag,    mSetsTag);
+                    mClearsTag   = (int)ta->getResourceId(VT::ViewTransition_clearsTag,  mClearsTag);
+                    mIfTagSet    = (int)ta->getResourceId(VT::ViewTransition_ifTagSet,   mIfTagSet);
+                    mIfTagNotSet = (int)ta->getResourceId(VT::ViewTransition_ifTagNotSet,mIfTagNotSet);
+                    mSharedValueID     = (int)ta->getResourceId(VT::ViewTransition_SharedValueId, mSharedValueID);
+                    mSharedValueTarget = ta->getInt(VT::ViewTransition_SharedValue, mSharedValueTarget);
                 }
-                mOnStateTransition = parser.getInt("onStateTransition", kOnState, mOnStateTransition);
-                mDisabled           = parser.getBoolean("transitionDisable", mDisabled);
-                mPathMotionArc      = parser.getInt("pathMotionArc", mPathMotionArc);
-                mDuration           = parser.getInt("duration", mDuration);
-                mUpDuration         = parser.getInt("upDuration", mUpDuration);
-                mViewTransitionMode = parser.getInt("viewTransitionMode", kViewTransitionMode,
-                                                    mViewTransitionMode);
-                mDefaultInterpolatorString = parser.getAttributeValue("motionInterpolator");
-                mSetsTag    = parser.getResourceId("setsTag",    mSetsTag);
-                mClearsTag  = parser.getResourceId("clearsTag",  mClearsTag);
-                mIfTagSet   = parser.getResourceId("ifTagSet",   mIfTagSet);
-                mIfTagNotSet= parser.getResourceId("ifTagNotSet",mIfTagNotSet);
-                mSharedValueID     = parser.getResourceId("SharedValueId", mSharedValueID);
-                mSharedValueTarget = parser.getInt("SharedValue", mSharedValueTarget);
             } else if (tag == "KeyFrameSet") {
                 mKeyFrames = std::make_unique<KeyFrames>(ctx, parser); // consumes through </KeyFrameSet>
             } else if (tag == "Constraint" || tag == "ConstraintOverride") {
                 // A per-view override that becomes the delta applied in currentState/allStates mode.
-                mConstraintDelta.loadConstraint(parser); // consumes through </Constraint>
+                mConstraintDelta.loadConstraint(ctx, parser); // consumes through </Constraint>
             } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
                 // A ViewTransition-level custom attribute: stored on the delta's set-level collection
                 // and applied to every target via applyDelta.
-                mConstraintDelta.loadCustomAttribute(parser);
+                mConstraintDelta.loadCustomAttribute(ctx, parser);
             }
         } else if (eventType == XmlPullParser::END_TAG) {
-            if (parser.getName() == "ViewTransition") return;
+            if (parser.getName() == "ViewTransition") {
+                /* androidx ViewTransition: an unspecified duration falls back to
+                   DEFAULT_DURATION (400ms), and upDuration falls back to duration.
+                   Without this, mDuration stays UNSET(-1) and Animate computes a
+                   negative mDpositionDt (1/-1): the position walks backwards,
+                   never reaches 1.0, the Animate is never reaped — and the
+                   controller's INFINITE frame animator spins forever. */
+                if (mDuration == UNSET) mDuration = DEFAULT_DURATION;
+                if (mUpDuration == UNSET) mUpDuration = mDuration;
+                return;
+            }
         }
         parser.next();
     }
@@ -150,16 +158,16 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         for (View* v : views) applyIndependentTransition(controller, layout, v);
         return;
     }
-    // currentState / allStates: apply mConstraintDelta to the current ConstraintSet and animate the
-    // target views to the resulting state. Android clones the current set, applies the delta, then
-    // drives a temporary Transition (start = current, end = delta'd) via transitionToEnd — which is
-    // exactly CDROID's setTransition(start, end) + transitionToEnd().
+    // currentState / allStates: apply the delta as an independent per-view animation (same
+    // mechanism as noState above) rather than replacing the main transition. The old approach
+    // (setTransition + transitionToEnd) replaced the main start↔end transition with a temporary
+    // current→delta'd one, so the OnClick toggle fired a phantom animateTo that interrupted the
+    // ViewTransition animation and corrupted progress.
     if (current == nullptr || layout == nullptr) return;
-    if (mConstraintDelta.empty()) return; // nothing to apply
 
     // allStates additionally persists the delta into EVERY ConstraintSet (except the from-state) so
     // the change survives a later state switch (Android applyTransition 491-506).
-    if (mViewTransitionMode == VIEWTRANSITIONMODE_ALLSTATES) {
+    if (mViewTransitionMode == VIEWTRANSITIONMODE_ALLSTATES && !mConstraintDelta.empty()) {
         for (int id : layout->getConstraintSetIds()) {
             if (id == fromId) continue;
             ConstraintSet* cSet = layout->getConstraintSet(id);
@@ -171,14 +179,42 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
         }
     }
 
-    ConstraintSet transformed = *current;               // deep copy (map of Constraint)
+    // androidx animates current -> current+delta by cloning the current set, applying the delta
+    // per target, and transitioning to it. CDROID keeps the independent per-view Animate
+    // (f6b5548e4 — never replaces the main transition), but the Animate still gets the delta'd
+    // endpoint: solve current+delta once via captureState and use the resulting frames as each
+    // Motion's end. Capture the start frames BEFORE the solve (it re-layouts the children), and
+    // restore the live layout to the current state afterwards so nothing visible moves.
+    std::unordered_map<int, MotionWidget> startFrames, endFrames;
     for (View* v : views) {
-        if (v == nullptr) continue;
-        mConstraintDelta.applyDelta(transformed.get(v->getId()));
+        if (v == nullptr || v->getId() == View::NO_ID) continue;
+        MotionLayout::captureWidgetFrame(startFrames[v->getId()], v);
     }
-    layout->setTransition(current, &transformed);
-    // On completion, set/clear the tags (mirrors Android's transitionToEnd Runnable).
-    layout->transitionToEnd([this, views] { applyTagsToViews(views); });
+    if (!mConstraintDelta.empty()) {
+        ConstraintSet deltaSet(*current); // deep copy — every member is a value type
+        for (View* v : views) {
+            if (v == nullptr || v->getId() == View::NO_ID) continue;
+            mConstraintDelta.applyDelta(deltaSet.get(v->getId()));
+        }
+        layout->captureState(&deltaSet, endFrames);
+    }
+    for (View* v : views) {
+        // AndroidX animates only targets it could frame — a view with no id never enters
+        // start/endFrames, and its fallback below would build the Motion while the layout
+        // still rests at the delta'd state, pinning the view to the delta frame forever.
+        if (v == nullptr || v->getId() == View::NO_ID) continue;
+        const auto s = startFrames.find(v->getId());
+        const auto e = endFrames.find(v->getId());
+        if (s != startFrames.end() && e != endFrames.end()) {
+            applyIndependentTransition(controller, layout, v, s->second, e->second);
+        } else {
+            applyIndependentTransition(controller, layout, v); // no delta: keyframes only
+        }
+    }
+    if (!endFrames.empty()) { // captureState left the layout at the delta'd set — put it back
+        std::unordered_map<int, MotionWidget> restore;
+        layout->captureState(current, restore);
+    }
 }
 
 bool ViewTransition::addAllFrames(Motion* mc) const {
@@ -212,9 +248,19 @@ void ViewTransition::applyIndependentTransition(ViewTransitionController* contro
     // 1 leave the view untouched; the KeyFrameSet defines the deviation in between.
     MotionWidget mw;
     MotionLayout::captureWidgetFrame(mw, view);
+    applyIndependentTransition(controller, layout, view, mw, mw);
+}
+
+void ViewTransition::applyIndependentTransition(ViewTransitionController* controller,
+                                                MotionLayout* layout, View* view,
+                                                MotionWidget& start, MotionWidget& end) {
+    if (view == nullptr || layout == nullptr) return;
+    // Motion::setStart/setEnd read the widget state into their path points synchronously
+    // (nothing is retained), so the caller-owned frames are borrowed directly — MotionWidget's
+    // copy is shallow (it owns its WidgetFrame), no by-value copies here.
     Motion* m = new Motion();
-    m->setStart(&mw);
-    m->setEnd(&mw);
+    m->setStart(&start);
+    m->setEnd(&end);
     if (mKeyFrames) {
         for (MotionKey* key : mKeyFrames->getKeysForView(view->getId())) {
             switch (key->mType) {

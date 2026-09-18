@@ -28,7 +28,6 @@
 namespace cdroid{
 class View;
 class ViewGroup;
-namespace fragment{
 
 // shared-element name -> view mapping passed across a fragment transition.
 using SharedElementMapping = std::map<std::string, View*>;
@@ -42,6 +41,5 @@ public:
     static Transition* makeExitTransition(const SharedElementMapping& sharedElements = {});
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

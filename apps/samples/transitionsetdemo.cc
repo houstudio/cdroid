@@ -21,11 +21,11 @@ int main(int argc, const char* argv[]){
     Window* w = new Window(0, 0, -1, -1);
     w->setBackgroundColor(0xFF223344);
 
-    LinearLayout* root = new LinearLayout(-1, -1);
+    LinearLayout* root = new LinearLayout(&app);
     root->setOrientation(LinearLayout::VERTICAL);
     w->addView(root);
 
-    Button* toggle = new Button("Toggle Fade + Rotate", 700, 140);
+    Button* toggle =new Button(&app); toggle->setText("Toggle Fade + Rotate" );
     toggle->setTextSize(32);
     root->addView(toggle);
 
@@ -34,11 +34,11 @@ int main(int argc, const char* argv[]){
     // from content. A WRAP sceneRoot collapses to 0 when the box goes GONE during the
     // disappear transition (the box is measured 0 before setTransitionVisibility runs),
     // which quick-rejects sceneRoot and hides the rotating box. Android behaves the same.
-    FrameLayout* sceneRoot = new FrameLayout(-1, 800);
+    FrameLayout* sceneRoot = new FrameLayout(&app);
     sceneRoot->setLayoutParams(new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, 0, 1.0f));
     root->addView(sceneRoot);
 
-    View* box = new View(500, 500);
+    View* box = new View(&app);
     box->setBackgroundColor(0xFFFF4081);
     box->setId(2001);
     sceneRoot->addView(box);

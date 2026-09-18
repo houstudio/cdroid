@@ -24,10 +24,15 @@
 #include <widget/explorebytouchhelper.h>
 namespace cdroid{
 
+class NumberFormat;   // content/numberformat.h — the day formatter below
+
 class SimpleMonthView:public View{
 public:
     DECLARE_UIEVENT(void,OnDayClickListener,SimpleMonthView& view, Calendar& day);
 private:
+    // AOSP mDayFormatter = NumberFormat.getIntegerInstance(mLocale): the day
+    // numbers are localized digits (ar ٠١٢…), not ASCII.
+    std::unique_ptr<NumberFormat> mDayFormatter;
     static constexpr int DAYS_IN_WEEK =7;
     static constexpr int MAX_WEEKS_IN_MONTH = 6;
     static constexpr int DEFAULT_SELECTED_DAY=-1;
@@ -37,7 +42,8 @@ private:
 
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
-    MonthViewTouchHelper*mTouchHelper;
+    int mDayOfWeekNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
+    std::shared_ptr<MonthViewTouchHelper> mTouchHelper;
 
     // Text paints: rendered via Paint::drawTextRun, which honors Paint::Align
     // and routes through minikin for font fallback (direct cairo font calls do
@@ -100,7 +106,7 @@ private:
     void initPaints();
     void updateMonthYearLabel();
     void updateDayOfWeekLabels();
-    const cdroid::RefPtr<ColorStateList> applyTextAppearance(Paint& p, const std::string& resId);
+    const cdroid::RefPtr<ColorStateList> applyTextAppearance(Paint& p, int resId);
     bool moveOneDay(bool positive);
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);
@@ -129,15 +135,24 @@ protected:
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas& canvas)override;
 public:
-    SimpleMonthView(int,int);
-    SimpleMonthView(Context*,const AttributeSet&atts);
+    SimpleMonthView(Context*ctx);   // AOSP SimpleMonthView(Context)
+    SimpleMonthView(Context*,const AttributeSet*atts);
+    SimpleMonthView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~SimpleMonthView()override;
     int getMonthHeight()const;
     int getCellWidth()const;
      
-    void setMonthTextAppearance(const std::string& resId);
-    void setDayOfWeekTextAppearance(const std::string& resId);
-    void setDayTextAppearance(const std::string& resId);
+    void setMonthTextAppearance(int resId);
+    void setDayOfWeekTextAppearance(int resId);
+    void setDayTextAppearance(int resId);
+
+    /* CDROID extension (AOSP hardcodes narrow weekday labels): 0 = narrow
+       (AOSP default), 1 = abbreviated, 2 = wide weekday names. */
+    void setDayOfWeekNameLength(int length);
+
+    /* CDROID runtime-locale extension: rebuild the month-year title and the
+       weekday header from the current locale's symbols. */
+    void onLocaleChanged();
 
     void setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor);
     void setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor);

@@ -15,7 +15,9 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <execinfo.h>
 #include <algorithm>
+#include <porting/cdlog.h>
 #include <view/viewtreeobserver.h>
 #include <cdlog.h>
 namespace cdroid {
@@ -90,50 +92,50 @@ void ViewTreeObserver::merge(ViewTreeObserver& observer) {
 
 
     if (observer.mOnGlobalFocusListeners.size()) {
-	mOnGlobalFocusListeners.reserve(mOnGlobalFocusListeners.size() + observer.mOnGlobalFocusListeners.size());
-	mOnGlobalFocusListeners.insert(mOnGlobalFocusListeners.end(),observer.mOnGlobalFocusListeners.begin(),
+	    mOnGlobalFocusListeners.reserve(mOnGlobalFocusListeners.size() + observer.mOnGlobalFocusListeners.size());
+	    mOnGlobalFocusListeners.insert(mOnGlobalFocusListeners.end(),observer.mOnGlobalFocusListeners.begin(),
 			observer.mOnGlobalFocusListeners.end());
     }
 
     if (observer.mOnGlobalLayoutListeners.size()) {
-	mOnGlobalLayoutListeners.reserve(mOnGlobalLayoutListeners.size() + observer.mOnGlobalLayoutListeners.size());
-	mOnGlobalLayoutListeners.insert(mOnGlobalLayoutListeners.end(),observer.mOnGlobalLayoutListeners.begin(),
+	    mOnGlobalLayoutListeners.reserve(mOnGlobalLayoutListeners.size() + observer.mOnGlobalLayoutListeners.size());
+	    mOnGlobalLayoutListeners.insert(mOnGlobalLayoutListeners.end(),observer.mOnGlobalLayoutListeners.begin(),
 			observer.mOnGlobalLayoutListeners.end());
     }
 
     if (observer.mOnPreDrawListeners.size()) {
-	mOnPreDrawListeners.reserve(mOnPreDrawListeners.size() + observer.mOnPreDrawListeners.size());
-	mOnPreDrawListeners.insert(mOnPreDrawListeners.end(),observer.mOnPreDrawListeners.begin(),
+	    mOnPreDrawListeners.reserve(mOnPreDrawListeners.size() + observer.mOnPreDrawListeners.size());
+	    mOnPreDrawListeners.insert(mOnPreDrawListeners.end(),observer.mOnPreDrawListeners.begin(),
 			observer.mOnPreDrawListeners.end());
     }
 
     if (observer.mOnDrawListeners.size()) {
-	mOnDrawListeners.reserve(mOnDrawListeners.size() + observer.mOnDrawListeners.size());
-	mOnDrawListeners.insert(mOnDrawListeners.end(),observer.mOnDrawListeners.begin(),
+	    mOnDrawListeners.reserve(mOnDrawListeners.size() + observer.mOnDrawListeners.size());
+	    mOnDrawListeners.insert(mOnDrawListeners.end(),observer.mOnDrawListeners.begin(),
 			observer.mOnDrawListeners.end());
     }
 
     if (observer.mOnTouchModeChangeListeners.size()) {
-	mOnTouchModeChangeListeners.reserve(mOnTouchModeChangeListeners.size() + observer.mOnTouchModeChangeListeners.size());
-	mOnTouchModeChangeListeners.insert(mOnTouchModeChangeListeners.end(),observer.mOnTouchModeChangeListeners.begin(),
+	    mOnTouchModeChangeListeners.reserve(mOnTouchModeChangeListeners.size() + observer.mOnTouchModeChangeListeners.size());
+	    mOnTouchModeChangeListeners.insert(mOnTouchModeChangeListeners.end(),observer.mOnTouchModeChangeListeners.begin(),
 			observer.mOnTouchModeChangeListeners.end());
     }
 
     if (observer.mOnComputeInternalInsetsListeners.size()) {
-	mOnComputeInternalInsetsListeners.reserve(mOnComputeInternalInsetsListeners.size() + observer.mOnComputeInternalInsetsListeners.size());
-	mOnComputeInternalInsetsListeners.insert(mOnComputeInternalInsetsListeners.end(),observer.mOnComputeInternalInsetsListeners.begin(),
+	    mOnComputeInternalInsetsListeners.reserve(mOnComputeInternalInsetsListeners.size() + observer.mOnComputeInternalInsetsListeners.size());
+	    mOnComputeInternalInsetsListeners.insert(mOnComputeInternalInsetsListeners.end(),observer.mOnComputeInternalInsetsListeners.begin(),
 			observer.mOnComputeInternalInsetsListeners.end());
     }
 
     if (observer.mOnScrollChangedListeners.size()) {
-	mOnScrollChangedListeners.reserve(mOnScrollChangedListeners.size() + observer.mOnScrollChangedListeners.size());
-	mOnScrollChangedListeners.insert(mOnScrollChangedListeners.end(),observer.mOnScrollChangedListeners.begin(),
+	    mOnScrollChangedListeners.reserve(mOnScrollChangedListeners.size() + observer.mOnScrollChangedListeners.size());
+	    mOnScrollChangedListeners.insert(mOnScrollChangedListeners.end(),observer.mOnScrollChangedListeners.begin(),
 			observer.mOnScrollChangedListeners.end());
     }
 
     if (observer.mOnWindowShownListeners.size()) {
-	mOnWindowShownListeners.reserve(mOnWindowShownListeners.size() + observer.mOnWindowShownListeners.size());
-	mOnWindowShownListeners.insert(mOnWindowShownListeners.end(),observer.mOnWindowShownListeners.begin(),
+        mOnWindowShownListeners.reserve(mOnWindowShownListeners.size() + observer.mOnWindowShownListeners.size());
+        mOnWindowShownListeners.insert(mOnWindowShownListeners.end(),observer.mOnWindowShownListeners.begin(),
 			observer.mOnWindowShownListeners.end());
     }
 
@@ -165,8 +167,9 @@ void ViewTreeObserver::addOnWindowFocusChangeListener(const OnWindowFocusChangeL
 void ViewTreeObserver::removeOnWindowFocusChangeListener(const OnWindowFocusChangeListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnWindowFocusListeners.begin(),mOnWindowFocusListeners.end(),victim);
-    if(it!=mOnWindowFocusListeners.end())
+    if(it!=mOnWindowFocusListeners.end()){
        mOnWindowFocusListeners.erase(it);
+    }
 }
 
 void ViewTreeObserver::addOnGlobalFocusChangeListener(const OnGlobalFocusChangeListener& listener) {
@@ -178,8 +181,9 @@ void ViewTreeObserver::addOnGlobalFocusChangeListener(const OnGlobalFocusChangeL
 void ViewTreeObserver::removeOnGlobalFocusChangeListener(const OnGlobalFocusChangeListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnGlobalFocusListeners.begin(),mOnGlobalFocusListeners.end(),victim);
-    if(it != mOnGlobalFocusListeners.end())
+    if(it != mOnGlobalFocusListeners.end()){
         mOnGlobalFocusListeners.erase(it);
+    }
 }
 
 void ViewTreeObserver::addOnGlobalLayoutListener(const OnGlobalLayoutListener& listener) {
@@ -196,8 +200,9 @@ void ViewTreeObserver::removeGlobalOnLayoutListener(const OnGlobalLayoutListener
 void ViewTreeObserver::removeOnGlobalLayoutListener(const OnGlobalLayoutListener& victim) {
     checkIsAlive();
     auto it = std::find(mOnGlobalLayoutListeners.begin(),mOnGlobalLayoutListeners.end(),victim);
-    if(it != mOnGlobalLayoutListeners.end())
+    if(it != mOnGlobalLayoutListeners.end()){
         mOnGlobalLayoutListeners.erase(it);
+    }
 }
 
 void ViewTreeObserver::addOnPreDrawListener(const OnPreDrawListener& listener) {
@@ -208,9 +213,13 @@ void ViewTreeObserver::addOnPreDrawListener(const OnPreDrawListener& listener) {
 
 void ViewTreeObserver::removeOnPreDrawListener(const OnPreDrawListener& victim) {
     checkIsAlive();
-    auto it = std::find(mOnPreDrawListeners.begin(),mOnPreDrawListeners.end(),victim);
-    if(it!=mOnPreDrawListeners.end())
-	mOnPreDrawListeners.erase(it);
+    // Erase ALL equal entries: a double-attach adds the same listener twice,
+    // and a single-erase remove left the second copy registered — it fired on
+    // freed views after teardown (the popup preDraw/touchMode crashes).
+    for (auto it = mOnPreDrawListeners.begin(); it != mOnPreDrawListeners.end();) {
+        if (*it == victim) it = mOnPreDrawListeners.erase(it);
+        else ++it;
+    }
 }
 
 void ViewTreeObserver::addOnWindowShownListener(const OnWindowShownListener& listener) {
@@ -233,13 +242,9 @@ void ViewTreeObserver::addOnDrawListener(const OnDrawListener& listener) {
     checkIsAlive();
 
     if (mInDispatchOnDraw) {
-        /*IllegalStateException ex = new IllegalStateException(
-            "Cannot call addOnDrawListener inside of onDraw");
-        if (sIllegalOnDrawModificationIsFatal) {
-            throw ex;
-        } else {
-            Log.e("ViewTreeObserver", ex.getMessage(), ex);
-        }*/
+        // AOSP throws IllegalStateException (or logs when non-fatal); the
+        // dispatchOnDraw snapshot makes the mutation safe, so just warn.
+        LOGE("ViewTreeObserver: Cannot call addOnDrawListener inside of onDraw");
     }
     mOnDrawListeners.push_back(listener);
 }
@@ -247,13 +252,7 @@ void ViewTreeObserver::addOnDrawListener(const OnDrawListener& listener) {
 void ViewTreeObserver::removeOnDrawListener(const OnDrawListener& victim) {
     checkIsAlive();
     if (mInDispatchOnDraw) {
-        /*IllegalStateException ex = new IllegalStateException(
-        if (sIllegalOnDrawModificationIsFatal) {
-            FATAL("Cannot call removeOnDrawListener inside of onDraw");
-            
-        } else {
-            Log.e("ViewTreeObserver", ex.getMessage(), ex);
-        }*/
+        LOGE("ViewTreeObserver: Cannot call removeOnDrawListener inside of onDraw");
     }
     auto it = std::find(mOnDrawListeners.begin(),mOnDrawListeners.end(),victim);
     if(it!=mOnDrawListeners.end())mOnDrawListeners.erase(it);
@@ -280,9 +279,12 @@ void ViewTreeObserver::addOnTouchModeChangeListener(const OnTouchModeChangeListe
 
 void ViewTreeObserver::removeOnTouchModeChangeListener(const OnTouchModeChangeListener& victim) {
     checkIsAlive();
-    auto it = std::find(mOnTouchModeChangeListeners.begin(),mOnTouchModeChangeListeners.end(),victim);
-    if(it != mOnTouchModeChangeListeners.end())
-       mOnTouchModeChangeListeners.erase(it);
+    // Same all-equal-entries erase as removeOnPreDrawListener (double-attach
+    // left a second copy that crashed the next popup's layout).
+    for (auto it = mOnTouchModeChangeListeners.begin(); it != mOnTouchModeChangeListeners.end();) {
+        if (*it == victim) it = mOnTouchModeChangeListeners.erase(it);
+        else ++it;
+    }
 }
 
 void ViewTreeObserver::addOnComputeInternalInsetsListener(const OnComputeInternalInsetsListener& listener) {
@@ -353,7 +355,12 @@ void ViewTreeObserver::dispatchOnGlobalFocusChange(View* oldFocus, View* newFocu
 void ViewTreeObserver::dispatchOnGlobalLayout() {
     auto &listeners = mOnGlobalLayoutListeners;
     if ( listeners.size() > 0) {
-        for (auto listener: mOnGlobalLayoutListeners) {
+        // Snapshot (AOSP CopyOnWriteArrayList): one-shot listeners remove
+        // themselves in onGlobalLayout — a live range-for then walks a shifted
+        // vector, and an add reallocs it under the loop (same hazard class the
+        // preDraw snapshot below fixed).
+        std::vector<OnGlobalLayoutListener> snapshot = mOnGlobalLayoutListeners;
+        for (auto listener: snapshot) {
             listener();//access.get(i).onGlobalLayout();
         }
     }
@@ -367,7 +374,14 @@ bool ViewTreeObserver::dispatchOnPreDraw() {
     bool cancelDraw = false;
     auto& listeners = mOnPreDrawListeners;
     if ( listeners.size() > 0) {
-        for (auto listener:mOnPreDrawListeners) {
+        // Iterate a SNAPSHOT: a preDraw listener may remove itself (MultiListener
+        // detaches on first fire) or add others mid-dispatch — a live range-for
+        // then walks invalidated iterators (valgrind: invalid read of the shared
+        // control block inside the per-element copy). AOSP copies the list for
+        // the same reason. CallbackBase copies share the mID, so an identity
+        // removal by a running listener still finds its entry.
+        std::vector<CallbackBase<bool>> snapshot = mOnPreDrawListeners;
+        for (auto listener : snapshot) {
             cancelDraw |= !listener();//(access.get(i).onPreDraw());
         }
     }
@@ -378,7 +392,8 @@ void ViewTreeObserver::dispatchOnWindowShown() {
     mWindowShown = true;
     auto&listeners = mOnWindowShownListeners;
     if (listeners.size() > 0) {
-        for (auto listener:mOnWindowShownListeners) {
+        std::vector<OnWindowShownListener> snapshot = mOnWindowShownListeners;
+        for (auto listener:snapshot) {
             listener();//access.get(i).onWindowShown();
         }
     }
@@ -387,7 +402,11 @@ void ViewTreeObserver::dispatchOnWindowShown() {
 void ViewTreeObserver::dispatchOnDraw() {
     if (mOnDrawListeners.size()) {
         mInDispatchOnDraw = true;
-        for (auto listener:mOnDrawListeners) {
+        // Snapshot: add/removeOnDrawListener are illegal inside onDraw (AOSP
+        // throws) but the port only logs — a live range-for would walk a
+        // realloc'd buffer when the guard is ignored.
+        std::vector<OnDrawListener> snapshot = mOnDrawListeners;
+        for (auto listener:snapshot) {
             listener();//onDraw();
         }
         mInDispatchOnDraw = false;
@@ -396,14 +415,16 @@ void ViewTreeObserver::dispatchOnDraw() {
 
 void ViewTreeObserver::dispatchOnTouchModeChanged(bool inTouchMode) {
     auto& listeners = mOnTouchModeChangeListeners;
-    for (OnTouchModeChangeListener listener : listeners) {
+    std::vector<OnTouchModeChangeListener> snapshot = listeners;
+    for (OnTouchModeChangeListener listener : snapshot) {
         listener(inTouchMode);//.onTouchModeChanged(inTouchMode);
     }
 }
 
 void ViewTreeObserver::dispatchOnScrollChanged() {
     auto&listeners = mOnScrollChangedListeners;
-    for (auto listener:mOnScrollChangedListeners) {
+    std::vector<OnScrollChangedListener> snapshot = listeners;
+    for (auto listener:snapshot) {
          listener();//onScrollChanged();
     }
 }

@@ -28,13 +28,14 @@ protected:
     Animation  *mInAnimation;
     Animation  *mOutAnimation;
 private:
-    void initViewAnimator(Context* context,const AttributeSet& attrs);
+    void initViewAnimator(Context* context,const AttributeSet* attrs);
+    ViewAnimator(Context*ctx);   // AOSP ViewAnimator(Context)
 protected:
     void showOnly(int childIndex);
     virtual void showOnly(int childIndex, bool animate);
 public:
-    ViewAnimator(int w,int h);
-    ViewAnimator(Context* context,const AttributeSet& attrs);
+    ViewAnimator(Context* context,const AttributeSet* attrs);
+    ViewAnimator(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewAnimator();
     void setDisplayedChild(int whichChild);
     int getDisplayedChild()const;
@@ -52,9 +53,12 @@ public:
     void setInAnimation(Animation* inAnimation);
     Animation* getOutAnimation()const;
     void setOutAnimation(Animation* outAnimation);
+    void setInAnimation(Context* context, int resourceID);
+    void setOutAnimation(Context* context, int resourceID);
     bool getAnimateFirstView()const;
     void setAnimateFirstView(bool animate);
     int getBaseline()override;
+    std::string getAccessibilityClassName()const;
 };
 }//namespace
 #endif

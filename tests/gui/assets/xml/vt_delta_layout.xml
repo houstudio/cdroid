@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionDeltaOverlaysLayoutFields: a Layout-field delta (anchor + margin). -->
+<ConstraintOverride xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+                    xmlns:android="http://schemas.android.com/apk/res/android"
+                    app:motionTarget="@+id/vdl_target"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    android:layout_marginLeft="20px" />

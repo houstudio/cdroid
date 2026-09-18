@@ -58,8 +58,9 @@ protected:
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent&)override;
 public:
-    QRCodeView(int w,int h);
-    QRCodeView(Context*ctx,const AttributeSet&attrs);
+    QRCodeView(Context*ctx);   // AOSP QRCodeView(Context)
+    QRCodeView(Context*ctx,const AttributeSet*attrs);
+    QRCodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~QRCodeView()override;
     void setText(const std::string&text);
     void setEccLevel(int);
@@ -71,7 +72,7 @@ public:
     void setBarBgColor(int color);
     int getBarBgColor()const;
     void setLogo(Drawable*);
-    void setLogoResource(const std::string&);
+    void setLogoResource(int resid);
     Drawable* getLogo()const;
     void setZoom(float);
     float getZoom()const;

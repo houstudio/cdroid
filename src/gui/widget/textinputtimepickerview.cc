@@ -18,20 +18,29 @@
 #include <iomanip>
 #include <text/textwatcher.h>
 #include <text/editable.h>
-#include <widget/R.h>
-#include <utils/textutils.h>
+#include <widget/internal_R.h>
+#include <text/textutils.h>
 #include <utils/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/textinputtimepickerview.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
 namespace cdroid {
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(TextInputTimePickerView);
-TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet& attrs)
-    :RelativeLayout(context, attrs){
+DECLARE_WIDGET2(TextInputTimePickerView, "android.widget.TextInputTimePickerView");
+TextInputTimePickerView::TextInputTimePickerView(Context*ctx)
+    :TextInputTimePickerView(ctx,nullptr){}
 
-    LayoutInflater::from(context)->inflate("cdroid:layout/time_picker_text_input_material", this);
+TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet* attrs):TextInputTimePickerView(context,attrs,0){}
 
+TextInputTimePickerView::TextInputTimePickerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :RelativeLayout(context, pAttrs, defStyleAttr){
+
+    LayoutInflater::from(context)->inflate(R::layout::time_picker_text_input_material, this);
+    mTimeSet = false;
+    mErrorShowing = false;
     mHourEditText = (EditText*)findViewById(R::id::input_hour);
     mMinuteEditText = (EditText*)findViewById(R::id::input_minute);
     mInputSeparatorView = (TextView*)findViewById(R::id::input_separator);
@@ -59,7 +68,7 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
     mMinuteEditText->addTextChangedListener(minuteWatcher);
     mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
     std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
-    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
+    ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, R::layout::simple_spinner_dropdown_item,0);
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[0]));
     adapter->add(TimePickerClockDelegate::obtainVerbatim(amPmStrings[1]));
     mAmPmSpinner->setAdapter(adapter);
@@ -86,9 +95,9 @@ void TextInputTimePickerView::setListener(const OnValueTypedListener& listener) 
 void TextInputTimePickerView::setHourFormat(int maxCharLength) {
     mHourEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
     mMinuteEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
-    /*final LocaleList locales = mContext.getResources().getConfiguration().getLocales();
+    const LocaleList locales = getContext()->getResources().getConfiguration().getLocales();
     mHourEditText->setImeHintLocales(locales);
-    mMinuteEditText->setImeHintLocales(locales);*/
+    mMinuteEditText->setImeHintLocales(locales);
 }
 
 bool TextInputTimePickerView::validateInput() {
@@ -126,13 +135,20 @@ bool TextInputTimePickerView::isTimeSet() const{
     return mTimeSet;
 }
 
+// AOSP updateTextInputValues: hourFormat = "%d", minuteFormat = "%02d", both
+// through String.format — i.e. the DEFAULT-locale NumberFormat (localized
+// digits), never a plain ostringstream.
 static std::string formatNumber(int mValue, int mCount) {
-    std::ostringstream oss;
-    if(mCount)
-        oss << std::setw(mCount) << std::setfill('0') << mValue;
-    else
-        oss<<mValue;
-    return oss.str();
+    static std::string tag;
+    static std::unique_ptr<cdroid::NumberFormat> plain, twoDigit;
+    const std::string cur = Locale::getDefault().toLanguageTag();
+    if (tag != cur || plain == nullptr) {
+        tag = cur;
+        plain = NumberFormat::getIntegerInstance(Locale::getDefault());
+        twoDigit = NumberFormat::getIntegerInstance(Locale::getDefault());
+        twoDigit->setMinimumIntegerDigits(2);
+    }
+    return mCount ? twoDigit->format(mValue) : plain->format(mValue);
 }
 void TextInputTimePickerView::updateTextInputValues(int localizedHour, int minute, int amOrPm, bool is24Hour,
         bool hourFormatStartsAtZero) {

@@ -24,7 +24,8 @@ CurvingLayoutCallback::CurvingLayoutCallback(Context* context) {
     mPathMeasure = new PathMeasure();
     mParentView= nullptr;
     mIsScreenRound = true;//context.getResources().getConfiguration().isScreenRound();
-    mXCurveOffset = context->getDimensionPixelSize("@cdroid:dimen/ws_wrv_curve_default_x_offset");
+    mXCurveOffset = context->getDimensionPixelSize(context->getResources().getIdentifier(
+            "ws_wrv_curve_default_x_offset", "dimen", "cdroid.widgetex"));
 }
 
 CurvingLayoutCallback::~CurvingLayoutCallback(){

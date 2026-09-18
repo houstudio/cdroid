@@ -18,25 +18,34 @@
 #include <stdlib.h>
 #include <random>
 #include <view/viewgroup.h>
+#include <animation/animationutils.h>
 #include <animation/gridlayoutanimationcontroller.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>   // TypedValue (Description::parseValue)
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 GridLayoutAnimationController::GridLayoutAnimationController(Context* context,const AttributeSet& attrs)
   :LayoutAnimationController(context,attrs){
-    mColumnDelay = attrs.getFloat("columnDelay");
-    mRowDelay    = attrs.getFloat("rowDelay");
-    mDirection   = attrs.getInt("direction",std::unordered_map<std::string,int>{
-        {"left_to_right",(int)DIRECTION_LEFT_TO_RIGHT},
-        {"right_to_left",(int)DIRECTION_RIGHT_TO_LEFT},
-        {"top_to_bottom",(int)DIRECTION_TOP_TO_BOTTOM},
-        {"bottom_to_top",(int)DIRECTION_BOTTOM_TO_TOP}
-    }, DIRECTION_LEFT_TO_RIGHT | DIRECTION_TOP_TO_BOTTOM);
-    mDirectionPriority = attrs.getInt("directionPriority",std::unordered_map<std::string,int>{
-        {"none",(int)PRIORITY_NONE},
-        {"column",(int)PRIORITY_COLUMN},
-        {"row", (int)PRIORITY_ROW}
-    },PRIORITY_NONE);
+    // AOSP GridLayoutAnimationController: columnDelay/rowDelay are float|fraction
+    // (Description::parseValue); direction/directionPriority enums are aapt2-compiled.
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::GridLayoutAnimation);
+
+    TypedValue v;
+    auto parse = [&](int idx)->Animation::Description {
+        if (!a->peekValue(idx, &v)) return Animation::Description::parseValue(nullptr, context);
+        return Animation::Description::parseValue(&v, context);
+    };
+    Animation::Description d = parse(R::styleable::GridLayoutAnimation_columnDelay);
+    mColumnDelay = d.value;
+    d = parse(R::styleable::GridLayoutAnimation_rowDelay);
+    mRowDelay = d.value;
+    mDirection = a->getInt(R::styleable::GridLayoutAnimation_direction,
+            DIRECTION_LEFT_TO_RIGHT | DIRECTION_TOP_TO_BOTTOM);
+    mDirectionPriority = a->getInt(R::styleable::GridLayoutAnimation_directionPriority,
+            PRIORITY_NONE);
 }
 
 GridLayoutAnimationController::GridLayoutAnimationController(Animation* animation)

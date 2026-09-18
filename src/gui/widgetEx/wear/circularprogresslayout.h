@@ -33,14 +33,14 @@ private:
     int64_t mTotalTime;
 private:
     void initCircularProgressLayout();
-    std::vector<int> getColorListFromResources(const std::string& arrayResId);
+    std::vector<int> getColorListFromResources(int arrayResId);
 protected:
     void onLayout(bool changed, int left, int top, int width, int heigt) override;
     void onDetachedFromWindow() override;
 public:
     DECLARE_UIEVENT(void,OnTimerFinishedListener,CircularProgressLayout&);
-    CircularProgressLayout(int w,int h);
-    CircularProgressLayout(Context* context,const AttributeSet& attrs);
+    CircularProgressLayout(Context* context,const AttributeSet* attrs);
+    CircularProgressLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CircularProgressLayout()override;
 
     void setBackgroundColor(int color) override;

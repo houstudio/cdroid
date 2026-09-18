@@ -1,4 +1,5 @@
 #include <cdroid.h>
+#include <widget/R.h>   // public cdroid::R (android.R role)
 #include <unistd.h>
 #include <thread>
 class MyHandler:public Handler{
@@ -11,13 +12,13 @@ public:
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w= new Window(0,0,-1,-1);
-    TextView*tv=new TextView("Hello world!",600,40);
-    ProgressBar*pb = new ProgressBar(600,40);
+    TextView*tv=new TextView(&app); tv->setText("Hello world!" );
+    ProgressBar*pb = new ProgressBar(&app,nullptr,cdroid::R::attr::progressBarStyleHorizontal);
     Handler*handler= new MyHandler();
     tv->setTextColor(0xFFFFFFFF);
     tv->setBackgroundColor(0xFF334455);
     tv->setTextSize(32);
-    LinearLayout*ll=new LinearLayout(-1,-1);
+    LinearLayout*ll=new LinearLayout(&app);
     ll->setOrientation(LinearLayout::VERTICAL);
     ll->addView(tv);
     ll->addView(pb);

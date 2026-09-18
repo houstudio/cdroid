@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AppCompat vendored-resource stand-in: the original holo ripple selector was
+     never copied into the app; transparent flat item background instead. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@android:color/transparent" />
+</selector>

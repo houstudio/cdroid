@@ -23,6 +23,8 @@
 namespace cdroid{
 
 class AnimatorSet:public Animator,public AnimationHandler::AnimationFrameCallback{
+public:
+    class Builder; // public: callers name it as AnimatorSet::Builder* (play() return); defined below
 private:
     class Node;
     class SeekState;
@@ -32,6 +34,7 @@ private:
     std::unordered_map<Animator*, Node*> mNodeMap;
     std::vector<AnimationEvent*> mEvents;
     std::vector<Node*> mNodes;
+    std::vector<Builder*> mBuilders; // owned Builder helpers from play(); freed in dtor
     AnimatorListener mDummyListener;
     bool mDependencyDirty = false;
 
@@ -97,7 +100,6 @@ protected:
     bool isInitialized()override;
     void startWithoutPulsing(bool)override;
 public:
-    class Builder;
     AnimatorSet();
     ~AnimatorSet()override;
     void playTogether(const std::vector<Animator*>&);

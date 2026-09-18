@@ -27,6 +27,7 @@
 #include <cairomm/fontface.h>
 #include <image-decoders/imagedecoder.h>
 #include <windowmanager.h>
+#include <widget/cdwindow.h>
 #include <systemclock.h>
 #include <thread>
 #if defined(__linux__)||defined(__unix__)
@@ -35,9 +36,23 @@
 #include <malloc.h>
 #include <fstream>
 #include <mutex>
+#include <algorithm>
+#include <animation/animator.h>
+#include <core/handler.h>
 using namespace Cairo;
 
 namespace cdroid{
+
+namespace {
+// Bounding box of two screen-space rects (cdroid Rect stores left/top/width/height).
+Rect unionRect(const Rect& a, const Rect& b) {
+    const int l = std::min(a.left, b.left);
+    const int t = std::min(a.top, b.top);
+    const int r = std::max(a.left + a.width, b.left + b.width);
+    const int bo = std::max(a.top + a.height, b.top + b.height);
+    return Rect::MakeLTRB(l, t, r, bo);
+}
+} // namespace
 
 GraphDevice&GraphDevice::getInstance(){
     static GraphDevice* mInstance = nullptr;
@@ -339,11 +354,39 @@ void GraphDevice::composeSurfaces(){
     mPrimaryContext->set_operator(Cairo::Context::Operator::SOURCE);
     for(int i = 0;i < wSurfaces.size();i++){
         Rect rcw = wBounds[i];
+        // Compose-time visual translation (the SLIDE activity transition's only output —
+        // CDROID's SurfaceControl::setPosition): blit the surface at the translated position
+        // while the window's real frame stays at rest, so a11y/input/WMS see the resting
+        // geometry mid-animation (AOSP semantics).
+        rcw.left += wins[i]->mSurfaceDx;
+        rcw.top  += wins[i]->mSurfaceDy;
         GFXHANDLE hdlSurface = wSurfaces[i]->mHandle;
         Cairo::RefPtr<Cairo::Region> rgn = wins[i]->mPendingRgn;
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
+        if (!rgn->empty() && wins[i]->getAlpha() < 1.0f) {
+            // Whole-surface fade (window ActivityTransition FADE): the X11-style backends
+            // have no per-surface opacity, and the blit path bypasses View-level alpha —
+            // apply it HERE, compositing through cairo with paint_with_alpha (OVER, so the
+            // windows below show through). NB: ignores display rotation (fades on rotated
+            // displays fall back to this un-rotated blit).
+            const float walpha = wins[i]->getAlpha();
+            mPrimaryContext->save();
+            mPrimaryContext->reset_clip();
+            for(int j = 0; j < rgn->get_num_rectangles(); j++){
+                const RectangleInt rc = rgn->get_rectangle(j);
+                mPrimaryContext->rectangle(rcw.left + rc.x, rcw.top + rc.y, rc.width, rc.height);
+            }
+            mPrimaryContext->clip();
+            mPrimaryContext->set_operator(Cairo::Context::Operator::OVER);
+            mPrimaryContext->set_source(wSurfaces[i]->get_target(), rcw.left, rcw.top);
+            mPrimaryContext->paint_with_alpha(walpha);
+            mPrimaryContext->restore();
+            commitedRects += rgn->get_num_rectangles();
+            rgn->subtract(rgn);
+            continue;
+        }
 #if defined(__x86_64__) ||defined(__x86_64) ||defined(__amd64__)||defined(__amd64)
         for(int j = 0; j < rgn->get_num_rectangles(); j++){
             const RectangleInt rc = rgn->get_rectangle(j);
@@ -384,8 +427,98 @@ void GraphDevice::composeSurfaces(){
         }
         rgn->subtract(rgn);
     }/*endif for wSurfaces.size*/
+    // Compositor ghosts: snapshots of REMOVED windows playing their exit
+    // animation (AOSP: WMS keeps animating the surface after the view detach).
+    // Painted after every window — popups/activity windows sit at the top of
+    // their stacks when they exit, so no z-interleaving is needed. NB: like the
+    // window fade path above, this blit is un-rotated (rotated-display exit
+    // fades/slides fall back to the resting orientation).
+    if (mPrimaryContext != nullptr) {
+        for (GhostLayer* g : mGhosts) {
+            if (!g->snapshot) continue;
+            mPrimaryContext->save();
+            mPrimaryContext->reset_clip();
+            mPrimaryContext->set_operator(Cairo::Context::Operator::OVER);
+            mPrimaryContext->set_source(g->snapshot,
+                    g->bounds.left + g->dx, g->bounds.top + g->dy);
+            if (g->alpha < 1.f) {
+                mPrimaryContext->paint_with_alpha(g->alpha);
+            } else {
+                mPrimaryContext->paint();
+            }
+            mPrimaryContext->restore();
+            commitedRects++;
+        }
+    }
     if(commitedRects)GFXFlip(mPrimarySurface);
     mLastComposeTime = SystemClock::uptimeMillis();
     mPendingCompose = 0;
 }
+
+GraphDevice::GhostLayer* GraphDevice::addGhost(
+        const Cairo::RefPtr<Cairo::ImageSurface>& snap, const Rect& bounds) {
+    LOGD("ghost add %dx%d at (%d,%d)", bounds.width, bounds.height, bounds.left, bounds.top);
+    GhostLayer* g = new GhostLayer();
+    g->snapshot = snap;
+    g->bounds = bounds;
+    g->lastRect = bounds;   // the first compose damages from the resting bounds
+    mGhosts.push_back(g);
+    return g;
+}
+
+void GraphDevice::removeGhost(GhostLayer* g) {
+    LOGD("ghost remove alpha=%.2f dx=%d dy=%d", g->alpha, g->dx, g->dy);
+    const auto it = std::find(mGhosts.begin(), mGhosts.end(), g);
+    if (it == mGhosts.end()) return;  // idempotent: animator cancel() re-fires end
+    mGhosts.erase(it);
+    // Clear the ghost's last frame: repaint its swept region from the windows
+    // below (the frame still sits on the primary), then compose once without it.
+    Rect cur = g->bounds;
+    cur.offset(g->dx, g->dy);
+    WindowManager::getInstance().damageRegion(unionRect(g->lastRect, cur));
+    if (g->animator != nullptr) {
+        Animator* a = g->animator;
+        g->animator = nullptr;
+        a->cancel();   // may re-enter removeGhost — the erase above made it a no-op
+        // Never free the animator mid-dispatch: this runs FROM its end callback
+        // (same discipline as Window::finishClose's posted deletes).
+        Handler* h = new Handler();
+        h->post([h, a]() { delete a; delete h; });
+    }
+    delete g;
+    composeSurfaces();
+}
+
+void GraphDevice::clearGhosts() {
+    // Process teardown: no compose, no posts — cancel and free (the looper may
+    // already be quitting). cancel() re-fires the end listener -> removeGhost,
+    // which no-ops on the already-emptied list.
+    std::vector<GhostLayer*> ghosts;
+    ghosts.swap(mGhosts);
+    for (GhostLayer* g : ghosts) {
+        if (g->animator != nullptr) {
+            Animator* a = g->animator;
+            g->animator = nullptr;
+            a->cancel();   // after cancel() returns, the dispatch stack is unwound
+            delete a;      // — ~Window's cancel-then-delete discipline
+        }
+        delete g;
+    }
+}
+
+void GraphDevice::composeGhosts() {
+    if (mGhosts.empty()) return;
+    // A ghost frame: repaint the swept region (previous ∪ current placement)
+    // from the windows below — the last painted frame still sits on the
+    // primary — then compose with the ghosts on top. The exit animator drives
+    // this from the Choreographer, independent of any window traversal.
+    for (GhostLayer* g : mGhosts) {
+        Rect cur = g->bounds;
+        cur.offset(g->dx, g->dy);
+        WindowManager::getInstance().damageRegion(unionRect(g->lastRect, cur));
+        g->lastRect = cur;
+    }
+    composeSurfaces();
+}
+
 }//end namespace

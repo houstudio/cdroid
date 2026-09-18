@@ -104,7 +104,7 @@ protected:
     void layoutChunk(RecyclerView::Recycler& recycler, RecyclerView::State& state,
             LayoutState& layoutState, LayoutChunkResult& result)override;
 public:
-    GridLayoutManager(Context* context, const AttributeSet& attrs);
+    GridLayoutManager(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     GridLayoutManager(Context* context, int spanCount);
     GridLayoutManager(Context* context, int spanCount,int orientation, bool reverseLayout);
     ~GridLayoutManager()override;
@@ -126,7 +126,7 @@ public:
     void onItemsUpdated(RecyclerView& recyclerView, int positionStart, int itemCount,Object* payload)override;
     void onItemsMoved(RecyclerView& recyclerView, int from, int to, int itemCount)override;
     LayoutParams* generateDefaultLayoutParams()const override;
-    LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const override;
+    LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const override;
 
     bool checkLayoutParams(const RecyclerView::LayoutParams* lp)const override;

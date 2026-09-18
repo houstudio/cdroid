@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Path X/Y test asset: objectAnimator driving propertyXName/propertyYName
+     along a pathData (AnimatorInflater.setupObjectAnimator's path case).
+     Loaded by ANIMATORINFLATOR.pathxy_xml. -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:duration="300"
+    android:valueType="floatType"
+    android:pathData="M 0,0 L 100,100"
+    android:propertyXName="translationX"
+    android:propertyYName="translationY"
+/>

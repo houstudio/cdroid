@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App-level themes overriding the framework textColorPrimary (the
+     printerdemo AppTheme pattern): parent = framework Material themes,
+     overrides point at app color selectors. -->
+<resources>
+    <style name="ctdThemeLight" parent="@android:style/Theme.Material.Light">
+        <item name="android:textColorPrimary">@color/ctd_text_primary</item>
+        <item name="android:textColorSecondary">@color/ctd_text_primary</item>
+        <!-- TextAppearance.Material.Small's textColor rides textColorTertiary,
+             so the default-style probe (bare TextView) needs it overridden too. -->
+        <item name="android:textColorTertiary">@color/ctd_text_primary</item>
+    </style>
+
+    <style name="ctdThemeDark" parent="@android:style/Theme.Material">
+        <item name="android:textColorPrimary">@color/ctd_text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/ctd_text_primary_dark</item>
+        <item name="android:textColorTertiary">@color/ctd_text_primary_dark</item>
+        <!-- Scrollbar theme probe: overriding the framework attr must swap the
+             vertical scrollbar thumb. -->
+        <item name="android:scrollbarThumbVertical">@drawable/ctd_scrollbar_thumb</item>
+    </style>
+</resources>

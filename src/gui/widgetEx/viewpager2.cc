@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widgetEx/viewpager2.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
 #include <widgetEx/scrolleventadapter.h>
@@ -23,8 +23,9 @@
 //#include <widgetEx/compositeonpagechangecallback.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewPager2)
+DECLARE_WIDGET2(ViewPager2, "androidx.viewpager2.widget.ViewPager2");
 
 class PageTransformerAdapter:public ViewPager2::OnPageChangeCallback {
 private:
@@ -62,13 +63,13 @@ public:
     }
 };
 
-ViewPager2::ViewPager2(int w,int h):ViewGroup(w,h){
-    initialize(mContext, AttributeSet(mContext,""));
-}
+ViewPager2::ViewPager2(Context*ctx):ViewPager2(ctx,nullptr){}
 
-ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
-    initialize(context, attrs);
+ViewPager2::ViewPager2(Context* context,const AttributeSet* attrs):ViewPager2(context,attrs,0){}
+
+ViewPager2::ViewPager2(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    initialize(context, pAttrs);
 }
 
 ViewPager2::~ViewPager2(){
@@ -82,7 +83,7 @@ ViewPager2::~ViewPager2(){
     delete mPageTransformerAdapter;
 }
 
-void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
+void ViewPager2::initialize(Context* context,const AttributeSet* attrs) {
     if(sFeatureEnhancedA11yEnabled)
         mAccessibilityProvider = new PageAwareAccessibilityProvider(this);
     else 
@@ -221,7 +222,7 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mPageChangeCallbacks.push_back(*mPageTransformerAdapter);//mPageChangeEventDispatcher->addOnPageChangeCallback(*mPageTransformerAdapter);
 }
 
-void ViewPager2::setOrientation(Context* context,const AttributeSet& attrs) {
+void ViewPager2::setOrientation(Context* context,const AttributeSet* attrs) {
     setOrientation(ORIENTATION_HORIZONTAL);
     //a.getInt(R.styleable.ViewPager2_android_orientation, ORIENTATION_HORIZONTAL));
 }
@@ -612,7 +613,7 @@ bool ViewPager2::performAccessibilityAction(int action, Bundle* arguments) {
     return ViewGroup::performAccessibilityAction(action, arguments);
 }
 
-ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet&attr,ViewPager2*vp)
+ViewPager2::RecyclerViewImpl::RecyclerViewImpl(Context* context,const AttributeSet*attr,ViewPager2*vp)
     :RecyclerView(context,attr),mVP(vp){
 }
 
@@ -689,6 +690,10 @@ View* ViewPager2::PagerSnapHelperImpl::findSnapView(RecyclerView::LayoutManager&
     return vp->isFakeDragging() ? nullptr : PagerSnapHelper::findSnapView(layoutManager);
 }
 
+
+void ViewPager2::detachItemDecoration(RecyclerView::ItemDecoration* decor) {
+    mRecyclerView->detachItemDecoration(decor);
+}
 
 void ViewPager2::addItemDecoration(RecyclerView::ItemDecoration* decor) {
     mRecyclerView->addItemDecoration(decor);
@@ -848,30 +853,25 @@ std::string ViewPager2::BasicAccessibilityProvider::onRvGetAccessibilityClassNam
 }
 
 ////////////////////class PageAwareAccessibilityProvider extends AccessibilityProvider//////////////////////////////
-/*private final AccessibilityViewCommand mActionPageForward =
-    new AccessibilityViewCommand() {
-        @Override
-        public bool perform(@NonNull View view,
-                @Nullable CommandArguments arguments) {
-            ViewPager2 viewPager = (ViewPager2) view;
-            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() + 1);
-            return true;
-        }
-    };
 
-private final AccessibilityViewCommand mActionPageBackward =
-    new AccessibilityViewCommand() {
-        @Override
-        public bool perform(@NonNull View view,
-                @Nullable CommandArguments arguments) {
-            ViewPager2 viewPager = (ViewPager2) view;
-            setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() - 1);
-            return true;
-        }
-    };*/
+ViewPager2::PageAwareAccessibilityProvider::PageActionCommand::PageActionCommand(
+        PageAwareAccessibilityProvider* provider, int direction)
+    :mProvider(provider), mDirection(direction){
+}
+
+bool ViewPager2::PageAwareAccessibilityProvider::PageActionCommand::perform(View&,
+        CommandArguments*){
+    // androidx: ViewPager2 viewPager = (ViewPager2) view;
+    // setCurrentItemFromAccessibilityCommand(viewPager.getCurrentItem() ± 1);
+    mProvider->setCurrentItemFromAccessibilityCommand(
+            mProvider->mVP->getCurrentItem() + mDirection);
+    return true;
+}
 
 ViewPager2::PageAwareAccessibilityProvider::PageAwareAccessibilityProvider(ViewPager2*v)
-    :AccessibilityProvider(v){
+    :AccessibilityProvider(v),
+    mActionPageForward(this, +1),
+    mActionPageBackward(this, -1){
     mAdapterDataObserver = nullptr;
 }
 
@@ -982,7 +982,6 @@ void ViewPager2::PageAwareAccessibilityProvider::setCurrentItemFromAccessibility
 
 void ViewPager2::PageAwareAccessibilityProvider::updatePageAccessibilityActions() {
     ViewPager2* viewPager = mVP;
-#if 0
     constexpr int actionIdPageLeft = R::id::accessibilityActionPageLeft;
     constexpr int actionIdPageRight = R::id::accessibilityActionPageRight;
     constexpr int actionIdPageUp = R::id::accessibilityActionPageUp;
@@ -1013,27 +1012,26 @@ void ViewPager2::PageAwareAccessibilityProvider::updatePageAccessibilityActions(
 
         if (mVP->mCurrentItem < itemCount - 1) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageForward, nullptr), nullptr,
-                    mActionPageForward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageForward, std::string()),
+                    nullptr, &mActionPageForward);
         }
         if (mVP->mCurrentItem > 0) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageBackward, nullptr), nullptr,
-                    mActionPageBackward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageBackward, std::string()),
+                    nullptr, &mActionPageBackward);
         }
     } else {
         if (mVP->mCurrentItem < itemCount - 1) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageDown, nullptr), nullptr,
-                    mActionPageForward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageDown, std::string()),
+                    nullptr, &mActionPageForward);
         }
         if (mVP->mCurrentItem > 0) {
             viewPager->replaceAccessibilityAction(
-                    new AccessibilityNodeInfo::AccessibilityAction(actionIdPageUp, nullptr), nullptr,
-                    mActionPageBackward);
+                    AccessibilityNodeInfo::AccessibilityAction(actionIdPageUp, std::string()),
+                    nullptr, &mActionPageBackward);
         }
     }
-#endif
 }
 
 void ViewPager2::PageAwareAccessibilityProvider::addCollectionInfo(AccessibilityNodeInfo& info) {

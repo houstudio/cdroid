@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Nav graph for NavHostFragment tests. Mirrors navdemo's route-based form:
-     android:startDestination="<route>" + app:route on each <fragment> (the form CDROID's
-     NavInflater resolves — app:startDestination with @+id does not). -->
+     app:startDestination="<route>" + app:route on each <fragment> (the form CDROID's
+     NavInflater resolves). app: namespace, not android: — aapt2 link rejects
+     android:startDestination since the framework has no such attr (NavInflater
+     reads by local name so the runtime is agnostic, but link is strict). -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:app="http://schemas.android.com/apk/res-auto"
+            xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
             android:id="@+id/nav_host_test"
-            android:startDestination="start_fragment">
+            app:startDestination="start_fragment">
 
     <fragment android:id="@+id/start_fragment" android:name="NavTestFragment" app:route="start_fragment" />
     <fragment android:id="@+id/second_fragment" android:name="NavTestFragment" app:route="second_fragment" />

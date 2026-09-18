@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionMatchesConstraintTag: string motionTarget — a regex matched against the view's
+     LayoutParams.constraintTag (not a view id). -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <ViewTransition android:id="@+id/vt_regex" app:motionTarget="btn_.*"
+                    app:onStateTransition="actionDown" app:duration="400"
+                    app:viewTransitionMode="noState" />
+</MotionScene>

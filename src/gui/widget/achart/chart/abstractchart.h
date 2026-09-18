@@ -20,7 +20,7 @@
 #include <map>
 #include <core/rect.h>
 #include <core/canvas.h>
-#include <core/numberformat.h>
+#include <content/numberformat.h>
 #include <text/paint.h>
 #include <widget/achart/model/seriesselection.h>
 #include <widget/achart/renderer/defaultrenderer.h>

@@ -6,6 +6,9 @@
 */
 
 #include <widget/plotview.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 
 #include <math.h>
 #include <widget/plotaxis.h>
@@ -23,7 +26,7 @@
 //kf5plotting: https://invent.kde.org/frameworks/kplotting
 namespace cdroid{
 
-DECLARE_WIDGET(PlotView)
+DECLARE_WIDGET2(PlotView, "android.widget.PlotView");
 
 class PlotView::Private
 {
@@ -93,14 +96,9 @@ public:
     Cairo::RefPtr<Cairo::ImageSurface> plotMask;
 };
 
-PlotView::PlotView(int w,int h):View(w,h),d(new Private(this)){
-    d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
-    // sets the default limits
-    d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
-    d->pixRect.set(0,0,getWidth(),getHeight());
-}
+PlotView::PlotView(cdroid::Context*ctx):PlotView(ctx,nullptr){}
 
-PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
+PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet*atts)
     : View(ctx,atts) , d(new Private(this))
 {
     d->secondDataRect.set(0,0,0,0); // default: no secondary data rect
@@ -108,12 +106,12 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     d->calcDataRectLimits(0.0, 1.0, 0.0, 1.0);
     const std::unordered_map<std::string,int>dirs={{"left",1},{"top",2},{"right",4},{"bottom",8},
 	    {"horizontal",5},{"vertical",10},{"all",15}};
-    d->showGrid = atts.getBoolean("showGrid",false);
-    d->cGrid = atts.getInt("gridColor",d->cGrid);
-    d->tickLabelSize = atts.getDimensionPixelSize("tickLabelSize",d->tickLabelSize);
-
-    const int tickMarks = atts.getInt("tickMarks",dirs,15);
-    const int tickLabels= atts.getInt("tickLabels",dirs,0);
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::PlotView);
+    d->showGrid = ta->getBoolean(R::styleable::PlotView_showGrid, false);
+    d->cGrid = ta->getInt(R::styleable::PlotView_gridColor, d->cGrid);
+    d->tickLabelSize = ta->getDimensionPixelSize(R::styleable::PlotView_tickLabelSize, d->tickLabelSize);
+    const int tickMarks = ta->getInt(R::styleable::PlotView_tickMarks, 15);
+    const int tickLabels = ta->getInt(R::styleable::PlotView_tickLabels, 0);
 
     axis(LeftAxis)->setTickmarkVisible(tickMarks&1);
     axis(TopAxis)->setTickmarkVisible(tickMarks&2);
@@ -124,7 +122,7 @@ PlotView::PlotView(cdroid::Context*ctx,const cdroid::AttributeSet&atts)
     axis(TopAxis)->setTickLabelsShown(tickLabels&2);
     axis(RightAxis)->setTickLabelsShown(tickLabels&4);
     axis(BottomAxis)->setTickLabelsShown(tickLabels&8);
-    //d->tickMarkTextColor= atts.getInt("tickMarkColor",d->tickMarkTextColor);
+    //d->tickMarkTextColor= atts.getAttributeIntValue(std::string(), "tickMarkColor",d->tickMarkTextColor);
 }
 
 PlotView::~PlotView()

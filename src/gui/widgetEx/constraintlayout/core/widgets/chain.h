@@ -36,7 +36,11 @@ class ChainHead;
 
 class Chain {
   public:
-    static const bool USE_CHAIN_OPTIMIZATION = true;
+    // AndroidX core Chain.USE_CHAIN_OPTIMIZATION is false — the Direct.solveChain fast path
+    // ships as dead code upstream too. Keeping this true made the port MORE aggressive than
+    // the original with no way to turn it off (the layout_optimizationLevel mask can't
+    // disable a compiled-in flag).
+    static const bool USE_CHAIN_OPTIMIZATION = false;
 
     // Iterate every chain head recorded on the container and apply chain constraints.
     // `widgets` is nullable (Java ArrayList<ConstraintWidget>); when non-null only chains whose

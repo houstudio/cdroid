@@ -18,6 +18,7 @@
 #ifndef __VIEWPAGER2_H__
 #define __VIEWPAGER2_H__
 #include <view/viewgroup.h>
+#include <view/accessibility/accessibilityviewcommand.h>
 #include <widgetEx/recyclerview/recyclerview.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/pagersnaphelper.h>
@@ -85,8 +86,8 @@ protected:
     ScrollEventAdapter* mScrollEventAdapter;
     AccessibilityProvider* mAccessibilityProvider; //to avoid creation of a synthetic accessor
 private:
-    void initialize(Context* context, const AttributeSet& attrs);
-    void setOrientation(Context* context,const AttributeSet& attrs);
+    void initialize(Context* context, const AttributeSet* attrs);
+    void setOrientation(Context* context,const AttributeSet* attrs);
     void restorePendingState();
     void unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter);
 protected:
@@ -104,8 +105,9 @@ protected:
     void setCurrentItemInternal(int item, bool smoothScroll);
     void snapToPage();
 public:
-    ViewPager2(int w,int h);
-    ViewPager2(Context* context, const AttributeSet& attrs);
+    ViewPager2(Context*ctx);   // AOSP ViewPager2(Context)
+    ViewPager2(Context* context, const AttributeSet* attrs);
+    ViewPager2(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ViewPager2()override;
     void setAdapter(RecyclerView::Adapter* adapter);
     void registerCurrentItemDataSetTracker(RecyclerView::Adapter* adapter);
@@ -137,6 +139,8 @@ public:
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;
     bool performAccessibilityAction(int action, Bundle* arguments)override;
 
+    // Detach without deleting (ItemDecoration ownership protocol).
+    void detachItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor);
     void addItemDecoration(RecyclerView::ItemDecoration* decor, int index);
     RecyclerView::ItemDecoration* getItemDecorationAt(int index);
@@ -185,8 +189,19 @@ public:
 
 class ViewPager2::PageAwareAccessibilityProvider:public ViewPager2::AccessibilityProvider {
 private:
-    AccessibilityViewCommand* mActionPageForward;
-    AccessibilityViewCommand* mActionPageBackward;
+    // androidx has two anonymous AccessibilityViewCommands calling
+    // setCurrentItemFromAccessibilityCommand(currentItem ± 1); collapsed here
+    // into one command class carrying the direction.
+    class PageActionCommand : public AccessibilityViewCommand {
+    public:
+        PageActionCommand(PageAwareAccessibilityProvider* provider, int direction);
+        bool perform(View& view, CommandArguments* arguments) override;
+    private:
+        PageAwareAccessibilityProvider* mProvider;
+        int mDirection;
+    };
+    PageActionCommand mActionPageForward;
+    PageActionCommand mActionPageBackward;
     RecyclerView::AdapterDataObserver* mAdapterDataObserver;
     void addCollectionInfo(AccessibilityNodeInfo& info);
     void addScrollActions(AccessibilityNodeInfo& info);
@@ -230,7 +245,7 @@ private:
     friend ViewPager2;
     ViewPager2*mVP;
 public:
-    RecyclerViewImpl(Context* context,const AttributeSet&,ViewPager2*);
+    RecyclerViewImpl(Context* context,const AttributeSet*,ViewPager2*);
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEvent(AccessibilityEvent& event)override;
     bool onTouchEvent(MotionEvent& event)override;

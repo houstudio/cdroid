@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/connected_devices.xml. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="connected_devices_screen"
+    android:title="Connected devices">
+
+    <SwitchPreference
+        android:key="bluetooth_enabled"
+        android:title="Bluetooth"
+        android:summaryOn="On"
+        android:summaryOff="Off"
+        android:defaultValue="false" />
+
+    <!-- AOSP bluetooth_settings.xml keys: the row key IS the route
+         (onPreferenceTreeClick -> screen_bluetooth_pairing). -->
+    <Preference
+        android:key="screen_bluetooth_pairing"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="@string/bluetooth_pair_new_device"
+        android:dependency="bluetooth_enabled" />
+
+    <Preference
+        android:key="device_name"
+        android:widgetLayout="@layout/prefdemo_chevron"
+        android:title="@string/bluetooth_device_name"
+        android:summary="@string/summary_placeholder"
+        android:dependency="bluetooth_enabled" />
+
+    <!-- BluetoothSettings' paired-devices category, filled by
+         DeviceListPreferenceFragment under the BONDED filter. -->
+    <PreferenceCategory
+        android:key="paired_devices"
+        android:title="@string/bluetooth_paired_device_title" />
+
+    <!-- AOSP FooterPreference: the adapter MAC. -->
+    <Preference
+        android:key="bluetooth_footer"
+        android:title="…"
+        android:selectable="false" />
+
+    <PreferenceCategory android:title="NFC">
+
+        <SwitchPreference
+            android:key="nfc_enabled"
+            android:title="Use NFC"
+            android:defaultValue="true" />
+
+        <Preference
+            android:key="nfc_payment"
+        android:widgetLayout="@layout/prefdemo_chevron"
+            android:title="Tap &amp; pay"
+            android:dependency="nfc_enabled" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Media output">
+
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="cast_screen" android:title="Cast" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="printing" android:title="Printing" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

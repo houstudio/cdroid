@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID custom ids (not framework) — kept separate from framework ids.xml -->
+<resources>
+    <item type="id" name="keyboardview" />
+    <item type="id" name="predict2" />
+    <item type="id" name="closekeyboard" />
+</resources>

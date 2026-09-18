@@ -9,8 +9,8 @@ public:
 
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            //tv=new TextView("",600,20);
-            tv=new CheckBox("",600,20);
+            //tv=new TextView(&App::getInstance());
+            tv=new CheckBox(&App::getInstance());
             tv->setPadding(20,0,0,0);
             tv->setFocusable(false);
         }
@@ -32,7 +32,7 @@ int main(int argc,const char*argv[]){
 
     // Window::doLayout now always lays out direct children, so absolute layout() on
     // multiple direct children piles them up at (0,0). Stack them in a LinearLayout.
-    LinearLayout*content=new LinearLayout(-1,-1);
+    LinearLayout*content=new LinearLayout(&App::getInstance());
     content->setOrientation(LinearLayout::VERTICAL);
     w->addView(content);
     auto add=[&](View*v,int ww,int hh){
@@ -42,7 +42,7 @@ int main(int argc,const char*argv[]){
     };
 
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=new ListView(320,480);
+    ListView*lv=new ListView(&App::getInstance());
     add(lv,320,480);
     lv->setId(1000);
     for(int i=0;i<56;i++){
@@ -59,7 +59,7 @@ int main(int argc,const char*argv[]){
     lv->setDividerHeight(1);
     //lv->setRotation(30);
 
-    TextView*tv=new TextView("HelloWorld",200,40);
+    TextView*tv=new TextView(&App::getInstance()); tv->setText("HelloWorld" );
     add(tv,200,40);
     tv->setBackgroundColor(0xFF00FF00);
     float rotation=.0f;

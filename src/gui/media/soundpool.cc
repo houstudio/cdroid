@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <media/soundpool.h>
 #include <core/context.h>
+#include <core/iostreams.h>   // AssetInputStream
 #include <porting/cdlog.h>
 #include <iostream>
 #include <fstream>
@@ -129,7 +130,10 @@ int32_t SoundPool::load(Context* context, const std::string& resId, int priority
     auto sound = std::make_shared<Sound>();
     std::unique_ptr<std::istream> is;
 #if ENABLE(AUDIO)
-    if(context) is = context->getInputStream(resId);
+    if(context){
+        if(Asset*asset = context->openAsset(resId))
+            is = std::unique_ptr<std::istream>(new AssetInputStream(asset));
+    }
     if((is==nullptr)||!(*is)){
         is = std::make_unique<std::ifstream>(resId, std::ios::in|std::ios::binary);
         if((is==nullptr)||(!*is)){

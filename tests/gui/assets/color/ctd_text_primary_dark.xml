@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dark-theme primary text color selector: enabled #deffffff, disabled
+     #3dffffff. Referenced by ctdThemeDark's android:textColorPrimary
+     override. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="#3DFFFFFF"/>
+    <item android:color="#DEFFFFFF"/>
+</selector>

@@ -112,6 +112,14 @@ void Message::recycleUnchecked(){
         next = sPool;
         sPool = this;
         sPoolSize++;
+    } else {
+        // Pool full: Java drops it for GC to reclaim; C++ must free it here or
+        // it leaks (valgrind widgetsDemo: 88B Message + the 48B control block
+        // the callback=nullptr assignment just allocated, definite per message
+        // recycled past the 50-entry pool). Safe: obtain() only ever returns
+        // heap Messages, and every caller has already unlinked it from any
+        // queue before recycling.
+        delete this;
     }
 }
 

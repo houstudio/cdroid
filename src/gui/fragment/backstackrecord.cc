@@ -21,7 +21,6 @@
 #include <algorithm>
 
 namespace cdroid{
-namespace fragment{
 
 BackStackRecord::BackStackRecord(FragmentManager* manager) : mManager(manager){
 }
@@ -196,5 +195,4 @@ void BackStackRecord::restoreFromState(const BackStackRecordState& state,
     mAddToBackStack = true;
 }
 
-}//namespace fragment
 }//namespace cdroid

@@ -16,6 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/rotateanimation.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
+#include <widget/framework_styleable.h>
+
+using namespace cdroid::internal;
 namespace cdroid{
 
 RotateAnimation::RotateAnimation(const RotateAnimation&o){
@@ -29,15 +34,24 @@ RotateAnimation::RotateAnimation(const RotateAnimation&o){
     initializePivotPoint();
 }
 
-RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs){
-    mFromDegrees = attrs.getFloat("fromDegrees", 0.0f);
-    mToDegrees   = attrs.getFloat("toDegrees", 0.0f);
+RotateAnimation::RotateAnimation(Context* context,const AttributeSet& attrs)
+    :Animation(context,attrs){
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::RotateAnimation);
 
-    Description d = Description::parseValue(attrs.getString("pivotX"));
+    mFromDegrees = a->getFloat(R::styleable::RotateAnimation_fromDegrees, 0.0f);
+    mToDegrees   = a->getFloat(R::styleable::RotateAnimation_toDegrees, 0.0f);
+
+    // AOSP: Description.parseValue(a.peekValue(pivotX), context); an absent
+    // attr (tv stays TYPE_NULL) resolves to ABSOLUTE/0 like AOSP's null.
+    TypedValue tv;
+    a->peekValue(R::styleable::RotateAnimation_pivotX, &tv);
+    Description d = Description::parseValue(&tv, context);
     mPivotXType = d.type;
     mPivotXValue = d.value;
 
-    d = Description::parseValue(attrs.getString("pivotY"));
+    tv = TypedValue();
+    a->peekValue(R::styleable::RotateAnimation_pivotY, &tv);
+    d = Description::parseValue(&tv, context);
     mPivotYType = d.type;
     mPivotYValue = d.value;
 

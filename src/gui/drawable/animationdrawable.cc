@@ -15,17 +15,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/animationdrawable.h>
 #include <core/systemclock.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
+#include <stdexcept>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 #pragma GCC push_options
 #pragma GCC optimize("O0")
-AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr){
+AnimationDrawable::AnimationDrawable():AnimationDrawable(nullptr, nullptr){
 }
 
-AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state){
-    std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this);
+AnimationDrawable::AnimationDrawable(std::shared_ptr<AnimationDrawable::AnimationState>state, Resources* res){
+    std::shared_ptr<AnimationState>as =std::make_shared<AnimationState>(state.get(),this,res);
     setConstantState(as);
     mRunning  = false;
     mCurFrame = 0;
@@ -90,6 +95,12 @@ int AnimationDrawable::getNumberOfFrames()const{
 }
 
 Drawable* AnimationDrawable::getFrame(int index)const{
+    /*AOSP backs the frames with an ArrayList — getFrame(-1)/getFrame(n) throws
+      ArrayIndexOutOfBoundsException straight from ArrayList.get. The explicit
+      check is the C++ equivalent (tests expect std::out_of_range).*/
+    if (index < 0 || index >= mAnimationState->getChildCount()) {
+        throw std::out_of_range("getFrame index out of bounds");
+    }
     return mAnimationState->getChild(index);
 }
 
@@ -148,7 +159,7 @@ AnimationDrawable* AnimationDrawable::mutate(){
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> AnimationDrawable::cloneConstantState(){
-    return std::make_shared<AnimationState>(mAnimationState.get(),this);
+    return std::make_shared<AnimationState>(mAnimationState.get(),this,nullptr);
 }
 
 void AnimationDrawable::clearMutated(){
@@ -156,22 +167,23 @@ void AnimationDrawable::clearMutated(){
     mMutated = false;
 }
 
-void AnimationDrawable::inflate(XmlPullParser& parser,const AttributeSet& atts){
+void AnimationDrawable::inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts, const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimationDrawable);
     DrawableContainer::inflateWithAttributes(parser,atts);
-    updateStateFromTypedArray(atts);
+    if (ta) updateStateFromTypedArray(*ta);
 
     //updateDensity();
-    inflateChildElements(parser,atts);
+    inflateChildElements(r,parser,atts,theme);
     setFrame(0,true,false);
 }
 
-void AnimationDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+void AnimationDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mAnimationState;
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mOneShot = atts.getBoolean("oneshot", state->mOneShot);
+    state->mVariablePadding = a.getBoolean(R::styleable::AnimationDrawable_variablePadding, state->mVariablePadding);
+    state->mOneShot = a.getBoolean(R::styleable::AnimationDrawable_oneshot, state->mOneShot);
 }
 
-void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& atts){
+void AnimationDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
     while ((type=parser.next()) != XmlPullParser::END_DOCUMENT
@@ -183,12 +195,14 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
         if ((depth > innerDepth) || parser.getName().compare("item")) {
             continue;
         }
-        const int duration = atts.getInt("duration", -1);
+        // AOSP obtains R.styleable.AnimationDrawableItem per <item>.
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimationDrawableItem);
+        const int duration = ta->getInt(R::styleable::AnimationDrawableItem_duration, -1);
         if (duration < 0) {
             throw std::logic_error(parser.getPositionDescription()+": <item> tag requires a 'duration' attribute");
         }
 
-        Drawable* dr = atts.getDrawable("drawable");
+        Drawable* dr = ta->getDrawable(R::styleable::AnimationDrawableItem_drawable);
 
         if (dr == nullptr) {
             while ((type=parser.next()) == XmlPullParser::TEXT) {
@@ -199,10 +213,18 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
                         ": <item> tag requires a 'drawable' attribute or child tag"
                         " defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser, atts);
+            dr = Drawable::createFromXmlInner(r,parser, atts, theme);
         }
 
         mAnimationState->addFrame(dr, duration);
+        // DELIBERATE divergence from AOSP (which relies on addChild routing
+        // the frame callback to the container): CDROID's
+        // DrawableContainer::scheduleDrawable only forwards while
+        // &who == mCurrDrawable and its own mCallback is wired, which is not
+        // guaranteed mid frame-advance — routing frames straight to the
+        // VIEW-side callback is what actually keeps the frame runnable
+        // scheduled here. Doing it "faithfully" froze the barberpole (and the
+        // host ProgressBar's postInvalidateOnAnimation loop) after a while.
         if (dr != nullptr) {
             dr->setCallback(mCallback);
         }
@@ -210,8 +232,8 @@ void AnimationDrawable::inflateChildElements(XmlPullParser& parser,const Attribu
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,AnimationDrawable*owner)
-    :DrawableContainer::DrawableContainerState(orig,owner){
+AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,AnimationDrawable*owner,Resources*res)
+    :DrawableContainer::DrawableContainerState(orig,owner,res){
     if(orig){
         mDurations= orig->mDurations;
         mOneShot  = orig->mOneShot;
@@ -221,10 +243,16 @@ AnimationDrawable::AnimationState::AnimationState(const AnimationState*orig,Anim
 }
 
 void AnimationDrawable::AnimationState::mutate(){
+    // AOSP super.mutate() mutates every child; see StateListState::mutate().
+    DrawableContainerState::mutate();
 }
 
 AnimationDrawable*AnimationDrawable::AnimationState::newDrawable(){
-    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()));
+    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()), nullptr);
+}
+
+Drawable*AnimationDrawable::AnimationState::newDrawable(Resources* res){
+    return new AnimationDrawable(std::dynamic_pointer_cast<AnimationState>(shared_from_this()), res);
 }
 
 void AnimationDrawable::AnimationState::addFrame(Drawable*dr,int dur){

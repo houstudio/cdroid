@@ -15,60 +15,54 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/daypickercalendardelegate.h>
 #include <widget/daypickerview.h>
 #include <widget/yearpickerview.h>
 #include <widget/viewanimator.h>
+#include <widget/framework_styleable.h>
 #include <view/layoutinflater.h>
 #include <view/view.h>
 #include <view/hapticfeedbackconstants.h>
 #include <core/systemclock.h>
+#include <content/simpledateformat.h>
+#include <content/typedarray.h>
+#include <drawable/colorstatelist.h>
+#include <drawable/stateset.h>
+#include <porting/cdlog.h>
 #include <stdexcept>
 #include <string>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-namespace {
-// Approximates AOSP DateFormat skeleton "EMMMd" (CDROID has no DateFormat).
-const char* const kShortMonths[] = {
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-// Header update (formerly onCurrentDateChanged, which is commented out because the
-// base delegate has no such virtual). Kept as a free helper to avoid duplicating the
-// two setText calls at each call site.
-void updateHeader(TextView* yearTv, TextView* monthDayTv, Calendar& date) {
-    const int year = date.get(Calendar::YEAR);
-    const int month = date.get(Calendar::MONTH);
-    const int day = date.get(Calendar::DAY_OF_MONTH);
-    if (yearTv) yearTv->setText(std::to_string(year));
-    if (monthDayTv) {
-        const char* mon = (month >= 0 && month < 12) ? kShortMonths[month] : "";
-        monthDayTv->setText(std::string(mon) + " " + std::to_string(day));
-    }
-}
-} // namespace
+// AOSP DatePickerCalendarDelegate ATTRS_TEXT_COLOR / ATTRS_DISABLED_ALPHA.
+static const uint32_t ATTRS_TEXT_COLOR[] = { R::attr::textColor, 0 };
+static const uint32_t ATTRS_DISABLED_ALPHA[] = { R::attr::disabledAlpha, 0 };
 
 DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Context* context,
-        const AttributeSet& attrs)
+        const AttributeSet* attrs, int defStyleAttr, int defStyleRes)
     : AbstractDatePickerDelegate(delegator, context) {
-    (void) attrs; // DEFERRED: styling attrs (headerBackground, textAppearance) not wired.
-    mDelegator = delegator;
-    mContext = context;
+    mCurrentDate.setTimeInMillis(SystemClock::currentTimeMillis());
 
     mMinDate.set(DEFAULT_START_YEAR, Calendar::JANUARY, 1);
     mMaxDate.set(DEFAULT_END_YEAR, Calendar::DECEMBER, 31);
 
-    // Set up and attach container.
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::DatePicker, defStyleAttr, defStyleRes);
     LayoutInflater* inflater = LayoutInflater::from(mContext);
-    mContainer = (ViewGroup*) inflater->inflate("cdroid:layout/date_picker_material", nullptr, false);
+    const int layoutResourceId = a->getResourceId(R::styleable::DatePicker_internalLayout,
+            R::layout::date_picker_material);
+
+    // Set up and attach container.
+    mContainer = (ViewGroup*) inflater->inflate(layoutResourceId, mDelegator, false);
     mContainer->setSaveFromParentEnabled(false);
     mDelegator->addView(mContainer);
 
     // Set up header views.
     ViewGroup* header = (ViewGroup*) mContainer->findViewById(R::id::date_picker_header);
+    if (header == nullptr) {
+        LOGW("date_picker_material layout has no date_picker_header; header is inert");
+    }
     mHeaderYear = header ? (TextView*) header->findViewById(R::id::date_picker_header_year) : nullptr;
     mHeaderMonthDay = header ? (TextView*) header->findViewById(R::id::date_picker_header_date) : nullptr;
 
@@ -80,8 +74,41 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
             setCurrentView(VIEW_MONTH_DAY);
         }
     };
-    if (mHeaderYear) mHeaderYear->setOnClickListener(headerClickListener);
-    if (mHeaderMonthDay) mHeaderMonthDay->setOnClickListener(headerClickListener);
+    if (mHeaderYear) {
+        mHeaderYear->setOnClickListener(headerClickListener);
+        // DEFERRED: setAccessibilityDelegate(ClickActionDelegate(context, R.string.select_year)).
+        mHeaderYear->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
+    }
+    if (mHeaderMonthDay) {
+        mHeaderMonthDay->setOnClickListener(headerClickListener);
+        // DEFERRED: setAccessibilityDelegate(ClickActionDelegate(context, R.string.select_day)).
+        mHeaderMonthDay->setAccessibilityLiveRegion(View::ACCESSIBILITY_LIVE_REGION_POLITE);
+    }
+
+    // For the sake of backwards compatibility, attempt to extract the text
+    // color from the header month text appearance. If it's set, we'll let
+    // that override the "real" header text color.
+    RefPtr<ColorStateList> headerTextColor;
+    const int monthHeaderTextAppearance = a->getResourceId(R::styleable::DatePicker_headerMonthTextAppearance, 0);
+    if (monthHeaderTextAppearance != 0) {
+        auto textAppearance = mContext->obtainStyledAttributes(nullptr, ATTRS_TEXT_COLOR, 0, monthHeaderTextAppearance);
+        RefPtr<ColorStateList> legacyHeaderTextColor = textAppearance->getColorStateList(0);
+        headerTextColor = applyLegacyColorFixes(legacyHeaderTextColor);
+    }
+
+    if (!headerTextColor) {
+        headerTextColor = a->getColorStateList(R::styleable::DatePicker_headerTextColor);
+    }
+
+    if (headerTextColor) {
+        if (mHeaderYear) mHeaderYear->setTextColor(headerTextColor);
+        if (mHeaderMonthDay) mHeaderMonthDay->setTextColor(headerTextColor);
+    }
+
+    // Set up header background, if available.
+    if (header && a && a->hasValueOrEmpty(R::styleable::DatePicker_headerBackground)) {
+        header->setBackground(a->getDrawable(R::styleable::DatePicker_headerBackground));
+    }
 
     // Set up picker container.
     mAnimator = (ViewAnimator*) mContainer->findViewById(R::id::animator);
@@ -92,6 +119,7 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
         mDayPickerView->setFirstDayOfWeek(mFirstDayOfWeek);
         mDayPickerView->setMinDate(mMinDate.getTimeInMillis());
         mDayPickerView->setMaxDate(mMaxDate.getTimeInMillis());
+        mDayPickerView->setDate(mCurrentDate.getTimeInMillis());
         mDayPickerView->setOnDaySelectedListener(
             [this](DayPickerView&, Calendar& day) {
                 mCurrentDate.setTimeInMillis(day.getTimeInMillis());
@@ -103,22 +131,15 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePicker* delegator, Co
     mYearPickerView = (YearPickerView*) mContainer->findViewById(R::id::date_picker_year_picker);
     if (mYearPickerView) {
         mYearPickerView->setRange(mMinDate, mMaxDate);
+        mYearPickerView->setYear(mCurrentDate.get(Calendar::YEAR));
         mYearPickerView->setOnYearSelectedListener(
             [this](YearPickerView& view, int year) { onYearChanged(view, year); });
     }
 
-    // Initialize to current date, clamped to the valid range.
-    mCurrentDate.setTimeInMillis(SystemClock::currentTimeMillis());
-    if (mCurrentDate.before(mMinDate)) {
-        mCurrentDate.setTimeInMillis(mMinDate.getTimeInMillis());
-    } else if (mCurrentDate.after(mMaxDate)) {
-        mCurrentDate.setTimeInMillis(mMaxDate.getTimeInMillis());
-    }
+    // Initialize for current locale. This also initializes the date, so no
+    // need to call onDateChanged.
+    onLocaleChanged(mCurrentLocale);
 
-    if (mYearPickerView) mYearPickerView->setYear(mCurrentDate.get(Calendar::YEAR));
-    if (mDayPickerView) mDayPickerView->setDate(mCurrentDate.getTimeInMillis());
-
-    updateHeader(mHeaderYear, mHeaderMonthDay, mCurrentDate);
     setCurrentView(VIEW_MONTH_DAY);
 }
 
@@ -157,7 +178,16 @@ void DatePickerCalendarDelegate::setCurrentView(int viewIndex) {
         }
         break;
     case VIEW_YEAR:
-        if (mYearPickerView) mYearPickerView->setYear(mCurrentDate.get(Calendar::YEAR));
+        if (mYearPickerView) {
+            mYearPickerView->setYear(mCurrentDate.get(Calendar::YEAR));
+            mYearPickerView->post([this]() {
+                mYearPickerView->requestFocus();
+                View* selected = mYearPickerView->getSelectedView();
+                if (selected != nullptr) {
+                    selected->requestFocus();
+                }
+            });
+        }
         if (mCurrentView != viewIndex) {
             if (mHeaderMonthDay) mHeaderMonthDay->setActivated(false);
             if (mHeaderYear) mHeaderYear->setActivated(true);
@@ -202,7 +232,7 @@ void DatePickerCalendarDelegate::onDateChanged(bool fromUser, bool callbackToCli
     if (mDayPickerView) mDayPickerView->setDate(mCurrentDate.getTimeInMillis());
     if (mYearPickerView) mYearPickerView->setYear(year);
 
-    updateHeader(mHeaderYear, mHeaderMonthDay, mCurrentDate);
+    onCurrentDateChanged();
 
     if (fromUser) {
         tryVibrate();
@@ -329,7 +359,7 @@ void DatePickerCalendarDelegate::onRestoreInstanceState(Parcelable& state) {
         mMinDate.setTimeInMillis(ss->getMinDate());
         mMaxDate.setTimeInMillis(ss->getMaxDate());
 
-        updateHeader(mHeaderYear, mHeaderMonthDay, mCurrentDate);
+        onCurrentDateChanged();
 
         const int currentView = ss->getCurrentView();
         setCurrentView(currentView);
@@ -339,8 +369,8 @@ void DatePickerCalendarDelegate::onRestoreInstanceState(Parcelable& state) {
             if (currentView == VIEW_MONTH_DAY) {
                 if (mDayPickerView) mDayPickerView->setPosition(listPosition);
             } else if (currentView == VIEW_YEAR) {
-                // CDROID's AdapterView has no setSelectionFromTop; restore position only.
-                if (mYearPickerView) mYearPickerView->setSelection(listPosition);
+                const int listPositionOffset = ss->getListPositionOffset();
+                if (mYearPickerView) mYearPickerView->setSelectionFromTop(listPosition, listPositionOffset);
             }
         }
     }
@@ -375,6 +405,82 @@ int DatePickerCalendarDelegate::getDaysInMonth(int month, int year) {
 
 void DatePickerCalendarDelegate::tryVibrate() {
     mDelegator->performHapticFeedback(HapticFeedbackConstants::CALENDAR_DATE);
+}
+
+void DatePickerCalendarDelegate::onConfigurationChanged(Configuration& newConfig) {
+    setCurrentLocale(newConfig.getLocales().get(0));
+}
+
+void DatePickerCalendarDelegate::onLocaleChanged(const Locale& locale) {
+    // Skeletons "EMMMd"/"y" are approximated with explicit patterns in
+    // onCurrentDateChanged (CDROID has no getBestDateTimePattern); the locale
+    // itself only selects the symbol tables inside SimpleDateFormat.
+    (void)locale;
+    if (mHeaderYear == nullptr) {
+        // Abort, we haven't initialized yet. This method will get called
+        // again later after everything has been set up.
+        return;
+    }
+
+    // Update the header text.
+    onCurrentDateChanged();
+}
+
+void DatePickerCalendarDelegate::onCurrentDateChanged() {
+    if (mHeaderYear == nullptr) {
+        // Abort, we haven't initialized yet. This method will get called
+        // again later after everything has been set up.
+        return;
+    }
+
+    // AOSP formats via skeletons "y" and "EMMMd" (DateFormat.getBestDateTimePattern);
+    // CDROID has no DTPG, so use the equivalent explicit en patterns and let
+    // SimpleDateFormat resolve the per-locale names.
+    SimpleDateFormat yearFormat("yyyy", mCurrentLocale);
+    mHeaderYear->setText(yearFormat.format(mCurrentDate.getTimeInMillis()));
+    SimpleDateFormat monthDayFormat("EEE, MMM d", mCurrentLocale);
+    mHeaderMonthDay->setText(monthDayFormat.format(mCurrentDate.getTimeInMillis()));
+}
+
+RefPtr<ColorStateList> DatePickerCalendarDelegate::applyLegacyColorFixes(RefPtr<ColorStateList> color) {
+    // The legacy text color might have been poorly defined. Ensures that it
+    // has an appropriate activated state, using the selected state if one
+    // exists or modifying the default text color otherwise.
+    if (!color || color->hasState(R::attr::state_activated)) {
+        return color;
+    }
+
+    int activatedColor;
+    int defaultColor;
+    if (color->hasState(R::attr::state_selected)) {
+        activatedColor = color->getColorForState(StateSet::get(
+                StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_SELECTED), 0);
+        defaultColor = color->getColorForState(StateSet::get(
+                StateSet::VIEW_STATE_ENABLED), 0);
+    } else {
+        activatedColor = color->getDefaultColor();
+
+        // Generate a non-activated color using the disabled alpha.
+        auto ta = mContext->obtainStyledAttributes(ATTRS_DISABLED_ALPHA);
+        const float disabledAlpha = ta->getFloat(0, 0.30f);
+        defaultColor = multiplyAlphaComponent(activatedColor, disabledAlpha);
+    }
+
+    if (activatedColor == 0 || defaultColor == 0) {
+        // We somehow failed to obtain the colors.
+        return nullptr;
+    }
+
+    const std::vector<std::vector<int>> states = { { R::attr::state_activated }, {} };
+    const std::vector<int> colors = { activatedColor, defaultColor };
+    return RefPtr<ColorStateList>(new ColorStateList(states, colors));
+}
+
+int DatePickerCalendarDelegate::multiplyAlphaComponent(int color, float alphaMod) {
+    const int srcRgb = color & 0xFFFFFF;
+    const int srcAlpha = (color >> 24) & 0xFF;
+    const int dstAlpha = (int) (srcAlpha * alphaMod + 0.5f);
+    return srcRgb | (dstAlpha << 24);
 }
 
 } // namespace cdroid

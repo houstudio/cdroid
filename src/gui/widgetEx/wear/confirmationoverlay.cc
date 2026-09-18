@@ -1,9 +1,11 @@
-#include <widget/R.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widget/textview.h>
 #include <widget/imageview.h>
 #include <widget/cdwindow.h>
 #include <widgetEx/wear/confirmationoverlay.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ConfirmationOverlay::ConfirmationOverlay(){
     mIsShowing = false;
@@ -82,7 +84,7 @@ void ConfirmationOverlay::animateAndHideAfterDelay() {
  * #mHideRunnable} after {@link #mDurationMillis} milliseconds.
  */
 void ConfirmationOverlay::hide() {
-    Animation* fadeOut = AnimationUtils::loadAnimation(mOverlayView->getContext(), "cdroid:anim/fade_out");
+    Animation* fadeOut = AnimationUtils::loadAnimation(mOverlayView->getContext(), R::anim::fade_out);
     Animation::AnimationListener al;
     mOverlayView->clearAnimation();
     al.onAnimationStart=[this](Animation& animation){
@@ -102,7 +104,8 @@ void ConfirmationOverlay::hide() {
 void ConfirmationOverlay::updateOverlayView(Context* context) {
     if (mOverlayView == nullptr) {
         //noinspection InflateParams
-        mOverlayView = LayoutInflater::from(context)->inflate("cdroid:layout/ws_overlay_confirmation", nullptr);
+        mOverlayView = LayoutInflater::from(context)->inflate(
+                R::layout::ws_overlay_confirmation, nullptr);
     }
     mOverlayView->setOnTouchListener([](View& v, MotionEvent& event) {
         return true;
@@ -114,7 +117,8 @@ void ConfirmationOverlay::updateOverlayView(Context* context) {
 }
 
 void ConfirmationOverlay::updateMessageView(Context* context, View* overlayView) {
-    TextView* messageView =  (TextView*)overlayView->findViewById(R::id::wearable_support_confirmation_overlay_message);
+    TextView* messageView =  (TextView*)overlayView->findViewById(
+            R::id::wearable_support_confirmation_overlay_message);
 
     if (!mMessage.empty()) {
         const int screenWidthPx = context->getDisplayMetrics().widthPixels;// ResourcesUtil.getScreenWidthPx(context);
@@ -138,20 +142,21 @@ void ConfirmationOverlay::updateMessageView(Context* context, View* overlayView)
 void ConfirmationOverlay::updateImageView(Context* context, View* overlayView) {
     switch (mType) {
     case SUCCESS_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/generic_confirmation_animation");
+        mOverlayDrawable = context->getDrawable(R::drawable::confirmation_animation);
         break;
     case FAILURE_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/ws_full_sad");
+        mOverlayDrawable = context->getDrawable(R::drawable::failure_animation);
         break;
     case OPEN_ON_PHONE_ANIMATION:
-        mOverlayDrawable = context->getDrawable("@cdroid:drawable/ws_open_on_phone_animation");
+        mOverlayDrawable = context->getDrawable(R::drawable::open_on_phone_animation);
         break;
     default:
         LOGE("Invalid ConfirmationOverlay type [%d]", mType);
         break;
     }
 
-    ImageView* imageView = (ImageView*)overlayView->findViewById(R::id::wearable_support_confirmation_overlay_image);
+    ImageView* imageView = (ImageView*)overlayView->findViewById(
+            R::id::wearable_support_confirmation_overlay_image);
     imageView->setImageDrawable(mOverlayDrawable);
 }
 }/*endof namespace*/

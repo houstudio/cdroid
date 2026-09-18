@@ -18,13 +18,14 @@
 #include <widgetEx/recyclerview/gridlayoutmanager.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 #include <core/build.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet& attrs)
-   :LinearLayoutManager(context, attrs){
-    Properties properties = getProperties(context, attrs,0,0);// defStyleAttr, defStyleRes);
+GridLayoutManager::GridLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+   :LinearLayoutManager(context, pAttrs, defStyleAttr, defStyleRes){
+    Properties properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     mSpanSizeLookup = new DefaultSpanSizeLookup();
     setSpanCount(properties.spanCount);
     mPendingSpanCountChange = false;
@@ -214,8 +215,8 @@ bool GridLayoutManager::performAccessibilityAction(int action,Bundle* args){
         int noRow = -1;
         int noColumn = -1;
         if (args != nullptr) {
-            int rowArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, noRow);
-            int columnArg = -1;//args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, noColumn);
+            int rowArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, noRow);
+            int columnArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, noColumn);
 
             if (rowArg == noRow || columnArg == noColumn) {
                 return false;
@@ -591,8 +592,8 @@ GridLayoutManager::LayoutParams* GridLayoutManager::generateDefaultLayoutParams(
     }
 }
 
-GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet& attrs)const{
-    return new LayoutParams(c, attrs);
+GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(Context* c,const AttributeSet* attrs)const{
+    return new LayoutParams(c, *attrs);
 }
 
 GridLayoutManager::LayoutParams* GridLayoutManager::generateLayoutParams(const ViewGroup::LayoutParams& lp)const{

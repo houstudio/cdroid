@@ -30,6 +30,7 @@
 #define CDROID_CONSTRAINTLAYOUT_HELPERS_CAROUSEL_H
 
 #include <vector>
+#include <memory>
 
 #include <core/attributeset.h>
 #include <widgetEx/constraintlayout/motion/motionhelper.h>
@@ -55,10 +56,10 @@ class Carousel : public MotionHelper {
         virtual void onNewItem(int /*index*/) {}               // settled on a new index
     };
 
-    Carousel(Context* ctx, const AttributeSet& attrs);
-    explicit Carousel(int width, int height);
+    Carousel(Context* ctx, const AttributeSet* attrs);
+    Carousel(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
-    void setAdapter(Adapter* adapter) { mAdapter = adapter; }
+    void setAdapter(Adapter* adapter) { mAdapter = adapter; refresh(); }
     int  getCount();
     int  getCurrentIndex() const { return mIndex; }
     // Animate to `index`; `delay` is the per-step transition duration in ms.
@@ -69,7 +70,7 @@ class Carousel : public MotionHelper {
     void refresh();
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void onAttachedToWindow() override;
     void onDetachedFromWindow() override;
 
@@ -87,6 +88,10 @@ class Carousel : public MotionHelper {
     MotionLayout* mMotionLayout = nullptr;
     std::vector<View*> mList;                    // the reusable carousel item views
     MotionLayout::TransitionListener mListener;  // registered on mMotionLayout in onAttachedToWindow
+    // Liveness token for the runnables posted to mMotionLayout (AndroidX relies
+    // on GC there; the posted lambdas capture this and must not run after the
+    // helper dies — each post captures a weak_ptr and bails when expired).
+    std::shared_ptr<bool> mSelfAlive = std::make_shared<bool>();
     int mLastStartId = -1;
     int mPreviousIndex = 0;
     int mIndex = 0;

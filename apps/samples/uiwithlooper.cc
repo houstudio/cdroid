@@ -11,7 +11,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setId(10000);
     w->setBackgroundColor(0xFF111111);
-    EditText*edit=new EditText("Hello world! This value is positive for typical fonts that include",680,200);
+    EditText*edit=new EditText(&app); edit->setText("Hello world! This value is positive for typical fonts that include" );
     edit->setTextColor(0xFFFFFFFF);
     edit->setSingleLine(false);
     edit->setClickable(true);

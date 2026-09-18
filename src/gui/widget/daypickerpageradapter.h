@@ -38,7 +38,7 @@ private:
     Calendar mMaxDate;
     SparseArray<ViewHolder*>mItems;
     LayoutInflater* mInflater;
-    std::string mLayoutResId;
+    int mLayoutResId = 0;
     int mCalendarViewId;
     
     // Stored by value: AOSP holds a reference, but the C++ click path passes a
@@ -47,9 +47,10 @@ private:
     Calendar mSelectedDay;
     bool mSelectedDayValid = false;
 
-    std::string mMonthTextAppearance;
-    std::string mDayOfWeekTextAppearance;
-    std::string mDayTextAppearance;
+    int mMonthTextAppearance = 0;
+    int mDayOfWeekTextAppearance = 0;
+    int mDayTextAppearance = 0;
+    int mDayOfWeekNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
 
     cdroid::RefPtr<ColorStateList> mCalendarTextColor;
     cdroid::RefPtr<ColorStateList> mDaySelectorColor;
@@ -65,7 +66,7 @@ private:
     int getYearForPosition(int position);
     int getPositionForDay(Calendar* day);
 public:
-    DayPickerPagerAdapter(Context* context,const std::string&layoutResId,int calendarViewId);
+    DayPickerPagerAdapter(Context* context,int layoutResId,int calendarViewId);
     ~DayPickerPagerAdapter();
     void setRange(Calendar& min,Calendar& max);
     void setFirstDayOfWeek(int weekStart);
@@ -76,12 +77,17 @@ public:
     void setCalendarTextColor(const cdroid::RefPtr<ColorStateList>& calendarTextColor);
     void setDaySelectorColor(const cdroid::RefPtr<ColorStateList>& selectorColor);
 
-    void setMonthTextAppearance(const std::string& resId);
-    void setDayOfWeekTextAppearance(const std::string& resId);
-    std::string getDayOfWeekTextAppearance();
+    void setMonthTextAppearance(int resId);
+    void setDayOfWeekTextAppearance(int resId);
+    int getDayOfWeekTextAppearance();
 
-    void setDayTextAppearance(const std::string&resId);
-    std::string getDayTextAppearance();
+    void setDayOfWeekNameLength(int length);
+
+    /* CDROID runtime-locale extension: re-localize every instantiated page. */
+    void onLocaleChanged();
+
+    void setDayTextAppearance(int resId);
+    int getDayTextAppearance();
 
     int getCount()override;
     bool isViewFromObject(View* view,void*object)override;

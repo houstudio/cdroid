@@ -40,6 +40,10 @@ public:
    int getSections(std::vector<std::string>&mbs);
    void removeSection(const std::string&section);
    bool hasSection(const std::string&)const;
+   // Per-key enumeration/removal (needed by the SharedPreferences backend,
+   // which maps one flat key namespace onto a single section).
+   int getKeys(const std::string&section, std::vector<std::string>&keys) const;
+   void remove(const std::string&section, const std::string&key);
    int getUpdates()const;
    bool getBool(const std::string&section,const std::string&key,bool def=false);
    int getInt(const std::string&section,const std::string&key,int def=0);

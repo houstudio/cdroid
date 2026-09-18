@@ -42,13 +42,13 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w = new Window(0,0,-1,-1);
 #if ENABLE_COORDINATORLAYOUT
-    CoordinatorLayout*cl=new CoordinatorLayout(-1,-1);
-    NestedScrollView*scroller=new NestedScrollView(-1,-1);
+    CoordinatorLayout*cl=new CoordinatorLayout(&app);
+    NestedScrollView*scroller=new NestedScrollView(&app);
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
 
-    LinearLayout*layout=new LinearLayout(-1,-1);
+    LinearLayout*layout=new LinearLayout(&app);
     layout->setOrientation(LinearLayout::VERTICAL);
     CoordinatorLayout::LayoutParams*tlp=new CoordinatorLayout::LayoutParams(
                         LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
@@ -59,7 +59,7 @@ int main(int argc,const char*argv[]){
     for(int i=0;i<50;i++){
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,100);//(LayoutParams::WRAP_CONTENT));
         lp->setMargins(5,2,5,2);
-        TextView*edit=new TextView(std::string("String")+std::to_string(i),680,200);
+        TextView*edit=new TextView(&app); edit->setText(std::string("String")+std::to_string(i));
         edit->setTextColor(0xFFFFFFFF);
         edit->setSingleLine(true);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
@@ -69,7 +69,7 @@ int main(int argc,const char*argv[]){
         layout->addView(edit,lp);
     }
     cl->addView(scroller,new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
-    TextView*tv=new TextView("Hello world",100,64);
+    TextView*tv=new TextView(&app); tv->setText("Hello world" );
     tv->setTextSize(48);
     tlp=new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,64);
     tlp->setBehavior(new YourCustomBehavior());
@@ -77,7 +77,8 @@ int main(int argc,const char*argv[]){
     cl->addView(tv,tlp);
     w->addView(cl);
 #else
-    w->addView(new TextView("CoordinatorLayout not enabled in your cdroid.",-1,-1));
+    TextView*hint=new TextView(&app); hint->setText("CoordinatorLayout not enabled in your cdroid.");
+    w->addView(hint);
 #endif
     w->requestLayout();
     return app.exec();

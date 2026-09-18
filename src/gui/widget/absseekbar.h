@@ -76,8 +76,9 @@ protected:
     bool onKeyDown(int keycode,KeyEvent&event)override;
     bool onTouchEvent(MotionEvent& event)override;
 public:
-    AbsSeekBar(int w,int h);
-    AbsSeekBar(Context*ctx,const AttributeSet&attrs);
+    AbsSeekBar(Context*ctx);   // AOSP AbsSeekBar(Context)
+    AbsSeekBar(Context*ctx,const AttributeSet*attrs);
+    AbsSeekBar(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~AbsSeekBar();
     void setKeyProgressIncrement(int increment);
     int getKeyProgressIncrement()const;

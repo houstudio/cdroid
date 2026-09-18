@@ -193,6 +193,9 @@ class Transition {
     virtual void runAnimators();
     virtual void forceToEnd(ViewGroup* sceneRoot);
     virtual void cancel();
+    /** App-exit tail (after WindowManager is gone): free throwaway clones whose
+     *  deferred self-delete post was dropped by the quitting message queue. */
+    static void deleteOrphanedClones();
 
     // addListener/removeListener take TransitionListener by value (EventSet identity via
     // shared mID: a copy compares equal to its original, so removeListener finds it).
@@ -212,7 +215,7 @@ class Transition {
     Rect getEpicenter() const;
     virtual void setPathMotion(PathMotion* pathMotion);
     PathMotion* getPathMotion() const;
-    virtual void setPropagation(TransitionPropagation* transitionPropagation);
+    virtual void setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation);
     TransitionPropagation* getPropagation() const;
 
     // ---- scene-root / removal / name overrides (engine hooks) ----
@@ -280,7 +283,7 @@ class Transition {
     std::vector<TransitionListener> mListeners;
     std::vector<Animator*> mAnimators;
     std::vector<Animator*> mOwnedAnimators; // created by createAnimators; owned, freed in ~Transition
-    TransitionPropagation* mPropagation = nullptr;
+    std::shared_ptr<TransitionPropagation> mPropagation; // shared: TransitionSet shares one across children
     EpicenterCallback* mEpicenterCallback = nullptr;
     ArrayMap<std::string, std::string> mNameOverrides; // empty == null (value semantics; copy-safe)
     PathMotion* mPathMotion; // set in ctor to STRAIGHT_PATH_MOTION instance
@@ -314,8 +317,12 @@ class Transition {
     static bool isValueChanged(const TransitionValues& oldValues,
                                const TransitionValues& newValues, const std::string& key);
 
-    // Returns the per-process map of currently running animators (ThreadLocal in android).
+    // Returns the per-process map of currently running animators (ThreadLocal in
+    // android). Framework-internal: SpecialEffectsController ends animators over a
+    // view subtree before freeing deferred exit views.
+public:
     static ArrayMap<Animator*, AnimationInfo>& getRunningAnimators();
+private:
 
     /**
      * Utility class for managing ArrayLists efficiently (android.transition.Transition

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ViewTransitionAllStatesPersistsDelta: allStates persists the delta into every ConstraintSet
+     except the current state. -->
+<MotionScene xmlns:app="http://schemas.android.com/apk/res/cdroid.widgetex"
+             xmlns:android="http://schemas.android.com/apk/res/android">
+    <Transition app:constraintSetStart="@+id/as_start" app:constraintSetEnd="@+id/as_end" />
+    <ConstraintSet android:id="@+id/as_start">
+        <Constraint android:id="@+id/as_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintLeft_toLeftOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    </ConstraintSet>
+    <ConstraintSet android:id="@+id/as_end">
+        <Constraint android:id="@+id/as_target" android:layout_width="100px" android:layout_height="50px"
+                    app:layout_constraintRight_toRightOf="parent" app:layout_constraintBottom_toBottomOf="parent" />
+    </ConstraintSet>
+    <ViewTransition android:id="@+id/vt_all" app:motionTarget="@+id/as_target"
+                    app:viewTransitionMode="allStates">
+        <ConstraintOverride app:motionTarget="@+id/as_target" android:scaleX="1.5" />
+    </ViewTransition>
+</MotionScene>

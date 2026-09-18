@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Choice arrays for the settings screens (entries referenced from the
+     preference XMLs; values keep the AOSP string-typed convention). -->
+<resources>
+
+    <string-array name="prefdemo_wifi_sleep_entries">
+        <item>Never</item>
+        <item>Only when plugged in</item>
+        <item>Always</item>
+    </string-array>
+    <string-array name="prefdemo_wifi_sleep_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="prefdemo_browser_entries">
+        <item>Chrome</item>
+        <item>Firefox</item>
+        <item>Browser</item>
+    </string-array>
+    <string-array name="prefdemo_browser_values">
+        <item>chrome</item>
+        <item>firefox</item>
+        <item>browser</item>
+    </string-array>
+
+    <string-array name="prefdemo_assistant_entries">
+        <item>Assistant</item>
+        <item>None</item>
+    </string-array>
+    <string-array name="prefdemo_assistant_values">
+        <item>assistant</item>
+        <item>none</item>
+    </string-array>
+
+    <string-array name="prefdemo_lockscreen_entries">
+        <item>Show all notification content</item>
+        <item>Hide sensitive content</item>
+        <item>Show no notifications</item>
+    </string-array>
+    <string-array name="prefdemo_lockscreen_values">
+        <item>all</item>
+        <item>redacted</item>
+        <item>none</item>
+    </string-array>
+
+    <string-array name="prefdemo_channel_entries">
+        <item>Messages</item>
+        <item>Calendar</item>
+        <item>Email</item>
+        <item>Reminders</item>
+        <item>Downloads</item>
+    </string-array>
+    <string-array name="prefdemo_channel_values">
+        <item>messages</item>
+        <item>calendar</item>
+        <item>email</item>
+        <item>reminders</item>
+        <item>downloads</item>
+    </string-array>
+
+    <string-array name="prefdemo_screen_timeout_entries">
+        <item>15 seconds</item>
+        <item>30 seconds</item>
+        <item>1 minute</item>
+        <item>2 minutes</item>
+        <item>5 minutes</item>
+        <item>10 minutes</item>
+        <item>30 minutes</item>
+    </string-array>
+    <string-array name="prefdemo_screen_timeout_values">
+        <item>15000</item>
+        <item>30000</item>
+        <item>60000</item>
+        <item>120000</item>
+        <item>300000</item>
+        <item>600000</item>
+        <item>1800000</item>
+    </string-array>
+
+    <string-array name="prefdemo_font_size_entries">
+        <item>Small</item>
+        <item>Default</item>
+        <item>Large</item>
+        <item>Largest</item>
+    </string-array>
+    <string-array name="prefdemo_font_size_values">
+        <item>0.85</item>
+        <item>1.0</item>
+        <item>1.15</item>
+        <item>1.3</item>
+    </string-array>
+
+    <string-array name="prefdemo_ringtone_entries">
+        <item>Default</item>
+        <item>Crystal</item>
+        <item>Orbit</item>
+        <item>Slacur</item>
+        <item>Silent</item>
+    </string-array>
+    <string-array name="prefdemo_ringtone_values">
+        <item>default</item>
+        <item>crystal</item>
+        <item>orbit</item>
+        <item>slacur</item>
+        <item>silent</item>
+    </string-array>
+
+    <string-array name="prefdemo_lock_type_entries">
+        <item>None</item>
+        <item>Swipe</item>
+        <item>PIN</item>
+        <item>Password</item>
+    </string-array>
+    <string-array name="prefdemo_lock_type_values">
+        <item>none</item>
+        <item>swipe</item>
+        <item>pin</item>
+        <item>password</item>
+    </string-array>
+
+    <string-array name="prefdemo_location_mode_entries">
+        <item>High accuracy</item>
+        <item>Battery saving</item>
+        <item>Device only</item>
+    </string-array>
+    <string-array name="prefdemo_location_mode_values">
+        <item>high_accuracy</item>
+        <item>high_battery</item>
+        <item>device_only</item>
+    </string-array>
+
+    <string-array name="prefdemo_language_entries">
+        <item>English (United States)</item>
+        <item>English (United Kingdom)</item>
+        <item>中文 (简体)</item>
+        <item>中文 (繁體)</item>
+        <item>日本語</item>
+        <item>한국어</item>
+    </string-array>
+    <string-array name="prefdemo_language_values">
+        <item>en-US</item>
+        <item>en-GB</item>
+        <item>zh-CN</item>
+        <item>zh-TW</item>
+        <item>ja-JP</item>
+        <item>ko-KR</item>
+    </string-array>
+
+    <string-array name="prefdemo_timezone_entries">
+        <item>GMT+08:00 Beijing</item>
+        <item>GMT+09:00 Tokyo</item>
+        <item>GMT+00:00 London</item>
+        <item>GMT-08:00 Pacific</item>
+    </string-array>
+    <string-array name="prefdemo_timezone_values">
+        <item>gmt8</item>
+        <item>gmt9</item>
+        <item>gmt0</item>
+        <item>gmt-8</item>
+    </string-array>
+
+</resources>

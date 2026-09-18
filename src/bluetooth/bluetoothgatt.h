@@ -1,0 +1,187 @@
+#ifndef __CDROID_BLUETOOTH_GATT_H__
+#define __CDROID_BLUETOOTH_GATT_H__
+
+#include <cstdint>
+#include <functional>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include <core/callbackbase.h>   /* EventSet listener base (header-only) */
+
+#include <bluetoothdevice.h>
+#include <bluetoothuuid.h>
+
+namespace cdroid {
+
+class BluetoothGatt;
+class BluetoothAdapter;
+
+/**
+ * Port of android.bluetooth.BluetoothGattCharacteristic (android-36):
+ * a GATT characteristic handle. Instances are minted by
+ * BluetoothGatt::discoverServices and owned by it; getValue/setValue
+ * buffer locally, read()/write() round-trip the transport.
+ */
+class BluetoothGattCharacteristic {
+public:
+    static constexpr int PROPERTY_BROADCAST = 0x01;
+    static constexpr int PROPERTY_READ = 0x02;
+    static constexpr int PROPERTY_WRITE_NO_RESPONSE = 0x04;
+    static constexpr int PROPERTY_WRITE = 0x08;
+    static constexpr int PROPERTY_NOTIFY = 0x10;
+    static constexpr int PROPERTY_INDICATE = 0x20;
+
+    BluetoothUuid getUuid() const { return mUuid; }
+    /* Instance id maps to the BlueZ object path tail; kept for parity. */
+    int getInstanceId() const { return mInstanceId; }
+    int getProperties() const { return mProperties; }
+
+    /* Local value buffer (AOSP semantics: last read/written value).
+     * setValue mirrors the Java boolean return (always true — no
+     * length-limit validation exists on this port). */
+    std::vector<uint8_t> getValue() const { return mValue; }
+    bool setValue(const std::vector<uint8_t>& value) { mValue = value; return true; }
+
+private:
+    friend class BluetoothGatt;
+    BluetoothGattCharacteristic(const BluetoothUuid& uuid, int instanceId,
+                                int properties, const std::string& objectPath);
+    BluetoothUuid mUuid;
+    int mInstanceId;
+    int mProperties;
+    std::string mObjectPath;   /* BlueZ GattCharacteristic1 path */
+    std::vector<uint8_t> mValue;
+};
+
+/**
+ * Port of android.bluetooth.BluetoothGattService (android-36): a GATT
+ * service with its characteristics.
+ */
+class BluetoothGattService {
+public:
+    static constexpr int SERVICE_TYPE_PRIMARY = 0;
+    static constexpr int SERVICE_TYPE_SECONDARY = 1;
+
+    BluetoothUuid getUuid() const { return mUuid; }
+    int getInstanceId() const { return mInstanceId; }
+    int getType() const { return mType; }
+
+    std::vector<BluetoothGattCharacteristic*> getCharacteristics() const {
+        return mCharacteristics;
+    }
+    BluetoothGattCharacteristic* getCharacteristic(const BluetoothUuid& uuid) const;
+
+private:
+    friend class BluetoothGatt;
+    BluetoothGattService(const BluetoothUuid& uuid, int instanceId, int type,
+                         const std::string& objectPath);
+    ~BluetoothGattService();
+    BluetoothUuid mUuid;
+    int mInstanceId;
+    int mType;
+    std::string mObjectPath;
+    std::vector<BluetoothGattCharacteristic*> mCharacteristics;
+};
+
+/**
+ * Port of android.bluetooth.BluetoothGattCallback (android-36). All
+ * callbacks arrive on the monitor thread (the cdnet convention — marshal
+ * through the app's Handler/View::post for UI work). Listener shape:
+ * EventSet + std::function slots (identity in EventSet, unset slots are
+ * no-ops). @NonNull params are references: gatt is the dispatching
+ * session itself, and characteristic is null-checked by the callers
+ * before the callbacks fire.
+ */
+class BluetoothGattCallback : public EventSet {
+public:
+    std::function<void(BluetoothGatt& gatt, int status,
+                       int newState)> onConnectionStateChange;
+    std::function<void(BluetoothGatt& gatt, int status)> onServicesDiscovered;
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic,
+                       int status)> onCharacteristicRead;
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic,
+                       int status)> onCharacteristicWrite;
+    /* Value arrived via notification/indication. */
+    std::function<void(BluetoothGatt& gatt,
+                       BluetoothGattCharacteristic& characteristic)> onCharacteristicChanged;
+};
+
+/**
+ * Port of android.bluetooth.BluetoothGatt (android-36): the GATT client.
+ * connect() on the AOSP side is asynchronous and the object must be
+ * closed after use — same contract here: construct via
+ * BluetoothDevice.connectGatt(context, autoConnect, callback), call
+ * discoverServices() once onConnectionStateChange reports STATE_CONNECTED,
+ * and close() when done (the destructor closes too).
+ *
+ * discoverServices() populates from BlueZ's GATT object tree (bluez
+ * resolves services during Device1.Connect — the AOSP equivalent of the
+ * service discovery cache).
+ */
+class BluetoothGatt : public std::enable_shared_from_this<BluetoothGatt> {
+public:
+    static constexpr int STATE_DISCONNECTED = 0;
+    static constexpr int STATE_CONNECTING = 1;
+    static constexpr int STATE_CONNECTED = 2;
+
+    /* GATT_SUCCESS and friends (BluetoothGatt/GattCallback codes). */
+    static constexpr int GATT_SUCCESS = 0;
+    static constexpr int GATT_FAILURE = 257;
+    static constexpr int GATT_ERROR = 133;
+
+    ~BluetoothGatt();
+    /* Notification fan-out keeps the session alive across the app
+     * callback (close()-then-delete while a callback is in flight was
+     * a use-after-free — review round 2). Factories return the shared
+     * pointer; AOSP's own binder callback path holds a strong ref the
+     * same way. The callback is stored as a value copy (EventSet). */
+    static std::shared_ptr<BluetoothGatt> create(const BluetoothDevice& device,
+                                                 bool autoConnect,
+                                                 const BluetoothGattCallback& callback);
+
+    bool connect();
+    void disconnect();
+    void close();
+
+    bool discoverServices();
+    std::vector<BluetoothGattService*> getServices() const {
+        std::lock_guard<std::mutex> lock(mStateMutex);
+        return mServices;
+    }
+    BluetoothGattService* getService(const BluetoothUuid& uuid) const;
+
+    bool readCharacteristic(BluetoothGattCharacteristic* characteristic);
+    bool writeCharacteristic(BluetoothGattCharacteristic* characteristic);
+    bool setCharacteristicNotification(BluetoothGattCharacteristic* characteristic,
+                                      bool enable);
+
+private:
+    friend class BluetoothDevice;
+    friend class BluetoothAdapter;   /* characteristic-changed fan-out */
+    explicit BluetoothGatt(const BluetoothDevice& device,
+                           const BluetoothGattCallback& callback);
+    /* BlueZ characteristic Value/Notifying flip (monitor thread). */
+    void onCharacteristicChangedInternal(const std::string& objectPath,
+                                         const std::vector<uint8_t>& value);
+
+    BluetoothDevice mDevice;
+    /* Ctor-set value copy, immutable afterwards: read from the app and
+     * monitor threads without a lock (unset slots are no-ops). */
+    BluetoothGattCallback mCallback;
+    class BluezClient& mClient;      /* shared transport (via the adapter) */
+    /* Services/state are mutated by the app thread (discoverServices/
+     * close) and read by the monitor thread (notification fan-out):
+     * guarded — the adapter's session list lock protects only the
+     * registry, not the sessions' contents (review's UAF finding). */
+    mutable std::mutex mStateMutex;
+    int mConnectionState = STATE_DISCONNECTED;
+    std::vector<BluetoothGattService*> mServices;
+    bool mClosed = false;
+};
+
+} // namespace cdroid
+
+#endif /* __CDROID_BLUETOOTH_GATT_H__ */

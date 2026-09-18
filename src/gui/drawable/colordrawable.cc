@@ -15,12 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/colordrawable.h>
 #include <drawable/colormatrix.h>
+#include <core/context.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ColorDrawable::ColorState::ColorState(){
     mTint = nullptr;
@@ -39,7 +44,11 @@ ColorDrawable::ColorState::ColorState(const ColorState& state){
 }
 
 ColorDrawable* ColorDrawable::ColorState::newDrawable(){
-    return new ColorDrawable(shared_from_this());
+    return new ColorDrawable(shared_from_this(), nullptr);
+}
+
+Drawable* ColorDrawable::ColorState::newDrawable(Resources* res){
+    return new ColorDrawable(shared_from_this(), res);
 }
 
 int ColorDrawable::ColorState::getChangingConfigurations()const{
@@ -56,7 +65,7 @@ ColorDrawable::ColorDrawable(int color){
     setColor(color);
 }
 
-ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
+ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state, Resources* res){
     mColorState = state;
     mTintFilter = nullptr;
     mMutated = false;
@@ -65,8 +74,38 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
 ColorDrawable::~ColorDrawable(){
 }
 
-void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    mColorState->mBaseColor = atts.getColor("color", mColorState->mBaseColor);
+void ColorDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ColorDrawable);
+    if (ta) {
+        // AOSP: extract the theme attributes for later re-resolution (applyTheme).
+        mColorState->mThemeAttrs = ta->extractThemeAttrs();
+        mColorState->mBaseColor = ta->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+    }
+    mColorState->mUseColor = mColorState->mBaseColor;
+}
+
+// AOSP ColorDrawable.canApplyTheme/applyTheme.
+bool ColorDrawable::canApplyTheme(){
+    return (mColorState && !mColorState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void ColorDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mColorState && !mColorState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mColorState->mThemeAttrs, R::styleable::ColorDrawable);
+        if (a) {
+            mColorState->mBaseColor = a->getColor(R::styleable::ColorDrawable_color, mColorState->mBaseColor);
+            // AOSP (ColorDrawable.java:329-333 + :309) re-extracts from the
+            // resolved array: an attr the theme could not resolve stays
+            // pending instead of being dropped. (Sibling subclasses still
+            // clear unconditionally — a per-class re-extract port is a
+            // separate family-wide pass.)
+            mColorState->mThemeAttrs = a->extractThemeAttrs();
+        } else {
+            mColorState->mThemeAttrs.clear();
+        }
+    }
     mColorState->mUseColor = mColorState->mBaseColor;
 }
 
@@ -122,7 +161,9 @@ bool ColorDrawable::onStateChange(const std::vector<int>&stateSet){
         mTintFilter = updateTintFilter(mTintFilter, mColorState->mTint, mColorState->mTintMode);
         return true;
     }
-    return mColorState->mTint!=nullptr;
+    // AOSP: no tint mode => no change to report (a NOOP-mode tint kept
+    // returning true, forcing needless re-selection on every setState).
+    return false;
 }
 
 int ColorDrawable::getChangingConfigurations()const{

@@ -34,21 +34,26 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
+#include <core/attributeset.h>
 #include <algorithm>
+#include <stdexcept>
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 FragmentManager::FragmentManager(){
     // mExecCommit is assigned exactly once and never rebound. Runnable identity is its shared
     // Functor pointer (CallbackBase::operator==), and Handler::removeCallbacks matches posted
     // runnables by that pointer — a stable identity is required for dedup (R4).
     mExecCommit = [this]{ execPendingActions(true); };
+    // androidx FragmentManager: the default factory (Class.forName instantiation replaced
+    // by the registry). Owned — setFragmentFactory() replaces it and transfers ownership.
+    mFragmentFactory = new FragmentFactory();
 }
 
 FragmentManager::~FragmentManager(){
     LOGD("FragmentManager %p Destroied",this);
+    delete mFragmentFactory; // owned (default-constructed or setFragmentFactory-transferred)
     for(BackStackRecord* r : mBackStack) delete r;
     mBackStack.clear();
     // Pending records are owned by this FM (commit transferred ownership); free any that never
@@ -82,6 +87,17 @@ void FragmentManager::attachController(FragmentHostCallback* host, FragmentConta
     // androidx instanceof probes for ViewModelStoreOwner / SavedStateRegistryOwner /
     // OnBackPressedDispatcherOwner / FragmentOnAttachListener are deferred until the
     // corresponding host interfaces are wired on FragmentActivity (stage 2b-5).
+}
+
+// androidx FragmentManager.saveFragmentInstanceState: capture a live fragment's state
+// as Fragment.SavedState for later re-application (FragmentStatePagerAdapter et al).
+Fragment::SavedState* FragmentManager::saveFragmentInstanceState(Fragment* fragment){
+    if (fragment->mState > Fragment::INITIALIZING) {
+        if (FragmentStateManager* fsm = getOrCreateStateManager(fragment)) {
+            return new Fragment::SavedState(fsm->saveState());
+        }
+    }
+    return nullptr;
 }
 
 FragmentStateManager* FragmentManager::getOrCreateStateManager(Fragment* f){
@@ -225,13 +241,131 @@ void FragmentManager::addFragment(Fragment* f, bool hidden){
     f->mParentFragment = mParent; // nested: set when this FM is a childFragmentManager (parent = NavHostFragment)
     f->mAdded = true;
     f->mHidden = hidden;
-    // Resolve the container ViewGroup fragments inflate into / are added to.
-    f->mContainer = mContainer ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
+    // Resolve the container ViewGroup fragments inflate into / are added to. androidx
+    // FragmentManager.getFragmentContainer resolves a container ONLY for a real container id
+    // (mContainerId > 0); a container-less fragment (DialogFragment via add(fragment, tag),
+    // mContainerId == 0) stays null. Without the guard the lookup runs findViewById(0) and binds
+    // an arbitrary id-less view as mContainer — that view dies with e.g. RecycledViewPool::clear
+    // and the FSM's mContainer dangles (destroySpecialEffectsController getTag UAF).
+    f->mContainer = (mContainer && f->mContainerId > 0)
+        ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
     mAdded.push_back(f);
     mActive[f->mWho] = f;
     FragmentStateManager* fsm = getOrCreateStateManager(f);
     fsm->setFragmentManagerState(mCurState);
     fsm->moveToExpectedState();
+}
+
+// --- <fragment> XML tag inflation (androidx FragmentLayoutInflaterFactory) ---
+LayoutInflater::Factory2 FragmentManager::getLayoutInflaterFactory(){
+    // androidx FragmentManager.mLayoutInflaterFactory (a FragmentLayoutInflaterFactory holding
+    // this manager). CDROID composes the same thing from onCreateView directly.
+    return [this](View* parent, const std::string& name, Context* context,
+                  const AttributeSet& attrs) -> View* {
+        return onCreateView(parent, name, context, attrs);
+    };
+}
+
+View* FragmentManager::onCreateView(View* parent, const std::string& name, Context* context,
+                                     const AttributeSet& attrs){
+    // androidx FragmentLayoutInflaterFactory.onCreateView, verbatim structure. The
+    // FragmentContainerView fast path is omitted (CDROID has no FragmentContainerView yet).
+    if(name.compare("fragment") != 0) return nullptr;
+
+    std::string fname = attrs.getClassAttribute();
+    if(fname.empty()) fname = attrs.getAttributeValue("", "name");
+    const int id = attrs.getIdAttributeResourceValue(cdroid::View::NO_ID);
+    const std::string tag = attrs.getAttributeValue("", "tag");
+
+    if(fname.empty() || !FragmentFactory::isFragmentClass(fname)){
+        // Not a class registered with the FragmentFactory — let normal inflation proceed
+        // (androidx: "let the device's framework handle it").
+        return nullptr;
+    }
+
+    const int containerId = parent ? parent->getId() : cdroid::View::NO_ID;
+    if(containerId == cdroid::View::NO_ID && id == cdroid::View::NO_ID && tag.empty()){
+        throw std::invalid_argument(attrs.getPositionDescription()
+            + ": Must specify unique android:id, android:tag, or have a parent with an id for "
+            + fname);
+    }
+
+    // If we restored from a previous state, we may already have instantiated this
+    // fragment from the state and should use that instance instead of making a new one.
+    Fragment* fragment = (id != cdroid::View::NO_ID) ? findFragmentById(id) : nullptr;
+    if(fragment == nullptr && !tag.empty()) fragment = findFragmentByTag(tag);
+    if(fragment == nullptr && containerId != cdroid::View::NO_ID) fragment = findFragmentById(containerId);
+
+    FragmentStateManager* fragmentStateManager = nullptr;
+    if(fragment == nullptr){
+        fragment = getFragmentFactory()->instantiate(fname);
+        fragment->mFromLayout = true;
+        fragment->mFragmentId = id != 0 ? id : containerId;
+        fragment->mContainerId = containerId;
+        fragment->mTag = tag;
+        fragment->mInLayout = true;
+        fragment->mFragmentManager = this;
+        fragment->mHost = mHost;
+        // androidx passes fragment.mSavedFragmentState's inner bundle; a fresh inflate
+        // (no restore) has none. CDROID onInflate takes the raw state pointer.
+        fragment->onInflate(context, const_cast<AttributeSet*>(&attrs),
+                            fragment->mSavedFragmentState ? fragment->mSavedFragmentState->savedInstanceState : nullptr);
+        // androidx: fragmentStateManager = mFragmentManager.addFragment(fragment) —
+        // registers without driving. CDROID's addFragment also drives one
+        // moveToExpectedState (harmless: idempotent, and <fragment> fragments are
+        // steered through ensureInflatedView by the FSM's CREATED step).
+        addFragment(fragment, false);
+        fragmentStateManager = getOrCreateStateManager(fragment);
+    } else if(fragment->mInLayout){
+        // A fragment already exists and it is not one we restored from previous state.
+        throw std::invalid_argument(attrs.getPositionDescription()
+            + ": Duplicate id 0x" + std::to_string(id) + ", tag " + tag
+            + ", or parent id 0x" + std::to_string(containerId)
+            + " with another fragment for " + fname);
+    } else {
+        // This fragment was retained from a previous instance; get it going now.
+        fragment->mInLayout = true;
+        fragment->mFragmentManager = this;
+        fragment->mHost = mHost;
+        fragment->onInflate(context, const_cast<AttributeSet*>(&attrs),
+                            fragment->mSavedFragmentState ? fragment->mSavedFragmentState->savedInstanceState : nullptr);
+        fragmentStateManager = getOrCreateStateManager(fragment);
+    }
+
+    // Explicitly set the container for the fragment as we already know the parent that
+    // the fragment will be added to by the LayoutInflater.
+    fragment->mContainer = dynamic_cast<cdroid::ViewGroup*>(parent);
+
+    // The <fragment> tag is the one case where we:
+    // 1) Move the Fragment to CREATED even if the FragmentManager isn't yet CREATED
+    fragmentStateManager->moveToExpectedState();
+    // 2) Create the Fragment's view despite not always moving to ACTIVITY_CREATED
+    fragmentStateManager->ensureInflatedView();
+
+    if(fragment->mView == nullptr){
+        throw std::runtime_error("Fragment " + fname + " did not create a view.");
+    }
+    if(id != 0){
+        fragment->mView->setId(id);
+    }
+    // androidx also mirrors the fragment tag onto the view (mView.setTag(tag)) — CDROID
+    // View tags are void*-keyed with no string variant; findFragmentByTag goes through
+    // this manager's registry instead, so the mirror is skipped.
+
+    // Fragments added via the <fragment> tag cannot move above VIEW_CREATED during
+    // inflation. Instead, wait for the view to be attached to the window and its parent
+    // view and drive the state machine at that point (androidx OnAttachStateChangeListener).
+    FragmentStateManager* fsm = fragmentStateManager;
+    std::weak_ptr<bool> alive = mAlive;
+    cdroid::View::OnAttachStateChangeListener listener;
+    listener.onViewAttachedToWindow = [fsm, alive](cdroid::View&){
+        if(alive.expired()) return; // FragmentManager destroyed — nothing left to drive
+        fsm->moveToExpectedState();
+        fsm->forceCompleteSpecialEffects();
+    };
+    listener.onViewDetachedFromWindow = [](cdroid::View&){};
+    fragment->mView->addOnAttachStateChangeListener(listener);
+    return fragment->mView;
 }
 
 void FragmentManager::removeFragment(Fragment* f){
@@ -321,7 +455,8 @@ void FragmentManager::unretainFragment(Fragment* f){
     f->mAdded = true;
     f->mFragmentManager = this;
     f->mHost = mHost;
-    f->mContainer = mContainer ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
+    f->mContainer = (mContainer && f->mContainerId > 0)   // getFragmentContainer: cid > 0 only
+        ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
     mAdded.push_back(f);
     FragmentStateManager* fsm = getOrCreateStateManager(f);
     fsm->setFragmentManagerState(mCurState);
@@ -345,12 +480,19 @@ void FragmentManager::hideFragment(Fragment* f){
 void FragmentManager::attachFragment(Fragment* f){
     if(!f) return;
     f->mDetached = false;
+    // The detach cap in FragmentStateManager::computeExpectedState froze this
+    // fragment at CREATED (view destroyed). Lifting it must re-drive the FSM so
+    // the view is re-created (androidx: attach() re-adds and re-creates views).
+    getOrCreateStateManager(f)->moveToExpectedState();
 }
 
 void FragmentManager::detachFragment(Fragment* f){
     if(!f) return;
     f->mDetached = true;
-    if(f->mView && f->mContainer) f->mContainer->removeView(f->mView);
+    // No manual view removal here: the DETACHED cap in computeExpectedState
+    // steps the fragment down through the normal path, whose DESTROY_VIEW step
+    // removes the view from the container (SpecialEffects included).
+    getOrCreateStateManager(f)->moveToExpectedState();
 }
 
 // Drive a fragment to newState. Delegates to its FragmentStateManager (explicit target,
@@ -705,5 +847,4 @@ cdroid::View* FragmentManager::findViewByTransitionName(cdroid::View* root, cons
     return nullptr;
 }
 
-}//namespace fragment
 }//namespace cdroid

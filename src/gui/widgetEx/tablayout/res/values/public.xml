@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- widgetEx tablayout attr id pinning (0x02 shared-lib). Source of truth for these ids;
+     consumed by _compile_shared_lib (aapt2 <public id=>) and gen_styleable. -->
+<resources>
+    <public type="attr" name="smoothScroll" id="0x020100f2"/>
+    <public type="attr" name="tabBackground" id="0x020100db"/>
+    <public type="attr" name="tabContentStart" id="0x020100da"/>
+    <public type="attr" name="tabGravity" id="0x020100e2"/>
+    <public type="attr" name="tabIconTint" id="0x020100ee"/>
+    <public type="attr" name="tabIconTintMode" id="0x020100ef"/>
+    <public type="attr" name="tabIndicator" id="0x020100dc"/>
+    <public type="attr" name="tabIndicatorAnimationDuration" id="0x020100de"/>
+    <public type="attr" name="tabIndicatorAnimationMode" id="0x020100e0"/>
+    <public type="attr" name="tabIndicatorColor" id="0x020100d8"/>
+    <public type="attr" name="tabIndicatorFullWidth" id="0x020100df"/>
+    <public type="attr" name="tabIndicatorGravity" id="0x020100dd"/>
+    <public type="attr" name="tabIndicatorHeight" id="0x020100d9"/>
+    <public type="attr" name="tabInlineLabel" id="0x020100e3"/>
+    <public type="attr" name="tabMaxWidth" id="0x020100e5"/>
+    <public type="attr" name="tabMinWidth" id="0x020100e4"/>
+    <public type="attr" name="tabMode" id="0x020100e1"/>
+    <public type="attr" name="tabPadding" id="0x020100ed"/>
+    <public type="attr" name="tabPaddingBottom" id="0x020100ec"/>
+    <public type="attr" name="tabPaddingEnd" id="0x020100eb"/>
+    <public type="attr" name="tabPaddingStart" id="0x020100e9"/>
+    <public type="attr" name="tabPaddingTop" id="0x020100ea"/>
+    <public type="attr" name="tabRippleColor" id="0x020100f0"/>
+    <public type="attr" name="tabSecondaryStyle" id="0x020100f7"/>
+    <public type="attr" name="tabSelectedTextAppearance" id="0x020100f3"/>
+    <public type="attr" name="tabSelectedTextColor" id="0x020100e8"/>
+    <public type="attr" name="tabStyle" id="0x020100f6"/>
+    <public type="attr" name="tabTextAppearance" id="0x020100e6"/>
+    <public type="attr" name="tabTextColor" id="0x020100e7"/>
+    <public type="attr" name="tabUnboundedRipple" id="0x020100f1"/>
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Base.Widget.Design.TabLayout" id="0x02090005"/>
+    <public type="style" name="TextAppearance.Design.Tab" id="0x02090006"/>
+    <public type="style" name="Widget.Design.TabLayout" id="0x02090007"/>
+</resources>

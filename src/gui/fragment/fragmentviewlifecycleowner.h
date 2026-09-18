@@ -31,7 +31,6 @@
 #include <savedstate/savedstateregistryowner.h>
 #include <savedstate/savedstateregistrycontroller.h>
 namespace cdroid{
-namespace fragment{
 
 class Fragment;
 
@@ -54,6 +53,5 @@ private:
     savedstate::SavedStateRegistryController* mSavedStateRegistryController;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

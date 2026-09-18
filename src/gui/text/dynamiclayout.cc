@@ -1,5 +1,6 @@
 #include <text/dynamiclayout.h>
 #include <text/precomputedtext.h>
+#include <cstring>
 namespace cdroid{
 
 Pools::SynchronizedPool<DynamicLayout::Builder>DynamicLayout::Builder::sPool(3);
@@ -221,6 +222,14 @@ DynamicLayout::DynamicLayout(const Builder& b)
 }
 
 DynamicLayout::~DynamicLayout(){
+    /*The ellipsized display text (Ellipsizer/SpannedEllipsizer) was new'ed by
+      createEllipsizer and handed to Layout as mText — Layout treats mText as
+      borrowed and never frees it, so this layout owns the wrapper solely.
+      With ellipsize==NONE mText IS the caller's display (borrowed): the
+      mEllipsize flag distinguishes the two (set in generate()).*/
+    if (mEllipsize) {
+        delete getText();
+    }
     // Detach and free our watcher. It is attached to mBase as a NoCopySpan
     // (borrowed), so mBase's Spannable never deletes it; DynamicLayout owns it
     // solely. removeSpan first so no callback fires against a half-destroyed
@@ -672,31 +681,33 @@ void DynamicLayout::updateBlocks(int startLine, int endLine, int newLineCount) {
         return;
     }
 
-    if (newNumberOfBlocks > mBlockEndLines.size()) {
-        /*int[] blockEndLines = ArrayUtils.newUnpaddedIntArray( std::max(mBlockEndLines.length * 2, newNumberOfBlocks));
-        int[] blockIndices = new int[blockEndLines.length];
-        System.arraycopy(mBlockEndLines, 0, blockEndLines, 0, firstBlock);
-        System.arraycopy(mBlockIndices, 0, blockIndices, 0, firstBlock);
-        System.arraycopy(mBlockEndLines, lastBlock + 1, blockEndLines, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        System.arraycopy(mBlockIndices, lastBlock + 1, blockIndices, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        mBlockEndLines = blockEndLines;
-        mBlockIndices = blockIndices;*/
-        
-        const int newSize = std::max(static_cast<int>(mBlockEndLines.size()) * 2, newNumberOfBlocks);
+    /*Both branches below do AOSP's tail shift — System.arraycopy(mBlockEndLines,
+      lastBlock + 1, mBlockEndLines, firstBlock + numAddedBlocks,
+      mNumberOfBlocks - lastBlock - 1) (+ the mBlockIndices twin). arraycopy is
+      memmove: the destination may overlap the source on either side (blocks
+      removed vs added). Growing first keeps the old contents in place
+      (vector::resize preserves them), so one memmove per array does it — no
+      scratch copies. The old std::copy_backward translation passed the
+      DESTINATION END where arraycopy takes the destination START, landing the
+      tail `tailCount` slots too low: multi-block edits reported unsorted end
+      lines and lost indices, and when the tail moves to slot 0 it even wrote
+      one slot BEFORE the buffer — the "double free or corruption" heap crash
+      in testFrom2RemoveFromFirst.*/
+    if (newNumberOfBlocks > (int) mBlockEndLines.size()) {
+        const int newSize = std::max((int) mBlockEndLines.size() * 2, newNumberOfBlocks);
         mBlockEndLines.resize(newSize);
         mBlockIndices.resize(newSize);
-        std::copy_backward(mBlockEndLines.begin() + lastBlock + 1, mBlockEndLines.begin() + mNumberOfBlocks,
-                       mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy_backward(mBlockIndices.begin() + lastBlock + 1, mBlockIndices.begin() + mNumberOfBlocks,
-                       mBlockIndices.begin() + firstBlock + numAddedBlocks);
-
-    } else if (numAddedBlocks + numRemovedBlocks != 0) {
-        //System.arraycopy(mBlockEndLines, lastBlock + 1, mBlockEndLines, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        //System.arraycopy(mBlockIndices, lastBlock + 1, mBlockIndices, firstBlock + numAddedBlocks, mNumberOfBlocks - lastBlock - 1);
-        std::copy_backward(mBlockEndLines.begin() + lastBlock + 1, mBlockEndLines.begin() + mNumberOfBlocks,
-                       mBlockEndLines.begin() + firstBlock + numAddedBlocks);
-        std::copy_backward(mBlockIndices.begin() + lastBlock + 1, mBlockIndices.begin() + mNumberOfBlocks,
-                       mBlockIndices.begin() + firstBlock + numAddedBlocks);
+    }
+    if (numAddedBlocks + numRemovedBlocks != 0) {
+        const int tailCount = mNumberOfBlocks - lastBlock - 1;
+        if (tailCount > 0) {
+            int* endLines = mBlockEndLines.data();
+            int* indices = mBlockIndices.data();
+            std::memmove(endLines + firstBlock + numAddedBlocks, endLines + lastBlock + 1,
+                    (size_t)tailCount * sizeof(int));
+            std::memmove(indices + firstBlock + numAddedBlocks, indices + lastBlock + 1,
+                    (size_t)tailCount * sizeof(int));
+        }
     }
 
     if ((numAddedBlocks + numRemovedBlocks != 0) && mBlocksAlwaysNeedToBeRedrawn.size()) {
@@ -872,6 +883,21 @@ LineBreakConfig DynamicLayout::getLineBreakConfig() const{
 
 DynamicLayout::ChangeWatcher::ChangeWatcher(DynamicLayout* layout) {
     mLayout = layout;
+    /*SpannableStringBuilder::replace dispatches TextWatcher callbacks through
+      the std::function members (the port's TextWatcher shape), so bind them to
+      the member functions. Qualified names — the member functions below hide
+      the base's function objects in this scope.*/
+    TextWatcher::beforeTextChanged =
+            [this](CharSequence& s, int where, int before, int after) {
+                beforeTextChanged(&s, where, before, after);
+            };
+    TextWatcher::onTextChanged =
+            [this](CharSequence& s, int where, int before, int after) {
+                onTextChanged(&s, where, before, after);
+            };
+    TextWatcher::afterTextChanged = [this](Editable& s) {
+        afterTextChanged(&s);
+    };
 }
 
 void DynamicLayout::ChangeWatcher::reflow(CharSequence* s, int where, int before, int after) {
@@ -938,25 +964,25 @@ void DynamicLayout::ChangeWatcher::transformAndReflow(Spannable* s, int start, i
     reflow(s, start, end - start, end - start);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanAdded(Spannable* s, ParcelableSpan* o, int start, int end) {
-    if (dynamic_cast<UpdateLayout*>(o))
-        transformAndReflow(s, start, end);
+void DynamicLayout::ChangeWatcher::onSpanAdded(Spannable& s, const ParcelableSpan* o, int start, int end) {
+    if (dynamic_cast<const UpdateLayout*>(o))
+        transformAndReflow(&s, start, end);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanRemoved(Spannable* s, ParcelableSpan* o, int start, int end) {
-    if (dynamic_cast<UpdateLayout*>(o))
-        transformAndReflow(s, start, end);
+void DynamicLayout::ChangeWatcher::onSpanRemoved(Spannable& s, const ParcelableSpan* o, int start, int end) {
+    if (dynamic_cast<const UpdateLayout*>(o))
+        transformAndReflow(&s, start, end);
 }
 
-void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable* s, ParcelableSpan* o, int start, int end, int nstart, int nend) {
-    if (dynamic_cast<UpdateLayout*>(o)) {
+void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable& s, const ParcelableSpan* o, int start, int end, int nstart, int nend) {
+    if (dynamic_cast<const UpdateLayout*>(o)) {
         if (start > end) {
             // Bug: 67926915 start cannot be determined, fallback to reflow from start
             // instead of causing an exception
             start = 0;
         }
-        transformAndReflow(s, start, end);
-        transformAndReflow(s, nstart, nend);
+        transformAndReflow(&s, start, end);
+        transformAndReflow(&s, nstart, nend);
     }
 }
 

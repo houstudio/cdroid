@@ -37,7 +37,7 @@ private:
     LinearLayout* mContent;
 
     Drawable* mBackground;
-    std::string mTextAppearance;
+    int mTextAppearance = 0;
     int mMenuType;
     Context* mTextAppearanceContext;
     Drawable* mSubMenuArrow;
@@ -57,7 +57,8 @@ protected:
     void onFinishInflate() override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
-    ListMenuItemView(Context* context,const AttributeSet& attrs);
+    ListMenuItemView(Context* context,const AttributeSet* attrs);
+    ListMenuItemView(Context* context,const AttributeSet* attrs,int defStyleAttr);
 
     void initialize(MenuItemImpl* itemData, int menuType)override;
 

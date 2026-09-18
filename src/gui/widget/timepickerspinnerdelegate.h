@@ -29,12 +29,11 @@ private:
 
     Calendar mTempCalendar;
 
+    bool mIsAm = false;
     bool mIsEnabled = DEFAULT_ENABLED_STATE;
-    bool mHourWithTwoDigit;
-    char mHourFormat;
-
-    bool mIs24HourView;
-    bool mIsAm;
+    bool mIs24HourView = false;
+    bool mHourWithTwoDigit = false;
+    char mHourFormat = 0;
 private:
     void getHourFormatData();
     bool isAmPmAtStart();
@@ -49,7 +48,8 @@ private:
     void setContentDescriptions();
     void trySetContentDescription(View* root, int viewId, int contDescResId);
 public:
-    TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs);
+    TimePickerSpinnerDelegate(TimePicker* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr, int defStyleRes);
     bool validateInput() override;
 
     void setDate(int hour, int minute) override;
@@ -59,7 +59,9 @@ public:
     void setMinute(int minute) override;
     int getMinute() override;
 
-    void setIs24Hour(bool is24Hour);
+    void setIs24Hour(bool is24Hour) override;
+
+    void onConfigurationChanged(Configuration& newConfig) override;
     bool is24Hour()override;
 
     void setEnabled(bool enabled) override;

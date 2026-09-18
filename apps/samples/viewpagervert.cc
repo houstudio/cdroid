@@ -9,14 +9,14 @@ public:
     void* instantiateItem(ViewGroup* container, int position) {
 #if ENABLE(DAYTIME_WIDGETS)
         if(position<getCount()/2){
-            SimpleMonthView*sm=new  SimpleMonthView(100,100);
+            SimpleMonthView*sm=new  SimpleMonthView(&App::getInstance());
             sm->setMonthParams(23,Calendar::MAY+position,2021,-1,1,31);
             container->addView(sm);
             return sm;
         }else
 #endif
         {
-            View*sm=new View(100,100);
+            View*sm=new View(&App::getInstance());
             sm->setBackground(new ColorDrawable(0xFF000000|(0xFF<<((position%3)*8))));
             container->addView(sm);
             return sm;
@@ -31,7 +31,7 @@ public:
 
 class VerticalViewPager:public ViewPager {
 public:
-    VerticalViewPager(int w,int h):ViewPager(w,h){
+    VerticalViewPager(Context*ctx):ViewPager(ctx){
     }
   
     bool onTouchEvent(MotionEvent& ev)override {
@@ -82,7 +82,7 @@ int main(int argc,const char*argv[]){
     MyWindow*w=new MyWindow(0,0,-1,-1);
 
     if(argc>1)mPageCount=std::max(5L,std::strtol(argv[1],nullptr,10));
-    ViewPager*pager=new VerticalViewPager(800,560);
+    ViewPager*pager=new VerticalViewPager(&App::getInstance());
     MyPageAdapter*gpAdapter=new MyPageAdapter();
     pager->setOffscreenPageLimit(8);
     pager->setAdapter(gpAdapter);

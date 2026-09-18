@@ -21,10 +21,10 @@
 #include <navigation/navhostfragment.h>
 #include <navigation/navcontroller.h>
 #include <core/bundle.h>
+#include <core/handler.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 // Saved-state keys (androidx DialogFragment.java:341-350).
 static const char* SAVED_DIALOG_STATE_TAG = "android:savedDialogState";
@@ -38,8 +38,15 @@ DialogFragment::DialogFragment(){
 }
 
 DialogFragment::~DialogFragment(){
-    // Dialog has a protected dtor — cleanup via dismiss(), not delete.
-    if(mDialog) mDialog->dismiss();
+    // Dialog's dtor is public now (dialog.h: AOSP's protected dtor assumed GC);
+    // we own the dialog prepareDialog created — dismiss tears the window down,
+    // delete frees the shell.
+    if(mDialog){
+        mDialog->setOnDismissListener(nullptr);
+        mDialog->dismiss();
+        delete mDialog;
+        mDialog = nullptr;
+    }
     delete mDialogState;
 }
 
@@ -108,6 +115,12 @@ void DialogFragment::dismiss(){
 
 void DialogFragment::dismissAllowingStateLoss(){
     dismissInternal(true, false);
+}
+
+void DialogFragment::onDismiss(cdroid::DialogInterface* /*dialog*/){
+    // androidx :896 — dismiss through the internal path when the backing
+    // Dialog reports dismissal (removes the fragment from the manager).
+    dismissInternal(true, true);
 }
 
 void DialogFragment::dismissInternal(bool /*allowStateLoss*/, bool fromOnDismiss){
@@ -188,8 +201,24 @@ void DialogFragment::onDestroyView(){
         if(!mDismissed){
             onDismiss(mDialog);
         }
-        mDialog = nullptr; // Dialog cleanup is via dismiss() above; dtor is protected.
+        // androidx sets mDialog = null here and lets GC reclaim the shell. CDROID owns it,
+        // but the delete must run OFF this stack: when the dismissal itself tore the fragment
+        // down (list-item click / BACK on the dialog), this onDestroyView runs synchronously
+        // inside Dialog::dismissDialog's mWindow->close() — removeWindow restores focus to the
+        // host window (onStart), execPendingActions executes the queued remove(this), and
+        // deleting mDialog inline would free the Dialog under the dismissDialog frame still
+        // writing it (valgrind: invalid write at Dialog::dismissDialog's mWindow = nullptr,
+        // then the whole click-dispatch stack unwinds over the freed AlertController/adapter).
+        // Standalone heap Handler, NOT View::post — the dialog's window teardown purges view
+        // queues that would drop this very post (same idiom as Window::finishClose).
+        Dialog* dialog = mDialog;
+        mDialog = nullptr;
         mDialogCreated = false;
+        Handler* handler = new Handler();
+        handler->post([handler, dialog](){
+            delete dialog;
+            delete handler;
+        });
     }
 }
 
@@ -240,5 +269,4 @@ void DialogFragment::setupDialog(Dialog* dialog, int style){
     (void)style;
 }
 
-}//namespace fragment
 }//namespace cdroid

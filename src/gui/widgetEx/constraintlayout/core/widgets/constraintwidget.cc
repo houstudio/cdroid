@@ -23,6 +23,7 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
+#include <widgetEx/constraintlayout/core/widgets/virtuallayout.h>   // addFirst's instanceof pair
 #include <widgetEx/constraintlayout/core/arrayrow.h>
 #include <widgetEx/constraintlayout/core/cache.h>
 #include <widgetEx/constraintlayout/core/linearsystem.h>
@@ -93,6 +94,23 @@ ConstraintAnchor* ConstraintWidget::getAnchor(ConstraintAnchor::Type anchorType)
 
 const std::vector<ConstraintAnchor*>& ConstraintWidget::getAnchors() const {
     return mAnchors;
+}
+
+// AndroidX createObjectVariables (ConstraintWidget.java:1056-1064).
+void ConstraintWidget::createObjectVariables(LinearSystem* system) {
+    system->createObjectVariable(&mLeft);
+    system->createObjectVariable(&mTop);
+    system->createObjectVariable(&mRight);
+    system->createObjectVariable(&mBottom);
+    if (mBaselineDistance > 0) {
+        system->createObjectVariable(&mBaseline);
+    }
+}
+
+// AndroidX addFirst (ConstraintWidget.java:2888): VirtualLayout/Guideline first.
+bool ConstraintWidget::addFirst() const {
+    return dynamic_cast<const clcore::VirtualLayout*>(this) != nullptr
+            || dynamic_cast<const clcore::Guideline*>(this) != nullptr;
 }
 
 void ConstraintWidget::resetSolverVariables(Cache* cache) {
@@ -301,6 +319,17 @@ void ConstraintWidget::setFrame(int left, int top, int right, int bottom) {
     if (mMatchConstraintMaxHeight > 0
             && mListDimensionBehaviors[VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT) {
         mHeight = std::min(mHeight, mMatchConstraintMaxHeight);
+    }
+
+    // AndroidX setFrame tail (ConstraintWidget.java:1723-1728): when the clamps above moved
+    // a dimension, flag it as the one-shot layout override — the next addToSolver pins the
+    // clamped size as FIXED instead of re-solving the raw spread (consumed at the top of
+    // applyConstraints, java:3040-3054).
+    if (w != mWidth) {
+        mWidthOverride = mWidth;
+    }
+    if (h != mHeight) {
+        mHeightOverride = mHeight;
     }
 }
 

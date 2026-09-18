@@ -194,11 +194,15 @@ def content2bytes(all_metas, string_pool, dat_save_path):
 
 
 if __name__ == '__main__':
+    # Defaults point at the cdroid tree (src/gui/i18n); optional argv overrides:
+    #   generate_i18dat.py [resource-dir] [out.dat]
     current_file_path = os.path.abspath(__file__)
-    resource_path = os.path.join(os.path.dirname(current_file_path), "..", "..", "..", "..", "resource")
+    repo = os.path.join(os.path.dirname(current_file_path), "..")
+    resource_path = os.path.join(repo, "src", "gui", "i18n", "resource")
+    save_path = os.path.join(repo, "src", "gui", "i18n", "i18n.dat")
+    if len(sys.argv) >= 3:
+        resource_path = os.path.abspath(sys.argv[1])
+        save_path = os.path.abspath(sys.argv[2])
     metas, pool = generate_all_metas(resource_path)
-
-    up_path = [".."] * 8
-    save_path = [os.path.dirname(current_file_path)] + up_path + ["frameworks", "i18n", "i18n.dat"]
-    save_path = os.path.join(*save_path)
     content2bytes(metas, pool, save_path)
+    print("i18n.dat written to", save_path)

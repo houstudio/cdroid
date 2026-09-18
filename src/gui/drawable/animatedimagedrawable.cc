@@ -15,16 +15,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/animatedimagedrawable.h>
 #include <core/systemclock.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
+#include <text/textutils.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
 #include <view/gravity.h>
 #include <view/choreographer.h>
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
+#include <content/asset.h>
+#include <content/resources.h>
+#include <core/context.h>
 #include <porting/cdgraph.h>
 #include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
 #include <future>
 #include <thread>
 #include <mutex>
@@ -38,6 +48,7 @@
 #endif
 
 namespace cdroid{
+using namespace cdroid::internal;
 #define ENABLE_DMABLIT 0
 /*delay (ms) used to re-check whether the decode thread has finished a slow frame;
   everything scheduled with this is posted on the UI thread, never on the decode thread*/
@@ -47,6 +58,7 @@ std::thread AnimatedImageDrawable::sDecodeThread;
 std::once_flag AnimatedImageDrawable::sDecodeOnce;
 std::mutex AnimatedImageDrawable::sDecodeMutex;
 std::condition_variable AnimatedImageDrawable::sDecodeCV;
+std::atomic<bool> AnimatedImageDrawable::sDecodeShutdown{false};
 
 AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
@@ -88,11 +100,12 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
     };
 }
 
-AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::string&res)
-   :AnimatedImageDrawable(){
-    auto frmSequence = FrameSequence::create(ctx,res);
+// Shared tail of every source ctor: adopt a created FrameSequence and set up
+// the decode surfaces (the old string-ctor body).
+void AnimatedImageDrawable::setFrameSequence(FrameSequence* frmSequence,const char* source){
     if(frmSequence==nullptr)return;
-    mAnimatedImageState->mFrameSequence = frmSequence;
+    mAnimatedImageState->mFrameSequence.reset(frmSequence);
+    
     mRepeatCount = frmSequence->getDefaultLoopCount();
     if(mRepeatCount<=0)
         mRepeatCount = REPEAT_UNDEFINED;
@@ -104,13 +117,58 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #else
     mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
 #endif
-    LOGD("%p %s %dx%dx%d frmSequence=%p",this,res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
+    LOGD("%p %s %dx%dx%d frmSequence=%p",this,source?source:"?",frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
     mRenderImage = mImage;
     mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
     mDecodeInProgress = false;
     mDecodeFuture = std::shared_future<void>();
     std::call_once(sDecodeOnce, []{ sDecodeThread = std::thread(decodeWorker); });
+}
+
+// AOSP setInputStream(InputStream) analog: the drawable itself only consumes a
+// decoded source; loading a resource/file is the caller's (ImageDecoder's) job.
+// getBuffer() is the zero-copy view for stored pak entries; the sequence
+// slurps everything inside create(), so the Asset is closed right here.
+AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Asset* asset)
+   :AnimatedImageDrawable(){
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    const std::string source = asset->getAssetSource();   // copy: the Asset dies below
+    asset->close();
+    delete asset;
+    setFrameSequence(frmSequence,source.c_str());
+}
+
+// AOSP ImageDecoder.createSource(Resources, resId) analog.
+AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,int resid)
+   :AnimatedImageDrawable(){
+    if(ctx==nullptr)return;
+    std::unique_ptr<Asset> asset(ctx->getResources().openRawResource(resid));
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    const std::string source = asset->getAssetSource();   // copy: the Asset dies below
+    asset->close();
+    setFrameSequence(frmSequence,source.c_str());
+}
+
+// AOSP ImageDecoder.createSource(File) analog: read through an ACCESS_BUFFER
+// Asset (stored files map straight through).
+AnimatedImageDrawable::AnimatedImageDrawable(const std::string& path)
+   :AnimatedImageDrawable(){
+    const int fd = ::open(path.c_str(), O_RDONLY);
+    if(fd<0)return;
+    std::unique_ptr<Asset> asset(Asset::createFromFd(fd,path.c_str(),Asset::ACCESS_BUFFER));
+    if(asset==nullptr)return;
+    const void* data = asset->getBuffer(false);
+    const size_t size = (size_t)asset->getLength();
+    FrameSequence* frmSequence = (data&&size) ? FrameSequence::create(data,size) : nullptr;
+    asset->close();
+    setFrameSequence(frmSequence,path.c_str());
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -172,6 +230,10 @@ void AnimatedImageDrawable::setRepeatCount(int repeatCount){
     }
     if (mRepeatCount != repeatCount) {
         mRepeatCount = repeatCount;
+        // AOSP writes the STATE's repeat count; clones from the constant
+        // state must see the value (the instance field alone left XML
+        // android:repeatCount unapplied to clones).
+        mAnimatedImageState->mRepeatCount = repeatCount;
     }
 }
 
@@ -447,16 +509,22 @@ void AnimatedImageDrawable::onBoundsChange(const Rect& bounds) {
     }*/
 }
 
-void AnimatedImageDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
-    updateStateFromTypedArray(atts, mSrcDensityOverride);
+void AnimatedImageDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
+    updateStateFromTypedArray(r, atts, theme, mSrcDensityOverride);
 }
 
-void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride){
-    std::string srcResid =atts.getString("src");
-    if(!srcResid.empty()){
+void AnimatedImageDrawable::updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride){
+    // AOSP obtainAttributes(r, theme, attrs, ...): resolving through the theme
+    // lets ?attr values on <animated-image> resolve (the plain Context call
+    // dropped the inflate theme).
+    auto ta = Drawable::obtainAttributes(r, theme, atts, R::styleable::AnimatedImageDrawable);
+    const int srcResId = ta->getResourceId(R::styleable::AnimatedImageDrawable_src, 0);
+    if(srcResId != 0){
+        // The id path decodes straight from the asset's zero-copy buffer
+        // (the old resolve-to-path + string reopen is gone).
+        if(true){
         Drawable* drawable = nullptr;
-        // This may have previously been set without a src if we were waiting for a  theme.
         /*const int repeatCount = mState->mRepeatCount;
         // Transfer the state of other to this one. other will be discarded.
         AnimatedImageDrawable* other = (AnimatedImageDrawable*) drawable;
@@ -467,9 +535,10 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
         if (repeatCount != REPEAT_UNDEFINED) {
             this.setRepeatCount(repeatCount);
         }*/
-        auto frmSequence = FrameSequence::create(atts.getContext(),srcResid);
+        auto frmSequence = FrameSequence::create(r.getContext(),srcResId);
         if(frmSequence==nullptr)return;
-        mAnimatedImageState->mFrameSequence = frmSequence;
+        mAnimatedImageState->mFrameSequence.reset(frmSequence);
+        
         mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
         mIntrinsicWidth = frmSequence->getWidth();
         mIntrinsicHeight= frmSequence->getHeight();
@@ -485,10 +554,11 @@ void AnimatedImageDrawable::updateStateFromTypedArray(const AttributeSet&atts,in
             mRenderImage = mImage;
             mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
         }
+        }
     }
-    mAnimatedImageState->mAutoMirrored = atts.getBoolean("autoMirrored",false);
-    const int repeatCount= atts.getInt("repeatCount",REPEAT_UNDEFINED);
-    const bool autoStart = atts.getBoolean("autoStart",false);
+    mAnimatedImageState->mAutoMirrored = ta->getBoolean(R::styleable::AnimatedImageDrawable_autoMirrored, false);
+    const int repeatCount = ta->getInt(R::styleable::AnimatedImageDrawable_repeatCount, REPEAT_UNDEFINED);
+    const bool autoStart = ta->getBoolean(R::styleable::AnimatedImageDrawable_autoStart, false);
     if(repeatCount!=REPEAT_UNDEFINED)
         setRepeatCount(repeatCount);
     if(autoStart && mFrameSequenceState){
@@ -513,11 +583,11 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
     mRepeatCount= state.mRepeatCount;
     mAlpha      = state.mAlpha;  // was missing — copying state lost the alpha
     mChangingConfigurations = state.mChangingConfigurations;
+    // Shares the sequence refcount — see the member comment (the GC role).
     mFrameSequence = state.mFrameSequence;
 }
 
 AnimatedImageDrawable::AnimatedImageState::~AnimatedImageState(){
-    delete mFrameSequence;
 }
 
 AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
@@ -548,7 +618,17 @@ void AnimatedImageDrawable::decodeWorker() {
         DecodeTask task;
         {
             std::unique_lock<std::mutex> lock(sDecodeMutex);
-            sDecodeCV.wait(lock, []{ return !sDecodeQueue.empty(); });
+            // Bounded wait: the shutdown sentinel below flips sDecodeShutdown and
+            // notify_all's, but the timeout is the belt-and-suspenders exit path —
+            // the thread must never permanently reside in the cv's waiter set,
+            // or the process-exit static destruction of sDecodeCV deadlocks
+            // (glibc pthread_cond_destroy spins while waiters remain).
+            sDecodeCV.wait_for(lock, std::chrono::milliseconds(200),
+                               []{ return !sDecodeQueue.empty(); });
+            if (sDecodeQueue.empty()) {
+                if (sDecodeShutdown.load()) return;   // idle + shutdown: daemon exits
+                continue;                             // spurious/timeout: re-park
+            }
             task = sDecodeQueue.front();
             sDecodeQueue.pop();
             task.instance->mDecodeInProgress = true;
@@ -574,5 +654,29 @@ void AnimatedImageDrawable::decodeWorker() {
         instance->mDecodeInProgress = false;
     }
 }
+
+void AnimatedImageDrawable::stopDecodeWorker() {
+    sDecodeShutdown.store(true);
+    {
+        std::lock_guard<std::mutex> lock(sDecodeMutex);
+        sDecodeCV.notify_all();   // wake the parked worker now, not via the 200ms timeout
+    }
+    if (sDecodeThread.joinable()) sDecodeThread.join();
+}
+
+/*Process-exit reaping for the decode daemon. AOSP's AnimatedImageDrawable
+  decodes on framework threads the JVM reclaims at process death (daemon
+  threads never block exit); a raw C++ thread must be collected explicitly.
+  Defined AFTER the sDecode* statics it touches: same-TU static destruction
+  runs in REVERSE definition order, so this destructor runs FIRST — the
+  thread is stopped and joined while sDecodeMutex/sDecodeCV/sDecodeThread are
+  still alive. Without it, ~sDecodeCV (glibc pthread_cond_destroy) waits for
+  the parked waiter forever: the main thread hangs in _dl_fini after the last
+  test (full-suite exit hang, gdb: cond_destroy <-> cond_wait deadlock).*/
+static struct DecodeThreadReaper {
+    ~DecodeThreadReaper() {
+        AnimatedImageDrawable::stopDecodeWorker();
+    }
+} sDecodeThreadReaper;
 
 }

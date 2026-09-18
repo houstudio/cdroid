@@ -31,8 +31,10 @@ private:
     int mChildSize;
     OnYearSelectedListener mOnYearSelectedListener;
 public:
-    YearPickerView(int w,int h);
-    YearPickerView(Context* context, const AttributeSet& attrs);
+    YearPickerView(Context*ctx);   // AOSP YearPickerView(Context)
+    YearPickerView(Context* context, const AttributeSet* attrs);
+    YearPickerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    ~YearPickerView() override;   // deletes the YearAdapter created in the ctor
     void setOnYearSelectedListener(const OnYearSelectedListener& listener);
     void setYear(int year);
     void setSelectionCentered(int position);

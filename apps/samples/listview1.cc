@@ -15,8 +15,8 @@ public:
 
         TextView*tv=(TextView*)convertView;
         if(convertView==nullptr){
-            if(itemType==0) tv=new TextView("",600,20);
-            else tv=new CheckBox("",600,20);
+            if(itemType==0) tv=new TextView(&App::getInstance());
+            else tv=new CheckBox(&App::getInstance());
             tv->setPadding(20,0,0,0);
             tv->setSingleLine(true);
         }
@@ -37,7 +37,7 @@ int main(int argc,const char*argv[]){
     // Window::doLayout now always lays out direct children, so absolute layout() on
     // multiple direct children piles them up at (0,0). Put the two ListViews + toggle
     // side by side in a horizontal LinearLayout (avoids ListView-inside-ScrollView).
-    LinearLayout*content=new LinearLayout(-1,-1);
+    LinearLayout*content=new LinearLayout(&App::getInstance());
     content->setOrientation(LinearLayout::HORIZONTAL);
     w->addView(content);
     auto add=[&](View*v,int ww,int hh){
@@ -52,7 +52,7 @@ int main(int argc,const char*argv[]){
     anim->setDuration(500);
     w->setId(10);
     LayoutAnimationController*lac = new LayoutAnimationController(anim,0.02);
-    ListView*lv = new ListView(460,500);
+    ListView*lv = new ListView(&App::getInstance());
     add(lv,460,500);
     lv->setId(100);
     adapter->setNotifyOnChange(true);
@@ -81,10 +81,10 @@ int main(int argc,const char*argv[]){
 ////////////////////////////////////////////////////////////////////////////////////////
 
     MyAdapter*adapter2=new MyAdapter(1);
-    ListView*lv2 = new ListView(500,500);
+    ListView*lv2 = new ListView(&App::getInstance());
     add(lv2,500,500);
     lv2->setId(200);
-    ToggleButton *toggle=new ToggleButton(300,40);
+    ToggleButton *toggle=new ToggleButton(&App::getInstance());
     add(toggle,300,40);
     lv2->setAdapter(adapter2);
     for(int i=0;i<56;i++)  adapter2->add("");
@@ -143,7 +143,7 @@ int main(int argc,const char*argv[]){
 
     toggle->setTextOn("Modal");
     toggle->setTextOff("Single");
-    toggle->setBackgroundResource("cdroid:drawable/btn_toggle_bg.xml");
+    toggle->setBackgroundResource(toggle->getContext()->getResources().getIdentifier("btn_toggle_bg","drawable","cdroid"));
     toggle->setOnCheckedChangeListener([&](CompoundButton&view,bool check){
         lv2->setChoiceMode(check ? ListView::CHOICE_MODE_MULTIPLE_MODAL : ListView::CHOICE_MODE_SINGLE);
     });

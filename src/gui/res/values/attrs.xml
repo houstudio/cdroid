@@ -969,6 +969,9 @@
         <attr name="switchPreferenceStyle" format="reference" />
         <!-- Default style for seekbar preferences. -->
         <attr name="seekBarPreferenceStyle" format="reference" />
+        <!-- androidx.preference DropDown default style (library attr ported
+             onto the framework PreferenceTheme styleable). -->
+        <attr name="dropdownPreferenceStyle" format="reference" />
 
         <!-- ============================ -->
         <!-- Text selection handle styles -->
@@ -1131,16 +1134,6 @@
         <!-- Bright complement to the primary branding color. By default, this is the color applied
              to framework controls (via colorControlActivated). -->
         <attr name="colorAccent" format="color" />
-
-        <!-- Color used for elements displayed on top of the primary branding color
-             (e.g. text/icons on a primary-colored surface). Material Components attribute. -->
-        <attr name="colorOnPrimary" format="color" />
-
-        <!-- Color used for elements displayed on top of surfaces (e.g. default text/icons). -->
-        <attr name="colorOnSurface" format="color" />
-
-        <!-- A more subdued alternative to colorOnSurface for less prominent content. -->
-        <attr name="colorOnSurfaceVariant" format="color" />
 
         <!-- Light accent color used on Material NEXT buttons. @hide -->
         <attr name="colorAccentPrimary" format="color" />
@@ -6718,6 +6711,17 @@
         <attr name="virtualButtonPressedDrawable" format="reference"/>
         <!-- @hide If true then the selector wheel is hidden until the picker has focus. -->
         <attr name="hideWheelUntilFocused" format="boolean"/>
+        <!-- Public framework attrs the NumberPicker ctor reads (resolvable in binary
+             AXML — the CDROID-specific attrs above are @hide/internal, absent from the
+             framework arsc, so apps can't set them in binary mode; the ctor still reads
+             them via the string bridge as harmless defaults). -->
+        <attr name="min" />
+        <attr name="max" />
+        <attr name="value" />
+        <attr name="textColor" />
+        <attr name="textSize" />
+        <attr name="fontFamily" />
+        <attr name="itemBackground" />
     </declare-styleable>
 
     <declare-styleable name="TimePicker">
@@ -7365,10 +7369,10 @@
     <declare-styleable name="ScaleDrawable">
         <!-- Scale width, expressed as a percentage of the drawable's bound. The value's
              format is XX%. For instance: 100%, 12.5%, etc.-->
-        <attr name="scaleWidth" format="string" />
+        <attr name="scaleWidth" format="fraction" />
         <!-- Scale height, expressed as a percentage of the drawable's bound. The value's
              format is XX%. For instance: 100%, 12.5%, etc.-->
-        <attr name="scaleHeight" format="string" />
+        <attr name="scaleHeight" format="fraction" />
         <!-- Specifies where the drawable is positioned after scaling. The default value is
              left. -->
         <attr name="scaleGravity">
@@ -8704,6 +8708,10 @@
              If this is false, the ordering will follow the Preference order attribute and
              default to alphabetic for those without the order attribute. -->
         <attr name="orderingFromXml" format="boolean" />
+        <!-- The maximal number of children that are shown when the preference group is launched
+             where the rest of the children will be hidden. If some children are hidden an expand
+             button will be provided to show all the hidden children. -->
+        <attr name="initialExpandedChildrenCount" />
     </declare-styleable>
 
     <!-- Attribute for a header describing the item shown in the top-level list
@@ -8782,6 +8790,15 @@
              icon view visibility will be set to GONE when there is no icon provided, so the default
              value of this attribute is false. -->
         <attr name="iconSpaceReserved" format="boolean" />
+        <!-- Whether the Preference is visible. By default, this is set to true. -->
+        <attr name="isPreferenceVisible" />
+        <!-- Whether the preference allows displaying divider on top -->
+        <attr name="allowDividerAbove" />
+        <!-- Whether the preference allows displaying divider below it -->
+        <attr name="allowDividerBelow" />
+        <!-- Whether the summary of this preference can be copied to the clipboard by long pressing
+             on the preference. By default, this is set to false. -->
+        <attr name="enableCopying" />
     </declare-styleable>
 
     <!-- Base attributes available to CheckBoxPreference. -->
@@ -8827,6 +8844,7 @@
              entries is selected. If a user clicks on the second item in entries, the
              second item in this array will be saved to the preference. -->
         <attr name="entryValues" format="reference" />
+        <attr name="useSimpleSummaryProvider" />
     </declare-styleable>
 
     <declare-styleable name="MultiSelectListPreference">
@@ -8899,7 +8917,10 @@
              possible states: normal, pressed, checkable, checkable+pressed, checkable+checked,
              checkable+checked+pressed.
              {@deprecated Copy this definition into your own application project.} -->
-        <attr name="keyBackground" format="reference" />
+        <!-- CDROID: reference|color (AOSP declares reference-only; the legacy
+             text-mode layouts set bare color literals here, and TypedArray
+             turns an inline color into a ColorDrawable either way). -->
+        <attr name="keyBackground" format="reference|color" />
 
         <!-- Size of the text for character keys.
              {@deprecated Copy this definition into your own application project.} -->
@@ -10000,6 +10021,11 @@
 
     <declare-styleable name="SeekBarPreference">
         <attr name="layout" />
+        <attr name="min" />
+        <attr name="android:max" />
+        <!--Attribute controlling the amount to increment or decrement the seekbar when the user
+        presses the arrow keys-->
+        <attr name="seekBarIncrement" />
         <!-- Attribute indicating whether the slider within this preference can be adjusted, that is
         pressing left/right keys when this preference is focused will move the slider accordingly
         (for example, inline adjustable preferences). False, if the slider within the preference is
@@ -10008,6 +10034,9 @@
         <!-- Flag indicating whether the TextView next to the seekbar that shows the current seekbar value will be
         displayed. If true, the view is VISIBLE; if false, the view will be GONE. By default, this view is VISIBLE. -->
         <attr name="showSeekBarValue" format="boolean" />
+        <!-- Flag indicating whether the SeekBarPreference should continuously save the Seekbar
+        value while the Seekbar is being dragged. By default, this boolean is false. -->
+        <attr name="updatesContinuously" />
     </declare-styleable>
 
     <!-- Base attributes available to PreferenceFragment. -->
@@ -10015,6 +10044,9 @@
         <!-- The layout for the PreferenceFragment. This should rarely need to be changed. -->
         <attr name="layout" />
         <attr name="divider" />
+        <attr name="android:dividerHeight" />
+        <!-- Whether a divider is allowed to draw after the last item -->
+        <attr name="allowDividerAfterLastItem" />
     </declare-styleable>
 
     <!-- Base attributes available to PreferenceScreen. -->
@@ -10270,6 +10302,9 @@
             <flag name="top" value="0x30" />
             <!-- Push object to the bottom of its container, not changing its size. -->
             <flag name="bottom" value="0x50" />
+            <!-- CDROID extension: Toolbar masks the value with the vertical gravity
+                 mask, so full gravity values are accepted at runtime. -->
+            <flag name="center_vertical" value="0x10" />
         </attr>
         <!-- Icon drawable to use for the collapse button. -->
         <attr name="collapseIcon" format="reference" />

@@ -61,9 +61,9 @@ typedef struct {
             if(it->name==path)return it;
         return fds.end();
     }
-} INPUTDEVICE;
+} INPUTDEVICEMGR;
 
-static INPUTDEVICE dev= {0,0};
+static INPUTDEVICEMGR dev= {0,0};
 #define WATCHED_PATH "/dev/input"
 int32_t InputInit() {
     if(dev.pipe[0] > 0)

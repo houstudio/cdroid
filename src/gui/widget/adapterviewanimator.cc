@@ -15,31 +15,45 @@
 + * License along with this library; if not, write to the Free Software
 + * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 + *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/adapterviewanimator.h>
+#include <widget/framework_styleable.h>
 #include <animation/animatorinflater.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(AdapterViewAnimator)
+DECLARE_WIDGET2(AdapterViewAnimator, "android.widget.AdapterViewAnimator");
 
-AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet& attrs)
-    :AdapterView(context,attrs){
+AdapterViewAnimator::AdapterViewAnimator(Context*ctx)
+    :AdapterViewAnimator(ctx,nullptr){}
+
+AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* attrs):AdapterViewAnimator(context,attrs,0){}
+
+AdapterViewAnimator::AdapterViewAnimator(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :AdapterView(context,pAttrs, defStyleAttr){
     initViewAnimator();
-    std::string res = attrs.getString("inAnimation");
-    if(res.empty())
-        setInAnimation(getDefaultInAnimation());
-    else
-        setInAnimation(context,res);
-    res = attrs.getString("outAnimation");
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::AdapterViewAnimator, defStyleAttr);
+    
 
-    if(res.empty())
-        setOutAnimation(getDefaultOutAnimation());
-    else
-        setOutAnimation(context,res);
+int res = ta->getResourceId(R::styleable::AdapterViewAnimator_inAnimation, 0);
+if(res)
+    setInAnimation(context,res);
+else
+    setInAnimation(getDefaultInAnimation());
+res = ta->getResourceId(R::styleable::AdapterViewAnimator_outAnimation, 0);
 
-    const bool flag = attrs.getBoolean("animateFirstView",true);
-    setAnimateFirstView(flag);
-    mLoopViews = attrs.getBoolean("loopViews",false);
-    initViewAnimator();
+if(res)
+    setOutAnimation(context,res);
+else
+    setOutAnimation(getDefaultOutAnimation());
+
+const bool flag = ta->getBoolean(R::styleable::AdapterViewAnimator_animateFirstView,true);
+setAnimateFirstView(flag);
+mLoopViews = ta->getBoolean(R::styleable::AdapterViewAnimator_loopViews,false);
+initViewAnimator();
+
 }
 
 AdapterViewAnimator::~AdapterViewAnimator(){
@@ -234,7 +248,7 @@ void AdapterViewAnimator::refreshChildren() {
 }
 
 FrameLayout* AdapterViewAnimator::getFrameForChild() {
-    return new FrameLayout(mContext,AttributeSet(mContext,mContext->getPackageName()));
+    return new FrameLayout(mContext);   // AOSP code construction
 }
 
 void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
@@ -552,11 +566,11 @@ void AdapterViewAnimator::setOutAnimation(ObjectAnimator* outAnimation) {
     mOutAnimation = outAnimation;
 }
 
-void AdapterViewAnimator::setInAnimation(Context* context, const std::string&resourceID) {
+void AdapterViewAnimator::setInAnimation(Context* context, int resourceID) {
     setInAnimation((ObjectAnimator*) AnimatorInflater::loadAnimator(context, resourceID));
 }
 
-void AdapterViewAnimator::setOutAnimation(Context* context, const std::string&resourceID) {
+void AdapterViewAnimator::setOutAnimation(Context* context, int resourceID) {
     setOutAnimation((ObjectAnimator*) AnimatorInflater::loadAnimator(context, resourceID));
 }
 
@@ -611,3 +625,35 @@ void AdapterViewAnimator::advance() {
 }
 
 }//endof namespace
+
+AdapterViewAnimator::SavedState::SavedState(Parcelable& superState, int whichChild)
+    : View::BaseSavedState(&superState) {
+    this->whichChild = whichChild;
+}
+
+AdapterViewAnimator::SavedState::SavedState(Parcel& in)
+    : View::BaseSavedState(in) {
+    whichChild = in.readInt();
+}
+
+void AdapterViewAnimator::SavedState::writeToParcel(Parcel& dest, int flags) {
+    View::BaseSavedState::writeToParcel(dest, flags);
+    dest.writeInt(whichChild);
+}
+
+Parcelable* AdapterViewAnimator::onSaveInstanceState() {
+    return new SavedState(*AdapterView::onSaveInstanceState(), mWhichChild);
+}
+
+void AdapterViewAnimator::onRestoreInstanceState(Parcelable& state) {
+    SavedState& ss = (SavedState&)state;
+    AdapterView::onRestoreInstanceState(*ss.getSuperState());
+    // Here we set mWhichChild in addition to setDisplayedChild: setDisplayedChild
+    // alone would not set mWhichChild when mAdapter is null (AOSP parity).
+    mWhichChild = ss.whichChild;
+    setDisplayedChild(mWhichChild, false);
+}
+
+std::string AdapterViewAnimator::getAccessibilityClassName()const{
+    return "AdapterViewAnimator";
+}

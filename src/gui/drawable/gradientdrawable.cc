@@ -15,14 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/gradientdrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <cairomm/mesh_pattern.h>
 #include <cfloat>
 #include <color.h>
 #include <cdlog.h>
+#include <widget/framework_styleable.h>
 using namespace Cairo;
 namespace cdroid {
+using namespace cdroid::internal;
 
 GradientDrawable::GradientState::GradientState() {
     mShape  = RECTANGLE;
@@ -32,6 +35,10 @@ GradientDrawable::GradientState::GradientState() {
     mStrokeColors= nullptr;
     mImagePattern= nullptr;
     mAngle = 0;
+    /*AOSP field initializer: Orientation mOrientation = TOP_BOTTOM — leaving
+      it unset made the default orientation read as garbage (the CTS test
+      constructs GradientDrawable() and expects TOP_BOTTOM).*/
+    mOrientation = DEFAULT_ORIENTATION;
     //mStrokeColor=mSolidColor=0;
     mStrokeWidth = -1;//if >= 0 use stroking
     mStrokeDashWidth = 0.0f;
@@ -59,7 +66,7 @@ GradientDrawable::GradientState::GradientState(Orientation orientation, const st
     setGradientColors(gradientColors);
 }
 
-GradientDrawable::GradientState::GradientState(const GradientState& orig) {
+GradientDrawable::GradientState::GradientState(const GradientState& orig, Resources* res) {
     mChangingConfigurations = orig.mChangingConfigurations;
     mShape = orig.mShape;
     mGradient = orig.mGradient;
@@ -104,7 +111,7 @@ GradientDrawable::GradientState::GradientState(const GradientState& orig) {
     mAttrCorners = orig.mAttrCorners;
     mAttrPadding = orig.mAttrPadding;
 
-    mDensity = Drawable::resolveDensity(/*res,*/orig.mDensity);
+    mDensity = Drawable::resolveDensity(res, orig.mDensity);
     if (orig.mDensity != mDensity) {
         applyDensityScaling(orig.mDensity, mDensity);
     }
@@ -140,7 +147,9 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
         const int bottom= Drawable::scaleFromDensity(mOpticalInsets.bottom, sourceDensity, targetDensity, true);
         mOpticalInsets.set(left, top, right, bottom);
     }
-    if (mPadding.empty()) {
+    // AOSP scales padding only when it was SET (non-empty); the inverted
+    // guard scaled zeroes.
+    if (!mPadding.empty()) {
         mPadding.left  = Drawable::scaleFromDensity(mPadding.left, sourceDensity, targetDensity, false);
         mPadding.top   = Drawable::scaleFromDensity(mPadding.top, sourceDensity, targetDensity, false);
         mPadding.width = Drawable::scaleFromDensity(mPadding.width, sourceDensity, targetDensity, false);
@@ -154,7 +163,7 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
         mRadiusArray[3] = Drawable::scaleFromDensity(static_cast<int>(mRadiusArray[3]), sourceDensity, targetDensity, true);
     }
     if (mStrokeWidth > 0)  mStrokeWidth = Drawable::scaleFromDensity(mStrokeWidth, sourceDensity, targetDensity, true);
-    if (mStrokeDashWidth>0)mStrokeDashWidth = Drawable::scaleFromDensity(mStrokeDashGap, sourceDensity, targetDensity);
+    if (mStrokeDashWidth>0)mStrokeDashWidth = Drawable::scaleFromDensity(mStrokeDashWidth, sourceDensity, targetDensity);
 
     if (mStrokeDashGap > 0)mStrokeDashGap = Drawable::scaleFromDensity(mStrokeDashGap, sourceDensity, targetDensity);
 
@@ -167,7 +176,21 @@ void GradientDrawable::GradientState::applyDensityScaling(int sourceDensity, int
 
 
 GradientDrawable* GradientDrawable::GradientState::newDrawable() {
-    return new GradientDrawable(shared_from_this());
+    return new GradientDrawable(std::dynamic_pointer_cast<GradientState>(shared_from_this()), nullptr);
+}
+
+Drawable* GradientDrawable::GradientState::newDrawable(Resources* res) {
+    // AOSP java:2366-2377: if this drawable is being created for a different
+    // density, just create a new constant state and call it a day.
+    std::shared_ptr<GradientState> state;
+    const int density = Drawable::resolveDensity(res, mDensity);
+    if (density != mDensity) {
+        state = std::make_shared<GradientState>(*this, res);
+    } else {
+        state = std::dynamic_pointer_cast<GradientState>(shared_from_this());
+    }
+
+    return new GradientDrawable(state, res);
 }
 
 int GradientDrawable::GradientState::getChangingConfigurations()const {
@@ -261,10 +284,10 @@ void GradientDrawable::GradientState::setGradientRadius(float gradientRadius,int
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 GradientDrawable::GradientDrawable()
-    :GradientDrawable(std::make_shared<GradientState>()) {
+    :GradientDrawable(std::make_shared<GradientState>(), nullptr) {
 }
 
-GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
+GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state, Resources* res) {
     mPathIsDirty = mGradientIsDirty = false;
     mPadding.set(0,0,0,0);
     mGradientState = state;
@@ -274,11 +297,11 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mAlpha = 255;
     mRect.setEmpty();
     mPath = std::make_shared<cdroid::Path>();
-    updateLocalState();
+    updateLocalState(res);
 }
 
 GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int>&colors)
-    :GradientDrawable(std::make_shared<GradientState>(orientation,colors)) {
+    :GradientDrawable(std::make_shared<GradientState>(orientation,colors), nullptr) {
 }
 
 GradientDrawable::~GradientDrawable(){
@@ -288,7 +311,7 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
     return mGradientState;
 }
 
-void GradientDrawable::updateLocalState() {
+void GradientDrawable::updateLocalState(Resources* res) {
     mPathIsDirty = true;
     auto state = mGradientState;
     if(state->mSolidColors) {
@@ -302,7 +325,9 @@ void GradientDrawable::updateLocalState() {
     } else if(state->mImagePattern){
         //mFillPaint = SurfacePattern::create(state->mImagePattern);
     } else {
-        mFillPaint = SolidPattern::create_rgba(0,0,0,1);
+        // No solid color: AOSP leaves the fill paint null — a <shape> with
+        // only a <stroke> renders as an unfilled outline, not a black rect.
+        mFillPaint = nullptr;
     }
     mPadding = state->mPadding;
     if(state->mStrokeWidth>0){
@@ -326,7 +351,10 @@ void GradientDrawable::getOutline(Outline& outline) {
     // either not have a stroke, or have same stroke/fill opacity
     const bool useFillOpacity = st->mOpaqueOverShape && (mGradientState->mStrokeWidth <= 0
             || mStrokePaint == nullptr /*|| mStrokePaint->getAlpha() == mFillPaint->getAlpha()*/);
-    outline.setAlpha(255);//useFillOpacity ? modulateAlpha(mFillPaint->getAlpha()) / 255.0f: 0.0f);
+    // AOSP: report the fill alpha when the shape covers it consistently,
+    // 0 otherwise (a hardcoded 255 drew elevation shadows for translucent
+    // and stroke-only shapes).
+    outline.setAlpha(useFillOpacity ? getAlpha() / 255.0f : 0.0f);
 
     switch (st->mShape) {
         case RECTANGLE:
@@ -358,7 +386,7 @@ void GradientDrawable::getOutline(Outline& outline) {
 GradientDrawable* GradientDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
         mGradientState=std::make_shared<GradientState>(*mGradientState);
-        updateLocalState();
+        updateLocalState(nullptr);
         mMutated = true;
     }
     return this;
@@ -725,10 +753,14 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
         }
     }
 
-    /*if (st->mTint != nullptr && st.mBlendMode != null) {
-        mBlendModeColorFilter = updateBlendModeFilter(mBlendModeColorFilter, st.mTint, s.mBlendMode);
-        invalidateSelf = true;
-    }*/
+    if (st->mTint != nullptr && st->mTintMode != PorterDuff::Mode::NOOP) {
+        // AOSP GradientDrawable.onStateChange re-resolves the tint filter on
+        // every state change (updateBlendModeFilter) — without it a stateful
+        // tint freezes at the load-time default state (e.g. the Switch track's
+        // @color/switch_track_material never turning the checked color).
+        mTintFilter = updateTintFilter(mTintFilter, st->mTint, st->mTintMode);
+        bInvalidateSelf = true;
+    }
 
     if (bInvalidateSelf) {
         invalidateSelf();
@@ -760,7 +792,7 @@ int  GradientDrawable::getChangingConfigurations()const {
 void  GradientDrawable::setAlpha(int alpha) {
     if (alpha != mAlpha) {
         mAlpha = alpha;
-        updateLocalState();
+        updateLocalState(nullptr);
         invalidateSelf();
     }
 }
@@ -863,42 +895,47 @@ bool GradientDrawable::ensureValidRect() {
             if (st.mGradient == LINEAR_GRADIENT) {
                 float x1,y1;
                 const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
+                // AOSP anchors the gradient vector on right()/bottom()
+                // (absolute coordinates), not width/height — for any rect with
+                // a non-zero origin (layer offsets, stroke inset) the
+                // width/height form reversed the gradient.
+                const float rRight = r.right(), rBottom = r.bottom();
                 switch (st.mOrientation) {
                 case TOP_BOTTOM:
                     x0 = r.left;  y0 = r.top;
-                    x1 = x0;      y1 = level *r.height;
+                    x1 = x0;      y1 = y0 + level * r.height;
                     break;
                 case TR_BL:
-                    x0 = r.width; y0 = r.top;
+                    x0 = rRight;  y0 = r.top;
                     x1 = level * r.left;
-                    y1 = level *r.height;
+                    y1 = level * rBottom;
                     break;
                 case RIGHT_LEFT:
-                    x0 = r.width; y0 = r.top;
+                    x0 = rRight;  y0 = r.top;
                     y1 = y0;      x1 = level * r.left;
                     break;
                 case BR_TL:
-                    x0 = r.width; y0 = r.height;
+                    x0 = rRight;  y0 = rBottom;
                     x1 = level * r.left;
                     y1 = level * r.top;
                     break;
                 case BOTTOM_TOP:
-                    x0 = r.left;  y0 = r.height;
+                    x0 = r.left;  y0 = rBottom;
                     x1 = x0;      y1 = level * r.top;
                     break;
                 case BL_TR:
-                    x0 = r.left;  y0 = r.height;
-                    x1 = level * r.width;
+                    x0 = r.left;  y0 = rBottom;
+                    x1 = level * rRight;
                     y1 = level * r.top;
                     break;
                 case LEFT_RIGHT:
                     x0 = r.left;  y0 = r.top;
-                    y1 = y0;      x1 = level * r.width;
+                    y1 = y0;      x1 = level * rRight;
                     break;
                 default:/*TL_BR*/
                     x0 = r.left;  y0 = r.top;
-                    x1 = level * r.width;
-                    y1 = level *r.height;
+                    x1 = level * rRight;
+                    y1 = level *rBottom;
                     break;
                 }
                 RefPtr<Cairo::LinearGradient>pat = LinearGradient::create(x0, y0, x1, y1);
@@ -939,11 +976,21 @@ bool GradientDrawable::ensureValidRect() {
                 x0 = mRect.left+ mRect.width * st.mCenterX;
                 y0 = mRect.top + mRect.height * st.mCenterY;
                 const double RADIUS = getRadius(mRect,x0,y0);
+                // AOSP: append the last color (n+1 stops) and distribute evenly
+                // unless explicit positions exist; useLevel scales the stop
+                // positions (never all-zero offsets — that collapsed the sweep
+                // to the first color whenever the cairo mesh honored them).
+                const float level = st.mUseLevel ? getLevel() / 10000.0f : 1.0f;
+                const int n = gradientColors.size();
                 std::vector<Cairo::ColorStop> stops;
-                for(int i=0; i<gradientColors.size(); i++) {
+                for(int i=0; i<n; i++) {
                     Color c = gradientColors[i];
-                    stops.push_back({0,c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f});
+                    const float pos = (st.mPositions.size()==(size_t)n)
+                            ? st.mPositions[i] : (n>1)?(float)i/(n-1):0.f;
+                    stops.push_back({pos*level,c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f});
                 }
+                Color cl((uint32_t)gradientColors[n-1]);
+                stops.push_back({1.f,cl.red(),cl.green(),cl.blue(),(cl.alpha()*mAlpha)/255.f});
                 mFillPaint = SweepGradient::create(x0, y0,RADIUS,M_PI*2.0,stops);
             } else if(st.mGradient == BITMAP_PATTERN){
                 //mFillPaint = SurfacePattern::create(st.mImagePattern);
@@ -1093,12 +1140,18 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
         break;
-    case OVAL:
-        rad = mRect.height/2.f;
-        canvas.scale(double(mRect.width)/mRect.height,1.f);
+    case OVAL: {
+        // AOSP drawOval: always the FULL ellipse centered in the bounds —
+        // useLevel only scales the gradient shader, never clips the shape.
+        // Scale about the center (translate first); the old origin-scale
+        // shifted the arc center to centerX*(w/h).
+        const float cx = mRect.centerX(), cy = mRect.centerY();
+        canvas.translate(cx, cy);
+        canvas.scale(double(mRect.width)/double(mRect.height),1.f);
         canvas.begin_new_sub_path();
-        canvas.arc(mRect.centerX(),mRect.centerY(),rad,0,M_PI*2.f*(getUseLevel()?(float)getLevel()/10000.f:1));
+        canvas.arc(0, 0, mRect.height/2.f, 0, M_PI*2.f);
         break;
+    }
     case RING:
         if(0){/*new ring with cdroid::Path*/
             auto path = buildRing(st.get());
@@ -1109,25 +1162,30 @@ void GradientDrawable::draw(Canvas&canvas) {
             RectF bounds= {mRect.left,mRect.top,mRect.width,mRect.height};
             float thickness = st->mThickness!=-1 ? st->mThickness:(bounds.width/st->mThicknessRatio);
             float radius = st->mInnerRadius!=-1 ? st->mInnerRadius :(bounds.width/st->mInnerRadiusRatio);
-            canvas.scale(bounds.width/bounds.height,1.f);
-            RectF innerBounds = bounds;
+            // AOSP buildRing/drawOval center the ring in the bounds. Scale
+            // about the CENTER (translate first), never about the origin:
+            // origin-scaling multiplied the center too, shifting every
+            // non-square ring horizontally.
             const float x = bounds.centerX();
             const float y = bounds.centerY();
+            canvas.translate(x, y);
+            canvas.scale(bounds.width/bounds.height,1.f);
+            RectF innerBounds = bounds;
             if(innerRadius<=0.f)
                 innerRadius=std::min(mRect.width,mRect.height)/2.f-thickness;
             canvas.begin_new_sub_path();
             if( sweep<360.f && sweep>-360.f ) {
                 const double end_angle = M_PI*2*sweep/360.f;
                 canvas.set_fill_rule(Cairo::Context::FillRule::WINDING);//EVEN_ODD);//WINDING);
-                canvas.move_to(x + radius,y);
-                canvas.arc(x,y,radius + thickness,0.f,end_angle);
-                canvas.arc_negative(x,y,radius,end_angle,0.f);
+                canvas.move_to(radius,0);
+                canvas.arc(0,0,radius + thickness,0.f,end_angle);
+                canvas.arc_negative(0,0,radius,end_angle,0.f);
                 canvas.close_path();
             } else {
                 //canvas.set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);
-                canvas.arc(x,y,radius + thickness,0,M_PI*2.f);
+                canvas.arc(0,0,radius + thickness,0,M_PI*2.f);
                 canvas.begin_new_sub_path();
-                canvas.arc_negative(x,y,radius,M_PI*2.f,0.f);
+                canvas.arc_negative(0,0,radius,M_PI*2.f,0.f);
             }
         }break;
     }/*endof switch*/
@@ -1149,61 +1207,82 @@ void GradientDrawable::draw(Canvas&canvas) {
     canvas.restore();
 }
 
-void GradientDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser, atts);
-    mGradientState->setDensity(Drawable::resolveDensity( 0));
-    updateStateFromTypedArray(atts);
-    inflateChildElements(parser,atts);
-    updateLocalState();
+void GradientDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    Drawable::inflate(r, parser, atts, theme);
+    mGradientState->setDensity(Drawable::resolveDensity(&r, 0));
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawable);
+    if (ta) updateStateFromTypedArray(*ta);
+    inflateChildElements(r,parser,atts,theme);
+    updateLocalState(&r);
 }
 
-void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+// AOSP GradientDrawable.canApplyTheme: theme attrs pending re-resolution.
+bool GradientDrawable::canApplyTheme(){
+    return (mGradientState && !mGradientState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+// AOSP GradientDrawable.applyTheme(Theme): re-resolve the recorded ?attr ids
+// through the new theme and refresh the state (AOSP also re-themes the tint /
+// solid / stroke / gradient ColorStateLists — CDROID CSLs resolve ?attr up
+// front at inflation, so only the top-level attrs are re-resolved here).
+void GradientDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    auto state = mGradientState;
+    if (!state) return;
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::GradientDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
+    updateLocalState(&t.getResources());
+}
+
+void GradientDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mGradientState;
 
     // Account for any configuration changes.
     //state.mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mShape = atts.getInt("shape",std::unordered_map<std::string,int> {
-        {"rectangle",(int)GradientDrawable::RECTANGLE},{"oval",(int)GradientDrawable::OVAL},
-        {"line",(int)GradientDrawable::LINE},          {"ring",(int)GradientDrawable::RING}
-    }, state->mShape);
+    // aapt2 pre-resolves the shape enum (rectangle/oval/line/ring).
+    state->mShape = a.getInt(R::styleable::GradientDrawable_shape, state->mShape);
 
-    state->mDither = atts.getBoolean("dither", state->mDither);
+    state->mDither = a.getBoolean(R::styleable::GradientDrawable_dither, state->mDither);
 
     if (state->mShape == GradientDrawable::RING) {
-        state->mInnerRadius = atts.getDimensionPixelSize("innerRadius", state->mInnerRadius);
+        state->mInnerRadius = a.getDimensionPixelSize(R::styleable::GradientDrawable_innerRadius, state->mInnerRadius);
         if (state->mInnerRadius == -1) {
-            state->mInnerRadiusRatio = atts.getFloat("innerRadiusRatio", state->mInnerRadiusRatio);
+            state->mInnerRadiusRatio = a.getFloat(R::styleable::GradientDrawable_innerRadiusRatio, state->mInnerRadiusRatio);
         }
 
-        state->mThickness = atts.getDimensionPixelSize("thickness", state->mThickness);
+        state->mThickness = a.getDimensionPixelSize(R::styleable::GradientDrawable_thickness, state->mThickness);
         if (state->mThickness == -1) {
-            state->mThicknessRatio = atts.getFloat("thicknessRatio", state->mThicknessRatio);
+            state->mThicknessRatio = a.getFloat(R::styleable::GradientDrawable_thicknessRatio, state->mThicknessRatio);
         }
 
-        state->mUseLevelForShape = atts.getBoolean("useLevel");// state->mUseLevelForShape);
+        state->mUseLevelForShape = a.getBoolean(R::styleable::GradientDrawable_useLevel, state->mUseLevelForShape);
     }
 
-    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
-    if (tintMode != PorterDuff::NOOP) {
+    // aapt2 pre-resolves the tintMode enum; -1 means "not specified".
+    const int tintMode = a.getInt(R::styleable::GradientDrawable_tintMode, -1);
+    if (tintMode != -1) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = atts.getColorStateList("tint");
+    auto tint = a.getColorStateList(R::styleable::GradientDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
 
-    const int insetLeft = atts.getDimensionPixelSize("opticalInsetLeft", state->mOpticalInsets.left);
-    const int insetTop = atts.getDimensionPixelSize("opticalInsetTop", state->mOpticalInsets.top);
-    const int insetRight = atts.getDimensionPixelSize("opticalInsetRight", state->mOpticalInsets.right);
-    const int insetBottom = atts.getDimensionPixelSize("opticalInsetBottom", state->mOpticalInsets.bottom);
+    const int insetLeft = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetLeft, state->mOpticalInsets.left);
+    const int insetTop = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetTop, state->mOpticalInsets.top);
+    const int insetRight = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetRight, state->mOpticalInsets.right);
+    const int insetBottom = a.getDimensionPixelSize(R::styleable::GradientDrawable_opticalInsetBottom, state->mOpticalInsets.bottom);
     state->mOpticalInsets = Insets::of(insetLeft, insetTop, insetRight, insetBottom);
 }
 
-void GradientDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+void GradientDrawable::inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
 
@@ -1215,49 +1294,69 @@ void GradientDrawable::inflateChildElements(XmlPullParser&parser,const Attribute
 
         const std::string name = parser.getName();
         if (name.compare("size")==0) {
-            updateGradientDrawableSize(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableSize);
+            if (ta) updateGradientDrawableSize(*ta);
         } else if (name.compare("gradient")==0) {
-            updateGradientDrawableGradient(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableGradient);
+            if (ta) updateGradientDrawableGradient(*ta);
+            // CDROID-private "pattern" attr (image pattern for gradient fill).
+            { auto ta2 = obtainAttributes(r, theme, atts, R::styleable::GradientDrawablePattern);
+              auto pattern = ta2->getString(R::styleable::GradientDrawablePattern_pattern);
+              if (!pattern.empty()) setImagePattern(r.getContext(), pattern);
+            }
         } else if (name.compare("solid")==0) {
-            updateGradientDrawableSolid(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableSolid);
+            if (ta) updateGradientDrawableSolid(*ta);
         } else if (name.compare("stroke")==0) {
-            updateGradientDrawableStroke(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawableStroke);
+            if (ta) updateGradientDrawableStroke(*ta);
         } else if (name.compare("corners")==0) {
-            updateDrawableCorners(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::DrawableCorners);
+            if (ta) updateDrawableCorners(*ta);
         } else if (name.compare("padding")==0) {
-            updateGradientDrawablePadding(atts);
+            auto ta = obtainAttributes(r, theme, atts, R::styleable::GradientDrawablePadding);
+            if (ta) updateGradientDrawablePadding(*ta);
         } else {
             LOGW("drawable", "Bad element %s under <shape>: ",name.c_str());
         }
     }
 }
     
-void GradientDrawable::updateGradientDrawableSize(const AttributeSet&atts){
+void GradientDrawable::updateGradientDrawableSize(const TypedArray& a){
     auto st = mGradientState;
-    st->mWidth = atts.getDimensionPixelSize("width",st->mWidth);
-    st->mHeight = atts.getDimensionPixelSize("height",st->mHeight);
+    st->mWidth = a.getDimensionPixelSize(R::styleable::GradientDrawableSize_width, st->mWidth);
+    st->mHeight = a.getDimensionPixelSize(R::styleable::GradientDrawableSize_height, st->mHeight);
 }
 
-void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
+// Faithful port of AOSP GradientDrawable.getFloatOrFraction: a fraction-typed
+// value resolves via getFraction, everything else via getFloat.
+static float getFloatOrFraction(const TypedArray& a, size_t idx, float defaultValue) {
+    TypedValue tv;
+    if (!a.peekValue(idx, &tv)) return defaultValue;
+    if (tv.type == TypedValue::TYPE_FRACTION)
+        return a.getFraction(idx, 1, 1, defaultValue);
+    return a.getFloat(idx, defaultValue);
+}
+
+void GradientDrawable::updateGradientDrawableGradient(const TypedArray& a){
     auto st = mGradientState;
-    st->mCenterX = atts.getFraction("centerX",100,0, st->mCenterX);
-    st->mCenterY = atts.getFraction("centerY",100,0, st->mCenterY);
-    st->mUseLevel = atts.getBoolean("useLevel", st->mUseLevel);
-    st->mGradient = atts.getInt("type",std::unordered_map<std::string,int> {
-        {"linear" , (int)GradientDrawable::LINEAR_GRADIENT},
-        {"radial" , (int)GradientDrawable::RADIAL_GRADIENT},
-        {"sweep"  , (int)GradientDrawable::SWEEP_GRADIENT},
-        {"pattern", (int)GradientDrawable::BITMAP_PATTERN}}, st->mGradient);
+
+    st->mCenterX = getFloatOrFraction(a, R::styleable::GradientDrawableGradient_centerX, st->mCenterX);
+    st->mCenterY = getFloatOrFraction(a, R::styleable::GradientDrawableGradient_centerY, st->mCenterY);
+    st->mUseLevel = a.getBoolean(R::styleable::GradientDrawable_useLevel, st->mUseLevel);
+    // aapt2 pre-resolves the type enum (linear/radial/sweep); "pattern" is a
+    // private value with no framework id and is handled via the bitmap string bridge
+    // in inflateChildElements().
+    st->mGradient = a.getInt(R::styleable::GradientDrawableGradient_type, st->mGradient);
 
     // TODO: Update these to be themeable.
-    const int startColor = atts.getColor("startColor", 0);
-    const bool hasCenterColor = atts.hasAttribute("centerColor");
-    const bool hasStartColor = atts.hasAttribute("startColor");
-    const bool hasEndColor = atts.hasAttribute("endColor");
-    const int centerColor = atts.getColor("centerColor", 0);
-    const int endColor = atts.getColor("endColor", 0);
-    setImagePattern(atts.getContext(),atts.getString("bitmap"));
-    auto image = st->mImagePattern;
+    const int startColor = a.getColor(R::styleable::GradientDrawableGradient_startColor, 0);
+    const bool hasCenterColor = a.hasValue(R::styleable::GradientDrawableGradient_centerColor);
+    const bool hasStartColor = a.hasValue(R::styleable::GradientDrawableGradient_startColor);
+    const bool hasEndColor = a.hasValue(R::styleable::GradientDrawableGradient_endColor);
+    const int centerColor = a.getColor(R::styleable::GradientDrawableGradient_centerColor, 0);
+    const int endColor = a.getColor(R::styleable::GradientDrawableGradient_endColor, 0);
+
     if (hasCenterColor) {
         st->mGradientColors.resize(3);
         st->mGradientColors[0] = startColor;
@@ -1278,7 +1377,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         st->mPositions[1] = 1.f;
     }
 
-    const int angle = ((int) atts.getFloat("angle", st->mAngle))%360;
+    const int angle = ((int) a.getFloat(R::styleable::GradientDrawableGradient_angle, st->mAngle))%360;
     // GradientDrawable historically has not parsed negative angle measurements and always
     // stays on the default orientation for API levels older than Q.
     // Only configure the orientation if the angle is greater than zero.
@@ -1298,30 +1397,28 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         case 135:st->mOrientation = Orientation::BR_TL;       break;
         case 180:st->mOrientation = Orientation::RIGHT_LEFT;  break;
         case 225:st->mOrientation = Orientation::TR_BL;       break;
-        case 270:st->mOrientation = Orientation::TOP_BOTTOM;  break;
+        case 270: st->mOrientation = Orientation::TOP_BOTTOM;  break;
         case 315:st->mOrientation = Orientation::TL_BR;       break;
         }
     } else {
         st->mOrientation = DEFAULT_ORIENTATION;
     }
-    std::string tv = atts.getString("gradientRadius");
-    if (!tv.empty()) {
+
+    // gradientRadius: dispatch on the raw typed value (AOSP peekValue pattern).
+    TypedValue tv;
+    if (a.peekValue(R::styleable::GradientDrawableGradient_gradientRadius, &tv)) {
         float radius;
         int radiusType;
-        if (tv.find("%")!=std::string::npos){//=tv.type == TypedValue.TYPE_FRACTION) {
-            radius = atts.getFraction("gradientRadius",100,0,1.0f);
-
-            //int unit = (tv.data >> TypedValue.COMPLEX_UNIT_SHIFT) & TypedValue.COMPLEX_UNIT_MASK;
-            /*if (unit == TypedValue.COMPLEX_UNIT_FRACTION_PARENT) {
-                radiusType = RADIUS_TYPE_FRACTION_PARENT;
-            } else */{
-                radiusType = RADIUS_TYPE_FRACTION;
-            }
-        } else if (tv.find("p")!=std::string::npos){/*dp px sp*///type == TypedValue.TYPE_DIMENSION) {
-            radius = atts.getDimension("gradientRadius",0);
+        if (tv.type == TypedValue::TYPE_FRACTION) {
+            radius = a.getFraction(R::styleable::GradientDrawableGradient_gradientRadius, 1, 1, 1.0f);
+            const int unit = (tv.data >> TypedValue::COMPLEX_UNIT_SHIFT) & TypedValue::COMPLEX_UNIT_MASK;
+            radiusType = (unit == TypedValue::COMPLEX_UNIT_FRACTION_PARENT)
+                         ? RADIUS_TYPE_FRACTION_PARENT : RADIUS_TYPE_FRACTION;
+        } else if (tv.type == TypedValue::TYPE_DIMENSION) {
+            radius = a.getDimension(R::styleable::GradientDrawableGradient_gradientRadius, 0);
             radiusType = RADIUS_TYPE_PIXELS;
         } else {
-            radius = atts.getFloat("gradientRadius");
+            radius = a.getFloat(R::styleable::GradientDrawableGradient_gradientRadius, 0);
             radiusType = RADIUS_TYPE_PIXELS;
         }
 
@@ -1331,21 +1428,21 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
     mGradientIsDirty =true;
 }
 
-void GradientDrawable::updateGradientDrawableSolid(const AttributeSet&atts){
-    auto colorStateList = atts.getColorStateList("color");
+void GradientDrawable::updateGradientDrawableSolid(const TypedArray& a){
+    auto colorStateList = a.getColorStateList(R::styleable::GradientDrawableSolid_color);
     if(colorStateList) {
         setColor(colorStateList);
     }
 }
 
-void GradientDrawable::updateGradientDrawableStroke(const AttributeSet&atts){
+void GradientDrawable::updateGradientDrawableStroke(const TypedArray& a){
     auto st = mGradientState;
     const int defaultStrokeWidth = std::max(0,st->mStrokeWidth);
-    const int width = atts.getDimensionPixelSize("width",defaultStrokeWidth);
-    const float dashWidth = atts.getDimension("dashWidth",st->mStrokeDashWidth);
-    const float dashGap = atts.getDimension("dashGap",st->mStrokeDashGap);
+    const int width = a.getDimensionPixelSize(R::styleable::GradientDrawableStroke_width, defaultStrokeWidth);
+    const float dashWidth = a.getDimension(R::styleable::GradientDrawableStroke_dashWidth, st->mStrokeDashWidth);
+    const float dashGap = a.getDimension(R::styleable::GradientDrawableStroke_dashGap, st->mStrokeDashGap);
 
-    auto colorStateList = atts.getColorStateList("color");
+    auto colorStateList = a.getColorStateList(R::styleable::GradientDrawableStroke_color);
     if(colorStateList==nullptr){
         colorStateList = st->mStrokeColors;
     }
@@ -1356,31 +1453,37 @@ void GradientDrawable::updateGradientDrawableStroke(const AttributeSet&atts){
     }
 }
 
-void GradientDrawable::updateDrawableCorners(const AttributeSet&atts){
+void GradientDrawable::updateDrawableCorners(const TypedArray& a){
     auto st = mGradientState;
-    const int radius = atts.getDimensionPixelSize("radius", (int) st->mRadius);
+    // AOSP: radius comes from the android:radius attribute (defaulting to the
+    // state's current radius), NOT from the state alone — the state is still 0
+    // during inflate, so skipping the read dropped every <corners android:radius>.
+    const int radius = a.getDimensionPixelSize(R::styleable::DrawableCorners_radius, (int)st->mRadius);
     setCornerRadius(radius);
 
     // TODO: Update these to be themeable.
-    const float topLeftRadius = atts.getDimensionPixelSize("topLeftRadius", radius);
-    const float topRightRadius = atts.getDimensionPixelSize("topRightRadius", radius);
-    const float bottomLeftRadius = atts.getDimensionPixelSize("bottomLeftRadius", radius);
-    const float bottomRightRadius = atts.getDimensionPixelSize("bottomRightRadius", radius);
+    const float topLeftRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_topLeftRadius, radius);
+    const float topRightRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_topRightRadius, radius);
+    const float bottomLeftRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_bottomLeftRadius, radius);
+    const float bottomRightRadius = a.getDimensionPixelSize(R::styleable::DrawableCorners_bottomRightRadius, radius);
 
     if ( (topLeftRadius != radius) || (topRightRadius != radius) ||
             (bottomLeftRadius != radius) || (bottomRightRadius != radius)) {
-        // The corner radii are specified in clockwise order (see Path.addRoundRect())
+        // The corner radii are specified in clockwise order (see Path.addRoundRect()):
+        // tl,tl, tr,tr, br,br, bl,bl — the bottom pair was previously flipped,
+        // swapping the bottom-left/bottom-right corners of every shape that
+        // declares per-corner radii.
         setCornerRadii(std::vector<float>{ topLeftRadius, topLeftRadius, topRightRadius, topRightRadius,
                 bottomRightRadius, bottomRightRadius, bottomLeftRadius, bottomLeftRadius });
     }
 }
 
-void GradientDrawable::updateGradientDrawablePadding(const AttributeSet&atts){
+void GradientDrawable::updateGradientDrawablePadding(const TypedArray& a){
     Rect pad = mGradientState->mPadding;
-    pad.set(atts.getDimensionPixelOffset("left", pad.left),
-            atts.getDimensionPixelOffset("top", pad.top),
-            atts.getDimensionPixelOffset("right", pad.width),
-            atts.getDimensionPixelOffset("bottom", pad.height));
+    pad.set(a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_left, pad.left),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_top, pad.top),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_right, pad.width),
+            a.getDimensionPixelOffset(R::styleable::GradientDrawablePadding_bottom, pad.height));
     mGradientState->mPadding = pad;  // androidx: persist into the state so shared/cached instances read it
     mPadding = pad;
 }

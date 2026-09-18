@@ -17,16 +17,18 @@
  *********************************************************************************/
 #include <widget/yearpickerview.h>
 #include <widget/textview.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(YearPickerView)
+DECLARE_WIDGET2(YearPickerView, "android.widget.YearPickerView");
 
 class YearAdapter:public ArrayAdapter<int> {
 private:
-    /*static int ITEM_LAYOUT = R.layout.year_label_text_view;
-    static int ITEM_TEXT_APPEARANCE = R.style.TextAppearance_Material_DatePicker_List_YearLabel;
-    static int ITEM_TEXT_ACTIVATED_APPEARANCE =  R.style.TextAppearance_Material_DatePicker_List_YearLabel_Activated;*/
+    /*static int ITEM_LAYOUT = R.layout.year_label_text_view;*/
+    static const int ITEM_TEXT_APPEARANCE = R::style::TextAppearance_Material_DatePicker_List_YearLabel;
+    static const int ITEM_TEXT_ACTIVATED_APPEARANCE = R::style::TextAppearance_Material_DatePicker_List_YearLabel_Activated;
     LayoutInflater* mInflater;
     int mActivatedYear;
     int mMinYear;
@@ -83,7 +85,7 @@ public:
     View* getView(int position, View* convertView, ViewGroup* parent) {
         TextView* v;
         if (convertView==nullptr) {
-            v = (TextView*) mInflater->inflate("cdroid:layout/year_label_text_view.xml", parent, false);
+            v = (TextView*) mInflater->inflate(R::layout::year_label_text_view, parent, false);
         } else {
             v = (TextView*) convertView;
         }
@@ -92,11 +94,9 @@ public:
         bool activated = mActivatedYear == year;
 
         if ((convertView == nullptr) || v->isActivated() != activated) {
-            std::string textAppearanceResId="YearLabel_Activated";
-            if (activated /*&& ITEM_TEXT_ACTIVATED_APPEARANCE != 0*/) {
-                //textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
-            } else {
-                //textAppearanceResId = ITEM_TEXT_APPEARANCE;
+            int textAppearanceResId = ITEM_TEXT_APPEARANCE;
+            if (activated && ITEM_TEXT_ACTIVATED_APPEARANCE != 0) {
+                textAppearanceResId = ITEM_TEXT_ACTIVATED_APPEARANCE;
             }
             v->setTextAppearance(textAppearanceResId);
             v->setActivated(activated);
@@ -127,9 +127,16 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ctx,attrs){
-    mViewSize = attrs.getDimensionPixelOffset("animator_height");
-    mChildSize= attrs.getDimensionPixelOffset("year_label_height");
+YearPickerView::YearPickerView(Context*ctx)
+    :YearPickerView(ctx,nullptr){}
+
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet* attrs):YearPickerView(ctx,attrs,0){}
+
+YearPickerView::YearPickerView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ListView(ctx,pAttrs, defStyleAttr){
+    (void)pAttrs;
+    // AOSP reads R.dimen.datepicker_view_animator_height / datepicker_year_label_height.
+    mViewSize = ctx->getResources().getDimensionPixelOffset(R::dimen::datepicker_view_animator_height);
+    mChildSize= ctx->getResources().getDimensionPixelOffset(R::dimen::datepicker_year_label_height);
     mAdapter = new YearAdapter(ctx);
     setAdapter(mAdapter);
     setOnItemClickListener([this](AdapterView& parent,View& view, int position, long id){
@@ -138,6 +145,13 @@ YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ct
         if(mOnYearSelectedListener)
             mOnYearSelectedListener(*this,year);
     });
+}
+
+YearPickerView::~YearPickerView(){
+    // mAdapter is new'ed in the ctor and exclusively ours (AdapterView does
+    // not own adapters — the creator frees them).
+    delete mAdapter;
+    mAdapter = nullptr;
 }
 
 void YearPickerView::setOnYearSelectedListener(const OnYearSelectedListener& listener) {

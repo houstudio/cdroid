@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Theme-face probe: one well-known framework attr with a sentinel value. -->
+    <style name="theme_face_probe">
+        <item name="android:colorPrimary">#FF123456</item>
+    </style>
+    <!-- CTS Resources_ThemeTest styles. -->
+    <style name="Theme_InlineString">
+        <item name="testString">This is a string</item>
+    </style>
+    <style name="Theme_Empty">
+        <item name="type1">@empty</item>
+    </style>
+    <style name="Theme_OrientationDependent">
+        <item name="testString">portrait</item>
+    </style>
+    <!-- CTS TypedArrayTest styles. type18 (font) is not set: no fonts in this pak. -->
+    <style name="StyleA">
+        <item name="type17">from StyleA</item>
+    </style>
+    <style name="Whatever" parent="StyleA">
+        <item name="type1">true</item>
+        <item name="type2">false</item>
+        <item name="type3">#FF0000FF</item>
+        <item name="type4">@color/typedarray_green</item>
+        <item name="type5">0.75px</item>
+        <item name="type6">10px</item>
+        <item name="type7">18px</item>
+        <item name="type8">@drawable/pass</item>
+        <item name="type9">3.14</item>
+        <item name="type10">100%</item>
+        <item name="type11">365</item>
+        <item name="type12">86400</item>
+        <item name="type13">Hello, Android!</item>
+        <item name="type14">TypedArray Test!</item>
+        <item name="type15">@array/difficulty</item>
+        <item name="type16">plain</item>
+        <item name="typeEmpty">@empty</item>
+    </style>
+</resources>

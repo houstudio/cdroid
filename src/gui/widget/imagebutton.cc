@@ -16,17 +16,21 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include<widget/imagebutton.h>
+#include <widget/internal_R.h>
 #include<cdlog.h>
 #include<app.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ImageButton,"cdroid:attr/imageButtonStyle")
+DECLARE_WIDGET2(ImageButton, "android.widget.ImageButton");
 
-ImageButton::ImageButton(Context*ctx,const AttributeSet& attrs)
-  :ImageView(ctx,attrs){
-}
+ImageButton::ImageButton(Context*ctx)
+    :ImageButton(ctx,nullptr){}
 
-ImageButton::ImageButton(int w,int h):ImageView(w,h){
+ImageButton::ImageButton(Context*ctx,const AttributeSet* attrs):ImageButton(ctx,attrs,cdroid::internal::R::attr::imageButtonStyle){}
+
+ImageButton::ImageButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ImageView(ctx,pAttrs, defStyleAttr){
 }
 
 PointerIcon* ImageButton::onResolvePointerIcon(MotionEvent& event, int pointerIndex){

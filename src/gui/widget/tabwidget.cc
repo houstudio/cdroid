@@ -15,31 +15,37 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/tabwidget.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(TabWidget,"cdroid:attr/tabWidgetStyle")
+DECLARE_WIDGET2(TabWidget, "android.widget.TabWidget");
 
-TabWidget::TabWidget(int w,int h):LinearLayout(w,h){
+TabWidget::TabWidget(Context*ctx)
+    :TabWidget(ctx,nullptr){}
+
+TabWidget::TabWidget(Context*ctx,const AttributeSet* atts):TabWidget(ctx,atts,R::attr::tabWidgetStyle){}
+
+TabWidget::TabWidget(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(ctx,pAttrs, defStyleAttr){
     initTab();
-}
-
-TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
-  :LinearLayout(ctx,atts){
-    initTab();
-    const bool hasExplicitLeft = atts.hasAttribute("tabStripLeft");
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::TabWidget, defStyleAttr);
+    const bool hasExplicitLeft = ta && ta->hasValue(R::styleable::TabWidget_tabStripLeft);
     if(hasExplicitLeft)
-        mLeftStrip = atts.getDrawable("tabStripLeft");
+        mLeftStrip = ta->getDrawable(R::styleable::TabWidget_tabStripLeft);
     else
-        mLeftStrip = atts.getDrawable("tab_bottom_left");
+        mLeftStrip = getContext()->getDrawable(R::drawable::tab_bottom_left);
 
-    const bool hasExplicitRight = atts.hasAttribute("tabStripRight");
+    const bool hasExplicitRight = ta && ta->hasValue(R::styleable::TabWidget_tabStripRight);
     if(hasExplicitRight)
-        mRightStrip = atts.getDrawable("tabStripRight");
+        mRightStrip = ta->getDrawable(R::styleable::TabWidget_tabStripRight);
     else
-        mRightStrip = atts.getDrawable("tab_bottom_right");
+        mRightStrip = getContext()->getDrawable(R::drawable::tab_bottom_right);
     setChildrenDrawingOrderEnabled(true);
 }
 
@@ -148,7 +154,7 @@ void TabWidget::setDividerDrawable(Drawable* drawable) {
     LinearLayout::setDividerDrawable(drawable);
 }
 
-void TabWidget::setDividerDrawable(const std::string& resId) {
+void TabWidget::setDividerDrawable(int resId) {
     setDividerDrawable(mContext->getDrawable(resId));
 }
 void TabWidget::setLeftStripDrawable(Drawable* drawable) {
@@ -156,7 +162,7 @@ void TabWidget::setLeftStripDrawable(Drawable* drawable) {
     requestLayout();
     invalidate();
 }
-void TabWidget::setLeftStripDrawable(const std::string&resId) {
+void TabWidget::setLeftStripDrawable(int resId) {
     setLeftStripDrawable(mContext->getDrawable(resId));
 }
 
@@ -170,7 +176,7 @@ void TabWidget::setRightStripDrawable(Drawable* drawable) {
     invalidate();
 }
 
-void TabWidget::setRightStripDrawable(const std::string& resId) {
+void TabWidget::setRightStripDrawable(int resId) {
     setRightStripDrawable(mContext->getDrawable(resId));
 }
 
@@ -219,11 +225,23 @@ void TabWidget::dispatchDraw(Canvas& canvas){
         bounds.left = selectedChild->getLeft();
         bounds.width = selectedChild->getWidth();
         int myHeight = getHeight();
-        if(mLeftStrip)
-            mLeftStrip->setBounds(std::min(0, bounds.left - mLeftStrip->getIntrinsicWidth()),
-                myHeight - mLeftStrip->getIntrinsicHeight(), bounds.left, myHeight);
-        if(mRightStrip)mRightStrip->setBounds(bounds.right(), myHeight - mRightStrip->getIntrinsicHeight(),
-                std::max(getWidth(), bounds.width + mRightStrip->getIntrinsicWidth()), myHeight);
+        // AOSP TabWidget passes (left, top, right, bottom) — Drawable::setBounds
+        // here takes (x, y, WIDTH, HEIGHT) (the Rect (l,t,w,h) convention), so the
+        // right/bottom edges convert below. The right strip's far edge is
+        // bounds.right + intrinsicWidth in AOSP (NOT bounds.width + iw — with a
+        // negative-margin tab at left < 0 those differ by exactly left).
+        if (mLeftStrip) {
+            const int l = std::min(0, bounds.left - mLeftStrip->getIntrinsicWidth());
+            const int t = myHeight - mLeftStrip->getIntrinsicHeight();
+            mLeftStrip->setBounds(l, t, bounds.left - l, myHeight - t);
+        }
+        if (mRightStrip) {
+            const int l = bounds.right();
+            const int t = myHeight - mRightStrip->getIntrinsicHeight();
+            mRightStrip->setBounds(l, t,
+                    std::max(getWidth(), bounds.right() + mRightStrip->getIntrinsicWidth()) - l,
+                    myHeight - t);
+        }
         mStripMoved = false;
     }
     if(mLeftStrip )mLeftStrip->draw(canvas);
@@ -311,4 +329,14 @@ void TabWidget::onFocusChange(View* v, bool hasFocus) {
     // No-op. Tab selection is separate from keyboard focus.
 }
 
+}
+
+std::string TabWidget::getAccessibilityClassName()const{  // AOSP TabWidget:475
+    return "TabWidget";
+}
+
+void TabWidget::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){  // AOSP :481
+    LinearLayout::onInitializeAccessibilityEventInternal(event);
+    event.setItemCount(getTabCount());
+    event.setCurrentItemIndex(mSelectedTab);
 }

@@ -397,9 +397,6 @@ please see themes_device_defaults.xml.
         <item name="colorPrimaryDark">@color/primary_dark_material_dark</item>
         <item name="colorPrimary">@color/primary_material_dark</item>
         <item name="colorAccent">@color/accent_material_dark</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorOnSurface">@color/foreground_material_dark</item>
-        <item name="colorOnSurfaceVariant">@color/dim_foreground_dark</item>
         <item name="colorEdgeEffect">?attr/colorPrimary</item>
 
         <item name="colorControlNormal">?attr/textColorSecondary</item>
@@ -421,6 +418,9 @@ please see themes_device_defaults.xml.
 
     <!-- Material theme (light version). -->
     <style name="Theme.Material.Light" parent="Theme.Light">
+        <item name="spinnerStyle">?attr/dropDownSpinnerStyle</item>
+        <item name="dropDownSpinnerStyle">@style/Widget.Material.Light.Spinner.DropDown</item>
+        <item name="spinnerDropDownItemStyle">@style/Widget.Material.Light.DropDownItem.Spinner</item>
         <item name="colorForeground">@color/foreground_material_light</item>
         <item name="colorForegroundInverse">@color/foreground_material_dark</item>
         <item name="colorBackground">@color/background_material_light</item>
@@ -654,6 +654,7 @@ please see themes_device_defaults.xml.
         <item name="horizontalScrollViewStyle">@style/Widget.Material.Light.HorizontalScrollView</item>
         <item name="spinnerStyle">?attr/dropDownSpinnerStyle</item>
         <item name="dropDownSpinnerStyle">@style/Widget.Material.Light.Spinner.DropDown</item>
+        <item name="spinnerDropDownItemStyle">@style/Widget.Material.Light.DropDownItem.Spinner</item>
         <item name="starStyle">@style/Widget.Material.Light.CompoundButton.Star</item>
         <item name="tabWidgetStyle">@style/Widget.Material.Light.TabWidget</item>
         <item name="textViewStyle">@style/Widget.Material.Light.TextView</item>
@@ -781,9 +782,6 @@ please see themes_device_defaults.xml.
         <item name="colorPrimaryDark">@color/primary_dark_material_light</item>
         <item name="colorPrimary">@color/primary_material_light</item>
         <item name="colorAccent">@color/accent_material_light</item>
-        <item name="colorOnPrimary">@color/bright_foreground_light</item>
-        <item name="colorOnSurface">@color/foreground_material_light</item>
-        <item name="colorOnSurfaceVariant">@color/dim_foreground_light</item>
         <item name="colorEdgeEffect">?attr/colorPrimary</item>
 
         <item name="colorControlNormal">?attr/textColorSecondary</item>

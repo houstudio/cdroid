@@ -18,6 +18,7 @@
 #ifndef __LAYER_DRAWABLE_H__
 #define __LAYER_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <content/typedarray.h>
 namespace cdroid{
 
 class LayerDrawable:public Drawable,public Drawable::Callback {
@@ -28,6 +29,8 @@ public:
 protected:
     class ChildDrawable{
     public:
+        bool canApplyTheme()const;
+    public:
         Drawable*mDrawable;
         int mInsetL, mInsetT, mInsetR, mInsetB,mInsetE,mInsetS;
         int mWidth,mHeight;
@@ -36,7 +39,7 @@ protected:
         int mId;
         std::vector<int>mThemeAttrs;
         ChildDrawable(int density);
-        ChildDrawable(ChildDrawable* orig,LayerDrawable*owner);
+        ChildDrawable(ChildDrawable* orig,LayerDrawable*owner,Resources*res);
         ~ChildDrawable();
         void setDensity(int targetDensity);
         void applyDensityScaling(int sourceDensity, int targetDensity);
@@ -59,10 +62,12 @@ protected:
         bool mAutoMirrored;
         std::vector< ChildDrawable*>mChildren;
         LayerState();
-        LayerState(const LayerState*state,LayerDrawable*owner);
+        LayerState(const LayerState*state,LayerDrawable*owner,Resources*res);
         ~LayerState()override;
         LayerDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         int getChangingConfigurations()const override;
+        bool canApplyTheme();
         int getOpacity()const;
         bool isStateful()const;
         bool hasFocusStateSpecified()const;
@@ -94,11 +99,11 @@ private:
     void computeStackedPadding(Rect& padding);
     ChildDrawable* createLayer(Drawable* dr);
     Drawable* getFirstNonNullDrawable()const;
-    void inflateLayers(XmlPullParser& parser,const AttributeSet& atts);
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void updateLayerFromTypedArray(ChildDrawable*layer,const AttributeSet&atts);
+    void inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void updateLayerFromTypedArray(ChildDrawable*layer,const TypedArray& a);
 protected:
-    virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,const AttributeSet*);
+    virtual std::shared_ptr<LayerState> createConstantState(LayerState* state,Resources* res);
     void onBoundsChange(const Rect& bounds)override;
     bool onLevelChange(int level)override;
     bool onStateChange(const std::vector<int>& state)override;
@@ -112,6 +117,7 @@ protected:
 public:
     LayerDrawable();
     LayerDrawable(const std::vector<Drawable*>&drawables);
+    ~LayerDrawable() override;
 
     void setLayerSize(int index, int w, int h);
     int getLayerWidth(int index)const;
@@ -154,7 +160,6 @@ public:
     Drawable* getDrawable(int index)const;
     void setDrawable(int index, Drawable* drawable);
     bool getPadding(Rect& padding)override;
-    void setPadding(const AttributeSet&);
     void setPadding(int left, int top, int right, int bottom);
     void setPaddingRelative(int start,int top,int end,int bottom);
     int getLeftPadding()const;
@@ -184,7 +189,9 @@ public:
     void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override;
     void unscheduleDrawable(Drawable& who,const Runnable& what)override;
     void draw(Canvas&canvas)override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 }
 #endif

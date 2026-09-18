@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/storage_summary.xml fragments. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="storage_screen"
+    android:title="Storage">
+
+    <Preference
+        android:key="internal_usage"
+        android:title="Internal storage"
+        android:summary="18.2 GB used of 64 GB"
+        android:selectable="false" />
+
+    <PreferenceCategory android:title="Categories">
+
+        <Preference android:key="storage_photos" android:title="Photos &amp; videos" android:summary="4.6 GB" />
+        <Preference android:key="storage_music" android:title="Music &amp; audio" android:summary="512 MB" />
+        <Preference android:key="storage_games" android:title="Games" android:summary="3.1 GB" />
+        <Preference android:key="storage_apps" android:title="Apps" android:summary="9.9 GB" />
+        <Preference android:key="storage_other" android:title="Other" android:summary="96 MB" />
+        <Preference android:widgetLayout="@layout/prefdemo_chevron" android:key="storage_free" android:title="Free up space" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Advanced">
+
+        <SwitchPreference
+            android:key="storage_smart_storage"
+            android:title="Smart Storage"
+            android:summary="Remove backed-up photos &amp; videos when storage is low"
+            android:defaultValue="true" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

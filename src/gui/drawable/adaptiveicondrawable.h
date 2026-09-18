@@ -18,6 +18,7 @@
 #ifndef __ADAPTIVE_ICON_DRAWABLE_H__
 #define __ADAPTIVE_ICON_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <content/typedarray.h>
 namespace cdroid{
 class AdaptiveIconDrawable:public Drawable,public Drawable::Callback {
 private:
@@ -57,8 +58,8 @@ private:
     void updateLayerBounds(const Rect& bounds);
     void updateLayerBoundsInternal(const Rect& bounds);
     void updateMaskBoundsInternal(const Rect& b);
-    void inflateLayers(XmlPullParser& parser,AttributeSet& attrs);
-    void updateLayerFromTypedArray(ChildDrawable* layer,AttributeSet& attrs);
+    void inflateLayers(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme);
+    void updateLayerFromTypedArray(ChildDrawable* layer,const TypedArray& a);
     void suspendChildInvalidation();
     void resumeChildInvalidation();
     int getMaxIntrinsicWidth();
@@ -69,11 +70,11 @@ protected:
     bool onLevelChange(int level) override;
 public:
     AdaptiveIconDrawable();
-    AdaptiveIconDrawable(LayerState* state);
-    std::shared_ptr<LayerState> createConstantState(LayerState* state);
+    AdaptiveIconDrawable(LayerState* state, Resources* res);
+    std::shared_ptr<LayerState> createConstantState(LayerState* state, Resources* res);
     AdaptiveIconDrawable(Drawable* backgroundDrawable,Drawable* foregroundDrawable);
     AdaptiveIconDrawable(Drawable* backgroundDrawable, Drawable* foregroundDrawable, Drawable* monochromeDrawable);
-    void inflate(XmlPullParser& parser,AttributeSet& attrs);
+    void inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme)override;
     static float getExtraInsetFraction();
     static float getExtraInsetPercentage();
 
@@ -90,7 +91,7 @@ public:
 
     Cairo::RefPtr<Cairo::Region> getSafeZone();
     Cairo::RefPtr<Cairo::Region> getTransparentRegion() override;
-    //void applyTheme() override;
+    void applyTheme(const Resources::Theme& t) override;
     int getSourceDrawableResId();
 
     bool canApplyTheme() override;
@@ -145,12 +146,12 @@ public:
 
 class AdaptiveIconDrawable::ChildDrawable {
 public:
-    int* mThemeAttrs;
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
-    Drawable* mDrawable;
+    Drawable* mDrawable = nullptr;
 
     ChildDrawable(int density);
-    ChildDrawable(ChildDrawable* orig,AdaptiveIconDrawable* owner);
+    ChildDrawable(ChildDrawable* orig,AdaptiveIconDrawable* owner,Resources* res);
     bool canApplyTheme()const;
     void setDensity(int targetDensity);
 };
@@ -158,6 +159,10 @@ public:
 class AdaptiveIconDrawable::LayerState:public Drawable::ConstantState {
     static constexpr int N_CHILDREN = 3;
     std::vector<ChildDrawable*> mChildren;
+    // AOSP's Java ChildDrawable[] elements are always non-null; the C++ raw
+    // pointers leave unfilled slots null (e.g. no monochrome layer), so every
+    // child access must go through this guard.
+    Drawable* childAt(int i) const;
 
     // The density at which to render the drawable and its children.
     int mDensity;
@@ -169,7 +174,7 @@ class AdaptiveIconDrawable::LayerState:public Drawable::ConstantState {
     int mChildrenChangingConfigurations = 0;
     int mSourceDrawableId = 0;//Resources.ID_NULL;
 private:
-    int* mThemeAttrs;
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mOpacity = PixelFormat::UNKNOWN;
     bool mCheckedOpacity = false;
     bool mCheckedStateful = false;
@@ -177,12 +182,13 @@ private:
     bool mAutoMirrored = false;
     friend AdaptiveIconDrawable;
 public:
-    LayerState(LayerState* orig, AdaptiveIconDrawable* owner);
+    LayerState(LayerState* orig, AdaptiveIconDrawable* owner, Resources* res);
 
     void setDensity(int targetDensity);
 
-    bool canApplyTheme() const;
+    bool canApplyTheme();
     Drawable* newDrawable()override;
+    Drawable* newDrawable(Resources* res)override;
 
     int getChangingConfigurations() const override;
 

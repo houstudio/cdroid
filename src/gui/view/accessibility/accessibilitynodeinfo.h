@@ -11,6 +11,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 namespace cdroid{
 class View;
+class AccessibilityViewCommand;
 class AccessibilityWindowInfo;
 class AccessibilityNodeInfo{// implements Parcelable {
 private:
@@ -114,6 +115,9 @@ public:
 
     static constexpr const char* ACTION_ARGUMENT_MOVE_WINDOW_Y = "ACTION_ARGUMENT_MOVE_WINDOW_Y";
 
+    static constexpr const char* ACTION_ARGUMENT_SCROLL_AMOUNT_FLOAT =
+            "android.view.accessibility.action.ARGUMENT_SCROLL_AMOUNT_FLOAT";
+
     static constexpr const char* ACTION_ARGUMENT_ACCESSIBLE_CLICKABLE_SPAN = "android.view.accessibility.action.ACTION_ARGUMENT_ACCESSIBLE_CLICKABLE_SPAN";
 
     static constexpr int FOCUS_INPUT = 1;
@@ -194,10 +198,10 @@ private:
 
     static const AccessibilityNodeInfo DEFAULT;// = new AccessibilityNodeInfo();
 
-    bool mSealed;
+    bool mSealed = false;
 
     // Data.
-    int mWindowId;// = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
+    int mWindowId = AccessibilityWindowInfo::UNDEFINED_WINDOW_ID;
     int64_t mSourceNodeId = UNDEFINED_NODE_ID;
     int64_t mParentNodeId = UNDEFINED_NODE_ID;
     int64_t mLabelForId = UNDEFINED_NODE_ID;
@@ -205,10 +209,10 @@ private:
     int64_t mTraversalBefore = UNDEFINED_NODE_ID;
     int64_t mTraversalAfter = UNDEFINED_NODE_ID;
 
-    int mBooleanProperties;
+    int mBooleanProperties = 0;   // AOSP: JVM zero-init
     Rect mBoundsInParent;
     Rect mBoundsInScreen;
-    int mDrawingOrderInParent;
+    int mDrawingOrderInParent = 0;
 
     std::string mPackageName;
     std::string mClassName;
@@ -220,6 +224,7 @@ private:
     std::string mPaneTitle;
     std::string mContentDescription;
     std::string mTooltipText;
+    std::string mStateDescription;
     std::string mViewIdResourceName;
     std::vector<std::string> mExtraDataKeys;
 
@@ -227,15 +232,15 @@ private:
     std::vector<AccessibilityAction*> mActions;
 
     int mMaxTextLength = -1;
-    int mMovementGranularities;
+    int mMovementGranularities = 0;   // AOSP: JVM zero-init
 
     int mTextSelectionStart = UNDEFINED_SELECTION_INDEX;
     int mTextSelectionEnd = UNDEFINED_SELECTION_INDEX;
-    int mInputType;// = InputType::TYPE_NULL;
-    int mLiveRegion;// = View::ACCESSIBILITY_LIVE_REGION_NONE;
+    int mInputType = 0;   // InputType::TYPE_NULL
+    int mLiveRegion = 0;  // View::ACCESSIBILITY_LIVE_REGION_NONE
     int mConnectionId = UNDEFINED_CONNECTION_ID;
 
-    Bundle* mExtras;
+    Bundle* mExtras = nullptr;   // AOSP: JVM null default
 
     RangeInfo *mRangeInfo;
     CollectionInfo* mCollectionInfo;
@@ -522,6 +527,9 @@ public:
 
     void setTooltipText(const std::string& tooltipText);
 
+    std::string getStateDescription() const;
+    void setStateDescription(const std::string& stateDescription);
+
     void setLabelFor(View* labeled);
 
     void setLabelFor(View* root, int virtualDescendantId);
@@ -596,81 +604,106 @@ class AccessibilityNodeInfo::AccessibilityAction {
 public:
     static std::set<AccessibilityAction*> sStandardActions;
 
-    static const AccessibilityAction ACTION_FOCUS;
+    static AccessibilityAction ACTION_FOCUS;
 
-    static const AccessibilityAction ACTION_CLEAR_FOCUS;
+    static AccessibilityAction ACTION_CLEAR_FOCUS;
 
-    static const AccessibilityAction ACTION_SELECT;
+    static AccessibilityAction ACTION_SELECT;
 
-    static const AccessibilityAction ACTION_CLEAR_SELECTION;
+    static AccessibilityAction ACTION_CLEAR_SELECTION;
 
-    static const AccessibilityAction ACTION_CLICK;
+    static AccessibilityAction ACTION_CLICK;
 
-    static const AccessibilityAction ACTION_LONG_CLICK;
+    static AccessibilityAction ACTION_LONG_CLICK;
 
-    static const AccessibilityAction ACTION_ACCESSIBILITY_FOCUS;
+    static AccessibilityAction ACTION_ACCESSIBILITY_FOCUS;
 
-    static const AccessibilityAction ACTION_CLEAR_ACCESSIBILITY_FOCUS;
+    static AccessibilityAction ACTION_CLEAR_ACCESSIBILITY_FOCUS;
 
-    static const AccessibilityAction ACTION_NEXT_AT_MOVEMENT_GRANULARITY;
+    static AccessibilityAction ACTION_NEXT_AT_MOVEMENT_GRANULARITY;
 
-    static const AccessibilityAction ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
+    static AccessibilityAction ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY;
 
-    static const AccessibilityAction ACTION_NEXT_HTML_ELEMENT;
+    static AccessibilityAction ACTION_NEXT_HTML_ELEMENT;
 
-    static const AccessibilityAction ACTION_PREVIOUS_HTML_ELEMENT;
+    static AccessibilityAction ACTION_PREVIOUS_HTML_ELEMENT;
 
-    static const AccessibilityAction ACTION_SCROLL_FORWARD;
+    static AccessibilityAction ACTION_SCROLL_FORWARD;
 
-    static const AccessibilityAction ACTION_SCROLL_BACKWARD;
+    static AccessibilityAction ACTION_SCROLL_BACKWARD;
 
-    static const AccessibilityAction ACTION_COPY;
+    static AccessibilityAction ACTION_COPY;
 
-    static const AccessibilityAction ACTION_PASTE;
+    static AccessibilityAction ACTION_PASTE;
 
-    static const AccessibilityAction ACTION_CUT;
+    static AccessibilityAction ACTION_CUT;
 
-    static const AccessibilityAction ACTION_SET_SELECTION;
+    static AccessibilityAction ACTION_SET_SELECTION;
 
-    static const AccessibilityAction ACTION_EXPAND;
+    static AccessibilityAction ACTION_EXPAND;
 
-    static const AccessibilityAction ACTION_COLLAPSE;
+    static AccessibilityAction ACTION_COLLAPSE;
 
-    static const AccessibilityAction ACTION_DISMISS;
+    static AccessibilityAction ACTION_DISMISS;
 
-    static const AccessibilityAction ACTION_SET_TEXT;
+    static AccessibilityAction ACTION_SET_TEXT;
 
-    static const AccessibilityAction ACTION_SHOW_ON_SCREEN;
+    static AccessibilityAction ACTION_SHOW_ON_SCREEN;
 
-    static const AccessibilityAction ACTION_SCROLL_TO_POSITION;
+    static AccessibilityAction ACTION_SCROLL_TO_POSITION;
 
-    static const AccessibilityAction ACTION_SCROLL_UP;
+    static AccessibilityAction ACTION_SCROLL_UP;
 
-    static const AccessibilityAction ACTION_SCROLL_LEFT;
+    static AccessibilityAction ACTION_SCROLL_LEFT;
 
-    static const AccessibilityAction ACTION_SCROLL_DOWN;
+    static AccessibilityAction ACTION_SCROLL_DOWN;
 
-    static const AccessibilityAction ACTION_SCROLL_RIGHT;
+    static AccessibilityAction ACTION_SCROLL_RIGHT;
 
-    static const AccessibilityAction ACTION_CONTEXT_CLICK;
+    static AccessibilityAction ACTION_CONTEXT_CLICK;
 
-    static const AccessibilityAction ACTION_SET_PROGRESS;
+    static AccessibilityAction ACTION_SET_PROGRESS;
 
-    static const AccessibilityAction ACTION_MOVE_WINDOW;
+    static AccessibilityAction ACTION_MOVE_WINDOW;
 
-    static const AccessibilityAction ACTION_SHOW_TOOLTIP;
+    static AccessibilityAction ACTION_PAGE_UP;
 
-    static const AccessibilityAction ACTION_HIDE_TOOLTIP;
+    static AccessibilityAction ACTION_PAGE_DOWN;
+
+    static AccessibilityAction ACTION_SHOW_TOOLTIP;
+
+    static AccessibilityAction ACTION_HIDE_TOOLTIP;
+
+    /*android-36 singletons CDROID was missing — ids are the frozen public
+      framework ids (android.R.id.accessibilityAction*), all already pinned
+      in internal_R, so no generated file changes. Defined in android-36
+      declaration order; appended after HIDE_TOOLTIP to keep every existing
+      serialization flag stable (the flag is bitAt(insertion order)).*/
+    static AccessibilityAction ACTION_PRESS_AND_HOLD;
+    static AccessibilityAction ACTION_IME_ENTER;
+    static AccessibilityAction ACTION_DRAG_START;
+    static AccessibilityAction ACTION_DRAG_DROP;
+    static AccessibilityAction ACTION_DRAG_CANCEL;
+    static AccessibilityAction ACTION_SHOW_TEXT_SUGGESTIONS;
+    static AccessibilityAction ACTION_SCROLL_IN_DIRECTION;
+    static AccessibilityAction ACTION_PAGE_LEFT;
+    static AccessibilityAction ACTION_PAGE_RIGHT;
 
 private:
     int mActionId;
     std::string mLabel;
+    // Collapsed from androidx AccessibilityActionCompat: a custom/replacement
+    // action installed by View::add/replaceAccessibilityAction may carry the
+    // command to run. Borrowed — the command's owner outlives the host view.
+    AccessibilityViewCommand* mCommand = nullptr;
     AccessibilityAction(int standardActionId);
 public:
     long mSerializationFlag = -1L;
 
     AccessibilityAction(int actionId,const std::string& label);
+    AccessibilityAction(int actionId,const std::string& label, AccessibilityViewCommand* command);
     int getId() const;
+    AccessibilityViewCommand* getCommand() const;
 
     std::string getLabel() const;
 
@@ -686,6 +719,12 @@ public:
     static constexpr int RANGE_TYPE_INT = 0;
     static constexpr int RANGE_TYPE_FLOAT = 1;
     static constexpr int RANGE_TYPE_PERCENT = 2;
+    /** Range type: indeterminate — API 35+, flag-gated in AOSP. */
+    static constexpr int RANGE_TYPE_INDETERMINATE = 3;
+    /** AOSP RangeInfo.INDETERMINATE — the shared sentinel for ranges with
+        unknown extent. Safe to alias: nodes borrow a RangeInfo without
+        owning it (setRangeInfo stores the pointer, clear() only nulls). */
+    static RangeInfo INDETERMINATE;
 
 private:
     static Pools::SimplePool<RangeInfo> sPool;

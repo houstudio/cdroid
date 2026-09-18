@@ -152,9 +152,9 @@ MenuItem& ActionMenuItem::setIcon(Drawable* icon){
     return *this;
 }
 
-MenuItem& ActionMenuItem::setIcon(const std::string& iconRes){
+MenuItem& ActionMenuItem::setIcon(int iconRes){
     mIconResId = iconRes;
-    mIconDrawable = mContext->getDrawable(iconRes);
+    mIconDrawable = iconRes ? mContext->getDrawable(iconRes) : nullptr;
     applyIconTint();
     return *this;
 }
@@ -254,7 +254,7 @@ View* ActionMenuItem::getActionView(){
     return nullptr;
 }
 
-MenuItem& ActionMenuItem::setActionView(const std::string& resId){
+MenuItem& ActionMenuItem::setActionView(int resId){
     throw std::logic_error("UnsupportedOperationException");
 }
 

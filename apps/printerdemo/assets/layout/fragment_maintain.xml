@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?android:attr/colorBackground"
+        android:fillViewport="true">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp" android:text="@string/maintain_head" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
+                <LinearLayout android:id="@+id/m_clean"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_refresh_blue" android:importantForAccessibility="no"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_clean" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_deep_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:id="@+id/m_nozzle"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_checkcircle_green" android:importantForAccessibility="no"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_nozzle_check" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_test_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginHorizontal="14dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:id="@+id/m_align"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_amber">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_tune_amber" android:importantForAccessibility="no"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_align" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_align_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/home_supplies" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/dot_k"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_black" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/dot_c"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_m"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_y"/>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_color_cmy" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FFEF6C00"/>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/drum_life" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="78%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
+                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"
+                    android:background="?attr/progressTrack" android:padding="2dp">
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="78" android:background="@drawable/bar_fill_green"/>
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="22"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp" android:text="@string/maintain_diagnose" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="6dp">
+                <LinearLayout android:id="@+id/m_selftest"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
+                    <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_green">
+                        <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_shield_green" android:importantForAccessibility="no"/>
+                    </FrameLayout>
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/maintain_selftest" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/maintain_selftest_desc" android:textSize="12sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_chevron" android:importantForAccessibility="no"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:layout_marginBottom="8dp"
+                android:text="@string/home_overview" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:orientation="vertical" android:background="?attr/cardBackground" android:padding="16dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:orientation="vertical">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/stat_lifetime" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp" android:text="@string/stat_total_pages" android:textSize="18sp"
+                            android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="vertical" android:gravity="right">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/maintain_last" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp" android:text="2026-08-18" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                </LinearLayout>
+                <View android:layout_width="match_parent" android:layout_height="1dp"
+                    android:layout_marginTop="14dp" android:layout_marginBottom="12dp" android:background="?attr/colorSurfaceVariant"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical">
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:text="@string/home_health" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
+                    android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"
+                    android:background="?attr/progressTrack" android:padding="2dp">
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="92" android:background="@drawable/bar_fill_green"/>
+                    <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="8"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- Maintenance progress overlay -->
+    <FrameLayout android:id="@+id/maint_overlay"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="#B3000000" android:clickable="true" android:visibility="gone">
+        <LinearLayout
+            android:layout_width="280dp" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:orientation="vertical" android:gravity="center_horizontal"
+            android:background="?attr/cardBackground" android:padding="30dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp"
+                android:src="@drawable/ic_wrench_amber" android:background="@drawable/chip_amber" android:padding="8dp" android:importantForAccessibility="no"/>
+            <LinearLayout android:id="@+id/maint_track"
+                android:layout_width="210dp" android:layout_height="10dp"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal" android:weightSum="100"
+                android:background="?attr/progressTrack" android:padding="2dp">
+                <View android:id="@+id/maint_fill"
+                    android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="0" android:background="@drawable/bar_fill_green"/>
+            </LinearLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:text="@string/maintain_busy" android:textSize="16sp"
+                android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/maint_status"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:text="@string/loading" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

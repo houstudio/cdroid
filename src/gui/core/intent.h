@@ -341,6 +341,13 @@ public:
 
     Intent& putExtra(const std::string&name, const std::string& value);
 
+    // String literals: without this overload a const char* argument resolves
+    // to the bool overload (pointer→bool is a standard conversion and beats
+    // the user-defined conversion to std::string), silently storing `true`
+    // where a string was meant — every typed getter then throws Type mismatch.
+    // Java dispatches literals to putExtra(String, String); this restores that.
+    Intent& putExtra(const std::string&name, const char* value);
+
     Intent& putExtra(const std::string&name, Parcelable* value);
 
     Intent& putExtra(const std::string&name, const std::vector<Parcelable*>& value);

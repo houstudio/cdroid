@@ -28,8 +28,9 @@ protected:
         AbsSpinner*ABS;
     public:
         RecycleBin(AbsSpinner*);
+        ~RecycleBin();   // owns its detached views (CDROID; AOSP relies on GC)
         void put(int position, View* v);
-        View* get(int position);
+        View* get(int position);   // transfers ownership out
         void clear();
     };
     RecycleBin*mRecycler;
@@ -50,9 +51,11 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     virtual void layout(int delta, bool animate)=0;
 public:
-    AbsSpinner(int w,int h);
-    AbsSpinner(Context*,const AttributeSet&atts);
+    AbsSpinner(Context*ctx);   // AOSP AbsSpinner(Context)
+    AbsSpinner(Context*,const AttributeSet*atts);
+    AbsSpinner(Context*,const AttributeSet* attrs,int defStyleAttr);
     virtual ~AbsSpinner();
+    std::string getAccessibilityClassName()const override;
     int getCount()override;
     View* getSelectedView()override;
     void setAdapter(Adapter*adapter)override;

@@ -18,6 +18,7 @@
 #ifndef __NINEPATCH_DRAWABLE_H__
 #define __NINEPATCH_DRAWABLE_H__
 #include <drawable/drawable.h>
+#include <content/typedarray.h>
 
 namespace cdroid{
 class NinePatchRenderer;
@@ -25,6 +26,8 @@ class NinePatchDrawable:public Drawable{
 private:
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         float mBaseAlpha;//= 1.0f;
         bool mDither;//=DEFAULT_DITHER;
         bool mAutoMirrored;//= false;
@@ -32,14 +35,20 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
         int mChangingConfigurations;
+        // Density of the renderer's current pixel space (the asset's source
+        // density at decode; becomes the target density once the decode-time
+        // resample has run — AOSP keeps the equivalent in Bitmap.mDensity) and
+        // the density numbers should render at (AOSP NinePatchState.mTargetDensity).
+        int mSourceDensity;
+        int mTargetDensity;
         cdroid::RefPtr<ColorStateList>mTint;
         Cairo::RefPtr<NinePatchRenderer>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
         void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr,
                        const std::vector<uint8_t>*ninePatchChunk=nullptr);
-        void setBitmap(Context*ctx,const std::string&resid,const Rect*padding=nullptr);
         NinePatchDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         void draw(Canvas&canvas,const Rect&rect,int alpha);
         int getChangingConfigurations()const override;
     };
@@ -56,16 +65,19 @@ private:
     void computeBitmapSize();
     std::shared_ptr<NinePatchState>mNinePatchState;
     cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
-    NinePatchDrawable(std::shared_ptr<NinePatchState>state);
-    void updateStateFromTypedArray(const AttributeSet&a);
+    NinePatchDrawable(std::shared_ptr<NinePatchState>state, Resources* res);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
 public:
     NinePatchDrawable();
-    NinePatchDrawable(Context*,const std::string&resid);
     NinePatchDrawable(Cairo::RefPtr<Cairo::ImageSurface>bmp,const std::vector<uint8_t>*ninePatchChunk=nullptr);
     ~NinePatchDrawable();
     void setTargetDensity(int density);
+    // Decode-seam density fixup (AOSP folds this into BitmapFactory.decodeResourceStream):
+    // records the asset's source density so the decode site can resample the
+    // bitmap + chunk into the display's pixel space once, up front.
+    void setSourceDensity(int density);
     Insets getOpticalInsets()override;
     void setAlpha(int alpha)override;
     bool getPadding(Rect& padding) override;
@@ -84,7 +96,9 @@ public:
     bool hasFocusStateSpecified()const override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas&canvas)override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 }
 #endif

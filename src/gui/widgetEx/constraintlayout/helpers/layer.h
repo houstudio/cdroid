@@ -36,8 +36,8 @@ namespace cdroid {
 
 class Layer : public ConstraintHelper {
   public:
-    Layer(Context* ctx, const AttributeSet& attrs);
-    explicit Layer(int width, int height);
+    Layer(Context* ctx, const AttributeSet* attrs);
+    Layer(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     // --- group transforms (each recomputes & applies the affine transform) ---
     void setRotation(float angle) override;
@@ -51,7 +51,7 @@ class Layer : public ConstraintHelper {
     void setElevation(float elevation) override;
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void onAttachedToWindow() override;
     void updatePreDraw(ConstraintLayout* container) override;
     void updatePostLayout(ConstraintLayout* container) override;

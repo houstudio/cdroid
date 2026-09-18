@@ -18,7 +18,7 @@
 #ifndef __SWIPE_DISMISS_TRANSITION_HELPER_H__
 #define __SWIPE_DISMISS_TRANSITION_HELPER_H__
 #include <animation/springanimation.h>
-#include <widgetEx/wear/dismissableframelayout.h>
+#include <widgetEx/wear/dismissibleframelayout.h>
 
 namespace cdroid{
 class SwipeDismissTransitionHelper {

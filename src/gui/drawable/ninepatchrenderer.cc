@@ -403,11 +403,6 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
-    const bool haveLayoutBounds = (mOpticalInsets.left|mOpticalInsets.top|mOpticalInsets.right|mOpticalInsets.bottom)!=0;
-    LOGD_IF(haveLayoutBounds,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
-            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
-            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
-            mPadding.left,mPadding.top,mPadding.width,mPadding.height);
 }
 
 NinePatchRenderer::NinePatchRenderer(Context*ctx,const std::string&resid)
@@ -418,6 +413,9 @@ NinePatchRenderer::~NinePatchRenderer() {
 }
 
 void NinePatchRenderer::draw(Canvas& painter, int  x, int  y,float alpha) {
+    // No cached image (never rendered, or the last size was degenerate and
+    // updateCachedImage bailed): nothing to blit.
+    if (!mCachedImage) return;
     Cairo::Matrix ctx = painter.get_matrix();
     const double radians = atan2(ctx.yy, ctx.xy);
     const int rotDegrees = int(radians*180.f/M_PI)%90;
@@ -447,11 +445,52 @@ void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
 
 void NinePatchRenderer::setImageSize(int width, int height) {
     if((mWidth == width) && (mHeight==height))return;
-    if (width != mWidth || height != mHeight) {
-        mWidth = width;
-        mHeight = height;
+    // Non-positive sizes never render (see updateCachedImage) — record them so
+    // the equality early-out above doesn't thrash, but skip the re-render.
+    mWidth = width;
+    mHeight = height;
+    if (width > 0 && height > 0) {
         updateCachedImage(width, height,nullptr);
+    } else {
+        mCachedImage.reset();
     }
+}
+
+void NinePatchRenderer::applyDensityScale(float scale) {
+    if (scale <= 0.f || scale == 1.f) return;
+    const int oldW = mImage->get_width();
+    const int oldH = mImage->get_height();
+    const int newW = std::max(1, (int)(oldW * scale + 0.5f));
+    const int newH = std::max(1, (int)(oldH * scale + 0.5f));
+    if (newW != oldW || newH != oldH) {
+        Cairo::RefPtr<ImageSurface> scaled = ImageSurface::create(Surface::Format::ARGB32, newW, newH);
+        auto cr = Cairo::Context::create(scaled);
+        cr->scale((double)newW / oldW, (double)newH / oldH);
+        cr->set_source(mImage, 0.0, 0.0);
+        if (auto spat = std::dynamic_pointer_cast<Cairo::SurfacePattern>(cr->get_source()))
+            spat->set_filter(SurfacePattern::Filter::GOOD);
+        cr->paint();
+        mImage = scaled;
+    }
+
+    const auto scaledInt = [scale](int v) { return (int)(v * scale + 0.5f); };
+    // mResizeDistances* hold {start, length} pairs in source pixels.
+    for (auto& r : mResizeDistancesX) { r.first = scaledInt(r.first); r.second = scaledInt(r.second); }
+    for (auto& r : mResizeDistancesY) { r.first = scaledInt(r.first); r.second = scaledInt(r.second); }
+    mPadding.set(scaledInt(mPadding.left), scaledInt(mPadding.top),
+                 scaledInt(mPadding.width), scaledInt(mPadding.height));
+    mOpticalInsets = Insets::of(scaledInt(mOpticalInsets.left), scaledInt(mOpticalInsets.top),
+            scaledInt(mOpticalInsets.right), scaledInt(mOpticalInsets.bottom));
+    mOutlineRect.set(scaledInt(mOutlineRect.left), scaledInt(mOutlineRect.top),
+                     scaledInt(mOutlineRect.width), scaledInt(mOutlineRect.height));
+    mOutlineInsets = Insets::of(scaledInt(mOutlineInsets.left), scaledInt(mOutlineInsets.top),
+            scaledInt(mOutlineInsets.right), scaledInt(mOutlineInsets.bottom));
+    mRadius = scaledInt(mRadius);
+
+    // Cached output and derived rects were built in the old pixel space.
+    mCachedImage.reset();
+    mContentArea.set(0, 0, 0, 0);
+    mWidth = mHeight = -1;
 }
 
 Rect NinePatchRenderer::getPadding()const{
@@ -690,6 +729,15 @@ void NinePatchRenderer::drawLattice(int width, int height, Cairo::Context& paint
 }
 
 void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*painterIn) {
+    // Degenerate size (empty or negative bounds — e.g. a view the measure pass
+    // squeezed through negative margins): nothing to render. Skia/AOSP simply
+    // produces no pixels here; cairo would abort the process on
+    // ImageSurface::create(width <= 0), so bail out first (and drop any stale
+    // cache so a later valid size re-renders).
+    if (width <= 0 || height <= 0) {
+        mCachedImage.reset();
+        return;
+    }
     double lostX  = 0.f, lostY  = 0.f;
     double factorX= 0.f, factorY= 0.f;
     int x1 = 0 , y1 = 0; //for image parts X/Y
@@ -712,7 +760,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
 		imgPainter->restore();
         ppainter=imgPainter.get();
     }
-    Cairo::Context&painter=*imgPainter.get();
+    Cairo::Context&painter=*ppainter;
     // Deficit case: destination smaller than the sum of the fixed (non-stretch) patches
     // on either axis. The factor-based loop below only scales the stretch patches, so its
     // factor goes NEGATIVE here and the const patches overlap/garble (the old

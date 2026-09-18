@@ -66,6 +66,10 @@ class TransitionManager {
     // so the file-local MultiListener (not a member/friend) can access them, matching
     // android's same-package access.
     static ArrayMap<ViewGroup*, std::vector<Transition*>>& getRunningTransitions();
+    // True while any transition is pending (captured, pre-preDraw) or running
+    // on this scene root — views captured in their startValues must stay
+    // alive until this returns false.
+    static bool hasActiveTransitions(ViewGroup* sceneRoot);
     static std::vector<ViewGroup*>& getPendingTransitions();
 
   private:

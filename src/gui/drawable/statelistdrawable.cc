@@ -15,29 +15,52 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/statelistdrawable.h>
 #include <drawable/colordrawable.h>
+#include <core/context.h>
+#include <content/typedarray.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-StateListDrawable::StateListState::StateListState(const StateListState*orig,StateListDrawable*own)
-    :DrawableContainerState(orig,own){
+StateListDrawable::StateListState::StateListState(const StateListState*orig,StateListDrawable*own,Resources*res)
+    :DrawableContainerState(orig,own,res){
     if(orig){
         mStateSets = orig->mStateSets;
     }
 }
 
 StateListDrawable*StateListDrawable::StateListState::newDrawable(){
-    return new StateListDrawable(std::dynamic_pointer_cast<StateListState>(shared_from_this()));
+    // AOSP newDrawable() → ctor → setConstantState(new StateListState(...)):
+    // children re-created from their ConstantStates as futures. Adopting the
+    // shared state shared the children across every clone from the drawable
+    // cache — nested inside a LayerDrawable layer this leaked one view's
+    // bounds/level into every other view of the same resource.
+    return new StateListDrawable(
+            std::dynamic_pointer_cast<StateListState>(shared_from_this()), nullptr);
+}
+
+Drawable*StateListDrawable::StateListState::newDrawable(Resources* res){
+    return new StateListDrawable(
+            std::dynamic_pointer_cast<StateListState>(shared_from_this()), res);
 }
 
 void StateListDrawable::StateListState::mutate(){
+    // AOSP runs super.mutate() (mutates every child) before cloning mStateSets;
+    // an empty override suppressed the base chain entirely.
+    DrawableContainerState::mutate();
 }
 
 int StateListDrawable::StateListState::addStateSet(const std::vector<int>&stateSet, Drawable*drawable){
     const int pos = addChild(drawable);
-    mStateSets.push_back(stateSet);
+    // addChild dedupes a re-added Drawable* (returns the existing index) —
+    // keep mStateSets in lockstep so later indices stay aligned (AOSP always
+    // appends; the unconditional push desynced the parallel arrays).
+    if (pos == (int)mStateSets.size()) mStateSets.push_back(stateSet);
+    else mStateSets[pos] = stateSet;
     return pos;
 }
 
@@ -52,16 +75,16 @@ int StateListDrawable::StateListState::indexOfStateSet(const std::vector<int>&st
 }
 
 bool StateListDrawable::StateListState::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateSets,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateSets,(int)cdroid::internal::R::attr::state_focused);
 }
 
 StateListDrawable::StateListDrawable(){
-    auto state = std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this,nullptr);
     setConstantState(state);
 }
 
 StateListDrawable::StateListDrawable(const ColorStateList&cls){
-    auto state = std::make_shared<StateListState>(nullptr,this);
+    auto state = std::make_shared<StateListState>(nullptr,this,nullptr);
     setConstantState(state);
     const std::vector<int>&colors = cls.getColors();
     const std::vector<std::vector<int>>& states = cls.getStates();
@@ -70,14 +93,14 @@ StateListDrawable::StateListDrawable(const ColorStateList&cls){
     }
 }
 
-StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state){
-    std::shared_ptr<StateListState>newState = std::make_shared<StateListState>(state.get(), this);
+StateListDrawable::StateListDrawable(std::shared_ptr<StateListState>state,Resources*res){
+    std::shared_ptr<StateListState>newState = std::make_shared<StateListState>(state.get(), this, res);
     setConstantState(newState);
     onStateChange(getState());
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState>StateListDrawable::cloneConstantState(){
-    return std::make_shared<StateListState>(mStateListState.get(),this);
+    return std::make_shared<StateListState>(mStateListState.get(),this,nullptr);
 }
 
 StateListDrawable*StateListDrawable::mutate(){
@@ -115,7 +138,7 @@ void StateListDrawable::addState(const std::vector<int>&stateSet, Drawable* draw
 }
 
 bool StateListDrawable::hasFocusStateSpecified()const{
-    return StateSet::containsAttribute(mStateListState->mStateSets,StateSet::FOCUSED);
+    return StateSet::containsAttribute(mStateListState->mStateSets,(int)cdroid::internal::R::attr::state_focused);
 }
 
 int StateListDrawable::getStateCount()const{
@@ -138,52 +161,105 @@ bool StateListDrawable::onStateChange(const std::vector<int>&stateSet){
     const bool changed = DrawableContainer::onStateChange(stateSet);
     int  idx = mStateListState->indexOfStateSet(stateSet);
     if(idx<0)idx = mStateListState->indexOfStateSet(StateSet::WILD_CARD);
-    LOGV("%p set stateIndex[%d/%d]=%p",this,idx,getChildCount(),getChild(idx));
+    // idx may stay -1 when nothing matches (no wildcard item); selectDrawable
+    // handles that — never call getChild with it (bounds-checked .at throws).
+    LOGV("%p set stateIndex[%d/%d]",this,idx,getChildCount());
     return selectDrawable(idx)||changed;
 }
 
-void StateListDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflateWithAttributes(parser,atts);
-    updateStateFromTypedArray(atts);
-    inflateChildElements(parser,atts);
+// AOSP StateListDrawable.canApplyTheme/applyTheme.
+bool StateListDrawable::canApplyTheme(){
+    return (mStateListState && !mStateListState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void StateListDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mStateListState && !mStateListState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mStateListState->mThemeAttrs, R::styleable::StateListDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mStateListState->mThemeAttrs.clear();
+    }
     onStateChange(getState());
 }
 
-void StateListDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
+void StateListDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    (void)r;
+    Drawable::inflateWithAttributes(parser,atts);
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawable);
+    if (ta) updateStateFromTypedArray(*ta);
+    inflateChildElements(r,parser,atts, theme);
+    onStateChange(getState());
+}
+
+void StateListDrawable::updateStateFromTypedArray(const TypedArray& a) {
     auto state = mStateListState;
 
     // Account for any configuration changes.
     //state->mChangingConfigurations |= a.getChangingConfigurations();
     // Extract the theme attributes, if any.
-    //state->mThemeAttrs = a.extractThemeAttrs();
+    state->mThemeAttrs = a.extractThemeAttrs();
 
-    state->mVariablePadding = atts.getBoolean("variablePadding", state->mVariablePadding);
-    state->mConstantSize = atts.getBoolean("constantSize", state->mConstantSize);
-    state->mEnterFadeDuration = atts.getInt("enterFadeDuration", state->mEnterFadeDuration);
-    state->mExitFadeDuration = atts.getInt("exitFadeDuration", state->mExitFadeDuration);
-    state->mDither = atts.getBoolean("dither", state->mDither);
-    state->mAutoMirrored = atts.getBoolean("autoMirrored", state->mAutoMirrored);
+    state->mVariablePadding = a.getBoolean(R::styleable::StateListDrawable_variablePadding, state->mVariablePadding);
+    state->mConstantSize = a.getBoolean(R::styleable::StateListDrawable_constantSize, state->mConstantSize);
+    state->mEnterFadeDuration = a.getInt(R::styleable::StateListDrawable_enterFadeDuration, state->mEnterFadeDuration);
+    state->mExitFadeDuration = a.getInt(R::styleable::StateListDrawable_exitFadeDuration, state->mExitFadeDuration);
+    state->mDither = a.getBoolean(R::styleable::StateListDrawable_dither, state->mDither);
+    state->mAutoMirrored = a.getBoolean(R::styleable::StateListDrawable_autoMirrored, state->mAutoMirrored);
 }
 
-void StateListDrawable::inflateChildElements(XmlPullParser&parser,const AttributeSet&atts){
+void StateListDrawable::inflateChildElements(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
     int type,depth;
     const int innerDepth = parser.getDepth()+1;
+    // AOSP StateListDrawable.inflateChildElements: the loop must stop at the
+    // selector's own END_TAG (depth < innerDepth). The old
+    // `(next()!=END_DOCUMENT && depth>=innerDepth) || type==END_TAG` grouped
+    // as (A && B) || C, so ANY end tag kept it alive: the loop swallowed the
+    // enclosing tags and only stopped on the NEXT SIBLING's START_TAG, which
+    // the parent loop then never saw (a <selector> followed by a sibling
+    // element lost that sibling — e.g. seekbar_track_material dropped its
+    // progress layer and inflated with 2 layers).
     while( ((type=parser.next())!=XmlPullParser::END_DOCUMENT)
-            &&((depth=parser.getDepth())>=innerDepth)||(type==XmlPullParser::END_TAG)){
+            &&(((depth=parser.getDepth())>=innerDepth)||(type!=XmlPullParser::END_TAG))){
         if(type!=XmlPullParser::START_TAG)continue;
         if((depth>innerDepth)||parser.getName().compare("item"))continue;
 
         std::vector<int>states;
-        Drawable*dr = atts.getDrawable("drawable");
-        StateSet::parseState(states,atts);
+        auto ta = obtainAttributes(r, theme, atts, R::styleable::StateListDrawableItem);
+        Drawable*dr = ta->getDrawable(R::styleable::StateListDrawableItem_drawable);
+        states = extractStateSet(atts);
         if(dr==nullptr){
             while((type=parser.next())==XmlPullParser::TEXT){}
             if(type!=XmlPullParser::START_TAG)
                 throw std::logic_error("<item> tag requires a 'drawable' attribute or child tag defining a drawable");
-            dr = Drawable::createFromXmlInner(parser,atts);
+            dr = Drawable::createFromXmlInner(r,parser,atts, theme);
         }
         mStateListState->addStateSet(states,dr);
     }
+}
+
+// AOSP StateListDrawable.extractStateSet, verbatim: the fixed-size array and
+// the trailing trimStateSet collapse to the pushed entries (the vector only
+// ever holds the valid states).
+std::vector<int> StateListDrawable::extractStateSet(const AttributeSet& attrs) const {
+    int j = 0;
+    const int numAttrs = attrs.getAttributeCount();
+    std::vector<int> states(numAttrs);
+    for (int i = 0; i < numAttrs; i++) {
+        const int stateResId = attrs.getAttributeNameResource(i);
+        switch (stateResId) {
+            case 0:
+                break;
+            case R::attr::drawable:
+            case R::attr::id:
+                // Ignore attributes from StateListDrawableItem and
+                // AnimatedStateListDrawableItem.
+                continue;
+            default:
+                states[j++] = attrs.getAttributeBooleanValue(i, false) ? stateResId : -stateResId;
+        }
+    }
+    StateSet::trimStateSet(states, j);
+    return states;
 }
 
 }

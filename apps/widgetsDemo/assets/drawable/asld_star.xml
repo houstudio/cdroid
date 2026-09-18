@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AnimatedStateListDrawable demo: favorite star. Toggling the host view's
+     activated state plays the matching <transition> AVD; without a matching
+     transition pair the state would just switch instantly. -->
+<animated-selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/marked"
+        android:state_activated="true"
+        android:drawable="@drawable/star_filled" />
+    <item
+        android:id="@+id/unmarked"
+        android:drawable="@drawable/star_outline" />
+    <transition
+        android:fromId="@id/unmarked"
+        android:toId="@id/marked"
+        android:drawable="@drawable/star_to_marked" />
+    <transition
+        android:fromId="@id/marked"
+        android:toId="@id/unmarked"
+        android:drawable="@drawable/star_to_unmarked" />
+</animated-selector>

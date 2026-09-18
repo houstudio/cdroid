@@ -27,8 +27,10 @@ private:
     friend class AnimatorInflater;
     class StateListAnimatorConstantState: public std::enable_shared_from_this<StateListAnimatorConstantState>,public ConstantState<StateListAnimator*>{
     protected:
+        // Owns the source animator (AOSP relies on GC); see Animator's
+        // AnimatorConstantState for the ownership contract.
+        std::shared_ptr<StateListAnimator> mAnimator;
         int mChangingConf;
-        StateListAnimator*mAnimator;
     public:
         StateListAnimatorConstantState(StateListAnimator*animator);
         int getChangingConfigurations()override;
@@ -39,7 +41,8 @@ private:
     Tuple* mLastMatch;
     Animator*mRunningAnimator;
     class View*mView;
-    std::shared_ptr<StateListAnimatorConstantState> mConstantState;
+    // weak: the constant state owns the animator, a shared back-ref would cycle.
+    std::weak_ptr<StateListAnimatorConstantState> mConstantState;
     ValueAnimator::AnimatorListener mAnimatorListener;
     int mChangingConfigurations;
 

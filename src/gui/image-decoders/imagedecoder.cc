@@ -23,8 +23,12 @@
 #include <drawable/bitmapdrawable.h>
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/animatedimagedrawable.h>
+#include <image-decoders/framesequence.h>
 #include <image-decoders/imagedecoder.h>
-#include <utils/textutils.h>
+#include <content/typedvalue.h>  // TypedValue (id-based decodeDrawable path)
+#include <content/asset.h>            // Asset (openRawResource / openAsset face)
+#include <core/iostreams.h>           // AssetInputStream
+#include <text/textutils.h>
 #include <core/context.h>
 #include <png.h>
 #include <porting/cdlog.h>
@@ -128,6 +132,15 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
             if(transparentCount&&opaqueCount) return PixelFormat::TRANSLUCENT;
         }
     }
+    // Reaching here the surface holds only alpha==0 and/or alpha==255 pixels
+    // (any partial alpha returned TRANSLUCENT inside the loop, and a mix of the
+    // two returned TRANSLUCENT at the pair check). All-opaque -> OPAQUE; but
+    // ALL-TRANSPARENT is TRANSPARENT, never OPAQUE: BitmapDrawable's draw fast
+    // path switches to the SOURCE operator on OPAQUE, and a fully-transparent
+    // snapshot drawn with SOURCE erases the backdrop underneath it (the
+    // fragment-exit copyViewImage snapshot during a Slide transition blanked
+    // the whole content area to transparent-black, composing as a black flash).
+    if (transparentCount > 0) return PixelFormat::TRANSPARENT;
     return PixelFormat::OPAQUE;
 }
 
@@ -137,8 +150,16 @@ int ImageDecoder::getTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     if(bmp){
         unsigned long len;
         const unsigned char*data= bmp->get_mime_data((const char*)TRANSPARENCY,len);
-        const int transparency = int((unsigned long)data);
-        return transparency?transparency:int(PixelFormat::OPAQUE);
+        if(data) return int((unsigned long)data);
+        /* Untagged = a runtime-baked surface or a decoder that does not
+         * stamp (JPEG/GIF). AOSP's createBitmap(ARGB_8888) defaults
+         * hasAlpha=true, but an actually-opaque JPEG must stay OPAQUE
+         * (the draw path's SOURCE-operator fast path): scan the pixels
+         * once and stamp the verdict, so every later reader (clones,
+         * re-resolution) hits the tag instead of rescanning. */
+        const int transparency = computeTransparency(bmp);
+        setTransparency(bmp, transparency);
+        return transparency;
     }
     return PixelFormat::TRANSPARENT;
 }
@@ -208,9 +229,15 @@ std::unique_ptr<ImageDecoder>ImageDecoder::getDecoder(std::istream&istm){
     return nullptr;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
+Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height,
+                                                          std::vector<uint8_t>* ninePatchChunk){
     float scale = 1.f;
-    std::unique_ptr<ImageDecoder>decoder = getDecoder(istm);
+    // getDetector reads the magic then seeks back to 0, so the source stream
+    // must seek reliably. Slurp into a seekable istringstream first — same fix
+    // decodeDrawable uses.
+    std::string data((std::istreambuf_iterator<char>(istm)), std::istreambuf_iterator<char>());
+    std::istringstream seekable(std::move(data));
+    std::unique_ptr<ImageDecoder>decoder = getDecoder(seekable);
     if(decoder == nullptr)
         return nullptr;
     if((width > 0) && (height > 0))
@@ -219,20 +246,50 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
         scale = std::min(scale,float(width)/decoder->getWidth());
     else if(height > 0)
         scale = std::max(scale,float(height)/decoder->getHeight());
-    return decoder->decode(scale,mLCMSProfile.get());
+    Cairo::RefPtr<Cairo::ImageSurface> image = decoder->decode(scale,mLCMSProfile.get());
+    // Read the 9-patch chunk AFTER decode — the user-chunk callback (npTc/cdNp)
+    // fires during png_read_info inside decode, so it isn't available before.
+    if(ninePatchChunk){
+        const std::vector<uint8_t>* c = decoder->getNinePatchChunk();
+        if(c) *ninePatchChunk = *c;
+    }
+    return image;
 }
 
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
     std::unique_ptr<ImageDecoder>decoder;
-    std::unique_ptr<std::istream>istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
+    std::unique_ptr<std::istream>istm;
+    if(ctx){
+        Asset*asset = ctx->openAsset(resourceId);
+        if(asset) istm = std::unique_ptr<std::istream>(new AssetInputStream(asset));
+    }else istm = std::make_unique<std::ifstream>(resourceId);
     if((istm == nullptr)||(!*istm))
         return nullptr;
     return loadImage(*istm,width,height);
 }
 
-Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
-    std::unique_ptr<std::istream> istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
-    std::unique_ptr<ImageDecoder> decoder = ((istm==nullptr)||(!*istm))?nullptr:getDecoder(*istm);
+Drawable*ImageDecoder::decodeDrawable(Context*ctx,const std::string&resourceId){
+    std::unique_ptr<std::istream> istm;
+    if(ctx){
+        Asset*asset = ctx->openAsset(resourceId);
+        if(asset) istm = std::unique_ptr<std::istream>(new AssetInputStream(asset));
+    }else istm = std::make_unique<std::ifstream>(resourceId);
+    if((istm==nullptr)||(!*istm)) return nullptr;
+    return decodeDrawableStream(ctx, std::move(istm), resourceId);
+}
+
+// Shared decode core for decodeDrawable(string) and decodeDrawable(int).
+// `path` is the file path (for 9-patch/.gif/.webp/.png checks + AnimatedImage).
+Drawable* ImageDecoder::decodeDrawableStream(Context* ctx,
+        std::unique_ptr<std::istream> istm, const std::string& path) {
+    if ((istm == nullptr) || (!*istm)) return nullptr;
+    // Slurp into a seekable in-memory buffer. getDetector reads the magic then
+    // seeks back to 0 (libpng re-reads the signature), so the decode needs a
+    // reliably seekable stream; an istringstream seeks regardless of the
+    // source stream's seek behavior.
+    auto seekable = std::make_unique<std::istringstream>(
+        std::string((std::istreambuf_iterator<char>(*istm)), std::istreambuf_iterator<char>()));
+    std::unique_ptr<ImageDecoder> decoder = getDecoder(*seekable);
     Cairo::RefPtr<Cairo::ImageSurface> image = decoder?decoder->decode(1.0):nullptr;
 
     if(image && decoder && (decoder->getFrameCount()==1)){
@@ -241,30 +298,82 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         // .png, so the filename no longer carries .9). Keep the .9.png fallback for any
         // bordered source loaded directly without an embedded chunk.
         const std::vector<uint8_t>* npChunk = decoder ? decoder->getNinePatchChunk() : nullptr;
-        if(npChunk != nullptr || TextUtils::endWith(resourceId,".9.png"))
+        if(npChunk != nullptr || TextUtils::endWith(path,".9.png"))
             d = new NinePatchDrawable(image, npChunk);
         else if( (image->get_width() >0) && (image->get_height() > 0) ){
-            //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
         }
         if(d != nullptr) {
 #if !defined(NDEBUG)
-            d->getConstantState()->mResource=resourceId;
+            d->getConstantState()->mResource=path;
 #endif
             return d;
         }
     }
 
-    if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
-            ||TextUtils::endWith(resourceId,".apng")||TextUtils::endWith(resourceId,".png"))){
-	    Drawable* d = new AnimatedImageDrawable(ctx,resourceId);
-        LOGD_IF(d==nullptr,"%s load failed!",resourceId.c_str());
+    if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(path,".gif")||TextUtils::endWith(path,".webp")
+            ||TextUtils::endWith(path,".apng")||TextUtils::endWith(path,".png"))){
+        // AOSP ImageDecoder.createSource(File) vs (Resources,resId): a Context
+        // means the path is a pak asset, otherwise it is a plain file.
+        Drawable* d = ctx ? (Drawable*)new AnimatedImageDrawable(ctx->openAsset(path))
+                          : (Drawable*)new AnimatedImageDrawable(path);
+        LOGD_IF(d==nullptr,"%s load failed!",path.c_str());
         if(d != nullptr){
-            d->getConstantState()->mResource=resourceId;
+            d->getConstantState()->mResource=path;
             return d;
         }
     }
     return nullptr;
+}
+
+Drawable* ImageDecoder::decodeDrawable(Resources& res, int id) {
+    // AOSP ImageDecoder.createSource(Resources, resId): resolve the file path
+    // (for 9-patch / animated-extension checks) + open the asset by id, all
+    // through the Resources face.
+    TypedValue tv;
+    if (!res.getValue(id, &tv, true) || tv.type != TypedValue::TYPE_STRING) return nullptr;
+    std::string path = TextUtils::utf16_utf8(reinterpret_cast<const uint16_t*>(tv.string), tv.stringLen);
+    std::unique_ptr<Asset> asset(res.openRawResource(id));
+    if (asset == nullptr) return nullptr;
+    const off64_t sz = asset->getLength();
+    if (sz <= 0) return nullptr;
+    // Decode-time density fixup (AOSP BitmapFactory.decodeResourceStream):
+    // normalize the TypedValue bucket density once — DENSITY_DEFAULT
+    // (unqualified res/) -> display default, DENSITY_NONE (nodpi) -> 0 = raw
+    // sizes, anything else is the bucket as-is (android-36 :843-848, the same
+    // mapping as BitmapDrawable::updateStateFromTypedArray). Static formats
+    // only: animated (FrameSequence) drawables intentionally skip density —
+    // per-frame resampling costs more than it buys (raw frame intrinsics).
+    // Target density comes from the display metrics.
+    int srcDensity = 0;
+    if (tv.density == TypedValue::DENSITY_DEFAULT) {
+        srcDensity = DisplayMetrics::DENSITY_DEFAULT;
+    } else if (tv.density != TypedValue::DENSITY_NONE) {
+        srcDensity = tv.density;
+    }
+    // Animated formats take the zero-copy fast path: one asset open, the
+    // buffer handed straight to AnimatedImageDrawable (no slurp, no reopen).
+    if (FrameSequence::isAnimated(asset->getBuffer(false), (size_t)sz)) {
+        Drawable* d = new AnimatedImageDrawable(asset.release());
+        if (d) {
+            d->getConstantState()->mResource = path;
+            return d;
+        }
+        return nullptr;
+    }
+    // Static formats decode through the same zero-copy view (the Asset outlives
+    // the synchronous decode below) — the old slurp-into-string copy is gone.
+    Drawable* d = decodeDrawableStream(res.getContext(),
+            std::unique_ptr<std::istream>(new MemoryInputStream(
+                    (const char*)asset->getBuffer(false), (size_t)sz)), path);
+    if (auto* npd = dynamic_cast<NinePatchDrawable*>(d)) {
+        npd->setSourceDensity(srcDensity);
+        npd->setTargetDensity(res.getDisplayMetrics().densityDpi);
+    } else if (auto* bd = dynamic_cast<BitmapDrawable*>(d)) {
+        bd->setSourceDensity(srcDensity);
+        bd->setTargetDensity(res.getDisplayMetrics().densityDpi);
+    }
+    return d;
 }
 
 }/*endof namespace*/

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="?android:attr/colorBackground">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
+
+                <!-- Copies stepper -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:gravity="center_vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_blue">
+                        <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                            android:src="@drawable/ic_copy_blue" android:importantForAccessibility="no"/>
+                    </FrameLayout>
+                    <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                        android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/copy_copies" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    <!-- Copies: horizontal Material wheel (virtual +/- tap zones,
+                         drag/fling to scroll, tap the value to type). -->
+                    <NumberPicker android:id="@+id/np_copies"
+                        android:layout_width="170dp"
+                        android:layout_height="48dp"
+                        android:orientation="horizontal"/>
+                </LinearLayout>
+
+                <!-- Color mode -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_purple">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                                android:src="@drawable/ic_drop_purple" android:importantForAccessibility="no"/>
+                        </FrameLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp" android:text="@string/label_color" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <RadioGroup android:id="@+id/rg_color"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" android:orientation="horizontal">
+                        <RadioButton android:id="@+id/rb_bw" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="24dp" android:text="@string/mode_mono" android:checked="true"/>
+                        <RadioButton android:id="@+id/rb_color" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/mode_color"/>
+                    </RadioGroup>
+                </LinearLayout>
+
+                <!-- Duplex -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_amber">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                                android:src="@drawable/ic_flip_amber" android:importantForAccessibility="no"/>
+                        </FrameLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp" android:text="@string/label_duplex" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <RadioGroup android:id="@+id/rg_duplex"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" android:orientation="horizontal">
+                        <RadioButton android:id="@+id/rb_duplex_off" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="18dp" android:text="@string/duplex_off" android:checked="true"/>
+                        <RadioButton android:id="@+id/rb_duplex_long" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="18dp" android:text="@string/duplex_long"/>
+                        <RadioButton android:id="@+id/rb_duplex_short" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/duplex_short"/>
+                    </RadioGroup>
+                </LinearLayout>
+
+                <!-- Paper -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_green">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                                android:src="@drawable/ic_doc_green" android:importantForAccessibility="no"/>
+                        </FrameLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp" android:text="@string/label_paper" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <RadioGroup android:id="@+id/rg_paper"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" android:orientation="horizontal">
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="20dp" android:text="A4" android:checked="true"/>
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="20dp" android:text="Letter"/>
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="A3"/>
+                    </RadioGroup>
+                </LinearLayout>
+
+                <!-- Quality -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_blue">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                                android:src="@drawable/ic_quality_blue" android:importantForAccessibility="no"/>
+                        </FrameLayout>
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp" android:text="@string/label_quality" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                    </LinearLayout>
+                    <RadioGroup android:id="@+id/rg_quality"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp" android:orientation="horizontal">
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="20dp" android:text="@string/quality_draft"/>
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:layout_marginEnd="20dp" android:text="@string/quality_standard" android:checked="true"/>
+                        <RadioButton android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:text="@string/quality_high"/>
+                    </RadioGroup>
+                </LinearLayout>
+
+                <!-- Zoom 25-400% -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp" android:orientation="vertical"
+                    android:background="?attr/cardBackground" android:padding="16dp">
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:orientation="horizontal" android:gravity="center_vertical">
+                        <FrameLayout android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/chip_purple">
+                            <ImageView android:layout_width="22dp" android:layout_height="22dp" android:layout_gravity="center"
+                                android:src="@drawable/ic_zoom_purple" android:importantForAccessibility="no"/>
+                        </FrameLayout>
+                        <TextView android:layout_width="0dp" android:layout_height="wrap_content"
+                            android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/label_scale" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:id="@+id/tv_zoom" android:layout_width="wrap_content" android:layout_height="wrap_content"
+                            android:minWidth="56dp" android:gravity="end" android:text="100%" android:textSize="16sp" android:textStyle="bold" android:textColor="#FF1A73E8"/>
+                    </LinearLayout>
+                    <SeekBar android:id="@+id/seek_zoom"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp" android:max="400" android:progress="100"
+                        android:contentDescription="@string/label_scale"/>
+                </LinearLayout>
+            </LinearLayout>
+        </ScrollView>
+
+        <Button android:id="@+id/btn_start"
+            android:layout_width="match_parent" android:layout_height="54dp"
+            android:layout_marginLeft="20dp" android:layout_marginRight="20dp" android:layout_marginBottom="18dp"
+            android:background="@drawable/btn_primary"
+            android:text="@string/copy_start" android:textColor="#FFFFFFFF" android:textSize="17sp" android:textStyle="bold"/>
+    </LinearLayout>
+
+    <!-- Printing overlay: progress + status narrative. clickable=true blocks interaction while "printing". -->
+    <FrameLayout android:id="@+id/print_overlay"
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:background="#B3000000" android:clickable="true" android:visibility="gone">
+        <LinearLayout
+            android:layout_width="280dp" android:layout_height="wrap_content"
+            android:layout_gravity="center" android:orientation="vertical" android:gravity="center_horizontal"
+            android:background="?attr/cardBackground" android:padding="30dp">
+            <ImageView android:layout_width="40dp" android:layout_height="40dp"
+                android:src="@drawable/ic_printer_white" android:background="@drawable/chip_blue" android:padding="8dp" android:importantForAccessibility="no"/>
+            <LinearLayout android:id="@+id/print_track"
+                android:layout_width="210dp" android:layout_height="10dp"
+                android:layout_marginTop="18dp"
+                android:orientation="horizontal" android:weightSum="100"
+                android:background="?attr/progressTrack" android:padding="2dp">
+                <View android:id="@+id/print_fill"
+                    android:layout_width="0dp" android:layout_height="match_parent"
+                    android:layout_weight="0"
+                    android:background="@drawable/bar_fill_blue"/>
+            </LinearLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="18dp" android:text="@string/copy_busy" android:textSize="16sp"
+                android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/print_status"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="6dp" android:text="@string/loading" android:textSize="13sp" android:textColor="?android:attr/textColorSecondary"/>
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

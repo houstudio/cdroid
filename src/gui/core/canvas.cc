@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <view/gravity.h>
 #include <windowmanager.h>
 using namespace std;

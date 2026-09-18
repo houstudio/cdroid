@@ -78,7 +78,11 @@ public:
     };
 protected:
     class ListItemAccessibilityDelegate:public AccessibilityDelegate{
+    private:
+       // Borrowed back-pointer (AOSP's inner class holds AbsListView.this).
+       AbsListView* mHost;
     public:
+       explicit ListItemAccessibilityDelegate(AbsListView* host):mHost(host){}
        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
        bool performAccessibilityAction(View& host, int action, Bundle* arguments)override;
     };
@@ -160,12 +164,28 @@ private:
     int mLastScrollState;
     int mLastAccessibilityScrollEventFromIndex;
     int mLastAccessibilityScrollEventToIndex;
-    ListItemAccessibilityDelegate* mAccessibilityDelegate;
+    // Shared item delegate (AOSP sets it on EVERY child from obtainView);
+    // refcounted per the delegate-ownership rules — children borrow a
+    // reference, the last ref frees. Was a raw pointer that the ctor never
+    // initialized and the lazy-create was TODO'd out: heap garbage survived
+    // the null check and got raw-set on every measured child (auto-test
+    // SIGSEGV in the delegate virtual call).
+    std::shared_ptr<ListItemAccessibilityDelegate> mAccessibilityDelegate;
     CheckForLongPress* mPendingCheckForLongPress;
     CheckForTap* mPendingCheckForTap;
     CheckForKeyLongPress* mPendingCheckForKeyLongPress;
     ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
     ViewTreeObserver::OnTouchModeChangeListener mTouchModeChangeListener;
+    // The observer instance the touchMode listener was registered on. Removed
+    // from THIS instance only — getViewTreeObserver() after a no-dispatch
+    // teardown hands back a fresh floating observer and the remove misses the
+    // real one, leaving a dangling listener that crashes the next layout.
+    ViewTreeObserver* mTouchObserverRegistered = nullptr;
+    // Weak-liveness flag (the PopupWindow mAliveFlag pattern): copies of the
+    // listener captured by tree observers share it; the dtor flips it so a
+    // stale registration can never dereference the dead list. AOSP relies on
+    // GC for exactly this window.
+    std::shared_ptr<bool> mAliveFlag;
     AbsListView::PerformClick* mPerformClick;
     FlingRunnable* mFlingRunnable;
     Runnable mTouchModeReset;
@@ -175,7 +195,12 @@ private:
     class EditText* mTextFilter;
     OnScrollListener mOnScrollListener;
 private:
-    void initAbsListView(const AttributeSet&atts);
+    void initAbsListView();
+    // AOSP places the styled-attribute reads in the ctor after initAbsListView();
+    // extracted here so both ctors (XML element attrs + the programmatic style-
+    // ref path) share one AOSP-aligned read sequence (binary TypedArray with a
+    // text-XML AttributeSet fallback).
+    void readAbsListViewAttrs(const AttributeSet* atts);
     void useDefaultSelector();
     std::vector<int>getDrawableStateForSelector();
     void setItemViewLayoutParams(View* child, int position);
@@ -239,7 +264,7 @@ protected:
     bool mAdapterHasStableIds;
     bool mIsDetaching;
     bool mIsScrap[2]; 
-    std::string mFastScrollStyle;
+    int mFastScrollStyle = 0;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -362,8 +387,9 @@ protected:
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
     void draw(Canvas&canvas)override;
 public:
-    AbsListView(int w,int h);
-    AbsListView(Context*,const AttributeSet&atts);
+    AbsListView(Context*ctx);   // AOSP AbsListView(Context)
+    AbsListView(Context*,const AttributeSet*atts);
+    AbsListView(Context*,const AttributeSet* attrs,int defStyleAttr);
     ~AbsListView()override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;
@@ -384,13 +410,15 @@ public:
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     virtual void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info);
+    void addAccessibilityActionIfEnabled(AccessibilityNodeInfo* info, bool enabled,
+            AccessibilityNodeInfo::AccessibilityAction* action);
 
     void reportScrollStateChange(int newState);
     void setFastScrollEnabled(bool);
     bool isFastScrollEnabled()const;
     int  getVerticalScrollbarWidth()const override;
     void setVerticalScrollbarPosition(int position)override;
-    void setFastScrollStyle(const std::string& styleid);
+    void setFastScrollStyle(int styleResId);
     void setFastScrollAlwaysVisible(bool alwaysShow);
     bool isFastScrollAlwaysVisible()const;
 
@@ -399,7 +427,7 @@ public:
     bool isDrawSelectorOnTop()const;
     Drawable*getSelector();
     void setSelector(Drawable*drawable);
-    void setSelector(const std::string&resid);
+    void setSelector(int resid);
     void getFocusedRect(Rect& r)override;
 
     void setScrollBarStyle(int style)override;

@@ -84,6 +84,7 @@ public:
     class ItemDecoration;
     class OnItemTouchListener;
     friend GridLayoutManager;
+    friend class LinearLayoutManager;  // androidx package-private access (a11y scroll-to-position)
     friend RecyclerViewAccessibilityDelegate;
     DECLARE_UIEVENT(bool,OnFlingListener,int,int);
     class ItemAnimator{
@@ -96,6 +97,7 @@ public:
             int bottom;
             int changeFlags;
             ItemHolderInfo();
+            virtual ~ItemHolderInfo() = default;
             ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder);
             ItemHolderInfo* setFrom(RecyclerView::ViewHolder& holder,int flags);
         };
@@ -135,7 +137,7 @@ public:
         void setRemoveDuration(long removeDuration);
         long getChangeDuration()const;
         void setChangeDuration(long changeDuration);
-        ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
+        virtual ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
         ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
 
         virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
@@ -154,7 +156,7 @@ public:
         virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder);
         virtual bool canReuseUpdatedViewHolder(ViewHolder& viewHolder,std::vector<Object*>& payloads);
         void dispatchAnimationsFinished();/*final*/
-        ItemHolderInfo* obtainHolderInfo();
+        virtual ItemHolderInfo* obtainHolderInfo();
     };
     class LayoutParams:public ViewGroup::MarginLayoutParams{
     protected:
@@ -259,7 +261,7 @@ private:
     void dispatchUpdate(void* /*AdapterHelper::UpdateOp*/ op);
     void initAutofill();
     void createLayoutManager(Context* context,const std::string& className,
-            const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/);
+            const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     std::string getFullClassName(Context* context,const std::string& className);
     void initChildrenHelper();
     void setAdapterInternal(Adapter* adapter, bool compatibleWithPrevious,bool removeAndRecycleViews);
@@ -342,7 +344,9 @@ protected:
     GapWorker* mGapWorker;
     /*GapWorker::LayoutPrefetchRegistryImpl*/void* mPrefetchRegistry;
     State* mState;
-    RecyclerViewAccessibilityDelegate* mAccessibilityDelegate;
+    // Refcounted: the ctor-created delegate is owned (freed with the last
+    // ref); the setter's raw-pointer variant stays borrowed (AOSP contract).
+    std::shared_ptr<RecyclerViewAccessibilityDelegate> mAccessibilityDelegate;
     std::vector<ViewHolder*> mPendingAccessibilityImportanceChange;
 
     void initAdapterManager();
@@ -421,12 +425,13 @@ protected:
     bool setChildImportantForAccessibilityInternal(ViewHolder* viewHolder,int importantForAccessibility);
     void dispatchPendingImportantForAccessibilityChanges();
     int getAdapterPositionInRecyclerView(const ViewHolder* viewHolder)const;
-    void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable, 
-             StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable,const AttributeSet&);
+    void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable,
+             StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable);
     int getChildDrawingOrder(int childCount, int i)override;
 public:
-    RecyclerView(int w,int h);
-    RecyclerView(Context* context,const AttributeSet& attrs);
+    RecyclerView(Context*ctx);   // AOSP RecyclerView(Context)
+    RecyclerView(Context* context,const AttributeSet* attrs);
+    RecyclerView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~RecyclerView()override;
     RecyclerViewAccessibilityDelegate* getCompatAccessibilityDelegate();
     void setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* accessibilityDelegate);
@@ -459,6 +464,9 @@ public:
     void setItemViewCacheSize(int size);
     int getScrollState()const;
     void setScrollState(int state);
+    // Ownership seam: unregister WITHOUT deleting (self-detach path and
+    // self-registering helpers whose `this` the RV must never free).
+    void detachItemDecoration(ItemDecoration* decor);
     void addItemDecoration(ItemDecoration* decor, int index);
     void addItemDecoration(ItemDecoration* decor);
     ItemDecoration* getItemDecorationAt(int index);
@@ -663,10 +671,24 @@ public:
 
 class RecyclerView::ItemDecoration{
 public:
-    virtual ~ItemDecoration()=default;
+    // Ownership protocol: while registered, the decoration is owned by its
+    // RecyclerView (the RV frees it in its own dtor). Destructing it early
+    // (external delete) self-detaches from the owner, so both "delete it
+    // yourself" and "let the RV reclaim it" are safe. A registered decoration
+    // must NOT be deleted by the RV path AND the owner simultaneously: the RV
+    // dtor moves the list out before deleting, which makes the self-detach a
+    // no-op there.
+    virtual ~ItemDecoration(){
+        if(mOwnerRV){
+            mOwnerRV->detachItemDecoration(this);
+        }
+    }
     virtual void onDraw(Canvas& c,RecyclerView& parent,State& state);
     virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
     virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
+private:
+    RecyclerView* mOwnerRV = nullptr;
+    friend class RecyclerView;
 };
 
 class RecyclerView::OnItemTouchListener:public EventSet{
@@ -766,7 +788,7 @@ public:
     virtual LayoutParams* generateDefaultLayoutParams()const=0;
     virtual bool checkLayoutParams(const LayoutParams* lp)const;
     virtual LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams& lp)const;
-    virtual LayoutParams* generateLayoutParams(Context* c,const AttributeSet& attrs)const;
+    virtual LayoutParams* generateLayoutParams(Context* c,const AttributeSet* attrs)const;
     virtual int scrollHorizontallyBy(int dx, Recycler& recycler, State& state);
     virtual int scrollVerticallyBy(int dy, Recycler& recycler, State& state);
     virtual bool canScrollHorizontally()const;
@@ -885,7 +907,7 @@ public:
     bool isLayoutHierarchical(Recycler& recycler,State& state);
     virtual bool performAccessibilityAction(Recycler& recycler, State& state,int action, Bundle* args);
     virtual bool performAccessibilityActionForItem(Recycler& recycler,State& state, View& view, int action, Bundle* args);
-    static Properties getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
+    static Properties getProperties(Context* context,const AttributeSet* attrs,int defStyleAttr, int defStyleRes);
 };
 
 class RecyclerView::EdgeEffectFactory {
@@ -927,7 +949,13 @@ protected:
     void attachForPoolingContainer(Adapter*adapter);
     void detachForPoolingContainer(Adapter*adapter, bool isBeingReplaced);
 public:
-    static constexpr int DEFAULT_MAX_SCRAP = 5;
+    // AOSP default is 5. TEMPORARY MITIGATION (dedicated study pending):
+    // pool overflow DELETES the ViewHolder+itemView, while a live transition
+    // clone (default Fade on fragment replace) still holds those views in its
+    // captured startValues -> UAF at preDraw. A larger default keeps typical
+    // screens (the 14-row Settings root) from spilling; the overflow-delete
+    // vs transition-lifetime problem itself is tracked for a proper fix.
+    static constexpr int DEFAULT_MAX_SCRAP = 32;
     RecycledViewPool();
     virtual ~RecycledViewPool();
     void clear();

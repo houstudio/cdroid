@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
+#include <widget/internal_R.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 #include <widgetEx/recyclerview/scrollbarhelper.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
@@ -46,9 +47,9 @@ LinearLayoutManager::LinearLayoutManager(Context* context,int orientation,bool r
     setReverseLayout(reverseLayout);
 }
 
-LinearLayoutManager::LinearLayoutManager(Context* context, const AttributeSet& attrs)
+LinearLayoutManager::LinearLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
      :LinearLayoutManager(context){
-    Properties properties = getProperties(context, attrs,0,0);//, defStyleAttr, defStyleRes);
+    Properties properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     setOrientation(properties.orientation);
     setReverseLayout(properties.reverseLayout);
     setStackFromEnd(properties.stackFromEnd);
@@ -100,9 +101,7 @@ void LinearLayoutManager::onInitializeAccessibilityNodeInfo(RecyclerView::Recycl
     // TODO(b/251823537)
     RecyclerView::Adapter*adapter = mRecyclerView->getAdapter();
     if (adapter != nullptr && adapter->getItemCount() > 0) {
-        if (Build::VERSION::SDK_INT >= Build::VERSION_CODES::M) {
-            //info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION);
-        }
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION);
     }
 }
 
@@ -110,24 +109,23 @@ bool LinearLayoutManager::performAccessibilityAction(int action,Bundle* args){
     if (LayoutManager::performAccessibilityAction(action, args)) {
         return true;
     }
-#if 0
-    if (action == R::id::accessibilityActionScrollToPosition && args != nullptr) {
+    if (action == internal::R::id::accessibilityActionScrollToPosition && args != nullptr) {
         int position = -1;
 
         if (mOrientation == VERTICAL) {
-            const int rowArg = args.getInt( AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
+            const int rowArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
             if (rowArg < 0) {
                 return false;
             }
-            position = std::min(rowArg, getRowCountForAccessibility(mRecyclerView->mRecycler,
-                    mRecyclerView->mState) - 1);
+            position = std::min(rowArg,
+                    getRowCountForAccessibility(*mRecyclerView->mRecycler, *mRecyclerView->mState) - 1);
         } else { // horizontal
-            const int columnArg = args.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, -1);
+            const int columnArg = args->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_COLUMN_INT, -1);
             if (columnArg < 0) {
                 return false;
             }
-            position = std::min(columnArg, getColumnCountForAccessibility(mRecyclerView->mRecycler,
-                            mRecyclerView->mState) - 1);
+            position = std::min(columnArg,
+                    getColumnCountForAccessibility(*mRecyclerView->mRecycler, *mRecyclerView->mState) - 1);
         }
         if (position >= 0) {
             // We want the target element to be the first on screen. That way, a
@@ -137,7 +135,6 @@ bool LinearLayoutManager::performAccessibilityAction(int action,Bundle* args){
             return true;
         }
     }
-#endif
     return false;
 }
 

@@ -27,11 +27,12 @@ namespace cdroid {
 
 DECLARE_WIDGET(BarcodeView)
 
-BarcodeView::BarcodeView(int w,int h):View(w,h) {
-    initView();
-};
+BarcodeView::BarcodeView(Context*ctx):BarcodeView(ctx,nullptr){}
 
-BarcodeView::BarcodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs) {
+BarcodeView::BarcodeView(Context*ctx,const AttributeSet*attrs):BarcodeView(ctx,attrs,0){}
+
+BarcodeView::BarcodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr)
+    :View(ctx,attrs,defStyleAttr){
     initView();
 }
 

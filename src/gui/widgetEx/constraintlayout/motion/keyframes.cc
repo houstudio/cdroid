@@ -19,8 +19,12 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.KeyFrames.
  */
+#include <widget/internal_R.h>
+#include <core/context.h>
+#include <content/typedarray.h>
 #include <widgetEx/constraintlayout/motion/keyframes.h>
 
+#include <widgetEx/widgetex_styleable.h>
 #include <core/xmlpullparser.h>
 
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
@@ -30,101 +34,106 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
-// Enum-name -> int map for keyPositionType. The static constexpr position-type constants are cast
-// to int inline at the use site (a prvalue) to avoid odr-using them.
-const std::unordered_map<std::string, int> kPositionType = {
-    {"deltaRelative",  (int)MotionKeyPosition::TYPE_CARTESIAN},
-    {"cartesian",      (int)MotionKeyPosition::TYPE_CARTESIAN},
-    {"pathRelative",   (int)MotionKeyPosition::TYPE_PATH},
-    {"path",           (int)MotionKeyPosition::TYPE_PATH},
-    {"parentRelative", (int)MotionKeyPosition::TYPE_SCREEN},
-    {"screen",         (int)MotionKeyPosition::TYPE_SCREEN},
-    {"axisRelative",   (int)MotionKeyPosition::TYPE_AXIS},
-    {"axis",           (int)MotionKeyPosition::TYPE_AXIS}
-};
 
-// Read the attributes common to every keyframe type: motionTarget (view id) + framePosition (0..100).
-void loadCommon(MotionKey& k, const AttributeSet& a) {
-    k.mViewId = a.getResourceId("motionTarget", k.mViewId);
-    k.mFramePosition = a.getInt("framePosition", k.mFramePosition);
-}
+// motionTarget (view id) + framePosition are common to every keyframe but sit at
+// different indices per styleable, so each make* reads them from its own TypedArray.
 
-std::unique_ptr<MotionKey> makeKeyAttribute(const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyAttribute(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyAttributes>();
-    loadCommon(*k, a);
-    k->mAlpha       = a.getFloat("alpha", k->mAlpha);
-    k->mElevation   = a.getFloat("elevation", k->mElevation);
-    k->mRotation    = a.getFloat("rotation", k->mRotation);
-    k->mRotationX   = a.getFloat("rotationX", k->mRotationX);
-    k->mRotationY   = a.getFloat("rotationY", k->mRotationY);
-    k->mPivotX      = a.getFloat("transformPivotX", k->mPivotX);
-    k->mPivotY      = a.getFloat("transformPivotY", k->mPivotY);
-    k->mScaleX      = a.getFloat("scaleX", k->mScaleX);
-    k->mScaleY      = a.getFloat("scaleY", k->mScaleY);
-    k->mTranslationX = a.getFloat("translationX", k->mTranslationX);
-    k->mTranslationY = a.getFloat("translationY", k->mTranslationY);
-    k->mTranslationZ = a.getFloat("translationZ", k->mTranslationZ);
-    k->mTransitionPathRotate = a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
-    k->mProgress    = a.getFloat("motionProgress", k->mProgress);
-    k->mCurveFit    = a.getInt("curveFit", k->mCurveFit);
-    k->mVisibility  = a.getBoolean("visibility", k->mVisibility != 0) ? 1 : 0;
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyAttribute);
+    if (ta) {
+        namespace KA = R::styleable;
+        k->mViewId        = (int)ta->getResourceId(KA::KeyAttribute_motionTarget, k->mViewId);
+        k->mFramePosition = ta->getInt(KA::KeyAttribute_framePosition, k->mFramePosition);
+        k->mAlpha       = ta->getFloat(KA::KeyAttribute_alpha, k->mAlpha);
+        k->mElevation   = ta->getFloat(KA::KeyAttribute_elevation, k->mElevation);
+        k->mRotation    = ta->getFloat(KA::KeyAttribute_rotation, k->mRotation);
+        k->mRotationX   = ta->getFloat(KA::KeyAttribute_rotationX, k->mRotationX);
+        k->mRotationY   = ta->getFloat(KA::KeyAttribute_rotationY, k->mRotationY);
+        k->mPivotX      = ta->getFloat(KA::KeyAttribute_transformPivotX, k->mPivotX);
+        k->mPivotY      = ta->getFloat(KA::KeyAttribute_transformPivotY, k->mPivotY);
+        k->mScaleX      = ta->getFloat(KA::KeyAttribute_scaleX, k->mScaleX);
+        k->mScaleY      = ta->getFloat(KA::KeyAttribute_scaleY, k->mScaleY);
+        k->mTranslationX = ta->getFloat(KA::KeyAttribute_translationX, k->mTranslationX);
+        k->mTranslationY = ta->getFloat(KA::KeyAttribute_translationY, k->mTranslationY);
+        k->mTranslationZ = ta->getFloat(KA::KeyAttribute_translationZ, k->mTranslationZ);
+        k->mTransitionPathRotate = ta->getFloat(KA::KeyAttribute_transitionPathRotate, k->mTransitionPathRotate);
+        k->mProgress    = ta->getFloat(KA::KeyAttribute_motionProgress, k->mProgress);
+        k->mCurveFit    = ta->getInt(KA::KeyAttribute_curveFit, k->mCurveFit);
+    }
     return k;
 }
 
-std::unique_ptr<MotionKey> makeKeyPosition(const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyPosition(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyPosition>();
-    loadCommon(*k, a);
-    k->mTransitionEasing = a.getString("transitionEasing", k->mTransitionEasing);
-    k->mDrawPath       = a.getInt("drawPath", k->mDrawPath);
-    k->mPercentX       = a.getFloat("percentX", k->mPercentX);
-    k->mPercentY       = a.getFloat("percentY", k->mPercentY);
-    k->mPercentWidth   = a.getFloat("percentWidth", k->mPercentWidth);
-    k->mPercentHeight  = a.getFloat("percentHeight", k->mPercentHeight);
-    k->mAltPercentX    = a.getFloat("sizePercent", k->mAltPercentX);
-    k->mPathMotionArc  = a.getInt("pathMotionArc", k->mPathMotionArc);
-    k->mPositionType   = a.getInt("keyPositionType", kPositionType, k->mPositionType);
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyPosition);
+    if (ta) {
+        namespace KP = R::styleable;
+        k->mViewId        = (int)ta->getResourceId(KP::KeyPosition_motionTarget, k->mViewId);
+        k->mFramePosition = ta->getInt(KP::KeyPosition_framePosition, k->mFramePosition);
+        k->mTransitionEasing = ta->getString(KP::KeyPosition_transitionEasing);
+        k->mDrawPath       = ta->getInt(KP::KeyPosition_drawPath, k->mDrawPath);
+        k->mPercentX       = ta->getFloat(KP::KeyPosition_percentX, k->mPercentX);
+        k->mPercentY       = ta->getFloat(KP::KeyPosition_percentY, k->mPercentY);
+        k->mPercentWidth   = ta->getFloat(KP::KeyPosition_percentWidth, k->mPercentWidth);
+        k->mPercentHeight  = ta->getFloat(KP::KeyPosition_percentHeight, k->mPercentHeight);
+        k->mAltPercentX    = ta->getFloat(KP::KeyPosition_sizePercent, k->mAltPercentX);
+        k->mPathMotionArc  = ta->getInt(KP::KeyPosition_pathMotionArc, k->mPathMotionArc);
+        k->mPositionType   = ta->getInt(KP::KeyPosition_keyPositionType, k->mPositionType);
+    }
     return k;
 }
 
 // KeyCycle and KeyTimeCycle share the same attribute set (wave params + transform values).
 template <typename KeyT>
-std::unique_ptr<MotionKey> makeKeyCycle(const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyCycle(Context* ctx, const AttributeSet* a) {
     auto k = std::make_unique<KeyT>();
-    loadCommon(*k, a);
-    k->mWaveShape  = a.getInt("waveShape", k->mWaveShape);
-    k->mWavePeriod = a.getFloat("wavePeriod", k->mWavePeriod);
-    k->mWaveOffset = a.getFloat("waveOffset", k->mWaveOffset);
-    k->mAlpha       = a.getFloat("alpha", k->mAlpha);
-    k->mElevation   = a.getFloat("elevation", k->mElevation);
-    k->mRotation    = a.getFloat("rotation", k->mRotation);
-    k->mRotationX   = a.getFloat("rotationX", k->mRotationX);
-    k->mRotationY   = a.getFloat("rotationY", k->mRotationY);
-    k->mScaleX      = a.getFloat("scaleX", k->mScaleX);
-    k->mScaleY      = a.getFloat("scaleY", k->mScaleY);
-    k->mTranslationX = a.getFloat("translationX", k->mTranslationX);
-    k->mTranslationY = a.getFloat("translationY", k->mTranslationY);
-    k->mTranslationZ = a.getFloat("translationZ", k->mTranslationZ);
-    k->mTransitionPathRotate = a.getFloat("transitionPathRotate", k->mTransitionPathRotate);
-    k->mProgress    = a.getFloat("motionProgress", k->mProgress);
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyCycle);
+    if (ta) {
+        namespace KC = R::styleable;
+        k->mViewId        = (int)ta->getResourceId(KC::KeyCycle_motionTarget, k->mViewId);
+        k->mFramePosition = ta->getInt(KC::KeyCycle_framePosition, k->mFramePosition);
+        k->mWaveShape  = ta->getInt(KC::KeyCycle_waveShape, k->mWaveShape);
+        k->mWavePeriod = ta->getFloat(KC::KeyCycle_wavePeriod, k->mWavePeriod);
+        k->mWaveOffset = ta->getFloat(KC::KeyCycle_waveOffset, k->mWaveOffset);
+        k->mAlpha       = ta->getFloat(KC::KeyCycle_alpha, k->mAlpha);
+        k->mElevation   = ta->getFloat(KC::KeyCycle_elevation, k->mElevation);
+        k->mRotation    = ta->getFloat(KC::KeyCycle_rotation, k->mRotation);
+        k->mRotationX   = ta->getFloat(KC::KeyCycle_rotationX, k->mRotationX);
+        k->mRotationY   = ta->getFloat(KC::KeyCycle_rotationY, k->mRotationY);
+        k->mScaleX      = ta->getFloat(KC::KeyCycle_scaleX, k->mScaleX);
+        k->mScaleY      = ta->getFloat(KC::KeyCycle_scaleY, k->mScaleY);
+        k->mTranslationX = ta->getFloat(KC::KeyCycle_translationX, k->mTranslationX);
+        k->mTranslationY = ta->getFloat(KC::KeyCycle_translationY, k->mTranslationY);
+        k->mTranslationZ = ta->getFloat(KC::KeyCycle_translationZ, k->mTranslationZ);
+        k->mTransitionPathRotate = ta->getFloat(KC::KeyCycle_transitionPathRotate, k->mTransitionPathRotate);
+        k->mProgress    = ta->getFloat(KC::KeyCycle_motionProgress, k->mProgress);
+    }
     return k;
 }
 
-std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
+std::unique_ptr<MotionKey> makeKeyTrigger(Context* ctx,const AttributeSet* a) {
     auto k = std::make_unique<MotionKeyTrigger>();
-    loadCommon(*k, a);
-    k->mCross         = a.getString("onCross", k->mCross);
-    k->mPositiveCross = a.getString("onPositiveCross", k->mPositiveCross);
-    k->mNegativeCross = a.getString("onNegativeCross", k->mNegativeCross);
-    k->mTriggerID     = a.getResourceId("triggerId", k->mTriggerID);
-    k->mTriggerReceiver = a.getResourceId("triggerReceiver", k->mTriggerReceiver);
-    k->mTriggerSlack  = a.getFloat("triggerSlack", k->mTriggerSlack);
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::KeyTrigger);
+    if (ta) {
+        namespace KT = R::styleable;
+        k->mViewId        = (int)ta->getResourceId(KT::KeyTrigger_motionTarget, k->mViewId);
+        k->mFramePosition = ta->getInt(KT::KeyTrigger_framePosition, k->mFramePosition);
+        k->mCross         = ta->getString(KT::KeyTrigger_onCross);
+        k->mPositiveCross = ta->getString(KT::KeyTrigger_onPositiveCross);
+        k->mNegativeCross = ta->getString(KT::KeyTrigger_onNegativeCross);
+        k->mTriggerID       = (int)ta->getResourceId(KT::KeyTrigger_triggerId, k->mTriggerID);
+        k->mTriggerReceiver = (int)ta->getResourceId(KT::KeyTrigger_triggerReceiver, k->mTriggerReceiver);
+        k->mTriggerSlack  = ta->getFloat(KT::KeyTrigger_triggerSlack, k->mTriggerSlack);
+    }
     return k;
 }
 } // namespace
 
-KeyFrames::KeyFrames(Context* /*ctx*/, XmlPullParser& parser) {
+KeyFrames::KeyFrames(Context* ctx, XmlPullParser& parser) {
     // `parser` is at the <KeyFrameSet> START_TAG. Walk children until the matching END_TAG.
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
             parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
@@ -132,11 +141,11 @@ KeyFrames::KeyFrames(Context* /*ctx*/, XmlPullParser& parser) {
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             std::unique_ptr<MotionKey> key;
-            if (tag == "KeyAttribute")      key = makeKeyAttribute(parser);
-            else if (tag == "KeyPosition")  key = makeKeyPosition(parser);
-            else if (tag == "KeyCycle")     key = makeKeyCycle<MotionKeyCycle>(parser);
-            else if (tag == "KeyTimeCycle") key = makeKeyCycle<MotionKeyTimeCycle>(parser);
-            else if (tag == "KeyTrigger")   key = makeKeyTrigger(parser);
+            if (tag == "KeyAttribute")      key = makeKeyAttribute(ctx, &parser);
+            else if (tag == "KeyPosition")  key = makeKeyPosition(ctx, &parser);
+            else if (tag == "KeyCycle")     key = makeKeyCycle<MotionKeyCycle>(ctx, &parser);
+            else if (tag == "KeyTimeCycle") key = makeKeyCycle<MotionKeyTimeCycle>(ctx, &parser);
+            else if (tag == "KeyTrigger")   key = makeKeyTrigger(ctx, &parser);
             if (key) addKey(std::move(key));
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "KeyFrameSet") return; // consumed the set

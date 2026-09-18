@@ -19,23 +19,23 @@ int main(int argc, const char* argv[]){
     Window* w = new Window(0, 0, -1, -1);
     w->setBackgroundColor(0xFF223344);
 
-    LinearLayout* root = new LinearLayout(-1, -1);
+    LinearLayout* root = new LinearLayout(&app);
     root->setOrientation(LinearLayout::VERTICAL);
     w->addView(root);
 
-    Button* toggle = new Button("Toggle ChangeBounds", 700, 140);
+    Button* toggle =new Button(&app); toggle->setText("Toggle ChangeBounds" );
     toggle->setTextSize(32);
     root->addView(toggle);
 
     // FIXED-size sceneRoot (weight=1). A WRAP parent is unstable to animate bounds
     // against, and (per the disappear-rotation lesson) a WRAP parent can collapse and
     // hide children. Keep it fixed.
-    FrameLayout* sceneRoot = new FrameLayout(-1, 800);
+    FrameLayout* sceneRoot = new FrameLayout(&app);
     sceneRoot->setLayoutParams(new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, 0, 1.0f));
     sceneRoot->setBackgroundColor(0xFF112233);
     root->addView(sceneRoot);
 
-    View* box = new View(0, 0);
+    View* box = new View(&app);
     box->setBackgroundColor(0xFFFF4081);
     box->setId(2001);
     // Start state: top-left, 300x300.

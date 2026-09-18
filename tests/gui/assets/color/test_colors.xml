@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- gui_test's own color-state-list (int-face getColorStateList test asset). -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:color="#FFFFFFFF"/>
+    <item android:state_pressed="true"  android:color="#FFE0E0E0"/>
+    <item                                android:color="#FFC0C0C0"/>
+</selector>

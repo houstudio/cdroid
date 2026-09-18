@@ -26,11 +26,12 @@ class Context;
 class GestureLibrary;
 class GestureLibraries {
 private:
-    class StreamGestureLibrary;
+    class FileGestureLibrary;
+    class ResourceGestureLibrary;
     GestureLibraries();
 public:
     static GestureLibrary* fromFile(const std::string& path);
-    static GestureLibrary* fromRawResource(Context* context, const std::string&resourceId);
+    static GestureLibrary* fromRawResource(Context* context, int resourceId);
 };
 }/*endof namespace*/
 #endif/*__GESTURE_LIBRARIES_H__*/

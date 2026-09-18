@@ -18,6 +18,11 @@
 #include <drawable/drawablecontainer.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
+#include <core/context.h>
+#include <content/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 #include <set>
 namespace cdroid{
 
@@ -57,9 +62,12 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-DrawableContainer::DrawableContainerState::DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own){
+DrawableContainer::DrawableContainerState::DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own,Resources*res){
     mOwner = own;
-    mDensity = Drawable::resolveDensity(orig? orig->mDensity : 0);
+    // AOSP java:743-744: the source resources survive a null res by falling
+    // back to the copy's, so cloned children keep inflating against them.
+    mSourceRes = res ? res : (orig ? orig->mSourceRes : nullptr);
+    mDensity = Drawable::resolveDensity(res, orig? orig->mDensity : 0);
     mVariablePadding = false;
     mConstantSize = false;
     mCheckedConstantState = true;
@@ -68,8 +76,10 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mAutoMirrored = false;
     mMutated = false;
     mDither  = false;
+    mCheckedPadding = false;
     mCheckedStateful  = false;
     mCheckedOpacity   = false;
+    mConstantPadding.setEmpty();
     mLayoutDirection  = LayoutDirection::LTR;
     mEnterFadeDuration= 0;
     mExitFadeDuration = 0;
@@ -77,6 +87,12 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mColorFilter = nullptr;
     if(orig == nullptr)
         return;
+
+    // AOSP DrawableContainerState copy ctor keeps the tint list and color
+    // filter; dropping them made a mutate()/clone lose an applied tint.
+    mTintList = orig->mTintList;
+    mColorFilter = orig->mColorFilter;
+    mTintMode = orig->mTintMode;
 
     mChangingConfigurations = orig->mChangingConfigurations;
     mChildrenChangingConfigurations = orig->mChildrenChangingConfigurations;
@@ -98,8 +114,14 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
     mHasTintMode = orig.mHasTintMode;*/
 
     if (orig->mDensity == mDensity) {
-        mConstantPadding = orig->mConstantPadding;
-        mCheckedPadding = true;
+        // AOSP: mCheckedPadding = orig.mCheckedPadding (inherit the COMPUTED
+        // flag, not unconditionally true — a copy of a never-computed state
+        // must stay unchecked, else it reports an empty constant padding
+        // forever; seen as the 2nd Switch thumb losing its 9-patch padding).
+        if (orig->mCheckedPadding) {
+            mConstantPadding = orig->mConstantPadding;
+            mCheckedPadding = true;
+        }
 
         if (orig->mCheckedConstantSize) {
             mConstantWidth = orig->mConstantWidth;
@@ -155,7 +177,13 @@ int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
         if (mDrawables[i] == dr) return (int)i;
     }
     const int pos = (int)mDrawables.size();
-    dr->mutate();
+    // No dr->mutate() here — AOSP's DrawableContainerState.addChild adds the
+    // child as-is. The mutate was text-XML-era code (shared inflate-time
+    // instances needed a private copy); with ConstantState/newDrawable the
+    // child is already private, and forcing a container mutate at add time
+    // clones whole child states per add (valgrind: the switch_thumb
+    // animation-list's 12 nine-patch futures materialized + lost via
+    // setConstantState's getChild refresh — 692KB definite).
     dr->setVisible(false, true);
     dr->setCallback(mOwner);
 
@@ -177,13 +205,30 @@ void DrawableContainer::DrawableContainerState::invalidateCache(){
     mCheckedStateful= false;
 }
 
+void DrawableContainer::DrawableContainerState::updateDensity(Resources* res){
+    // AOSP java:955-973: dimension-type attributes need their default values
+    // re-scaled when the density changes.
+    if (res != nullptr) {
+        mSourceRes = res;
+
+        const int targetDensity = Drawable::resolveDensity(res, mDensity);
+        const int sourceDensity = mDensity;
+        mDensity = targetDensity;
+
+        if (sourceDensity != targetDensity) {
+            mCheckedConstantSize = false;
+            mCheckedPadding = false;
+        }
+    }
+}
+
 void DrawableContainer::DrawableContainerState::createAllFutures(){
     const size_t futureCount = mDrawableFutures.size();
     for (size_t keyIndex = 0; keyIndex < futureCount; keyIndex++) {
         const int index= mDrawableFutures.keyAt(keyIndex);
         std::shared_ptr<ConstantState>cs =mDrawableFutures.valueAt(keyIndex);
         delete mDrawables[index];
-        mDrawables[index] = prepareDrawable(cs->newDrawable());
+        mDrawables[index] = prepareDrawable(cs->newDrawable(mSourceRes));
     }
     mDrawableFutures.clear();
 }
@@ -205,13 +250,16 @@ std::vector<Drawable*> DrawableContainer::DrawableContainerState::getChildren(){
 }
 
 Drawable*DrawableContainer::DrawableContainerState::getChild(int index){
+    // A freshly cloned state keeps its children as futures and mDrawables
+    // empty — .at() would throw on any index then (and always on index<0).
+    if (index < 0 || index >= (int)mDrawables.size()) return nullptr;
     Drawable*dr = mDrawables.at(index);
     if(dr)return dr;
     if (mDrawableFutures.size()) {
         const int keyIndex = mDrawableFutures.indexOfKey(index);
         if (keyIndex>=0) {
             std::shared_ptr<ConstantState> cs = mDrawableFutures.valueAt(keyIndex);
-            Drawable* prepared = prepareDrawable(cs->newDrawable());
+            Drawable* prepared = prepareDrawable(cs->newDrawable(mSourceRes));
             mDrawables[index] = prepared;
             mDrawableFutures.removeAt(keyIndex);
             LOGV("getChild(%d)=%p",index,prepared);
@@ -281,10 +329,21 @@ bool DrawableContainer::DrawableContainerState::getConstantPadding(Rect&rect) {
 
     createAllFutures();
 
+    // No REALIZED children yet (empty, or all-null pending futures): there is
+    // no constant padding to report. Caching an empty result here poisons every
+    // future copy of this state (the copy inherits mCheckedPadding) — seen as a
+    // Switch thumb losing its 9-patch padding on the second instance loaded
+    // from the same resource.
+    bool anyChild = false;
+    for (auto dr:mDrawables) { if (dr != nullptr) { anyChild = true; break; } }
+    if (!anyChild) return false;
+
     Rect r ={0,0,0,0};
     Rect t ={0,0,0,0};
     for (auto dr:mDrawables) {
-        if (dr->getPadding(t)) {
+        if (dr == nullptr) continue;
+        const bool has = dr->getPadding(t);
+        if (has) {
             if (t.left > r.left) r.left = t.left;
             if (t.top > r.top) r.top = t.top;
             if(t.width > r.width ) r.width = t.width;
@@ -306,7 +365,7 @@ bool DrawableContainer::DrawableContainerState::isConstantSize() const{
 }
 
 std::shared_ptr<DrawableContainer::DrawableContainerState> DrawableContainer::cloneConstantState(){
-    return std::make_shared<DrawableContainerState>(mDrawableContainerState.get(),this);
+    return std::make_shared<DrawableContainerState>(mDrawableContainerState.get(),this,nullptr);
 }
 
 void DrawableContainer::setConstantState(std::shared_ptr<DrawableContainerState>state){
@@ -409,7 +468,7 @@ int DrawableContainer::DrawableContainerState::getOpacity(){
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
-    mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this);
+    mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this,nullptr);
     mHasAlpha = false;
     mMutated  = false;
     mAlpha = 0xFF;
@@ -421,15 +480,17 @@ DrawableContainer::DrawableContainer(){
     mEnterAnimationEnd= 0;
 }
 
-DrawableContainer::DrawableContainer(Context*ctx,const AttributeSet&atts):DrawableContainer(){
-    mDrawableContainerState->setConstantSize(atts.getBoolean("constantSize"));
-    mDrawableContainerState->setVariablePadding(atts.getBoolean("variablePadding")); 
-}
-
 DrawableContainer::~DrawableContainer(){
-    std::vector<Drawable*>&ds=mDrawableContainerState->mDrawables;
-    for_each(ds.begin(),ds.end(),[](Drawable*d){delete d;});
-    ds.clear();
+    /* AOSP has no such destructor: the children belong to the (refcounted)
+       constant state — ~DrawableContainerState frees them when the LAST
+       reference drops. Reaching into the state's array here deleted the
+       children of a state still shared with the drawable cache (and with
+       mutate() clones); the next cache hit copied the emptied state, and a
+       lazily materialized transition came back with zero frames (the Switch
+       off-thumb vanishing after a fragment view was destroyed once).
+       valgrind asldleak (4 Switches x 12 transitions): definite 256B/1blk +
+       indirect 97B/4blk — byte-identical to the pre-change build (the known
+       fontconfig startup-logo record; zero drawable-related leaks). */
     delete mBlockInvalidateCallback;
 }
 
@@ -457,10 +518,14 @@ bool DrawableContainer::getPadding(Rect&padding){
        }
     }
     if (needsMirroring()) {
+        // AOSP mirrors the HORIZONTAL padding pair (left <-> right); this
+        // swapped left with top, exchanging horizontal for vertical padding.
+        // cdroid padding Rects carry right in .width (see the Rect dual
+        // convention).
         const int left = padding.left;
-        const int right= padding.top;
+        const int right= padding.width;
         padding.left= right;
-        padding.top = left;
+        padding.width= left;
     }
     return result;
 }
@@ -732,6 +797,13 @@ void DrawableContainer::initializeDrawableForDisplay(Drawable*d){
 
     d->setCallback(mBlockInvalidateCallback->wrap(d->getCallback()));
 
+    // AOSP propagates remembered hotspot bounds to the newly selected child;
+    // an empty rect means none were set (ripples then anchor per their own
+    // default instead of a stale 0,0 rect).
+    if (!mHotspotBounds.empty()) {
+        d->setHotspotBounds(mHotspotBounds.left, mHotspotBounds.top,
+                mHotspotBounds.width, mHotspotBounds.height);
+    }
     if(mDrawableContainerState->mEnterFadeDuration <= 0 && mHasAlpha){
         d->setAlpha(mAlpha);
     }
@@ -826,8 +898,12 @@ std::shared_ptr<Drawable::ConstantState>DrawableContainer::getConstantState(){
 }
 
 Drawable*DrawableContainer::getChild(int index){
-    auto &drs=mDrawableContainerState->mDrawables;
-    return ((index>=0)&&(index<drs.size())) ? drs[index] : nullptr;
+    // Route through the state so a pending future is materialized first
+    // (AOSP StateListDrawable.getStateDrawable → mStateListState.getChild):
+    // children of a drawable cloned from the cache exist only as ConstantState
+    // futures, and the raw mDrawables slot is still null for them — callers
+    // like ProgressBar::tileify saw null items.
+    return mDrawableContainerState ? mDrawableContainerState->getChild(index) : nullptr;
 }
 
 void DrawableContainer::invalidateDrawable(Drawable& who){
