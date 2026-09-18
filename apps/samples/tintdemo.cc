@@ -35,9 +35,9 @@ int main(int argc,const char*argv[]){
     scroller->addView(content);
 
     const int tintColor=0xFFFF4040; /* red */
-    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:mipmap/ic_search");
+    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:drawable/ic_search");
     // name@runtime -> id (getIdentifier), then the typed int APIs
-    const int resId = app.getResources().getIdentifier(res.substr(res.rfind('/')+1), "mipmap", "cdroid");
+    const int resId = app.getResources().getIdentifier(res.substr(res.rfind('/')+1), "drawable", "cdroid");
     const int sz=78, gap=6, labelH=18, cols=8;
 
     auto lp=[&](int ww,int hh,int lmargin=0,int tmargin=0){
