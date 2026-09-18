@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom-nav words on the black global-nav slab (DESIGN.md): full white
+     when active, quiet body-muted grey when idle. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_checked="true" android:color="#FF1A73E8" />
-    <item android:color="#FF6B7280" />
+    <item android:state_checked="true" android:color="#FFFFFFFF" />
+    <item android:color="#FFCCCCCC" />
 </selector>

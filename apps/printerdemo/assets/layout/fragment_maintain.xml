@@ -71,7 +71,7 @@
                     android:orientation="horizontal" android:gravity="center_vertical">
                     <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/dot_k"/>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_black" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="85%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 </LinearLayout>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="12dp" android:background="?attr/colorSurfaceVariant"/>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
@@ -80,13 +80,13 @@
                     <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_m"/>
                     <View android:layout_width="12dp" android:layout_height="12dp" android:layout_marginStart="2dp" android:background="@drawable/dot_y"/>
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="10dp" android:text="@string/ink_color_cmy" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FFEF6C00"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="60 / 40 / 72%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF7A7A7A"/>
                 </LinearLayout>
                 <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginTop="12dp" android:background="?attr/colorSurfaceVariant"/>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
                     android:layout_marginTop="12dp" android:orientation="horizontal" android:gravity="center_vertical">
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/drum_life" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="78%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="78%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 </LinearLayout>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
                     android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"
@@ -146,7 +146,7 @@
                     <TextView android:layout_width="0dp" android:layout_height="wrap_content"
                         android:layout_weight="1" android:text="@string/home_health" android:textSize="14sp" android:textColor="?android:attr/textColorPrimary"/>
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                        android:text="92%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 </LinearLayout>
                 <LinearLayout android:layout_width="match_parent" android:layout_height="10dp"
                     android:layout_marginTop="8dp" android:weightSum="100" android:orientation="horizontal"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Recessed rail: pearl-grey capsule. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FFE9EDF3"/>
+    <solid android:color="#FFE8E8ED"/>
     <corners android:radius="6dp"/>
 </shape>

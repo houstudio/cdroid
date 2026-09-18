@@ -5,13 +5,16 @@
     android:orientation="horizontal"
     android:gravity="center_vertical"
     android:paddingRight="6dp">
-    <!-- closed spinner row: text left, drop-down arrow pinned to the right edge -->
+    <!-- closed spinner row: text left, drop-down arrow pinned to the right edge.
+         Text is pinned to ink (NOT ?textColorPrimary): this row always sits on
+         the white spinner_bg pill, which does not flip with the theme — a
+         theme-driven color turned white-on-white in the dark theme. -->
     <TextView android:id="@+id/spinner_item_text"
         android:layout_width="0dp" android:layout_height="wrap_content"
         android:layout_weight="1"
         android:paddingLeft="12dp"
         android:textSize="15sp"
-        android:textColor="?android:attr/textColorPrimary"/>
+        android:textColor="#FF1D1D1F"/>
     <ImageView android:layout_width="12dp" android:layout_height="8dp"
         android:layout_marginStart="6dp"
         android:src="@drawable/ic_spinner_arrow" android:importantForAccessibility="no"/>

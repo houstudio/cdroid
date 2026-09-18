@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- product-tile-dark (DESIGN.md): the near-black hero tile — white display
+     type rides on it, sharp rounded.none edges (tiles run edge-to-edge). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:startColor="#FF1A6DE8" android:centerColor="#FF1287DB" android:endColor="#FF00A0BE" android:angle="45"/>
-    <corners android:radius="22dp"/>
+    <solid android:color="#FF272729"/>
 </shape>

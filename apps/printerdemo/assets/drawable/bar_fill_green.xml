@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Level gauge fill variant: Focus Blue (still the single-blue family). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FF188038"/>
-    <corners android:radius="5dp"/>
+    <solid android:color="#FF0071E3"/>
+    <corners android:radius="3dp"/>
 </shape>
