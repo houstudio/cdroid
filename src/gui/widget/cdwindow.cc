@@ -833,15 +833,20 @@ void Window::setAttributes(const WindowManager::LayoutParams& a){
 }
 
 View& Window::setAlpha(float alpha){
-    // Set the VIEW alpha too: the whole-surface fade is applied at composition
-    // (GraphDevice::composeSurfaces reads getAlpha() and paints with it — the X11-style
-    // backends have no per-surface opacity, GFXSurfaceSetOpacity is a stub there).
-    // View::setAlpha also invalidates, which re-queues the window for composition.
-    View::setAlpha(alpha);
-    if(isAttachedToWindow()){
-        RefPtr<Canvas> canvas = getCanvas();
+    if (alpha == getAlpha()) return *this;
+    // Window alpha is PURELY COMPOSITIONAL: composeSurfaces reads getAlpha()
+    // and paints this window's blit with paint_with_alpha. The window's pixels
+    // are frame-invariant during a fade, so View::setAlpha's invalidate /
+    // full-tree re-render pipeline is wasted work every animation frame — use
+    // the no-invalidation path (AOSP setAlphaNoInvalidation) and just damage
+    // our own extent + flip: the next compose re-blits with the new alpha.
+    setAlphaNoInvalidation(alpha);
+    if (isAttachedToWindow() && mAttachInfo != nullptr && mAttachInfo->mCanvas != nullptr) {
         LOGV("setAlpha(%p,%d)",this,(int)(alpha*255));
-        GFXSurfaceSetOpacity(canvas->mHandle, (alpha*255));
+        GFXSurfaceSetOpacity(mAttachInfo->mCanvas->mHandle, (alpha*255));
+        const RectangleInt full = {0, 0, getWidth(), getHeight()};
+        mPendingRgn->do_union(full);
+        GraphDevice::getInstance().flip();
     }
     return *this;
 }

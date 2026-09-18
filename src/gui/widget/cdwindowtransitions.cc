@@ -32,6 +32,7 @@
 #include <animation/objectanimator.h>
 #include <animation/valueanimator.h>
 #include <animation/animationutils.h>
+#include <animation/interpolators.h>
 #include <animation/animationset.h>
 #include <animation/alphaanimation.h>
 #include <animation/translateanimation.h>
@@ -124,7 +125,37 @@ struct AnimSpec {
     ActivityTransition::Type type = ActivityTransition::Type::NONE;
     int slideEdge = 0;      // Gravity::LEFT/RIGHT/TOP/BOTTOM (SLIDE only)
     int64_t duration = 0;
+    // The authored curve/timing. The interpolator instance is OWNED BY THE
+    // PROCESS-WIDE STYLE CACHE (AnimSpec lives in sAnimStyleCache, which
+    // outlives every window and every ActivityTransition borrowing it).
+    TimeInterpolator* interpolator = nullptr;
+    int64_t startOffset = 0;
 };
+
+// Deep-copy a loaded interpolator: the extracted Animation tree is freed right
+// after extraction (AnimGuard), so a borrowed pointer would dangle. Every
+// interpolator is a stateless value object with a usable copy constructor —
+// the framework window-animation resources all resolve to this closed set.
+static TimeInterpolator* cloneInterpolator(const TimeInterpolator* src) {
+    if (src == nullptr) return nullptr;
+    #define CLONE(T) if (auto* p = dynamic_cast<const T*>(src)) return new T(*p)
+    CLONE(LinearInterpolator);
+    CLONE(AccelerateInterpolator);
+    CLONE(DecelerateInterpolator);
+    CLONE(AnticipateInterpolator);
+    CLONE(CycleInterpolator);
+    CLONE(OvershootInterpolator);
+    CLONE(AnticipateOvershootInterpolator);
+    CLONE(BounceInterpolator);
+    CLONE(AccelerateDecelerateInterpolator);
+    CLONE(PathInterpolator);
+    CLONE(FastOutSlowInInterpolator);
+    CLONE(LinearOutSlowInInterpolator);
+    CLONE(FastOutLinearInInterpolator);
+    CLONE(BezierSCurveInterpolator);
+    #undef CLONE
+    return nullptr;  // unknown exotic subclass — animator default curve
+}
 static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
     if (anim == nullptr) return AnimSpec();
     // OWNS anim: the caller loads a fresh Animation just for this parameter
@@ -143,14 +174,31 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
     }
     int64_t duration = 0;
     TranslateAnimation* slide = nullptr;
-    bool fades = false;
+    AlphaAnimation* fade = nullptr;
     for (Animation* a : parts) {
         if (a == nullptr) continue;
         duration = std::max<int64_t>(duration, a->getDuration());
         if (slide == nullptr) slide = dynamic_cast<TranslateAnimation*>(a);
-        if (dynamic_cast<AlphaAnimation*>(a) != nullptr) fades = true;
+        if (fade == nullptr && dynamic_cast<AlphaAnimation*>(a) != nullptr)
+            fade = static_cast<AlphaAnimation*>(a);
     }
+    // The DOMINANT child (the translate that drives a SLIDE, the alpha that
+    // drives a FADE) also lends its interpolator and startOffset — a
+    // shareInterpolator=false set (dialog_enter: scale@decelerate_quint +
+    // alpha@decelerate_cubic) authors the curve per child, and the whole-window
+    // model plays the dominant effect's curve. Prefer the child's own values,
+    // falling back to the top-level set's (set on the <set> itself).
+    const Animation* dominant = slide ? static_cast<const Animation*>(slide)
+                                      : static_cast<const Animation*>(fade);
     AnimSpec spec;
+    if (dominant != nullptr) {
+        spec.interpolator = cloneInterpolator(dominant->getInterpolator());
+        spec.startOffset = dominant->getStartOffset();
+    }
+    if (spec.interpolator == nullptr)
+        spec.interpolator = cloneInterpolator(anim->getInterpolator());
+    if (spec.startOffset == 0)
+        spec.startOffset = anim->getStartOffset();
     if (slide != nullptr) {
         // The nonzero delta gives the motion axis+direction: an enter animation's from-delta is
         // the side the window comes FROM; an exit animation's to-delta is the side it leaves TO.
@@ -166,7 +214,7 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
         spec.type = ActivityTransition::Type::SLIDE;
         spec.slideEdge = edge;
         spec.duration = duration > 0 ? duration : 300;
-    } else if (fades) {
+    } else if (fade != nullptr) {
         // A bare whole-surface fade is nearly imperceptible at the resource's own
         // 150-220ms — the scale component it normally pairs with (the visible part of
         // grow_fade_in) is not expressible window-level, so hold the fade long enough
@@ -182,8 +230,10 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
 // ownership; specs are cheap to re-apply, the style query + loadAnimation
 // extraction they came from is not).
 static ActivityTransition* transitionFromSpec(const AnimSpec& spec) {
-    if (spec.type == ActivityTransition::Type::FADE) return ActivityTransition::fade(spec.duration);
-    if (spec.type == ActivityTransition::Type::SLIDE) return ActivityTransition::slide(spec.slideEdge, spec.duration);
+    if (spec.type == ActivityTransition::Type::FADE)
+        return ActivityTransition::fade(spec.duration, spec.interpolator, spec.startOffset);
+    if (spec.type == ActivityTransition::Type::SLIDE)
+        return ActivityTransition::slide(spec.slideEdge, spec.duration, spec.interpolator, spec.startOffset);
     return nullptr;
 }
 
@@ -198,7 +248,12 @@ struct ResolvedAnimStyle {
     int enterRes = 0, exitRes = 0;   // 0 = the style names no animation for that leg
     AnimSpec enter, exit;
 };
-static std::unordered_map<int, ResolvedAnimStyle> sAnimStyleCache;
+// Key: theme identity << 32 | styleRes — the style query resolves through THIS
+// theme's resources, and in a multi-pak process two AssetManagers can mint the
+// same numeric 0x7f style id with different content; keying by styleRes alone
+// would cross-contaminate them. A dead theme's entries simply never hit again
+// (pointer compare only — no dereference, a few hundred stale bytes at most).
+static std::unordered_map<uint64_t, ResolvedAnimStyle> sAnimStyleCache;
 
 void Window::setWindowAnimations(int resId, bool enableExit) {
     mWindowAnimationStyle = resId;
@@ -208,10 +263,13 @@ void Window::setWindowAnimations(int resId, bool enableExit) {
 
 void Window::applyWindowAnimationStyle(int styleRes) {
     if (styleRes == 0 || mContext == nullptr) return;
-    // Resolve through the per-styleId cache — every popup show passes here with
-    // the same dropdown style, and only the FIRST visit pays the style query +
-    // the two AnimationUtils::loadAnimation extraction trees.
-    ResolvedAnimStyle& rs = sAnimStyleCache[styleRes];
+    // Resolve through the per-(theme,styleId) cache — every popup show passes
+    // here with the same dropdown style, and only the FIRST visit pays the style
+    // query + the two AnimationUtils::loadAnimation extraction trees. The theme
+    // identity is its engine handle (the themed-cache key convention, resources.h).
+    const uint64_t cacheKey = ((uint64_t)(uintptr_t)mContext->getTheme()._engineHandle() << 32)
+                            ^ (uint32_t)styleRes;
+    ResolvedAnimStyle& rs = sAnimStyleCache[cacheKey];
     if (!rs.resolved) {
         // AOSP R.styleable.WindowAnimation: the plain window names, falling back to the Activity
         // open/close names Animation.Activity carries (the windowAnimationStyle target). The
@@ -232,19 +290,35 @@ void Window::applyWindowAnimationStyle(int styleRes) {
         rs.resolved = true;
     }
 
-    // Install like setEnterTransition would — the snap is visual-only, so re-installing on a
-    // window whose snap already ran just re-snaps the offset (getLeft()/getTop() never corrupted).
+    // Install like setEnterTransition would — but only ARM + pre-snap the enter
+    // while the window has never drawn its first frame (mCanvas is created by the
+    // first getCanvas). Re-resolution on an on-screen window (setTheme at runtime,
+    // a later style pass) must not re-snap and replay the whole enter animation:
+    // AOSP reads window dressing at decor INSTALL time only — a visible window
+    // keeps its pixels; recreate() replays via a fresh window.
     auto enterT = transitionFromSpec(rs.enter);
     if (enterT != nullptr) {
         delete mEnterTransition;
         mEnterTransition = enterT;
-        mPendingEnterAnim = true;
-        snapEnterStart(enterT);
+        if (mAttachInfo == nullptr || mAttachInfo->mCanvas == nullptr) {
+            mPendingEnterAnim = true;
+            snapEnterStart(enterT);  // pre-snap to the start state before the first frame
+        }
+    } else {
+        // The style names no enter animation: clear whatever a previous style
+        // installed (incl. an armed snap) — setEnterTransition's null branch does
+        // the full undo (armed flag + translation/alpha revert).
+        setEnterTransition(nullptr);
     }
+    // Symmetrically for the exit leg: a style with no windowExitAnimation (or a
+    // swap onto one) must not keep the OLD style's exit armed (enableExit=false
+    // deliberately keeps whatever is installed — the legacy sync-dismiss flavor).
     auto exitT = mWindowExitAnimationsEnabled ? transitionFromSpec(rs.exit) : nullptr;
     if (exitT != nullptr) {
         delete mExitTransition;
         mExitTransition = exitT;
+    } else if (mWindowExitAnimationsEnabled) {
+        setExitTransition(nullptr);
     }
 }
 
@@ -282,6 +356,12 @@ GraphDevice::GhostLayer* Window::captureGhost() {
     GraphDevice::GhostLayer* g = GraphDevice::getInstance().addGhost(snap, getBound());
     g->dx = mSurfaceDx;
     g->dy = mSurfaceDy;
+    // Carry the in-flight enter fade too: dismiss during a FADE enter leaves the
+    // window's alpha mid-flight (the canceled animator's end listener only resets
+    // the surface translation), so the ghost must CONTINUE from the on-screen
+    // opacity — its snapshot holds full-content pixels, a fresh alpha=1 ghost
+    // would pop the frame bright before fading out.
+    g->alpha = getAlpha();
     if (mSurfaceDx != 0 || mSurfaceDy != 0) {
         g->lastRect = getBound();
         g->lastRect.offset(mSurfaceDx, mSurfaceDy);
@@ -298,13 +378,19 @@ void Window::startGhostExit(ActivityTransition* t) {
     GraphDevice::GhostLayer* ghost = captureGhost();
     if (ghost == nullptr) return;
     const int64_t duration = t->getDuration();
+    const TimeInterpolator* interpolator = t->getInterpolator();  // borrowed (style cache)
+    const int64_t startDelay = t->getStartOffset();
     Animator::AnimatorListener endListener;
     endListener.onAnimationEnd = [ghost](Animator&, bool) {
         GraphDevice::getInstance().removeGhost(ghost);  // frees the animator too
     };
     if (t->getType() == ActivityTransition::Type::FADE) {
-        ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{1.f, 0.f});
+        // Start from the ghost's inherited alpha (mid-fade dismiss continuity).
+        ValueAnimator* anim = ValueAnimator::ofFloat(
+                std::vector<float>{ghost->alpha, 0.f});
         anim->setDuration(duration);
+        anim->setStartDelay(startDelay);
+        anim->setInterpolator(interpolator);
         anim->addUpdateListener([ghost](ValueAnimator& a) {
             ghost->alpha = 1.f - a.getAnimatedFraction();
             GraphDevice::getInstance().composeGhosts();
@@ -320,6 +406,8 @@ void Window::startGhostExit(ActivityTransition* t) {
         const int endX = offX - ghost->bounds.left, endY = offY - ghost->bounds.top;
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
         anim->setDuration(duration);
+        anim->setStartDelay(startDelay);
+        anim->setInterpolator(interpolator);
         anim->addUpdateListener([ghost, startX, startY, endX, endY](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
             ghost->dx = (int)(startX + (endX - startX) * f);
@@ -370,6 +458,8 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
     }
     mInTransition = true;
     const int64_t duration = t->getDuration();
+    const TimeInterpolator* interpolator = t->getInterpolator();  // borrowed (style cache)
+    const int64_t startDelay = t->getStartOffset();
     Animator::AnimatorListener endListener;
     endListener.onAnimationEnd = [this, onEnd, enter](Animator&, bool) {
         if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
@@ -384,13 +474,14 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
     };
 
     if (t->getType() == ActivityTransition::Type::FADE) {
-        // ObjectAnimator "alpha" dispatches to View::setAlpha, which Window overrides to
-        // GFXSurfaceSetOpacity (whole-surface opacity). Each frame must re-compose, so schedule
-        // a traversal (setAlpha itself does not invalidate).
+        // ObjectAnimator "alpha" dispatches to Window::setAlpha — compositional
+        // only (no-invalidation + self-flip), so each frame re-COMPOSES without
+        // touching the view tree; no traversal is scheduled here.
         ObjectAnimator* anim = ObjectAnimator::ofFloat(this, "alpha",
             std::vector<float>{enter ? 0.f : 1.f, enter ? 1.f : 0.f});
         anim->setDuration(duration);
-        anim->addUpdateListener([this](ValueAnimator&) { scheduleTraversals(); });
+        anim->setStartDelay(startDelay);
+        anim->setInterpolator(interpolator);
         anim->addListener(endListener);
         mCurrentTransitionAnimator = anim;
         anim->start();
@@ -405,6 +496,8 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
         const int endY   = enter ? 0 : offY - getTop();
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
         anim->setDuration(duration);
+        anim->setStartDelay(startDelay);
+        anim->setInterpolator(interpolator);
         anim->addUpdateListener([this, startX, startY, endX, endY](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
             setSurfaceTranslation((int)(startX + (endX - startX) * f),
