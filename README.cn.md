@@ -23,12 +23,15 @@ CDroid 是 **Android Java UI SDK 的逐行 C++ 移植** —— 涵盖 `android.w
 
 ## 特性
 
-- **50+ 控件 & 20+ Drawable**,API 与 Android 兼容 —— 可在 Android Studio / Eclipse 中设计。
+- **100+ 控件 & 50 个 Drawable**,API 与 Android 兼容 —— 可在 Android Studio / Eclipse 中设计。
 - **完整的 AndroidX 移植**:RecyclerView、ConstraintLayout + MotionLayout、FragmentManager + Navigation、Flexbox、CoordinatorLayout、ViewPager2。
 - **Fragment + Transition 框架**,含共享元素转场。
+- **二进制 AXML 资源全链路** —— aapt2 编译的 XML + `resources.arsc` 打进 `.pak`,生成的 `R.h` 用真实资源 id,支持构建期资源 overlay。
+- **android.app 服务进程内化** —— AlarmManager(感知系统挂起、零专用线程)、对话框、最小版 PendingIntent。
+- **进程内无障碍** —— AccessibilityService + 节点树,UiAutomation 语义测试驱动(`--auto-test` 扫描 / `--test-script` DSL)。
 - **基于 Cairo 的矢量图形** —— 没有 `Bitmap` 类,由 `Cairo::ImageSurface` 承担该角色。
 - **多窗口 / 多层合成器**,脏区驱动渲染。
-- **忠实的文本栈**:spans、`StaticLayout`/`DynamicLayout`、minikin 断行、`KeyCharacterMap`、输入法。
+- **忠实的文本栈**:spans、`StaticLayout`/`DynamicLayout`、minikin 断行、fonts.xml 字体族/回退链、CBDT 彩色 emoji、`KeyCharacterMap`、输入法。
 - **跨平台后端**:DRM、fb、DirectFB、SDL、XCB/Xlib、VNC。
 
 ## 参与贡献 👋
@@ -58,41 +61,44 @@ CDroid 是一个庞大的移植工程 —— 永远有更多 AOSP 代码等着�
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 
 # **UI Components:**
-|  View         |     TextView       |  Button            |  ImageView    |  ImageButton  |
-|---------------|--------------------|--------------------|---------------|---------------|
-|CompoundButton |    ToggleButton    |     CheckBox       |  RadioButton  |  ProgressBar  |
-|   SeekBar     |    Chronometer     |    AnalogClock     |   ViewGroup   |  RadioGroup   |
-|  ScrollView   |     ViewPager      |  SimpleMonthView   |    Switch     |   RatingBar   |
-| NumberPicker  |      ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
-| ViewAnimator  | AdapterViewAnimator|    Calendarview    |SimpleMonthView|  Chronometer  |
-|  ScrollView   |  NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |   CardView    |
+
+| View           | TextView             | Button               | ImageView    | ImageButton |
+|----------------|----------------------|----------------------|--------------|-------------|
+| CompoundButton | ToggleButton         | CheckBox             | RadioButton  | ProgressBar |
+| SeekBar        | Chronometer          | AnalogClock          | ViewGroup    | RadioGroup  |
+| ScrollView     | ViewPager            | SimpleMonthView      | Switch       | RatingBar   |
+| NumberPicker   | ListView             | GridView             | RecyclerView | ViewFlipper |
+| ViewAnimator   | AdapterViewAnimator  | CalendarView         | TabLayout    | DatePicker  |
+| TimePicker     | NestedScrollView     | HorizontalScrollView | DateTimeView | ViewPager2  |
+| YearPickerView | WearableRecyclerView | Toolbar              | QRCodeView   | CardView    |
 
 # **Supported Layouts:**
-|   FrameLayout   |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
-|-----------------|----------------|----------------|------------------|-------------------|
-|   TableLayout   | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
-| ConstrainLayout |  MotionLayout  |  FlexboxLayout |                  |                   |
+| FrameLayout      | LinearLayout   | RelativeLayout | TableRow           | DrawerLayout      |
+|------------------|----------------|----------------|--------------------|-------------------|
+| TableLayout      | AbsoluteLayout | GridLayout     | GestureOverlayView | CoordinatorLayout |
+| ConstraintLayout | MotionLayout   | FlexboxLayout  | SlidingPaneLayout  |                   |
+
 # **Supported Drawables:**
-|   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
-|-------------------|------------------|--------------------------|-----------------|
-|ShapeDrawable      |TransitionDrawable|  AnimatedVectorDrawable  |StateListDrawable|
-| LevelListDrawable |   ClipDrawable   |  AnimatedRotateDrawable  | RotateDrawable  |
-|GradientDrawable   |  ScaleDrawable   |  AnimatedImageDrawable   | VectorDrawable  |
-|  RippleDrawable   |AnimationDrawable |AnimatedStateListDrawable |  LayerDrawable  |
-|   BadgeDrawable   | PictureDrawable  |AnimationScaleListDrawable| RippleDrawable  |
+| ColorDrawable     | BitmapDrawable     | NinePatchDrawable          | InsetDrawable        |
+|-------------------|--------------------|----------------------------|----------------------|
+| ShapeDrawable     | TransitionDrawable | AnimatedVectorDrawable     | StateListDrawable    |
+| LevelListDrawable | ClipDrawable       | AnimatedRotateDrawable     | RotateDrawable       |
+| GradientDrawable  | ScaleDrawable      | AnimatedImageDrawable      | VectorDrawable       |
+| RippleDrawable    | AnimationDrawable  | AnimatedStateListDrawable  | LayerDrawable        |
+| BadgeDrawable     | PictureDrawable    | AnimationScaleListDrawable | AdaptiveIconDrawable |
+
 # **Porting guide:**
 
 * 1 A new product porting should be placed to src/porting/xxx(where xxx is you chipset name)
 * 2 implement your porting api to xxx directory
 * 3 modify build.sh to support your port(you should configure sysroot toolchain...).
 * 4 call build.sh --product=xxx
-* 5 make you project(SeeAlso **Building CDROID**) 
+* 5 make you project(SeeAlso **Building CDROID**)
 
 # **Building CDROID:**
-###  1.install dependencs:
-sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python>=3.7 pip3-python python3-lxml meson
- pip install lxml Pillow polib requests xlrd xlwt
+###  1.install dependencs(Ubuntu 22+):
+sudo apt install autoconf libtool build-essential aapt2 cmake gdb pkg-config zip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python>=3.7 pip3-python python3-lxml meson
+pip install lxml Pillow polib requests xlrd xlwt
 ###  2.install vcpkg:
 * git clone https://www.github.com/microsoft/vcpkg.git
 * cd vcpkg
@@ -112,12 +118,12 @@ sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip 
 * cd outX64-Debug
 * make -j
 ### 7.prepare system and app resource
-*The cdroid.pak and yourapp's pak must be in your working directory*
-* cp src/gui/cdroid.pak ./
-* cp apps/appname/appname.pak ./
-### 8.run samples(in directory outX64-Debug)
-* apps/samples/helloworld
-* apps/uidemo1/uidemo1
+* 构建树内无需手动拷贝:cdroid.pak / widgetex.pak 生成在 out 根目录,所有 app 会自动找到(探测顺序:可执行文件所在目录及其上级、当前目录、/usr/share/cdroid、/opt/cdroid)。
+* app 自己的 `<app>.pak` 放在二进制同目录即可(目录可用 `--data` 指定)。
+* 设备安装态:把 cdroid.pak / widgetex.pak 放到 /usr/share/cdroid(或 /opt/cdroid)。
+### 8.build & run samples(in directory outX64-Debug)
+* 每个 sample 都是独立的 make 目标,例如 `make buttons` 之后运行 `apps/samples/buttons`
+* `make alarmmanager && apps/samples/alarmmanager`(AlarmManager 演示)
 
   
  
