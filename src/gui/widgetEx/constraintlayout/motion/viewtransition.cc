@@ -101,7 +101,17 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
                 mConstraintDelta.loadCustomAttribute(ctx, parser);
             }
         } else if (eventType == XmlPullParser::END_TAG) {
-            if (parser.getName() == "ViewTransition") return;
+            if (parser.getName() == "ViewTransition") {
+                /* androidx ViewTransition: an unspecified duration falls back to
+                   DEFAULT_DURATION (400ms), and upDuration falls back to duration.
+                   Without this, mDuration stays UNSET(-1) and Animate computes a
+                   negative mDpositionDt (1/-1): the position walks backwards,
+                   never reaches 1.0, the Animate is never reaped — and the
+                   controller's INFINITE frame animator spins forever. */
+                if (mDuration == UNSET) mDuration = DEFAULT_DURATION;
+                if (mUpDuration == UNSET) mUpDuration = mDuration;
+                return;
+            }
         }
         parser.next();
     }

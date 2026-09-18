@@ -69,6 +69,8 @@ class ViewTransition {
     static constexpr int VIEWTRANSITIONMODE_NOSTATE      = 2;
 
     static constexpr int UNSET = -1;
+    /* androidx ViewTransition: duration used when the XML omits app:duration. */
+    static constexpr int DEFAULT_DURATION = 400;
 
     // Caller positions `parser` at the <ViewTransition> START_TAG; this reads its attributes and
     // consumes through </ViewTransition> (parsing nested <KeyFrameSet>).

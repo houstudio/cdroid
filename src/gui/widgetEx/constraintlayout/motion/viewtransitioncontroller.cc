@@ -199,9 +199,13 @@ void ViewTransitionController::addAnimation(std::unique_ptr<ViewTransition::Anim
     ViewTransition::Animate* raw = a.get();
     mAnimations.push_back(std::move(a));
     raw->mutate(); // first frame immediately (the Animate constructor in Android calls mutate()).
-    if (mAnimator == nullptr) {
+    if (mAnimator == nullptr && mMotionLayout && mMotionLayout->isAttachedToWindow()) {
         // Start a repeating animator as the frame source (the per-draw animate() analog). Each tick
         // advances every active Animate by the elapsed wall-clock; cancelled once all finish.
+        // Gated on attach: Android ticks animate() from MotionLayout.dispatchDraw — a detached
+        // layout never draws and never ticks (tests drive detached scenes with stepAnimations()).
+        // Without the gate, a fire-and-forget on a detached layout (e.g. a hold-at-100 Animate
+        // that never receives ACTION_UP) leaves the INFINITE animator spinning forever.
         mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
         mAnimator->setDuration(1000);
         mAnimator->setRepeatCount(ValueAnimator::INFINITE);
