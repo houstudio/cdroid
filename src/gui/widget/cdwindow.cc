@@ -229,6 +229,18 @@ Window::~Window(){
 void Window::setTheme(int resid){
     ContextThemeWrapper* themed = dynamic_cast<ContextThemeWrapper*>(mContext);
     if (themed) themed->setTheme(resid);
+    // Re-apply the theme-derived window dressing. AOSP reads these at decor
+    // INSTALL time (PhoneWindow.generateLayout runs on setContentView, i.e.
+    // AFTER Activity.setTheme); CDROID's Window IS the view tree and is built
+    // eagerly in the ctor, so the ctor-time pass resolves against whatever
+    // theme was live then (for app activities: none yet). Apps call setTheme()
+    // in their ctor body / onCreate — the theme swap must refresh the window
+    // background, window animations and closeOnTouchOutside, or the window
+    // keeps the stale (empty) resolution forever (the "black page" seen when
+    // an app relies on Theme.Light's windowBackground).
+    loadThemeWindowAnimations();
+    loadThemeWindowBackground();
+    loadThemeCloseOnTouchOutside();
 }
 
 // AOSP Activity.recreate(): the system relaunches the activity with a NEW
@@ -1218,7 +1230,16 @@ void Window::loadThemeWindowBackground() {
     auto ta = mContext->getTheme().obtainStyledAttributes(attrs);
     if (!ta) return;
     if (Drawable* background = ta->getDrawable(0)) {  // null = unset or unresolvable
-        setBackground(background);  // DecorView.setWindowBackground -> setBackground
+        // Swap freely between theme installs, but never clobber a background
+        // the APP installed (setBackgroundDrawable after construction wins,
+        // AOSP DecorView.setWindowBackground semantics).
+        if (mBackgroundFromTheme || getBackground() == nullptr) {
+            LOGD("theme windowBackground=%p (fromTheme=%d)", background, (int)mBackgroundFromTheme);
+            setBackground(background);  // DecorView.setWindowBackground -> setBackground
+            mBackgroundFromTheme = true;
+        } else {
+            delete background;   // obtained but not installed — ours to free
+        }
         return;  // the fallback only applies when no window background is set
     }
     setBackgroundFallback(ta->getDrawable(1));

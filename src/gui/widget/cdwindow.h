@@ -208,6 +208,10 @@ protected:
     // to a View) and drawn by drawBackgroundFallback. The window background itself is
     // View::mBackground (setBackground transfers ownership).
     Drawable* mBackgroundFallbackDrawable = nullptr;
+    // True while the current View background came from the theme's
+    // windowBackground (loadThemeWindowBackground) — a later setTheme may swap
+    // it, but an app-installed background (setBackgroundDrawable) always wins.
+    bool mBackgroundFromTheme = false;
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;
