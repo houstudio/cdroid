@@ -140,7 +140,12 @@ inline void pumpUntilIdle(int maxMs=1000){
                so a scheduled traversal is a delayed message) still counts as
                pending work: pollOnce would time out again while it matures.
                Idle = the queue has nothing scheduled at all; otherwise grind
-               with pollAll(1), which dispatches due messages as they mature. */
+               with pollAll(1), which dispatches due messages as they mature.
+               Careful: any self-reposting delayed message (e.g. scrollbar
+               fade: awakenScrollBars posts a ~1.6s runner and every scroll
+               re-arms it) keeps the queue non-empty forever — keep test
+               trees free of those (the harness disables its own scrollbars),
+               or use pumpUntil(pred). */
             cdroid::Message* head = lp->getQueue()->peek();
             if(head == nullptr) break;
             lp->pollAll(1);

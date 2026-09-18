@@ -75,7 +75,7 @@ void rebuildDetail(){
     if(!gDetail) return;
     SpannableStringBuilder* b=new SpannableStringBuilder();
     const auto& src=selectedCases();
-    const size_t cap=200;
+    const size_t cap=50; // viewport-worth; keeps the per-case rebuild cheap
     for(size_t i = src.size()>cap? src.size()-cap : 0; i<src.size(); i++){
         const CaseRec&c=src[i];
         int col = c.status==ST_PASS?COL_PASS : c.status==ST_FAIL?COL_FAIL : COL_RUN;
@@ -173,8 +173,12 @@ void buildDrawer(){
     head->addView(spacer,new LinearLayout::LayoutParams(0,0,1.0f));
     panel->addView(head,new LinearLayout::LayoutParams(-1,56));
 
-    // upper: suite list (selectable) — auto-follows the running case
+    // upper: suite list (selectable) — auto-follows the running case.
+    // Scrollbars off for the same reason as gScroller below: setSelection
+    // re-arms the fade-delay message on every case.
     gSuiteList=new ListView(&App::getInstance());
+    gSuiteList->setVerticalScrollBarEnabled(false);
+    gSuiteList->setHorizontalScrollBarEnabled(false);
     gSuiteList->setBackgroundColor(0xFF141B22);
     gAdapter=new SuiteAdapter();
     gSuiteList->setAdapter(gAdapter);
@@ -184,8 +188,14 @@ void buildDrawer(){
     gSuiteList->setSelector(new ColorDrawable(0x22FFFFFF));
     panel->addView(gSuiteList,new LinearLayout::LayoutParams(-1,0,1.0f));
 
-    // lower: per-case detail for the current suite (scrollable, span-colored)
+    // lower: per-case detail for the current suite (scrollable, span-colored).
+    // Scrollbars off: the pane auto-follows via fullScroll, so they are pure
+    // noise — and awakenScrollBars keeps a ~1.6s fade-delay message armed in
+    // the queue after every rebuild, which makes pumpUntilIdle() grind its
+    // full timeout in every test that waits on it.
     gScroller=new ScrollView(&App::getInstance());
+    gScroller->setVerticalScrollBarEnabled(false);
+    gScroller->setHorizontalScrollBarEnabled(false);
     gScroller->setBackgroundColor(0xFF0C1116);
     gDetail=new TextView(&App::getInstance());
     gDetail->setTextSize(13);
@@ -242,8 +252,10 @@ public:
         g.selected=suite;
         int idx=indexOfSuite(suite);
         if(gSuiteList && idx>=0) gSuiteList->setSelection(idx);
-        refreshSummary();
-        rebuildDetail();
+        /* Light touch only: the detail rebuild and the suite-list rebind run
+           at OnTestEnd with the settled result — at OnTestStart they would
+           just repaint a "~ running" line and cost a full rebind each, twice
+           per case across 1500+ cases. */
     }
     void OnTestEnd(const testing::TestInfo&info)override{
         const std::string suite=info.test_suite_name();
@@ -271,7 +283,7 @@ public:
         if(wm.getWindows(wins)>0){
             for(auto* w: wins) if(w!=stage) wm.removeWindow(w);
         }
-        pumpFor(20);
+        pumpFor(5);
     }
 };
 
@@ -283,7 +295,7 @@ public:
    the gtest filter). */
 const char*const VISUAL_SUITES[]={
     "LAYOUT","EDITTEXT","EDGEEFFECT","WIDGET","APP","DIALOG","CDCONTEXT",
-    "FOCUS","ANIMATOR","ANIMATORINFLATOR","DRAWABLE_CDT","SCENE",
+    "FOCUS","ANIMATOR","ANIMATORINFLATOR","DRAWABLE_CDT","SCENE","IMAGE",
     "BaseKeyListenerTest","MultiTapKeyListenerTest",
 };
 
