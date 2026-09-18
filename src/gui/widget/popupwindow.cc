@@ -163,6 +163,10 @@ void PopupWindow::init(){
     };
 }
 
+// Fragment/MenuPopupWindow API surface (androidx kept these for L popup
+// content transitions). STORED ONLY: popup motion runs on the WINDOW level
+// (setWindowAnimations from computeAnimationResource, wired in invokePopup);
+// no consumer renders these android.transition objects on CDROID.
 void PopupWindow::setEnterTransition(Transition* enterTransition) {
     mEnterTransition = enterTransition;
 }
@@ -583,6 +587,18 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
         return ;
     mAboveAnchor = aboveAnchor;
 
+    // AOSP re-evaluates params.windowAnimations when a dropdown flips sides
+    // (Animation_DropDownUp vs _Down): the exit must slide the way the popup
+    // actually sits after an update() moved it across the anchor. Re-resolve
+    // onto the decor window — the enter leg is not re-armed (the popup's first
+    // frame is long drawn; applyWindowAnimationStyle skips the snap there).
+    if (mIsDropdown && mDecorView != nullptr) {
+        const int animRes = computeAnimationResource();
+        if (animRes != 0) {
+            ((Window*)mDecorView)->setWindowAnimations(animRes, /*enableExit=*/true);
+        }
+    }
+
     if (mBackground && mBackgroundView ) {
         // If the background drawable provided was a StateListDrawable
         // with above-anchor and below-anchor states, use those.
@@ -637,10 +653,6 @@ void PopupWindow::invokePopup(WindowManager::LayoutParams* p){
     if (p->windowAnimations != 0) {
         ((Window*)mDecorView)->setWindowAnimations(p->windowAnimations, /*enableExit=*/true);
     }
-    //mWindowManager->addView(mDecorView, p);
-    /*if (mEnterTransition != nullptr) {
-        mDecorView->requestEnterTransition(mEnterTransition);
-    }*/
 }
 
 void PopupWindow::setLayoutDirectionFromAnchor() {
