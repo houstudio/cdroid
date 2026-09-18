@@ -331,15 +331,19 @@ bool isLandscape(Context& context) {
 
 
 void setDefaultBackground(View* root) {
+    // [window-bg-experiment] Disabled wholesale (10 call sites route through
+    // here): the Window itself now paints the themed windowBackground, so
+    // fragment roots no longer need a manual colorBackground plate. Original
+    // body kept commented for quick restore.
     if (root == nullptr || root->getBackground() != nullptr) return;
-    Context& context = *root->getContext();
-    TypedValue value;
-    if (context.getTheme().resolveAttribute(0x01010031 /* android:colorBackground */,
-                &value, true)) {
-        int color = value.data;
-        if (value.resourceId != 0) color = context.getColor(value.resourceId);
-        root->setBackground(new ColorDrawable(color));
-    }
+    // Context& context = *root->getContext();
+    // TypedValue value;
+    // if (context.getTheme().resolveAttribute(0x01010031 /* android:colorBackground */,
+    //             &value, true)) {
+    //     int color = value.data;
+    //     if (value.resourceId != 0) color = context.getColor(value.resourceId);
+    //     root->setBackground(new ColorDrawable(color));
+    // }
 }
 
 } // namespace Utils

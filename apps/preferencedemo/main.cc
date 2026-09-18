@@ -282,19 +282,19 @@ public:
                 savedInstanceState);
         auto* root = dynamic_cast<cdroid::ViewGroup*>(inflater->inflate(
                 (int)preferencedemo::R::layout::prefdemo_settings, container, false));
-        // The window surface is transparent — the chrome must carry fully
-        // opaque backgrounds or the preference list floats over the desktop.
-        // Both colors follow the live theme (?android:attr/colorBackground /
-        // textColorPrimary), so switching Material <-> Material.Light restyles
-        // the chrome with no per-theme constants.
-        const int bg = themeColor(*requireContext(),
-                (int)internal::R::attr::colorBackground, 0xFFF8F9FA);
+        // [window-bg-experiment] The manual opaque chrome backdrops are disabled:
+        // the Window itself now paints the themed windowBackground
+        // (Window::loadThemeWindowBackground), so the preference list no longer
+        // floats over the desktop without these. Original lines kept commented
+        // for quick restore. The text color still follows the live theme.
+        // const int bg = themeColor(*requireContext(),
+        //         (int)internal::R::attr::colorBackground, 0xFFF8F9FA);
         const int fg = themeColor(*requireContext(),
                 (int)internal::R::attr::textColorPrimary, 0xFF1B1B1F);
-        if (root != nullptr) root->setBackgroundColor(bg);
-        if (auto* header = root ? root->findViewById((int)preferencedemo::R::id::prefdemo_header)
-                                : nullptr)
-            header->setBackgroundColor(bg);
+        // if (root != nullptr) root->setBackgroundColor(bg);
+        // if (auto* header = root ? root->findViewById((int)preferencedemo::R::id::prefdemo_header)
+        //                         : nullptr)
+        //     header->setBackgroundColor(bg);
         const std::string title = getPreferenceScreen() && !getPreferenceScreen()->getTitle().empty()
                 ? getPreferenceScreen()->getTitle() : std::string("Settings");
         auto* titleView = dynamic_cast<cdroid::TextView*>(
@@ -322,7 +322,7 @@ public:
         auto* host = dynamic_cast<cdroid::ViewGroup*>(
                 root ? root->findViewById((int)preferencedemo::R::id::prefdemo_content) : nullptr);
         if (host != nullptr) {
-            host->setBackgroundColor(bg);
+            // [window-bg-experiment] host->setBackgroundColor(bg); disabled — see above.
             if (content != nullptr) {
                 host->addView(content, new cdroid::LinearLayout::LayoutParams(
                         cdroid::LayoutParams::MATCH_PARENT,
@@ -1133,8 +1133,10 @@ protected:
         }
         auto* main = cdroid::LayoutInflater::from(getContext())->inflate(
                 (int)preferencedemo::R::layout::prefdemo_main, host, true);
-        main->setBackgroundColor(themeColor(*getContext(),
-                (int)internal::R::attr::colorBackground, 0xFFF8F9FA));
+        // [window-bg-experiment] manual pane backdrop disabled — the Window paints
+        // the themed windowBackground now:
+        // main->setBackgroundColor(themeColor(*getContext(),
+        //         (int)internal::R::attr::colorBackground, 0xFFF8F9FA));
         // Optional argv[1]: start directly at a nested screen (smoke-testing
         // every second-level page without touch input), e.g.
         //   ./preferencedemo screen_network

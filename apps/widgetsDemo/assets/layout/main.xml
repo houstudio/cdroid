@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- [window-bg-experiment] root android:background="@color/demo_bg" removed:
+     Window now paints the themed windowBackground itself; see how the bare
+     theme backdrop looks before restoring this if a specific look is wanted. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/demo_bg">
+    >
 
     <LinearLayout
         android:layout_width="match_parent"

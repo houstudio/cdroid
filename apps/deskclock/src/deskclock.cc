@@ -27,7 +27,10 @@ using uidata::UiDataModel;
 using data::DataModel;
 
 DeskClock::DeskClock() : FragmentActivity(0, 0, -1, -1) {
-   setBackgroundColor(0xFF000000);
+   // [window-bg-experiment] manual opaque backdrop disabled — the theme already
+   // carries android:windowBackground=@color/default_background (assets/values/
+   // themes.xml) and the Window paints it itself now:
+   // setBackgroundColor(0xFF000000);
 }
 
 void DeskClock::onNewIntent(const Intent& newIntent) {

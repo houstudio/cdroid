@@ -54,10 +54,12 @@ public:
         cdroid::ViewGroup* root = (cdroid::ViewGroup*)cdroid::LayoutInflater::from(getContext())
             ->inflate(printerdemo::R::layout::main, this, false);
         addView(root);
-        // The window surface is transparent by default — any region not covered by an opaque
-        // child (e.g. a strip left after a full-screen overlay is hidden, before it repaints)
-        // shows black. Give the Window itself an opaque background so uncovered areas are bg_screen.
-        setBackground(getContext()->getDrawable(printerdemo::R::drawable::bg_screen));
+        // [window-bg-experiment] The manual opaque backdrop is disabled: the Window
+        // itself now paints the themed windowBackground (Window::loadThemeWindowBackground).
+        // The original workaround (window surface transparent -> uncovered areas
+        // show black -> give the Window an opaque bg_screen drawable) stays here
+        // commented for quick restore:
+        // setBackground(getContext()->getDrawable(printerdemo::R::drawable::bg_screen));
         mToolbar = (cdroid::Toolbar*)root->findViewById(printerdemo::R::id::toolbar);
         mBottomNavigation = (cdroid::BottomNavigationView*)root->findViewById(
             printerdemo::R::id::bottom_navigation);
