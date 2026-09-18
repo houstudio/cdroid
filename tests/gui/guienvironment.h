@@ -6,7 +6,6 @@
 #include <core/messagequeue.h>
 #include <core/systemclock.h>
 #include <widget/cdwindow.h>
-#include <widget/drawerlayout.h>
 #include <widget/framelayout.h>
 #include <widget/linearlayout.h>
 #include <view/gravity.h>
@@ -21,10 +20,9 @@ private:
     int argc;
     const char**argv;
     static GUIEnvironment*mInst;
-    static cdroid::Window*       mStage;       // the one shared Window (full screen)
-    static cdroid::DrawerLayout* mDrawerLayout;// root: holds content + results drawer
-    static cdroid::ViewGroup*    mContent;     // test-screen area (DrawerLayout content)
-    static cdroid::LinearLayout* mDrawerPanel; // START drawer host; interior built in testmain
+    static cdroid::Window*       mStage;  // the one shared Window (full screen)
+    static cdroid::LinearLayout* mPanel;  // left results pane; interior built in testmain
+    static cdroid::ViewGroup*    mContent;// right test-screen pane
 public:
     GUIEnvironment(int c,const char*v[]):argc(c),argv(v){
         mInst=this;
@@ -56,29 +54,30 @@ public:
            the display's full size (see Window ctor). */
         mStage = new cdroid::Window(0, 0, -1, -1);
 
-        /* Root tree:
+        /* Root tree — side-by-side panes. A DrawerLayout drawer used to
+           overlay the test screen, hiding the UI under inspection; a
+           permanent split keeps both visible at once:
              Window
-             └─ DrawerLayout
-                ├─ content FrameLayout (gravity NO_GRAVITY) = "test screen"
-                └─ drawer  LinearLayout (gravity START)      = results panel
-           DrawerLayout drawers overlay the content (they don't shrink it): the
-           drawer is opened to read results and closed for a full-screen test.
-           The drawer interior (header + suite list + detail) is built lazily by
-           GuiTestListener in testmain.cc. */
-        mDrawerLayout = new cdroid::DrawerLayout(&cdroid::App::getInstance());
+             └─ LinearLayout (horizontal)
+                ├─ results LinearLayout (fixed 320px) = left pane
+                └─ content  FrameLayout  (weight 1)   = right pane, test screen
+           The results interior (header + suite list + detail) is built lazily
+           by GuiTestListener in testmain.cc. */
+        cdroid::LinearLayout* root = new cdroid::LinearLayout(&cdroid::App::getInstance());
+        root->setOrientation(cdroid::LinearLayout::HORIZONTAL);
+
+        mPanel = new cdroid::LinearLayout(&cdroid::App::getInstance());
+        mPanel->setOrientation(cdroid::LinearLayout::VERTICAL);
+        const int panelWidth = 320; // tweakable
+        root->addView(mPanel, 0,
+            new cdroid::LinearLayout::LayoutParams(panelWidth, -1));
 
         mContent = new cdroid::FrameLayout(&cdroid::App::getInstance());
-        mContent->setBackgroundColor(0xFF23282E); // the "canvas": distinct from the dark drawer
-        mDrawerLayout->addView(mContent, 0,
-            new cdroid::DrawerLayout::LayoutParams(-1, -1, cdroid::Gravity::NO_GRAVITY));
+        mContent->setBackgroundColor(0xFF23282E); // the "canvas": distinct from the dark panel
+        root->addView(mContent, 1,
+            new cdroid::LinearLayout::LayoutParams(0, -1, 1.0f));
 
-        mDrawerPanel = new cdroid::LinearLayout(&cdroid::App::getInstance());
-        mDrawerPanel->setOrientation(cdroid::LinearLayout::VERTICAL);
-        const int drawerWidth = 320; // tweakable
-        mDrawerLayout->addView(mDrawerPanel, 1,
-            new cdroid::DrawerLayout::LayoutParams(drawerWidth, -1, cdroid::Gravity::START));
-
-        mStage->addView(mDrawerLayout);
+        mStage->addView(root);
         printf("GUIEnvironment Setup\r\n");
     }
     void TearDown()override{
@@ -97,19 +96,15 @@ public:
     static cdroid::Window*stage(){
         return mStage;
     }
-    /* Where every test case adds its views (the DrawerLayout "content"). Cleared
-       between cases by the listener — the results drawer is a sibling, so it is
-       left untouched. */
+    /* Where every test case adds its views (the right pane). Cleared between
+       cases by the listener — the results panel is a sibling, so it is left
+       untouched. */
     static cdroid::ViewGroup*content(){
         return mContent;
     }
-    /* The DrawerLayout itself, for open/closeDrawer(). */
-    static cdroid::DrawerLayout*drawerLayout(){
-        return mDrawerLayout;
-    }
-    /* The START drawer panel (its interior is populated by the listener). */
-    static cdroid::LinearLayout*drawerPanel(){
-        return mDrawerPanel;
+    /* The left results pane (its interior is populated by the listener). */
+    static cdroid::LinearLayout*panel(){
+        return mPanel;
     }
 };
 

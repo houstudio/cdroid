@@ -9,14 +9,12 @@
 #include <core/callbackbase.h>     // Runnable
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
-#include <widget/button.h>
 #include <widget/linearlayout.h>
 #include <widget/framelayout.h>
 #include <widget/scrollview.h>
 #include <widget/listview.h>
 #include <widget/adapterview.h>
 #include <widget/adapter.h>
-#include <widget/drawerlayout.h>
 #include <drawable/colordrawable.h>
 #include <text/spannablestringbuilder.h>
 #include <text/spannablestring.h>       // Spanned flags
@@ -29,15 +27,14 @@ namespace cdroid{ class Window; }
 
 GUIEnvironment* GUIEnvironment::mInst=nullptr;
 Window*         GUIEnvironment::mStage=nullptr;
-DrawerLayout*   GUIEnvironment::mDrawerLayout=nullptr;
+LinearLayout*   GUIEnvironment::mPanel=nullptr;
 ViewGroup*      GUIEnvironment::mContent=nullptr;
-LinearLayout*   GUIEnvironment::mDrawerPanel=nullptr;
 
-/* The result drawer interior + its data. The drawer follows the currently
-   running case: the upper suite list auto-selects (and scrolls to) the running
-   case's suite; the lower detail shows only that suite's cases — colored per
-   result (+ green / x red / ~ gray running). Global pass/fail totals are shown
-   in the header. */
+/* The results pane (left) + its data. The pane follows the currently running
+   case: the upper suite list auto-selects (and scrolls to) the running case's
+   suite; the lower detail shows only that suite's cases — colored per result
+   (+ green / x red / ~ gray running). Global pass/fail totals are shown in
+   the header. */
 namespace{
 constexpr int COL_PASS = 0xFF66BB6A; // green
 constexpr int COL_FAIL = 0xFFEF5350; // red
@@ -153,7 +150,7 @@ int indexOfSuite(const std::string&sn){
 
 void buildDrawer(){
     if(gBuilt) return; gBuilt=true;
-    LinearLayout*panel=GUIEnvironment::drawerPanel();
+    LinearLayout*panel=GUIEnvironment::panel();
     panel->setBackgroundColor(0xEE0E1419);
 
     // header bar: title + global totals + close button
@@ -174,13 +171,6 @@ void buildDrawer(){
     head->addView(gHeaderSum,new LinearLayout::LayoutParams(-2,56));
     View*spacer=new View(&App::getInstance());
     head->addView(spacer,new LinearLayout::LayoutParams(0,0,1.0f));
-    Button*close=new Button(&App::getInstance()); close->setText("X");
-    close->setTextSize(16);
-    close->setOnClickListener([](View&){
-        DrawerLayout*dl=GUIEnvironment::drawerLayout();
-        if(dl) dl->closeDrawer(Gravity::START);
-    });
-    head->addView(close,new LinearLayout::LayoutParams(72,56));
     panel->addView(head,new LinearLayout::LayoutParams(-1,56));
 
     // upper: suite list (selectable) — auto-follows the running case
@@ -210,7 +200,7 @@ void buildDrawer(){
    ready; the first OnTestStart (which always runs after SetUp) finishes the job. */
 void ensureReady(const testing::UnitTest*unit){
     if(gReady) return;
-    if(!GUIEnvironment::drawerPanel()) return;
+    if(!GUIEnvironment::panel()) return;
     buildDrawer();
     /* CDROID's AttachInfo defaults mInTouchMode=true (Android defaults false).
        With no input in this harness the ListView stays in touch mode, which
@@ -229,8 +219,6 @@ void ensureReady(const testing::UnitTest*unit){
     }
     refreshSummary();
     rebuildDetail();
-    DrawerLayout*dl=GUIEnvironment::drawerLayout();
-    if(dl) dl->openDrawer(Gravity::START,false); // open, no slide-in animation
     pumpFor(40);
     gReady=true;
 }
@@ -273,7 +261,7 @@ public:
         refreshSummary();
         if(g.selected==suite) rebuildDetail();
 
-        // reset the test screen for the next case (the drawer is a sibling → untouched)
+        // reset the test screen for the next case (the results pane is a sibling → untouched)
         ViewGroup*content=GUIEnvironment::content();
         if(content) content->removeAllViews();
         // drop stray windows (dialogs / edge windows) the case may have created
@@ -287,10 +275,55 @@ public:
     }
 };
 
+/* Suites whose cases show UI on screen for human inspection (demo-style:
+   build a screen, pumpFor, look at it). They are excluded from the default
+   pure-logic regression run — run them alone with -visual, or mix everything
+   back in with -all. When adding a new visual test, add its suite name here.
+   Suite names must stay unique vs the pure suites (they are used verbatim in
+   the gtest filter). */
+const char*const VISUAL_SUITES[]={
+    "LAYOUT","EDITTEXT","EDGEEFFECT","WIDGET","APP","DIALOG","CDCONTEXT",
+    "FOCUS","ANIMATOR","ANIMATORINFLATOR","DRAWABLE_CDT","SCENE",
+    "BaseKeyListenerTest","MultiTapKeyListenerTest",
+};
+
+std::string visualFilter(){
+    std::string f;
+    for(const char*s:VISUAL_SUITES){
+        if(!f.empty()) f+=':';
+        f+=std::string(s)+".*";
+    }
+    return f;
+}
+
+/* Run-mode selection, applied via the gtest filter:
+     (default)  pure-logic regression — visual suites excluded
+     -visual    only the on-screen suites
+     -all       everything (pre-split behavior)
+   An explicit --gtest_filter on the command line always wins. */
 int main(int argc,char*argv[])
 {
+    bool visual=false, all=false;
+    /* Strip our own mode flags first so neither LogParseModules, gtest, nor
+       App ever sees them (unknown flags are not tolerated everywhere). */
+    int kept=0;
+    for(int i=0;i<argc;i++){
+        if(!strcmp(argv[i],"-visual")){ visual=true; continue; }
+        if(!strcmp(argv[i],"-all"))   { all=true;    continue; }
+        argv[kept++]=argv[i];
+    }
+    argc=kept;
+    /* Must scan before InitGoogleTest — gtest removes its own args from argv. */
+    bool explicitFilter=false;
+    for(int i=0;i<argc;i++)
+        if(!strncmp(argv[i],"--gtest_filter",14)){ explicitFilter=true; break; }
+
     LogParseModules(argc,(const char**)argv);
     testing::InitGoogleTest(&argc,argv);
+    if(!explicitFilter){
+        if(visual)      testing::GTEST_FLAG(filter)=visualFilter();
+        else if(!all)   testing::GTEST_FLAG(filter)="-"+visualFilter();
+    }
     ::testing::AddGlobalTestEnvironment(new GUIEnvironment(argc,(const char**)argv));
     ::testing::UnitTest::GetInstance()->listeners().Append(new GuiTestListener);
     return RUN_ALL_TESTS();
