@@ -33,6 +33,12 @@ list(APPEND CDROID_SOURCES
     ${PREFERENCE_SOURCES}
 )
 
+# android.app services not tied to the dialog feature set
+list(APPEND CDROID_SOURCES
+    app/alarmmanager.cc
+    app/pendingintent.cc
+)
+
 if(ENABLE_AUDIO)
     list(APPEND CDROID_SOURCES
         media/audiomanager.cc
