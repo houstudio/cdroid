@@ -36,6 +36,12 @@ public:
 ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h,int duration)
     :Window(x,y,w,h){
     mToast = toast;
+    // AOSP Toast.TN: params.windowAnimations = R.style.Animation_Toast — the
+    // toast_enter/toast_exit fades ship in the framework pak. The geometric
+    // ctor deliberately loads no theme dressing, so wire the style explicitly:
+    // the enter fade rides the compose-time alpha path, the timeout close()
+    // plays the themed ghost-exit fade.
+    setWindowAnimations((int)internal::R::style::Animation_Toast);
     // AOSP Toast.TN.handleShow: schedule ONE delayed hide for the full
     // duration (postDelayed(mHide, mDuration)). The 100ms-first-hop +
     // 500ms self-reposting poll this replaces woke the looper ~5x/s per
@@ -61,7 +67,19 @@ Toast::Toast(Context*context){
 }
 
 void Toast::show(){
+    // AOSP throws on a toast with no view and re-schedules on a re-show; the
+    // no-GC analog: no-op a re-show (a second ToastWindow would double-own
+    // mToast — both ~ToastWindow delete it) and refuse a viewless show instead
+    // of dereferencing null.
+    if (mWindow != nullptr) {
+        LOGW("Toast::show: already showing; ignoring re-show");
+        return;
+    }
     ViewGroup* frame = dynamic_cast<ViewGroup*>(mNextView);
+    if (frame == nullptr) {
+        LOGE("Toast::show: no view set (call setView/makeText first)");
+        return;
+    }
     MarginLayoutParams*lp=(MarginLayoutParams*)frame->getLayoutParams();
     const int horzMargin = lp->leftMargin+ lp->rightMargin;
     const int vertMargin = lp->topMargin + lp->bottomMargin;

@@ -87,6 +87,9 @@ void Dialog::create(){
 
 void Dialog::show(){
     if(mShowing){
+        // AOSP Dialog.show on a shown dialog: it may be hidden (hide()) — make
+        // the window visible again and nothing else.
+        if (mWindow != nullptr) mWindow->setVisibility(View::VISIBLE);
         return;
     }
     mCanceled = false;
@@ -150,6 +153,13 @@ void Dialog::show(){
 }
 
 void Dialog::hide(){
+    // AOSP Dialog.hide: mDecor.setVisibility(View.INVISIBLE) — the window stays
+    // alive, state retained, cheap re-show via show(). Window-level INVISIBLE
+    // routes hideWindow (drops the frame from the compositor and repaints what
+    // was under it); nothing is torn down.
+    if (mWindow != nullptr && mWindow->getVisibility() == View::VISIBLE) {
+        mWindow->setVisibility(View::INVISIBLE);
+    }
 }
 
 void Dialog::dismiss(){
@@ -169,7 +179,13 @@ void Dialog::dismissDialog(){
     }
     if(mWindow){
         mWindow->setCallback(nullptr);  // drop the `this` back-pointer before the posted teardown
-        mWindow->setVisibility(View::INVISIBLE);
+        // NO setVisibility(INVISIBLE) here: Window::close gates the themed ghost
+        // exit on getVisibility()==VISIBLE, and INVISIBLE would additionally route
+        // onVisibilityChanged->hideWindow, erasing the frame at once — the dialog
+        // would vanish with a hard cut every time despite the theme's
+        // Animation.Dialog exit (AOSP dismiss goes WMS remove + exit animation).
+        // close() tears the view tree down synchronously and hands the pixels to
+        // the compositor ghost; nothing lingers that INVISIBLE used to hide.
         mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
         mDismissedWindow = mWindow; // keep the arbitration handle (see dialog.h)
         mWindow = nullptr;         // idempotent: prevent double-close crash on re-entry
