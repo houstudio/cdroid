@@ -112,7 +112,12 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
         }
     });
     const int64_t uptimeMillis = SystemClock::uptimeMillis() + SUBMENU_TIMEOUT_MS;
-    LOGE("TODO");//mSubMenuHoverHandler->postAtTime(runnable,menu, uptimeMillis);
+    // Token = the menu: onItemHoverExit's removeCallbacksAndMessages(&menu)
+    // (and the dismiss sweep's removeCallbacksAndMessages(nullptr)) cancel a
+    // pending hover-open when the menu changes or the popup tears down — the
+    // runnable's by-ref captures (menu/item/this) all live inside that popup,
+    // so those removes are the no-GC liveness contract.
+    mSubMenuHoverHandler->postAtTime(runnable, &menu, uptimeMillis);
 }
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,

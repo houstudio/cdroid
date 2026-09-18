@@ -205,6 +205,10 @@ bool Handler::postAtTime(const Runnable& r,int64_t uptimeMillis){
     return sendMessageAtTime(getPostMessage(r),uptimeMillis);
 }
 
+bool Handler::postAtTime(const Runnable& r,void* token,int64_t uptimeMillis){
+    return sendMessageAtTime(getPostMessage(r,token),uptimeMillis);
+}
+
 bool Handler::postDelayed(const Runnable& r,long delayMillis){
     return sendMessageDelayed(getPostMessage(r),delayMillis);
 }
