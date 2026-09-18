@@ -26,8 +26,12 @@ void AnimationHandler::MyFrameCallbackProvider::postFrameCallback(const Choreogr
     Choreographer::getInstance().postFrameCallback(callback);
 }
 
-void AnimationHandler::MyFrameCallbackProvider::postCommitCallback(Runnable& runnable) {
-    Choreographer::getInstance().postCallback(Choreographer::CALLBACK_COMMIT, runnable, nullptr);
+void AnimationHandler::MyFrameCallbackProvider::postCommitCallback(Runnable& runnable, void* token) {
+    Choreographer::getInstance().postCallback(Choreographer::CALLBACK_COMMIT, runnable, token);
+}
+
+void AnimationHandler::MyFrameCallbackProvider::removeCommitCallbacks(void* token) {
+    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_COMMIT, nullptr, token);
 }
 
 int64_t AnimationHandler::MyFrameCallbackProvider::getFrameTime() {
@@ -88,7 +92,10 @@ void AnimationHandler::doAnimationFrame(int64_t frameTime){
                 runner = [this,callback](){
                     commitAnimationFrame(callback, getProvider()->getFrameTime());
                 };
-                getProvider()->postCommitCallback(runner);
+                // Token = the animator: removeCallback() drops every not-yet-
+                // drained COMMIT runner for it, so a freed animator is never
+                // invoked from the commit queue.
+                getProvider()->postCommitCallback(runner, callback);
             }
         }
     }
@@ -174,6 +181,10 @@ void AnimationHandler::removeCallback(AnimationFrameCallback* callback){
             (*it3) = nullptr;
             mListDirty = true;
         }
+        // Also revoke any COMMIT runner already posted to the Choreographer
+        // for this animator: it captures the raw pointer, and draining it after
+        // the animator is freed is a dangling virtual call.
+        getProvider()->removeCommitCallbacks(callback);
     }
 }
 
