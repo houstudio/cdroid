@@ -728,8 +728,10 @@ void Typeface::loadPreinstalledSystemFontMap() {
     // Prefer an Android fonts.xml / font_fallback.xml (curated named families + ordered
     // fallback chain). Try the explicitly-configured path, the build-tree snapshot
     // next to the executable, then common system locations.
-    // Fontconfig enumeration stays as the last resort only — a full desktop
-    // font set makes startup crawl.
+    // There is NO fontconfig fallback anymore (enumeration retired): when no
+    // candidate hits, the system font map stays empty and the warning below
+    // points at build.sh/genfontsxml.sh, which snapshots the host font set
+    // into <out>/fonts.xml at build time.
     bool loadedFromXml = false;
     std::vector<std::string> candidates;
     if (!sFontConfigXml.empty()) candidates.push_back(sFontConfigXml);
