@@ -34,7 +34,12 @@ public:
 };
 
 ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h,int duration)
-    :Window(x,y,w,h){
+    // Bare-window flavor: AOSP toasts are transparent overlay windows that
+    // draw their own backdrop (transient_notification's plate) — no themed
+    // windowBackground (the app/theme background would give the toast a solid
+    // opaque rectangle). The toast's motion comes from Animation_Toast below.
+    :Window(&App::getInstance(), x, y, w, h, Window::TYPE_APPLICATION,
+            /*themeWindowAnimations=*/false){
     mToast = toast;
     // AOSP Toast.TN: params.windowAnimations = R.style.Animation_Toast — the
     // toast_enter/toast_exit fades ship in the framework pak. The geometric

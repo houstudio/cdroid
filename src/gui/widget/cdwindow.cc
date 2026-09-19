@@ -69,12 +69,45 @@ void Window::loadThemeCloseOnTouchOutside() {
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : FrameLayout(&App::getInstance()),window_type(type){
+  // Delegate to the THEMED ctor: every window constructor installs the theme
+  // dressing (windowBackground, window animations, closeOnTouchOutside) by
+  // default — AOSP windows are themed windows; the bare-window flavor (popups,
+  // toast) opts out through the explicit themeWindowAnimations=false argument.
+  // This ctor used to build the context as a plain &App (no themed wrapper), so
+  // Activity-family windows here had a fully transparent surface until the
+  // subclass hand-called setTheme (widgetsDemo's transparent window) — and
+  // setTheme itself could not apply (Window::setTheme casts mContext to
+  // ContextThemeWrapper, which the bare assignment never was).
+  // Delegation also keeps the first-frame pending region this ctor used to seed.
+  : Window(&App::getInstance(), x, y, width, height, type){
+    LOGD("Window::Window(%p)",this);
+}
+
+// AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
+// ContextThemeWrapper) context drives inflation instead of the global App.
+// AOSP windows belong to an Activity, which IS a ContextThemeWrapper — CDROID
+// windows are the Activity, so a plain context is wrapped in an empty
+// ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
+// giving every window its own theme for Window::setTheme()/recreate().
+// This ctor owns the geometric setup too (the (x,y,w,h) ctor delegates here):
+// display-size resolution, LayoutParams, frame, first-frame pending region,
+// compositor registration. themeWindowAnimations=false is the bare-window
+// flavor (popup decors, toast) that skips the theme dressing.
+Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool themeWindowAnimations)
+  : FrameLayout(ctx ? ctx : &App::getInstance()),window_type(type){
     initWindow();
     LOGD("Window::Window(%p)",this);
-    // Set the boundary
-    // Do the resizing at first time in order to invoke the OnLayout
-    mContext = &App::getInstance();
+    // AOSP performLaunchActivity applies the manifest theme (activity's, else
+    // the application's) before the activity class instantiates; App routes it
+    // through a pending slot so the themed overlay exists before the subclass
+    // ctor inflates content.
+    const int themeResId = App::getInstance().mPendingActivityTheme;
+    if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
+        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), themeResId);
+        mOwnsContext = true;
+    } else {
+        mContext = ctx;
+    }
     Point size;
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     if(width<0)  width = size.x;
@@ -89,30 +122,11 @@ Window::Window(int x,int y,int width,int height,int type)
     mPendingRgn->do_union({0,0,width,height});
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
-}
-
-// AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
-// ContextThemeWrapper) context drives inflation instead of the global App.
-// AOSP windows belong to an Activity, which IS a ContextThemeWrapper — CDROID
-// windows are the Activity, so a plain context is wrapped in an empty
-// ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
-// giving every window its own theme for Window::setTheme()/recreate().
-Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool themeWindowAnimations)
-  : Window(x,y,width,height,type){
-    // AOSP performLaunchActivity applies the manifest theme (activity's, else
-    // the application's) before the activity class instantiates; App routes it
-    // through a pending slot so the themed overlay exists before the subclass
-    // ctor inflates content.
-    const int themeResId = App::getInstance().mPendingActivityTheme;
-    if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
-        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), themeResId);
-        mOwnsContext = true;
-    } else {
-        mContext = ctx;
-    }
-    // Theme-driven window animations resolve against the FINAL context (the themed overlay
-    // above), which did not exist when the delegated geometric ctor ran — load them here.
-    // PopupDecorView opts out (see the ctor declaration note).
+    // Theme dressing (windowAnimationStyle pair AND windowBackground/fallback) —
+    // AOSP's generateLayout belongs to app/activity windows; popup decors and
+    // the toast opt out (they carry their own animation style / draw their own
+    // backdrop, and popups align to the anchor AFTER construction, so a
+    // ctor-time enter snap would capture a stale resting position).
     if (themeWindowAnimations) {
         loadThemeWindowAnimations();
         loadThemeWindowBackground();

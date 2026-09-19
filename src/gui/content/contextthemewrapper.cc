@@ -65,7 +65,13 @@ Resources::Theme ContextThemeWrapper::getTheme() {
 }
 
 void ContextThemeWrapper::onApplyThemeResource(Resources::Theme& theme,int resId,bool /*first*/) {
-    theme.applyStyle(resId, true);
+    // AOSP ContextThemeWrapper.initializeTheme: applyStyle only when a theme
+    // resource was actually set (mThemeResource != 0) — a theme-less wrapper
+    // (app-driven windows created without a pending activity theme) keeps the
+    // base context's theme untouched instead of applyStyle(0).
+    if (resId != 0) {
+        theme.applyStyle(resId, true);
+    }
 }
 
 void ContextThemeWrapper::initializeTheme() {
