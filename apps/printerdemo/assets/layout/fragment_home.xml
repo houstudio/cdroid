@@ -16,7 +16,7 @@
         <FrameLayout
             android:id="@+id/hero"
             android:layout_width="match_parent"
-            android:layout_height="92dp"
+            android:layout_height="84dp"
             android:background="@drawable/hero_bg">
             <View
                 android:layout_width="210dp"
@@ -56,7 +56,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="@string/home_title" android:textSize="25sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                            android:text="@string/home_title" android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -107,7 +107,7 @@
                 android:layout_marginTop="14dp" android:orientation="horizontal" android:gravity="center">
                 <!-- K 85% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_k_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="15"/>
                         <View android:id="@+id/ink_k_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="85" android:background="?attr/inkBlackFill"/>
                     </LinearLayout>
@@ -118,7 +118,7 @@
                 </LinearLayout>
                 <!-- C 60% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_c_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40"/>
                         <View android:id="@+id/ink_c_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60" android:background="@drawable/ink_fill_c"/>
                     </LinearLayout>
@@ -129,7 +129,7 @@
                 </LinearLayout>
                 <!-- M 40% (low) -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_m_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60"/>
                         <View android:id="@+id/ink_m_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40" android:background="@drawable/ink_fill_m"/>
                     </LinearLayout>
@@ -140,7 +140,7 @@
                 </LinearLayout>
                 <!-- Y 72% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_y_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="28"/>
                         <View android:id="@+id/ink_y_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="72" android:background="@drawable/ink_fill_y"/>
                     </LinearLayout>
