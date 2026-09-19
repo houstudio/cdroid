@@ -1,33 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Single-label selection grow: the stateListAnimator replaces material's
      small/large label pair — one TextView, ColorStateList for the color and
-     this SLA for the 12sp->14sp equivalent scale (1.2x, overshoot). -->
+     this SLA animating TEXT SIZE for the 12sp->14sp material selection grow.
+     NB: an earlier take animated scaleX/scaleY, but a view scale is a purely
+     visual transform — the layout never re-flows, so the grown tab's 1.2x
+     bounds spilled over the neighbouring tab (they overlapped on screen).
+     Animating textSize grows the LABEL inside the fixed-width tab, which is
+     what BottomNavigationItemView's small/large label pair actually does. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_activated="true">
         <set>
             <objectAnimator
-                android:propertyName="scaleX"
+                android:propertyName="textSize"
                 android:duration="200"
-                android:valueTo="1.2"
-                android:interpolator="@android:anim/overshoot_interpolator" />
-            <objectAnimator
-                android:propertyName="scaleY"
-                android:duration="200"
-                android:valueTo="1.2"
+                android:valueFrom="14"
+                android:valueTo="17"
                 android:interpolator="@android:anim/overshoot_interpolator" />
         </set>
     </item>
     <item>
         <set>
             <objectAnimator
-                android:propertyName="scaleX"
+                android:propertyName="textSize"
                 android:duration="140"
-                android:valueTo="1.0"
-                android:interpolator="@android:anim/accelerate_decelerate_interpolator" />
-            <objectAnimator
-                android:propertyName="scaleY"
-                android:duration="140"
-                android:valueTo="1.0"
+                android:valueFrom="17"
+                android:valueTo="14"
                 android:interpolator="@android:anim/accelerate_decelerate_interpolator" />
         </set>
     </item>
