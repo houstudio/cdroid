@@ -84,6 +84,9 @@ public:
     BluetoothClass getBluetoothClass() const;
     /* Get the device type: CLASSIC / LE / DUAL / UNKNOWN. */
     int getType() const;
+    /* Get the supported service UUIDs (SDP/GATT cache; empty until the
+     * stack has resolved them — bonding triggers the SDP browse). */
+    std::vector<BluetoothUuid> getUuids() const;
 
     /* Start the bonding (pairing) process. Blocking on this module-phase
      * port: AOSP's call is fire-and-forget with the outcome arriving via

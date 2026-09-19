@@ -43,6 +43,7 @@ using cdroid::BluetoothProfile;
 using cdroid::BluetoothA2dp;
 using cdroid::BluetoothPan;
 using cdroid::BluetoothHeadset;
+using cdroid::BluetoothHidHost;
 using cdroid::BluetoothGattCallback;
 using cdroid::BluetoothGattCharacteristic;
 using cdroid::BluetoothGattService;
@@ -372,6 +373,72 @@ int main(int argc, char** argv) {
         printf("profiles: a2dp=%d hfp=%d (stubs until the audio "
                "pipeline lands)\n", (int)a2dp, (int)hfp);
         return (a2dp && hfp) ? 0 : 1;
+    }
+    if (cmd == "hid" && argc >= 3) {
+        /* HID host: "hid state <bdaddr>" / "hid connect|disconnect <bdaddr>"
+         * / "hid list" — ConnectProfile with the HID UUID; the input
+         * itself arrives as a kernel uhid evdev device. */
+        BluetoothHidHost* hid = nullptr;
+        BluetoothProfile::ServiceListener getter;
+        getter.onServiceConnected = [&hid](int, BluetoothProfile* proxy) {
+            hid = (BluetoothHidHost*)proxy;
+        };
+        if (!adapter.getProfileProxy(getter, BluetoothProfile::HID_HOST)
+                || hid == nullptr) {
+            printf("hid: proxy failed\n");
+            return 1;
+        }
+        const std::string sub = argv[2];
+        if (sub == "list") {
+            printf("hid connected devices:\n");
+            for (const BluetoothDevice& d : hid->getConnectedDevices()) {
+                printf("  %s (%s)\n", d.getAddress().c_str(),
+                       d.getName().c_str());
+            }
+            adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+            return 0;
+        }
+        if (argc >= 4) {
+            const BluetoothDevice remote = adapter.getRemoteDevice(argv[3]);
+            if (sub == "state") {
+                const int state = hid->getConnectionState(remote);
+                printf("hid %s state: %d (%s), %zu uuids\n", argv[3], state,
+                       state == BluetoothProfile::STATE_CONNECTED
+                               ? "CONNECTED" : "DISCONNECTED",
+                       remote.getUuids().size());
+                adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+                return 0;
+            }
+            if (sub == "connect" || sub == "disconnect") {
+                const bool ok = sub == "connect" ? hid->connect(remote)
+                                                 : hid->disconnect(remote);
+                printf("hid %s %s: %s\n", sub.c_str(), argv[3],
+                       ok ? "ok" : "FAILED");
+                adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+                return ok ? 0 : 1;
+            }
+            if (sub == "policy") {
+                printf("hid %s policy: connectionPolicy=%d priority=%d\n",
+                       argv[3], hid->getConnectionPolicy(remote),
+                       hid->getPriority(remote));
+                adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+                return 0;
+            }
+            if (sub == "allow" || sub == "forbid") {
+                const int policy = sub == "allow"
+                        ? BluetoothProfile::CONNECTION_POLICY_ALLOWED
+                        : BluetoothProfile::CONNECTION_POLICY_FORBIDDEN;
+                const bool ok = hid->setConnectionPolicy(remote, policy);
+                printf("hid %s %s: %s\n", sub.c_str(), argv[3],
+                       ok ? "ok" : "FAILED");
+                adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+                return ok ? 0 : 1;
+            }
+        }
+        printf("usage: bttest hid list | hid state|connect|disconnect|policy|"
+               "allow|forbid <bdaddr>\n");
+        adapter.closeProfileProxy(BluetoothProfile::HID_HOST, hid);
+        return 1;
     }
     if (cmd == "pan" && argc >= 3) {
         /* PAN: "pan on|off|status" (NAP tethering — bridge bt-pan must

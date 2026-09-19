@@ -175,6 +175,12 @@ public:
     /* Adapter1.RemoveDevice (forget). */
     bool removeDevice(const std::string& address);
     bool setDeviceAlias(const std::string& address, const std::string& alias);
+    /* Properties.Set(Device1.Trusted). AOSP's stack trusts every bonded
+     * device at bond completion (the btif storage path); BlueZ needs the
+     * explicit flag or the pairing agent denies the remote-initiated
+     * reconnects HID devices make. Fired automatically on Paired
+     * false->true transitions (handlePropertiesChanged). */
+    bool setDeviceTrusted(const std::string& address, bool trusted);
 
     /* --- BLE -------------------------------------------------------------- */
 
@@ -186,6 +192,13 @@ public:
     /* Device1.Connect / Disconnect (the GATT bearer). */
     bool connectDevice(const std::string& address);
     bool disconnectDevice(const std::string& address);
+    /* Device1.ConnectProfile / DisconnectProfile(uuid): connect exactly
+     * one profile (128-bit UUID string) — plain Connect() grabs every
+     * auto-connect profile at once. */
+    bool connectDeviceProfile(const std::string& address,
+                              const std::string& uuid);
+    bool disconnectDeviceProfile(const std::string& address,
+                                 const std::string& uuid);
 
     /* --- GATT cache (from GetManagedObjects, refreshed by signals) ------- */
     std::vector<BluezGattService> getGattServices(const std::string& deviceAddress) const;
@@ -265,6 +278,9 @@ private:
     bool adapterCall(const char* method);
     /* call a void method on a device object */
     bool deviceCall(const std::string& address, const char* method);
+    /* call a one-string-argument method on a device object */
+    bool deviceCallString(const std::string& address, const char* method,
+                          const std::string& arg);
     std::string pathForAddressLocked(const std::string& address) const;
 
     static int onPropertiesChangedStatic(sd_bus_message* m, void* userdata,
