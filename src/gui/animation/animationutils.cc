@@ -17,22 +17,24 @@
  *********************************************************************************/
 #include <animation/animationutils.h>
 #include <animation/animations.h>
+#include <widget/internal_R.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-std::unordered_map<std::string,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
+std::map<std::pair<int,void*>,std::shared_ptr<Interpolator>>AnimationUtils::mInterpolators;
 
 int64_t AnimationUtils::currentAnimationTimeMillis(){
     return SystemClock::uptimeMillis();
 }
 
-Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
-    Animation*anim = nullptr;
-    XmlPullParser parser(context,resid);
-    const AttributeSet& attrs = parser;
-    return createAnimationFromXml(context,parser,nullptr,attrs);
+
+Animation* AnimationUtils::loadAnimation(Context* context,int id){
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    return createAnimationFromXml(context,*parser,nullptr,attrs);
 }
 
 Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& parser,AnimationSet* parent,const AttributeSet& attrs){
@@ -73,10 +75,11 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
     return anim;
 }
 
-LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
-    XmlPullParser parser(context,resid);
-    const AttributeSet& attrs = parser;
-    return createLayoutAnimationFromXml(context,parser,attrs);
+
+LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,int id){
+    auto parser = context->getResources().getXml(id);
+    const AttributeSet& attrs = *parser;
+    return createLayoutAnimationFromXml(context,*parser,attrs);
 }
 
 LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context* c,
@@ -105,40 +108,58 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
 }
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
-    Animation*a = loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
+    Animation*a = loadAnimation(c, fromLeft ? (int)R::anim::slide_in_left : (int)R::anim::slide_in_right);
     a->setInterpolator(DecelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
-    Animation*a = loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
+    Animation*a = loadAnimation(c, toRight ? (int)R::anim::slide_out_right : (int)R::anim::slide_out_left);
     a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
-    Animation*a = loadAnimation(c,"cdroid:anim/slide_in_child_bottom.xml");
+    Animation*a = loadAnimation(c, R::anim::slide_in_child_bottom);
     a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
-Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string& id){
-    XmlPullParser parser(context,id);
-    return createInterpolatorFromXml(context, parser,id);
+
+Interpolator* AnimationUtils::loadInterpolator(Context*context,int id){
+    if (id == 0) return nullptr;  // AOSP: 0 → null
+    // AOSP java:413-416: open through the context's resources, style through
+    // its theme (cache key (id, theme engine) — see the header).
+    Resources& res = context->getResources();
+    Resources::Theme theme = context->getTheme();
+    auto it = mInterpolators.find({id, theme._engineHandle()});
+    if (it != mInterpolators.end()) return it->second.get();
+    auto parser = res.getXml(id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(&res, &theme, *parser);
+    if (interpolator) mInterpolators.emplace(std::make_pair(id, theme._engineHandle()), interpolator);
+    return interpolator.get();
 }
 
-static std::unordered_map<std::string,std::shared_ptr<Interpolator>>mInterpolators;
-Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser,const std::string&resid){
+// AOSP @hide loadInterpolator(Resources, Theme, int) (java:435-440).
+Interpolator* AnimationUtils::loadInterpolator(Resources* res,const Resources::Theme* theme,int id){
+    if (id == 0) return nullptr;  // AOSP: 0 → null
+    void* engine = theme ? theme->_engineHandle() : nullptr;
+    auto it = mInterpolators.find({id, engine});
+    if (it != mInterpolators.end()) return it->second.get();
+    auto parser = res->getXml(id);
+    std::shared_ptr<Interpolator> interpolator = createInterpolatorFromXml(res, theme, *parser);
+    if (interpolator) mInterpolators.emplace(std::make_pair(id, engine), interpolator);
+    return interpolator.get();
+}
+
+std::shared_ptr<Interpolator> AnimationUtils::createInterpolatorFromXml(Resources* res,const Resources::Theme* theme,XmlPullParser&parser){
     int type;
     const int depth = parser.getDepth();
     std::shared_ptr<BaseInterpolator>interpolator;
     const AttributeSet& attrs = parser;
-    auto it = mInterpolators.find(resid);
-    if(it!=mInterpolators.end())
-        return it->second.get();
     while(((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
@@ -149,29 +170,28 @@ Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPull
         if (0==name.compare("linearInterpolator")) {
             interpolator = std::make_shared<LinearInterpolator>();
         } else if (0==name.compare("accelerateInterpolator")) {
-            interpolator = std::make_shared<AccelerateInterpolator>(context, attrs);
+            interpolator = std::make_shared<AccelerateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("decelerateInterpolator")) {
-            interpolator = std::make_shared<DecelerateInterpolator>(context, attrs);
+            interpolator = std::make_shared<DecelerateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("accelerateDecelerateInterpolator")) {
             interpolator = std::make_shared<AccelerateDecelerateInterpolator>();
         } else if (0==name.compare("cycleInterpolator")) {
-            interpolator = std::make_shared<CycleInterpolator>(context, attrs);
+            interpolator = std::make_shared<CycleInterpolator>(res, theme, attrs);
         } else if (0==name.compare("anticipateInterpolator")) {
-            interpolator = std::make_shared<AnticipateInterpolator>(context,attrs);
+            interpolator = std::make_shared<AnticipateInterpolator>(res, theme, attrs);
         } else if (0==name.compare("overshootInterpolator")) {
-            interpolator = std::make_shared<OvershootInterpolator>(context, attrs);
+            interpolator = std::make_shared<OvershootInterpolator>(res, theme, attrs);
         } else if (0==name.compare("anticipateOvershootInterpolator")) {
-            interpolator = std::make_shared<AnticipateOvershootInterpolator>(context,attrs);
+            interpolator = std::make_shared<AnticipateOvershootInterpolator>(res, theme, attrs);
         } else if (0==name.compare("bounceInterpolator")) {
             interpolator = std::make_shared<BounceInterpolator>();
         } else if (0==name.compare("pathInterpolator")) {
-            interpolator = std::make_shared<PathInterpolator>(context,attrs);
+            interpolator = std::make_shared<PathInterpolator>(res, theme, attrs);
         } else {
             LOGE("Unknown interpolator name: %s",name.c_str());
         }
     }
-    mInterpolators.insert({resid,interpolator});
-    return interpolator.get();
+    return interpolator;
 }
 
 }

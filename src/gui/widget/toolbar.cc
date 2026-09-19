@@ -15,99 +15,119 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <text/textutils.h>
 #include <widget/toolbar.h>
+#include <widget/framework_styleable.h>
 #include <menu/actionmenupresenter.h>
 #include <gui_features.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(Toolbar)
+DECLARE_WIDGET2(Toolbar, "android.widget.Toolbar");
 
-Toolbar::Toolbar(Context*ctx,const AttributeSet&atts):ViewGroup(ctx,atts){
+Toolbar::Toolbar(Context*ctx)
+    :Toolbar(ctx,nullptr){}
+
+Toolbar::Toolbar(Context*ctx,const AttributeSet* atts):Toolbar(ctx,atts,0){}
+
+Toolbar::Toolbar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ViewGroup(ctx,pAttrs, defStyleAttr){
     initToolbar();
+
+    // Styled-attribute reads (AOSP Toolbar ctor body, verbatim order/methods).
+    // Text-XML ctor path dropped: resolves only through the binary-AXML
+    // TypedArray; a==null (text XML / no arsc) leaves the toolbar at defaults.
+    auto a = ctx->obtainStyledAttributes(pAttrs, R::styleable::Toolbar, defStyleAttr);
     
-    mTitleTextAppearance = atts.getString("titleTextAppearance");
-    mSubtitleTextAppearance = atts.getString("subtitleTextAppearance");
-    mNavButtonStyle= atts.getString("navigationButtonStyle");
-    mGravity = atts.getGravity("gravity",mGravity);
-    mButtonGravity = atts.getGravity("buttonGravity",Gravity::TOP);
-    mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
-              atts.getDimensionPixelOffset("titleMargin", 0);
-    const int marginStart = atts.getDimensionPixelOffset("titleMarginStart", -1);
-    if (marginStart >= 0) { mTitleMarginStart = marginStart; }
+// AOSP reads these via getResourceId(@StyleRes int).
+mTitleTextAppearance = a->getResourceId(R::styleable::Toolbar_titleTextAppearance, 0);
+mSubtitleTextAppearance = a->getResourceId(R::styleable::Toolbar_subtitleTextAppearance, 0);
+// AOSP ensureNavButtonView passes R.attr.toolbarNavigationButtonStyle as the
+// ImageButton defStyleAttr; CDROID's res registers it as navigationButtonStyle.
+mNavButtonStyle = R::attr::navigationButtonStyle;
+// navigationButtonStyle is a private framework attr with no resource id
+// (skipped by gen_styleable) — not readable through the TypedArray.
+mGravity = a->getInteger(R::styleable::Toolbar_gravity, mGravity);
+mButtonGravity = a->getInteger(R::styleable::Toolbar_buttonGravity, Gravity::TOP);
+mTitleMarginStart = mTitleMarginEnd = mTitleMarginTop = mTitleMarginBottom =
+          a->getDimensionPixelOffset(R::styleable::Toolbar_titleMargin, 0);
+const int marginStart = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginStart, -1);
+if (marginStart >= 0) { mTitleMarginStart = marginStart; }
 
-    const int marginEnd = atts.getDimensionPixelOffset("titleMarginEnd", -1);
-    if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
+const int marginEnd = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginEnd, -1);
+if (marginEnd >= 0) { mTitleMarginEnd = marginEnd; }
 
-    const int marginTop = atts.getDimensionPixelOffset("titleMarginTop", -1);
-    if (marginTop >= 0) { mTitleMarginTop = marginTop; }
+const int marginTop = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginTop, -1);
+if (marginTop >= 0) { mTitleMarginTop = marginTop; }
 
-    const int marginBottom = atts.getDimensionPixelOffset("titleMarginBottom", -1);
-    if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
+const int marginBottom = a->getDimensionPixelOffset(R::styleable::Toolbar_titleMarginBottom, -1);
+if (marginBottom >= 0) { mTitleMarginBottom = marginBottom; }
 
-    mMaxButtonHeight = atts.getDimensionPixelSize("maxButtonHeight", -1);
+mMaxButtonHeight = a->getDimensionPixelSize(R::styleable::Toolbar_maxButtonHeight, -1);
 
-    const int contentInsetStart= atts.getDimensionPixelOffset("contentInsetStart",RtlSpacingHelper::UNDEFINED);
-    const int contentInsetEnd  = atts.getDimensionPixelOffset("contentInsetEnd", RtlSpacingHelper::UNDEFINED);
-    const int contentInsetLeft = atts.getDimensionPixelSize("contentInsetLeft", 0);
-    const int contentInsetRight= atts.getDimensionPixelSize("contentInsetRight", 0);
+const int contentInsetStart= a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetStart,RtlSpacingHelper::UNDEFINED);
+const int contentInsetEnd  = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetEnd, RtlSpacingHelper::UNDEFINED);
+const int contentInsetLeft = a->getDimensionPixelSize(R::styleable::Toolbar_contentInsetLeft, 0);
+const int contentInsetRight= a->getDimensionPixelSize(R::styleable::Toolbar_contentInsetRight, 0);
 
-    ensureContentInsets();
-    mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
+ensureContentInsets();
+mContentInsets->setAbsolute(contentInsetLeft, contentInsetRight);
 
-    if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
-            contentInsetEnd != RtlSpacingHelper::UNDEFINED) {
-        mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
-    }
+if (contentInsetStart != RtlSpacingHelper::UNDEFINED ||
+        contentInsetEnd != RtlSpacingHelper::UNDEFINED) {
+    mContentInsets->setRelative(contentInsetStart, contentInsetEnd);
+}
 
-    mContentInsetStartWithNavigation = atts.getDimensionPixelOffset("contentInsetStartWithNavigation", RtlSpacingHelper::UNDEFINED);
-    mContentInsetEndWithActions = atts.getDimensionPixelOffset("contentInsetEndWithActions", RtlSpacingHelper::UNDEFINED);
+mContentInsetStartWithNavigation = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetStartWithNavigation, RtlSpacingHelper::UNDEFINED);
+mContentInsetEndWithActions = a->getDimensionPixelOffset(R::styleable::Toolbar_contentInsetEndWithActions, RtlSpacingHelper::UNDEFINED);
 
-    mCollapseIcon = atts.getDrawable("collapseIcon");
-    mCollapseDescription = atts.getString("collapseContentDescription");
+mCollapseIcon = a->getDrawable(R::styleable::Toolbar_collapseIcon);
+mCollapseDescription = a->getText(R::styleable::Toolbar_collapseContentDescription);
 
-    std::string title = atts.getString("title");
-    if (!title.empty()){
-        setTitle(title);
-    }
+std::string title = a->getText(R::styleable::Toolbar_title);
+if (!title.empty()){
+    setTitle(title);
+}
 
-    std::string subtitle = atts.getString("subtitle");
-    if (!subtitle.empty()) {
-        setSubtitle(subtitle);
-    }
+std::string subtitle = a->getText(R::styleable::Toolbar_subtitle);
+if (!subtitle.empty()) {
+    setSubtitle(subtitle);
+}
+
+Drawable* navIcon = a->getDrawable(R::styleable::Toolbar_navigationIcon);
+if (navIcon != nullptr) {
+    setNavigationIcon(navIcon);
+}
+
+std::string navDesc = a->getText(R::styleable::Toolbar_navigationContentDescription);
+if (!navDesc.empty()) {
+    setNavigationContentDescription(navDesc);
+}
+
+Drawable* logo = a->getDrawable(R::styleable::Toolbar_logo);
+if (logo != nullptr) {
+    setLogo(logo);
+}
+
+std::string logoDesc = a->getText(R::styleable::Toolbar_logoDescription);
+if (!logoDesc.empty()) {
+    setLogoDescription(logoDesc);
+}
+
+if (a->hasValue(R::styleable::Toolbar_titleTextColor)) {
+    setTitleTextColor(a->getColor(R::styleable::Toolbar_titleTextColor, 0xffffffff));
+}
+
+if (a->hasValue(R::styleable::Toolbar_subtitleTextColor)) {
+    setSubtitleTextColor(a->getColor(R::styleable::Toolbar_subtitleTextColor, 0xffffffff));
+}
+
 
     // Set the default context, since setPopupTheme() may be a no-op.
     mPopupContext = mContext;
-    //setPopupTheme(atts.getResourceId(R.styleable.Toolbar_popupTheme, 0));
-
-    Drawable* navIcon = atts.getDrawable("navigationIcon");
-    if (navIcon != nullptr) {
-        setNavigationIcon(navIcon);
-    }
-
-    std::string navDesc = atts.getString("navigationContentDescription");
-    if (!navDesc.empty()) {
-        setNavigationContentDescription(navDesc);
-    }
-
-    Drawable* logo = atts.getDrawable("logo");
-    if (logo != nullptr) {
-        setLogo(logo);
-    }
-
-    std::string logoDesc = atts.getString("logoDescription");
-    if (!logoDesc.empty()) {
-        setLogoDescription(logoDesc);
-    }
-
-    if (atts.hasAttribute("titleTextColor")) {
-        setTitleTextColor(atts.getColor("titleTextColor", 0xffffffff));
-    }
-
-    if (atts.hasAttribute("subtitleTextColor")) {
-        setSubtitleTextColor(atts.getColor("subtitleTextColor", 0xffffffff));
-    }
+    //setPopupTheme(a.getResourceId(R.styleable.Toolbar_popupTheme, 0));
 }
 
 void Toolbar::initToolbar(){
@@ -327,7 +347,7 @@ bool Toolbar::isTitleTruncated()const{
     return false;
 }
 
-void Toolbar::setLogo(const std::string& resId){
+void Toolbar::setLogo(int resId){
     setLogo(getContext()->getDrawable(resId));
 }
 
@@ -366,7 +386,7 @@ std::string Toolbar::getLogoDescription()const{
 
 void Toolbar::ensureLogoView() {
     if (mLogoView == nullptr) {
-        mLogoView = new ImageView(getContext(),AttributeSet(mContext,"cdroid"));
+        mLogoView = new ImageView(getContext(),nullptr);
     }
 }
 
@@ -396,10 +416,10 @@ void Toolbar::setTitle(const std::string&title){
     if (!title.empty()) {
         if (mTitleTextView == nullptr) {
             Context* context = getContext();
-            mTitleTextView = new TextView(context,AttributeSet(mContext,"cdroid"));
+            mTitleTextView = new TextView(context,nullptr);
             mTitleTextView->setSingleLine(true);
             mTitleTextView->setEllipsize(TextUtils::TruncateAt::END);
-            if (!mTitleTextAppearance.empty()) {
+            if (mTitleTextAppearance != 0) {
                 mTitleTextView->setTextAppearance(mTitleTextAppearance);
             }
             if (mTitleTextColor != 0) {
@@ -429,10 +449,10 @@ std::string Toolbar::getSubtitle()const{
 void Toolbar::setSubtitle(const std::string&subtitle){
     if (!subtitle.empty()) {
         if (mSubtitleTextView == nullptr) {
-            mSubtitleTextView = new TextView(mContext,AttributeSet(mContext,"cdroid"));
+            mSubtitleTextView = new TextView(mContext,nullptr);
             mSubtitleTextView->setSingleLine(true);
             mSubtitleTextView->setEllipsize(TextUtils::TruncateAt::END);
-            if (!mSubtitleTextAppearance.empty()) {
+            if (mSubtitleTextAppearance != 0) {
                 mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
             }
             if (mSubtitleTextColor != 0) {
@@ -546,7 +566,7 @@ void Toolbar::ensureMenu(){
 void Toolbar::ensureMenuView(){
     if (mMenuView == nullptr) {
 #if ENABLE(MENU)
-        mMenuView = new ActionMenuView(getContext(),AttributeSet(getContext(),"cdroid"));
+        mMenuView = new ActionMenuView(getContext(),nullptr);
         mMenuView->setPopupTheme(mPopupTheme);
         mMenuView->setOnMenuItemClickListener([this](MenuItem&item){
             return (mOnMenuItemClickListener!=nullptr)&&mOnMenuItemClickListener(item);
@@ -691,8 +711,8 @@ int Toolbar::getCurrentContentInsetRight()const{
 
 void Toolbar::ensureNavButtonView(){
     if (mNavButtonView == nullptr) {
-        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
-        mNavButtonView = new ImageButton(getContext(),attrs);
+        // AOSP: new ImageButton(context, null, R.attr.toolbarNavigationButtonStyle).
+        mNavButtonView = new ImageButton(getContext(),nullptr,mNavButtonStyle);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();
         lp->gravity = Gravity::START | (mButtonGravity & Gravity::VERTICAL_GRAVITY_MASK);
         mNavButtonView->setLayoutParams(lp);
@@ -701,8 +721,8 @@ void Toolbar::ensureNavButtonView(){
 
 void Toolbar::ensureCollapseButtonView(){
     if (mCollapseButtonView == nullptr) {
-        AttributeSet attrs = mContext->obtainStyledAttributes(mNavButtonStyle);
-        mCollapseButtonView = new ImageButton(getContext(),attrs);
+        // AOSP: new ImageButton(context, null, R.attr.toolbarNavigationButtonStyle).
+        mCollapseButtonView = new ImageButton(getContext(),nullptr,mNavButtonStyle);
         mCollapseButtonView->setImageDrawable(mCollapseIcon);
         mCollapseButtonView->setContentDescription(mCollapseDescription);
         LayoutParams* lp = (LayoutParams*)generateDefaultLayoutParams();

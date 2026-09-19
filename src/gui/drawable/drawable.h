@@ -25,6 +25,7 @@
 #include <core/attributeset.h>
 #include <core/porterduff.h>
 #include <core/context.h>
+#include <content/resources.h>
 #include <view/gravity.h>
 #include <core/insets.h>
 #include <core/outline.h>
@@ -33,6 +34,7 @@
 namespace cdroid{
 class ColorStateList;
 class Context;
+class Resources;
 
 class Animatable {
 public:
@@ -77,7 +79,11 @@ public:
         std::string mResource;
     public:
         virtual Drawable* newDrawable()=0;
+        virtual Drawable* newDrawable(Resources* res);
         virtual int getChangingConfigurations()const=0;
+        // AOSP ConstantState.canApplyTheme(): false unless a subclass holds
+        // unresolved theme attrs.
+        virtual bool canApplyTheme(){return false;}
         virtual ~ConstantState();
     };
     enum{
@@ -123,10 +129,25 @@ public:
     virtual Rect getDirtyBounds()const;
     virtual Drawable*mutate();
     virtual void clearMutated();
-    virtual void inflate(XmlPullParser&parser,const AttributeSet&);
+    // AOSP inflate(Resources, XmlPullParser, AttributeSet): non-virtual,
+    // delegates to the theme-aware form (subclasses override the 4-arg one).
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&);
+    // AOSP inflate(Resources, XmlPullParser, AttributeSet, @Nullable Theme):
+    // theme-aware inflation — attribute resolution goes through `theme`
+    // instead of the AttributeSet Context's default theme. The default
+    // implementation resolves the base Drawable attrs only (no dispatch).
+    virtual void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme);
+    // AOSP Drawable.applyTheme(@NonNull Theme): no-op at this layer — the
+    // base carries no pending attrs; subclasses owning mThemeAttrs
+    // (ColorDrawable) re-resolve them through the theme here.
+    virtual void applyTheme(const Resources::Theme& t);
     void inflateWithAttributes(XmlPullParser&parser,const AttributeSet&);
-    static Drawable*createFromXmlInner(XmlPullParser&parser,const AttributeSet&);
-    static Drawable*createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&,int);
+    static Drawable*createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&);
+    // AOSP createFromXmlInner(r, parser, attrs, @Nullable Theme).
+    static Drawable*createFromXmlInner(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme);
+    static Drawable*createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&,int);
+    // AOSP createFromXmlForDensity(r, parser, density, @Nullable Theme).
+    static Drawable*createFromXmlInnerForDensity(Resources& r,XmlPullParser&parser,const AttributeSet&,int,const Resources::Theme* theme);
     virtual void setColorFilter(const cdroid::RefPtr<ColorFilter>&);
     virtual const cdroid::RefPtr<ColorFilter>getColorFilter()const;
     void setColorFilter(int color,PorterDuff::Mode mode);
@@ -165,6 +186,14 @@ public:
     virtual void setAutoMirrored(bool mirrored);
     virtual bool isAutoMirrored()const;
     virtual bool canApplyTheme(){return false;}
+protected:
+    // AOSP Drawable.obtainAttributes(res, @Nullable Theme, set, attrs)
+    // (Drawable.java:1609-1615): theme==null takes the theme-less
+    // Resources.obtainAttributes — ?attr values stay raw (TYPE_ATTRIBUTE)
+    // so extractThemeAttrs() records them as pending for applyTheme().
+    static std::unique_ptr<TypedArray> obtainAttributes(Resources& r,const Resources::Theme* theme,
+            const AttributeSet& set,const uint32_t* attrs);
+public:
     virtual void jumpToCurrentState();
 
     int getLayoutDirection()const;
@@ -192,7 +221,7 @@ public:
 
     virtual void draw(Canvas&ctx)=0;
     static int resolveOpacity(int op1,int op2);
-    static int resolveDensity(int parentDensity);
+    static int resolveDensity(Resources* r, int parentDensity);
     static PorterDuff::Mode parseTintMode(int value, PorterDuff::Mode defaultMode);
     static float scaleFromDensity(float pixels, int sourceDensity, int targetDensity);
     static int scaleFromDensity(int pixels, int sourceDensity, int targetDensity, bool isSize);

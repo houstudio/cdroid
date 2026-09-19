@@ -62,6 +62,9 @@ public:
     virtual void dispatchMessage(Message* msg);
 
     void handleIdle()override;
+    // MessageHandler: drop back-pointers when the owning Looper dies (late
+    // static handlers must not touch the freed Looper/MessageQueue).
+    void onLooperDestroyed()override;
     Looper* getLooper()const;
     MessageQueue* getQueue()const;
 
@@ -89,6 +92,9 @@ public:
 
     bool post(const Runnable& r);
     bool postAtTime(const Runnable& r, int64_t uptimeMillis);
+    // AOSP Handler.postAtTime(Runnable, Object token, long): the token makes
+    // removeCallbacksAndMessages(token) able to drop this exact family.
+    bool postAtTime(const Runnable& r, void* token, int64_t uptimeMillis);
     bool postDelayed(const Runnable& r, long delayMillis);
     bool postAtFrontOfQueue(const Runnable&);
 };

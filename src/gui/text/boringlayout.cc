@@ -32,6 +32,7 @@ BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int out
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
         Alignment align, float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
         bool includePad) {
+    if (mOwnsText) { delete getText(); mOwnsText = false; }  // stale ellipsized copy was ours
     replaceWith(source, paint, outerwidth, align, spacingMult, spacingAdd);
 
     mEllipsizedWidth = outerwidth;
@@ -48,6 +49,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
     bool trust;
 
+    if (mOwnsText) { delete getText(); mOwnsText = false; }
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
         replaceWith(source, paint, outerWidth, align, 1.f, 0.f);
 
@@ -56,9 +58,15 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start, int end){ ellipsized(start, end); }),
-                paint, outerWidth, align, spacingMult, spacingAdd);
+        CharSequence* ellipsizedText = TextUtils::ellipsize(source, *paint,
+                ellipsizedWidth, ellipsize, true,
+                [this](int start, int end){ ellipsized(start, end); });
+        replaceWith(ellipsizedText, paint, outerWidth, align, spacingMult, spacingAdd);
+        /* ellipsize returns the SOURCE pointer itself when the text already
+           fits (width <= avail) — claim ownership only of a copy it actually
+           allocated; claiming the caller's text double-frees it at teardown
+           (AOSP is GC-safe returning the same reference). */
+        mOwnsText = (ellipsizedText != source);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
@@ -75,6 +83,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing) {
     bool trust;
 
+    if (mOwnsText) { delete getText(); mOwnsText = false; }
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
         replaceWith(source, paint, outerWidth, align, 1.f, 0.f);
 
@@ -86,6 +95,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
                     [this](int start, int end){ ellipsized(start, end); }),
                 paint, outerWidth, align, 1.f, 0.f);
+        mOwnsText = true;   // the ellipsized copy came from us
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
@@ -174,9 +184,13 @@ BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alig
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(text, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start, int end){ ellipsized(start, end); }),
-                    paint, width, align, spacingMult, spacingAdd);
+        CharSequence* ellipsizedText = TextUtils::ellipsize(text, *paint,
+                ellipsizedWidth, ellipsize, true,
+                [this](int start, int end){ ellipsized(start, end); });
+        replaceWith(ellipsizedText, paint, width, align, spacingMult, spacingAdd);
+        /* Same fit-early-out as above: only a genuinely allocated ellipsized
+           copy is ours to free (~BoringLayout); the input pointer is not. */
+        mOwnsText = (ellipsizedText != text);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
@@ -184,6 +198,10 @@ BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alig
 
     mUseFallbackLineSpacing = fallbackLineSpacing;
     init(getText(), paint, align, metrics, includePad, trust, fallbackLineSpacing);
+}
+
+BoringLayout::~BoringLayout(){
+    if (mOwnsText) delete getText();
 }
 
 void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,

@@ -22,8 +22,8 @@
 namespace cdroid{
 class BaseMenuPresenter:public MenuPresenter {
 private:
-    std::string mMenuLayoutRes;
-    std::string mItemLayoutRes;
+    int mMenuLayoutRes = 0;
+    int mItemLayoutRes = 0;
     int mId;
 protected:
     Context* mSystemContext;
@@ -38,7 +38,7 @@ protected:
     virtual void addItemView(View* itemView, int childIndex);
     virtual bool filterLeftoverView(ViewGroup* parent, int childIndex);
 public:
-    BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes);
+    BaseMenuPresenter(Context* context,int menuLayoutRes,int itemLayoutRes);
 
     void initForMenu(Context* context, MenuBuilder* menu)override;
     ViewGroup* getMenuView(ViewGroup* root)override;

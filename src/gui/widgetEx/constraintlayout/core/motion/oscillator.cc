@@ -24,6 +24,7 @@
 #include <algorithm>
 #include <cmath>
 #include <sstream>
+#include <utils/mathutils.h>
 
 namespace cdroid {
 
@@ -37,11 +38,6 @@ int binSearch(const std::vector<double>& a, double key) {
         return idx;
     }
     return -idx - 1;
-}
-
-// Java Math.signum(double): 0 at 0, else +/-1.
-double signum(double d) {
-    return (d > 0.0) ? 1.0 : (d < 0.0) ? -1.0 : 0.0;
 }
 } // namespace
 
@@ -135,7 +131,7 @@ double Oscillator::getValue(double time, double phase) const {
     case SIN_WAVE:
         return std::sin(mPI2 * angle);
     case SQUARE_WAVE:
-        return signum(0.5 - std::fmod(angle, 1.0)); // signum(0.5 - angle%1)
+        return MathUtils::signum(0.5 - std::fmod(angle, 1.0)); // signum(0.5 - angle%1)
     case TRIANGLE_WAVE:
         return 1 - std::fabs(std::fmod(angle * 4 + 1, 4) - 2);
     case SAW_WAVE:
@@ -184,7 +180,7 @@ double Oscillator::getSlope(double time, double phase, double dphase) const {
     case SQUARE_WAVE:
         return 0;
     case TRIANGLE_WAVE:
-        return 4 * dangle_dtime * signum(std::fmod(angle * 4 + 3, 4) - 2);
+        return 4 * dangle_dtime * MathUtils::signum(std::fmod(angle * 4 + 3, 4) - 2);
     case SAW_WAVE:
         return dangle_dtime * 2;
     case REVERSE_SAW_WAVE:

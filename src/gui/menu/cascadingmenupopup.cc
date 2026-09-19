@@ -15,12 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <menu/menuadapter.h>
 #include <menu/cascadingmenupopup.h>
 #include <menu/submenubuilder.h>
 #include <widget/menupopupwindow.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 void CascadingMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
@@ -49,8 +50,16 @@ void CascadingMenuPopup::onViewDetachedFromWindow(View& v) {
             mTreeObserver = v.getViewTreeObserver();
         }
         mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        mTreeObserver = nullptr;   // dies with the anchor tree; ~CMP must not touch it
     }
     v.removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    // The anchor tree is being torn down (e.g. activity recreation) - its
+    // views are freed right after this notification. Drop the anchor pointer
+    // so ~CascadingMenuPopup's cleanup (which would otherwise dereference the
+    // freed view) knows the listeners above are already gone.
+    if (mShownAnchorView == &v) {
+        mShownAnchorView = nullptr;
+    }
 }
 
 //MenuItemHoverListener mMenuItemHoverListener = new MenuItemHoverListener() {
@@ -103,11 +112,16 @@ void CascadingMenuPopup::onItemHoverEnter(MenuBuilder& menu,MenuItem& item) {
         }
     });
     const int64_t uptimeMillis = SystemClock::uptimeMillis() + SUBMENU_TIMEOUT_MS;
-    LOGE("TODO");//mSubMenuHoverHandler->postAtTime(runnable,menu, uptimeMillis);
+    // Token = the menu: onItemHoverExit's removeCallbacksAndMessages(&menu)
+    // (and the dismiss sweep's removeCallbacksAndMessages(nullptr)) cancel a
+    // pending hover-open when the menu changes or the popup tears down — the
+    // runnable's by-ref captures (menu/item/this) all live inside that popup,
+    // so those removes are the no-GC liveness contract.
+    mSubMenuHoverHandler->postAtTime(runnable, &menu, uptimeMillis);
 }
 
 CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
-        const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly) {
+        int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
     mContext = context;//Preconditions.checkNotNull(context);
     mAnchorView = anchor;//Preconditions.checkNotNull(anchor);
     mPopupStyleAttr = popupStyleAttr;
@@ -129,11 +143,11 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 
     //final Resources res = context.getResources();
     mMenuMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,
-            context->getDimensionPixelSize("android:dimen/config_prefDialogWidth"));
+            context->getDimensionPixelSize(R::dimen::config_prefDialogWidth));
 
     mSubMenuHoverHandler = new Handler();
 
-    mItemLayout = "cdroid:layout/cascading_menu_item_layout_material";//com.android.internal.R.layout.cascading_menu_item_layout_material;
+    mItemLayout = cdroid::internal::R::layout::cascading_menu_item_layout_material;
 }
 
 CascadingMenuPopup::~CascadingMenuPopup(){
@@ -142,6 +156,17 @@ CascadingMenuPopup::~CascadingMenuPopup(){
     // being iterated. mRecycledMenus holds windows already dismissed via
     // onCloseMenu; mShowingMenus holds windows that may still be showing
     // (force close) -- their decor Window is reclaimed by ~WindowManager.
+    // Collect the menus still registering this presenter BEFORE freeing the
+    // infos (their ->menu would dangle): shown menus (force close skips
+    // onCloseMenu's removeMenuPresenter) and never-shown pending ones; the
+    // recycled menus already unregistered themselves in onCloseMenu.
+    std::vector<MenuBuilder*> menus;
+    for (CascadingMenuInfo* info : mShowingMenus){
+        menus.push_back(info->menu);
+    }
+    for (MenuBuilder* menu : mPendingMenus){
+        menus.push_back(menu);
+    }
     for (CascadingMenuInfo* info : mShowingMenus){
         delete info;
     }
@@ -149,6 +174,21 @@ CascadingMenuPopup::~CascadingMenuPopup(){
         delete info;
     }
     delete mSubMenuHoverHandler;
+    // Symmetric unregister (CDROID has no GC): the presenter entry and the
+    // anchor listeners below hold lambdas capturing this; a later menu close,
+    // global layout or attach event would call into freed memory otherwise.
+    for (MenuBuilder* menu : menus){
+        menu->removeMenuPresenter(this);
+    }
+    if (mTreeObserver != nullptr) {
+        if (mTreeObserver->isAlive()) {
+            mTreeObserver->removeGlobalOnLayoutListener(mGlobalLayoutListener);
+        }
+        mTreeObserver = nullptr;
+    }
+    if (mShownAnchorView != nullptr) {
+        mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+    }
 }
 
 void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
@@ -156,7 +196,7 @@ void CascadingMenuPopup::setForceShowIcon(bool forceShow) {
 }
 
 MenuPopupWindow* CascadingMenuPopup::createPopupWindow() {
-    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
+    MenuPopupWindow* popupWindow = new MenuPopupWindow(mContext,nullptr, mPopupStyleAttr, mPopupStyleRes);
     popupWindow->setHoverListener(mMenuItemHoverListener);
     popupWindow->setOnItemClickListener([this](AdapterView&parent, View& view, int position, long id){
         onItemClick(parent,view,position,id);
@@ -199,7 +239,10 @@ void CascadingMenuPopup::dismiss() {
     // are received in order from foreground to background.
     const int length = mShowingMenus.size();
     if (length > 0) {
-        auto& addedMenus =mShowingMenus;// mShowingMenus.toArray(new CascadingMenuInfo[length]);
+        // AOSP copies (toArray) before iterating; the copy is load-bearing here:
+        // each info->window->dismiss() re-enters onCloseMenu (:502) which ERASES
+        // from mShowingMenus, so iterating the live vector walks a mutated one.
+        std::vector<CascadingMenuInfo*> addedMenus(mShowingMenus.begin(), mShowingMenus.end());
         for (int i = length - 1; i >= 0; i--) {
             CascadingMenuInfo* info = addedMenus[i];
             if (info->window->isShowing()) {
@@ -349,7 +392,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     // If this is the root menu, show the title if requested.
     if ((parentInfo == nullptr) && mShowTitle && menu->getHeaderTitle().size()) {
         FrameLayout* titleItemView = (FrameLayout*) inflater->inflate(
-            "cdroid:layout/popup_menu_header_item_layout", listView, false);
+            cdroid::internal::R::layout::popup_menu_header_item_layout, listView, false);
         TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
         titleItemView->setEnabled(false);
         titleView->setText(menu->getHeaderTitle());
@@ -465,7 +508,7 @@ bool CascadingMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
         addMenu(subMenu);
 
         if (mPresenterCallback.onOpenSubMenu != nullptr) {
-            mPresenterCallback.onOpenSubMenu(*subMenu);
+            mPresenterCallback.onOpenSubMenu(subMenu);
         }
         return true;
     }
@@ -500,10 +543,18 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     CascadingMenuInfo* info = mShowingMenus.at(menuIndex);
     mShowingMenus.erase(mShowingMenus.begin()+menuIndex);
     info->menu->removeMenuPresenter(this);
+    // CDROID no-GC adaptation: EVERY menu close is synchronous (AOSP's
+    // shouldCloseImmediately semantic, menu-wide). The fire-and-forget menu
+    // chain dies right after the dismiss cascade, and third-party teardowns
+    // (activity recreation freeing the ActionBar/MenuBuilder) can land inside
+    // an exit-animation window - an animated decor teardown defers its
+    // notification past both and fires into freed owners. MenuPopupWindow::
+    // setExitTransition(nullptr) clears the View-level transition AND the
+    // decor window's ActivityTransition; direct PopupWindow owners keep
+    // animated exits.
+    info->window->setExitTransition(nullptr);
     if (mShouldCloseImmediately) {
-        // Disable all exit animations.
-        info->window->setExitTransition(nullptr);
-        info->window->setAnimationStyle("");
+        info->window->setAnimationStyle(0);
     }
     info->window->dismiss();
 
@@ -534,11 +585,20 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
             }
             mTreeObserver = nullptr;
         }
-        mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+        // Null when the anchor tree was torn down (onViewDetachedFromWindow
+        // already removed the listener and dropped the pointer) - e.g. the
+        // menu outlived an activity recreation.
+        if (mShownAnchorView != nullptr) {
+            mShownAnchorView->removeOnAttachStateChangeListener(mAttachStateChangeListener);
+        }
 
         // If every [sub]menu was dismissed, that means the whole thing was
-        // dismissed, so notify the owner.
-        mOnDismissListener();//.onDismiss();
+        // dismissed, so notify the owner. AOSP null-checks the listener here;
+        // it is only installed when the popup runs under a MenuPopupHelper
+        // (direct CascadingMenuPopup users have none).
+        if (mOnDismissListener != nullptr) {
+            mOnDismissListener();
+        }
     } else if (allMenusAreClosing) {
         // Close all menus starting from the root. This will recursively
         // close any remaining menus, so we don't need to propagate the
@@ -617,12 +677,17 @@ CascadingMenuPopup::CascadingMenuInfo::~CascadingMenuInfo(){
     // already returned; just delete the objects. Do NOT dismiss() here: this
     // dtor also runs from ~CascadingMenuPopup, and dismissing would re-enter
     // onCloseMenu and mutate the vectors being iterated.
-    // Order matters: delete the window first -- its ListView borrows (but does
-    // not own) the adapter and unregisters its observer in its own destructor;
-    // freeing the adapter before the window would leave the ListView touching
-    // freed memory.
-    delete window;
-    window = nullptr;
+    // With popup window animations the decor Window outlives this info (its
+    // close() animation finishes asynchronously), so the ListView must drop its
+    // BORROWED adapter reference before the adapter is freed — its later detach
+    // (onDetachedFromWindow) would otherwise unregister an observer on freed
+    // memory. setAdapter(nullptr) unregisters the observer and clears mAdapter.
+    if (window != nullptr) {
+        ListView* listView = window->getListView();
+        if (listView != nullptr) listView->setAdapter(nullptr);
+        delete window;
+        window = nullptr;
+    }
     delete adapter;
     adapter = nullptr;
 }

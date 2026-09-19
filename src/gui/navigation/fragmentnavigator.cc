@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/fragmentnavigator.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navigatorstate.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
@@ -24,7 +25,7 @@
 
 namespace cdroid{
 
-FragmentNavigator::FragmentNavigator(fragment::FragmentManager* fm, int containerId)
+FragmentNavigator::FragmentNavigator(FragmentManager* fm, int containerId)
     : mFragmentManager(fm), mContainerId(containerId){
     mName = "fragment";
 }
@@ -35,7 +36,9 @@ NavDestination* FragmentNavigator::createDestination(){
 
 void FragmentNavigator::Destination::onInflate(cdroid::Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    setClassName(attrs.getString("name"));
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::FragmentNavigator);
+    setClassName(ta->getString(ns::FragmentNavigator_name));
     LOGV("FragmentNavigator.Destination.onInflate route='%s' className='%s'",
          getRoute().c_str(), getClassName().c_str());
 }
@@ -69,18 +72,18 @@ void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOption
         if(getState()) getState()->push(entry);
         return;
     }
-    fragment::FragmentFactory factory;
-    fragment::Fragment* fragment = factory.instantiate(d->getClassName());
+    FragmentFactory factory;
+    Fragment* fragment = factory.instantiate(d->getClassName());
     if(!fragment) return;
     fragment->setArguments(entry->getArguments() ? new Bundle(*entry->getArguments()) : nullptr);
-    fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
+    FragmentTransaction* t = mFragmentManager->beginTransaction();
     // Apply custom animations from NavOptions (androidx createFragmentTransaction :530-539).
     if(navOptions){
-        std::string enter = navOptions->getEnterAnim();
-        std::string exit = navOptions->getExitAnim();
-        std::string popEnter = navOptions->getPopEnterAnim();
-        std::string popExit = navOptions->getPopExitAnim();
-        if(!enter.empty() || !exit.empty() || !popEnter.empty() || !popExit.empty()){
+        const int enter = navOptions->getEnterAnim();
+        const int exit = navOptions->getExitAnim();
+        const int popEnter = navOptions->getPopEnterAnim();
+        const int popExit = navOptions->getPopExitAnim();
+        if(enter != 0 || exit != 0 || popEnter != 0 || popExit != 0){
             t->setCustomAnimations(enter, exit, popEnter, popExit);
         }
     }
@@ -106,7 +109,7 @@ void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState
             mSavedIds.insert(popUpTo->getId());
         }
     } else if(mFragmentManager){
-        mFragmentManager->popBackStackImmediate(popUpTo->getId(), fragment::FragmentManager::POP_BACK_STACK_INCLUSIVE);
+        mFragmentManager->popBackStackImmediate(popUpTo->getId(), FragmentManager::POP_BACK_STACK_INCLUSIVE);
     }
     if(getState()) getState()->pop(popUpTo, savedState);
 }

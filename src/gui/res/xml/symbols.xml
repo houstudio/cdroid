@@ -51,7 +51,7 @@
     </Row>
     
     <Row>
-        <Key android:codes="-1" android:keyIcon="@mipmap/sym_keyboard_shift"
+        <Key android:codes="-1" android:keyIcon="@drawable/sym_keyboard_shift"
                 android:keyWidth="15%p" android:isModifier="true"
                 android:isSticky="true" android:keyEdgeFlags="left"/>
         <Key android:codes="33" android:keyLabel="!" />
@@ -61,25 +61,25 @@
         <Key android:codes="59" android:keyLabel=";"/>
         <Key android:codes="47" android:keyLabel="/" />
         <Key android:codes="63" android:keyLabel="\?"/>
-        <Key android:codes="-5" android:keyIcon="@mipmap/sym_keyboard_delete"
+        <Key android:codes="-5" android:keyIcon="@drawable/sym_keyboard_delete"
                 android:keyWidth="15%p" android:keyEdgeFlags="right"
                 android:isRepeatable="true"/>
     </Row>
     
     <Row  android:rowEdgeFlags="bottom">
-        <Key android:codes="-3" android:keyIcon="@mipmap/sym_keyboard_done"
+        <Key android:codes="-3" android:keyIcon="@drawable/sym_keyboard_done"
                 android:keyWidth="15%p" android:keyEdgeFlags="left" />
         <Key android:codes="-7" android:keyLabel="ABC" android:keyWidth="10%p" />
         <!--
             android:codes: -101 is not a framework-defined key code but a key code that is
             privately defined in com.example.android.softkeyboard.LatinKeyboardView.
         -->
-        <Key android:codes="-101" android:keyIcon="@mipmap/sym_keyboard_language_switch"
+        <Key android:codes="-101" android:keyIcon="@drawable/sym_keyboard_language_switch"
                 android:keyWidth="10%p" />
-        <Key android:codes="32" android:keyIcon="@mipmap/sym_keyboard_space" android:keyWidth="30%p" 
+        <Key android:codes="32" android:keyIcon="@drawable/sym_keyboard_space" android:keyWidth="30%p" 
                 android:isRepeatable="true"/>
         <Key android:codes="44" android:keyLabel="," android:keyWidth="15%p" />
-        <Key android:codes="10" android:keyIcon="@mipmap/sym_keyboard_return"
+        <Key android:codes="10" android:keyIcon="@drawable/sym_keyboard_return"
                 android:keyWidth="20%p" android:keyEdgeFlags="right"
                 />
     </Row>

@@ -15,32 +15,41 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/ninepatchdrawable.h>
 #include <drawable/ninepatchrenderer.h>
 #include <image-decoders/imagedecoder.h>
+#include <content/asset.h>
+#include <widget/framework_styleable.h>
+#include <content/typedvalue.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <fstream>
 using namespace Cairo;
 namespace cdroid{
+using namespace cdroid::internal;
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
 
-NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>()){
+NinePatchDrawable::NinePatchDrawable():NinePatchDrawable(std::make_shared<NinePatchState>(), nullptr){
 }
 
-NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state){
+NinePatchDrawable::NinePatchDrawable(std::shared_ptr<NinePatchState>state, Resources* res){
     mNinePatchState = state;
     mAlpha = 255;
     mMutated = false;
     mFilterBitmap = false;
     mTintFilter = nullptr;
-    mTargetDensity=160;
+    // AOSP updateLocalState (java:751-756): with no Resources, match the
+    // density of the nine patch itself — the drawable renders 1:1 instead of
+    // scaling toward a stale target. mSourceDensity is CDROID's
+    // Bitmap.getDensity() (the decode-seam record of the bitmap's pixels).
+    if (res == nullptr && state->mNinePatch != nullptr) {
+        mTargetDensity = state->mSourceDensity;
+    } else {
+        mTargetDensity = Drawable::resolveDensity(res, state->mTargetDensity);
+    }
     mOutlineRadius=0.f;
     mPadding.setEmpty();
-    computeBitmapSize();
-}
-
-NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePatchDrawable(){
-    mNinePatchState->setBitmap(ctx,resid);
     computeBitmapSize();
 }
 
@@ -57,7 +66,7 @@ void NinePatchDrawable::computeBitmapSize(){
     if ( (mNinePatchState->mNinePatch==nullptr)|| (mNinePatchState->mNinePatch->mImage==nullptr))return;
     const RefPtr<ImageSurface> ninePatch = mNinePatchState->mNinePatch->mImage;
 
-    const int sourceDensity =160;// ninePatch.getDensity();
+    const int sourceDensity = mNinePatchState->mSourceDensity;
     const int targetDensity = mTargetDensity;
 
     const Insets sourceOpticalInsets = mNinePatchState->mOpticalInsets;
@@ -94,9 +103,33 @@ void NinePatchDrawable::setTargetDensity(int density){
     }
     if (mTargetDensity != density) {
         mTargetDensity = density;
+        mNinePatchState->mTargetDensity = density;
+        // Keep the shared renderer in lock-step: after the decode-time resample
+        // the renderer's pixel space equals the target density, so computeBitmapSize's
+        // density conversions pass the numbers through unchanged.
+        if (mNinePatchState->mNinePatch && mNinePatchState->mSourceDensity != density) {
+            mNinePatchState->mNinePatch->applyDensityScale(
+                    (float)density / mNinePatchState->mSourceDensity);
+            mNinePatchState->mPadding = mNinePatchState->mNinePatch->getPadding();
+            mNinePatchState->mOpticalInsets = mNinePatchState->mNinePatch->getOpticalInsets();
+            mNinePatchState->mSourceDensity = density;
+        }
         computeBitmapSize();
         invalidateSelf();
     }
+}
+
+void NinePatchDrawable::setSourceDensity(int density){
+    // Decode-seam density fixup (AOSP: BitmapFactory.decodeResourceStream reads the
+    // asset density from TypedValue.density). Records which pixel space the
+    // renderer was decoded in, so the subsequent setTargetDensity(display) can
+    // resample once. The renderer divides by this value, so 0 must never be
+    // stored: DENSITY_NONE (nodpi) and DENSITY_DEFAULT (unqualified res/) both
+    // keep the legacy default-density treatment — a raw 0 made setTargetDensity
+    // resample by density/0 = inf and collapse the 9-patch.
+    if (density == TypedValue::DENSITY_NONE || density == TypedValue::DENSITY_DEFAULT)
+        density = DisplayMetrics::DENSITY_DEFAULT;
+    mNinePatchState->mSourceDensity = density;
 }
 
 Insets NinePatchDrawable::getOpticalInsets(){
@@ -179,10 +212,12 @@ void NinePatchDrawable::getOutline(Outline& outline) {
     if (mNinePatchState != nullptr) {
         const Insets insets = mNinePatchState->mOpticalInsets;
         if (insets!=Insets::NONE) {
+            // Subtract BOTH horizontal insets (the second fallback does; this
+            // one omitted insets.left, leaving the outline too wide).
             outline.setRoundRect(bounds.left + insets.left,
                     bounds.top + insets.top,
-                    bounds.width - insets.right,
-                    bounds.height - insets.bottom,
+                    bounds.width - insets.left - insets.right,
+                    bounds.height - insets.top - insets.bottom,
                     mOutlineRadius);
             outline.setAlpha(getAlpha() / 255.0f);
             return;
@@ -269,10 +304,15 @@ void NinePatchDrawable::draw(Canvas&canvas){
         canvas.save();
         ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
         if(needsMirroring()){
-            const float cx=mBounds.left+mBounds.width/2.f;
-            const float cy=mBounds.left+mBounds.height/2.f;
-            canvas.scale(-1.f,1.f);
+            // AOSP: mirror about the bounds center — canvas.scale(-1, 1, cx, cy).
+            // The old code used mBounds.left for the Y center and a bare
+            // scale(-1,1)+translate, which mirrors about the wrong pivot and
+            // shifts the patch by cy.
+            const float cx = mBounds.left+mBounds.width/2.f;
+            const float cy = mBounds.top+mBounds.height/2.f;
             canvas.translate(cx,cy);
+            canvas.scale(-1.f,1.f);
+            canvas.translate(-cx,-cy);
         }
         mNinePatchState->draw(canvas,mBounds,mAlpha);
         if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
@@ -280,53 +320,95 @@ void NinePatchDrawable::draw(Canvas&canvas){
     }
 }
 
-void NinePatchDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-   Drawable::inflate(parser,atts);
-   updateStateFromTypedArray(atts);
+// AOSP NinePatchDrawable.canApplyTheme/applyTheme.
+bool NinePatchDrawable::canApplyTheme(){
+    return (mNinePatchState && !mNinePatchState->mThemeAttrs.empty()) || Drawable::canApplyTheme();
+}
+
+void NinePatchDrawable::applyTheme(const Resources::Theme& t){
+    Drawable::applyTheme(t);
+    if (mNinePatchState && !mNinePatchState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mNinePatchState->mThemeAttrs, R::styleable::NinePatchDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mNinePatchState->mThemeAttrs.clear();
+    }
+    computeBitmapSize();
+}
+
+void NinePatchDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+   Drawable::inflate(r,parser,atts, theme);
+   // AOSP: all attr reads + src loading happen inside updateStateFromTypedArray.
+   auto ta = obtainAttributes(r, theme, atts, R::styleable::NinePatchDrawable);
+   if (ta) updateStateFromTypedArray(*ta);
    computeBitmapSize();
 }
 
-void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
+void NinePatchDrawable::updateStateFromTypedArray(const TypedArray& a){
     auto state = mNinePatchState;
+    Resources& r = const_cast<Resources&>(a.getResources());
+    // AOSP: extract the theme attributes for later re-resolution (applyTheme).
+    state->mThemeAttrs = a.extractThemeAttrs();
 
-    // Account for any configuration changes.
-    //state->mChangingConfigurations |= a.getChangingConfigurations();
+    state->mDither = a.getBoolean(R::styleable::NinePatchDrawable_dither, state->mDither);
 
-    // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
-
-    state->mDither = a.getBoolean("dither", state->mDither);
-
-    const std::string srcResId = a.getString("src");
-    if (!srcResId.empty()) {
-        Rect padding ,opticalInsets;
-        Cairo::RefPtr<Cairo::ImageSurface> bitmap;
-        auto is= a.getContext()->getInputStream(srcResId);
-        bitmap = ImageDecoder::loadImage(*is,-1,-1);
-        if (bitmap == nullptr) {
-            throw std::logic_error(//a.getPositionDescription() +
-                    ": <nine-patch> requires a valid src attribute");
-        } else {//if (bitmap.getNinePatchChunk() == null) {
-            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
-            state->mPadding = state->mNinePatch->getPadding();
-            mOutlineRadius = state->mNinePatch->getRadius();
-            const Rect& r=state->mPadding;
-            if((r.left==0)&&(r.top==0)&&(r.width==0)&&(r.height==0)){
-                LOGE("<nine-patch>%s requires a valid 9-patch source image",srcResId.c_str());
+    // AOSP: src loading inside updateStateFromTypedArray (only param is TypedArray).
+    const int srcResId = a.getResourceId(R::styleable::NinePatchDrawable_src, 0);
+    if (srcResId != 0) {
+        TypedValue tv;
+        Asset* asset = r.openRawResource(srcResId, &tv);
+        if (asset) {
+            // Density from the TypedValue (AOSP: value.density → display density).
+            int density = DisplayMetrics::DENSITY_DEFAULT;
+            if (tv.density == TypedValue::DENSITY_DEFAULT) {
+                density = DisplayMetrics::DENSITY_DEFAULT;
+            } else if (tv.density != TypedValue::DENSITY_NONE) {
+                density = tv.density;
             }
+
+            const off64_t sz = asset->getLength();
+            if (sz > 0) {
+                std::string buf((size_t)sz, '\0');
+                asset->read(&buf[0], (size_t)sz);
+                std::vector<uint8_t> ninePatchChunk;
+                auto stream = std::make_unique<std::istringstream>(std::move(buf));
+                auto bitmap = ImageDecoder::loadImage(*stream, -1, -1, &ninePatchChunk);
+                if (bitmap) {
+                    const std::vector<uint8_t>* chunkPtr = ninePatchChunk.empty() ? nullptr : &ninePatchChunk;
+                    try {
+                        state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap, chunkPtr);
+                    } catch (...) {
+                        LOGW("<nine-patch> renderer threw");
+                    }
+                    if (state->mNinePatch) {
+                        state->mPadding = state->mNinePatch->getPadding();
+                        mOutlineRadius = state->mNinePatch->getRadius();
+                        state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
+                        // Decode-time density fixup (AOSP folds this into
+                        // BitmapFactory): record the asset's density, then resample
+                        // into the display's pixel space once.
+                        setSourceDensity(density);
+                        setTargetDensity(r.getDisplayMetrics().densityDpi);
+                    }
+                } else {
+                    LOGW("<nine-patch> src did not decode (0x%x)", srcResId);
+                }
+            }
+            delete asset;
         }
-        state->mOpticalInsets = state->mNinePatch->getOpticalInsets();
     }
 
-    state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
-    state->mBaseAlpha = a.getFloat("alpha", state->mBaseAlpha);
+    state->mAutoMirrored = a.getBoolean(R::styleable::NinePatchDrawable_autoMirrored, state->mAutoMirrored);
+    state->mBaseAlpha = a.getFloat(R::styleable::NinePatchDrawable_alpha, state->mBaseAlpha);
 
-    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
+    /* AOSP: Drawable.parseTintMode maps the XML enum (src_over=3 ... multiply=14)
+     * onto PorterDuff.Mode values. Storing the raw int left "multiply" (14) as an
+     * unrelated operator and the tint painted the whole group rect. */
+    const int tintMode = a.getInt(R::styleable::NinePatchDrawable_tintMode, PorterDuff::NOOP);
     if (tintMode != PorterDuff::NOOP) {
-        state->mTintMode = tintMode;
+        state->mTintMode = (int)parseTintMode(tintMode, (PorterDuff::Mode)state->mTintMode);
     }
 
-    auto tint = a.getColorStateList("tint");
+    auto tint = a.getColorStateList(R::styleable::NinePatchDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }
@@ -343,11 +425,8 @@ NinePatchDrawable::NinePatchState::NinePatchState(){
     mAutoMirrored =false;
     mPadding.set(0,0,0,0);
     mOpticalInsets.set(0,0,0,0);
-}
-
-void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&resid,const Rect*padding){
-    auto bitmap = ctx->loadImage(resid,-1,-1);
-    setBitmap(bitmap,padding);
+    mSourceDensity = DisplayMetrics::DENSITY_DEFAULT;
+    mTargetDensity = DisplayMetrics::DENSITY_DEFAULT;
 }
 
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding,
@@ -365,11 +444,14 @@ void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,con
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
+    mThemeAttrs = orig.mThemeAttrs;   // AOSP keeps them; dropping lost ?attr re-resolution
     mTint = orig.mTint;
     mNinePatch= orig.mNinePatch;
     mTintMode = orig.mTintMode;
     mPadding = orig.mPadding;
     mOpticalInsets = orig.mOpticalInsets;
+    mSourceDensity = orig.mSourceDensity;
+    mTargetDensity = orig.mTargetDensity;
     mBaseAlpha = orig.mBaseAlpha;
     mDither = orig.mDither;
     mChangingConfigurations=orig.mChangingConfigurations;
@@ -379,7 +461,11 @@ NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
 }
 
 NinePatchDrawable*NinePatchDrawable::NinePatchState::newDrawable(){
-    return new NinePatchDrawable(shared_from_this());
+    return new NinePatchDrawable(shared_from_this(), nullptr);
+}
+
+Drawable*NinePatchDrawable::NinePatchState::newDrawable(Resources* res){
+    return new NinePatchDrawable(shared_from_this(), res);
 }
 
 int NinePatchDrawable::NinePatchState::getChangingConfigurations()const{

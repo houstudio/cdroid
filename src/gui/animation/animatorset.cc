@@ -92,8 +92,14 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
         Node* node = other.mNodes.at(i);
         // Update dependencies for node's clone
         Node* nodeClone = clonesMap.find(node)->second;
-        nodeClone->mLatestParent = node->mLatestParent == nullptr
-                ? nullptr : clonesMap.find(node->mLatestParent)->second;
+        // AOSP uses Map#get() here, which tolerates a stale mLatestParent
+        // (missing key -> null). find()->second dereferenced end() and crashed
+        // when cloning a set whose nodes were mutated by a previous run.
+        nodeClone->mLatestParent = nullptr;
+        if (node->mLatestParent != nullptr) {
+            auto parentIt = clonesMap.find(node->mLatestParent);
+            if (parentIt != clonesMap.end()) nodeClone->mLatestParent = parentIt->second;
+        }
         int size = node->mChildNodes.size();
         bool found=false;
         for (int j = 0; j < size; j++) {
@@ -117,14 +123,23 @@ AnimatorSet::AnimatorSet(const AnimatorSet&other){
 }
 
 AnimatorSet::~AnimatorSet(){
+    // The AnimationHandler's callback list holds raw AnimationFrameCallback*
+    // entries: a set deleted while registered (running / paused / delayed)
+    // would dangle there and the next ObjectAnimator::start() ->
+    // autoCancelBasedOn() dynamic_casts freed memory. Java never hits this
+    // (the handler's reference keeps a running set reachable); mirror that by
+    // unregistering on destruction, exactly like ~ValueAnimator does.
+    removeAnimationCallback();
     for(auto nd:mNodeMap){
         delete nd.first;
     }
     for(auto nd:mNodes)
         delete nd;
     for(auto e:mEvents)delete e;
+    for(auto b:mBuilders) delete b;
     mNodeMap.clear();
     mNodes.clear();
+    mBuilders.clear();
     delete mSeekState;
 }
 
@@ -190,8 +205,14 @@ const TimeInterpolator* AnimatorSet::getInterpolator() const{
 }
 
 AnimatorSet::Builder* AnimatorSet::play(Animator* anim){
-    if(anim!=nullptr)
-        return new Builder(this,anim);
+    if(anim!=nullptr){
+        // The Builder is a transient chaining helper; this AnimatorSet owns it and frees
+        // it in the dtor, so callers (playSequentially, fastscroller, AnimatedVectorDrawable)
+        // never need to delete the returned pointer.
+        Builder* builder = new Builder(this,anim);
+        mBuilders.push_back(builder);
+        return builder;
+    }
     return nullptr;
 }
 
@@ -399,6 +420,10 @@ void AnimatorSet::initAnimation() {
 }
 
 void AnimatorSet::start(bool inReverse, bool selfPulse) {
+    // android-36: an identical re-start of a started set is a complete no-op.
+    if ((inReverse == mReversing) && (selfPulse == mSelfPulse) && mStarted) {
+        return;
+    }
     mStarted = true;
     mSelfPulse = selfPulse;
     mPaused = false;
@@ -632,7 +657,6 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
         mFirstFrame = frameTime;
     }
 
-    LOGV("%p frameTime=(%lld-%lld)=%d",this,frameTime,mFirstFrame,int(frameTime-mFirstFrame));
     // Handle pause/resume
     if (mPaused) {
         // Note: Child animations don't receive pause events. Since it's never a contract that
@@ -673,7 +697,6 @@ bool AnimatorSet::doAnimationFrame(int64_t frameTime){
     const int latestId = findLatestEventIdForTime(unscaledPlayTime);
     const int startId = mLastEventId;
 
-    LOGV("%p startId=%d latestId=%d mEvents.size=%d",this,startId,latestId,mEvents.size());
     handleAnimationEvents(startId, latestId, unscaledPlayTime);
 
     mLastEventId = latestId;
@@ -1293,6 +1316,8 @@ void AnimatorSet::SeekState::setPlayTime(int64_t playTime, bool inReverse) {
     // Clamp the play time
     if (mAnimSet->getTotalDuration() != DURATION_INFINITE) {
         mPlayTime = std::min(playTime, int64_t(mAnimSet->getTotalDuration() - mAnimSet->mStartDelay));
+    } else {
+        mPlayTime = playTime;
     }
     mPlayTime = std::max(int64_t(0), mPlayTime);
     mSeekingInReverse = inReverse;

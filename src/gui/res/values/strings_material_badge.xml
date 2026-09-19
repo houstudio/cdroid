@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Material badge strings, ported from com.google.android.material.badge
+         (research/material-components-android). Referenced via R::string::* so
+         BadgeState reads them through the arsc id-path. -->
+    <string name="mtrl_badge_numberless_content_description">New notification</string>
+</resources>

@@ -6,6 +6,7 @@
 // assertions reflect CDROID's semantics, with a note where they diverge from CTS's right/bottom.
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/DrawableTest.java (Apache 2.0)
+#include "R.h"
 #include <gtest/gtest.h>
 #include <drawable/drawable.h>
 #include <drawable/drawables.h>
@@ -301,7 +302,7 @@ TEST_F(CtsDrawableTest, testCreateFromXml) {
     // gradientdrawable.xml is a <shape> with <size width=42px height=63px> (ported from CTS,
     // res/drawable/gradientdrawable.xml). Exercises DrawableInflater parsing the android: namespace
     // and the shape's intrinsic size. getDrawable() returns a borrowed (cached) instance.
-    Drawable* d = App::getInstance().getDrawable("@drawable/gradientdrawable");
+    Drawable* d = App::getInstance().getDrawable(gui_test::R::drawable::gradientdrawable);
     ASSERT_NE(nullptr, d);
     EXPECT_EQ(42, d->getIntrinsicWidth());
     EXPECT_EQ(63, d->getIntrinsicHeight());

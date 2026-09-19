@@ -15,7 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/framework_styleable.h>
 #include <navigation/navgraph.h>
+#include <content/typedarray.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navgraphnavigator.h>
 #include <navigation/navigatorprovider.h>
 namespace cdroid{
@@ -49,9 +52,13 @@ NavGraph::~NavGraph(){
 
 void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    const std::string startRoute = attrs.getString("startDestination");
+    // androidx reads R.styleable.NavGraph: startDestination is a route string
+    // or a destination-id reference (0x02 navigation attr).
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::NavGraph);
+    const std::string startRoute = ta->getString(ns::NavGraph_startDestination);
     if(!startRoute.empty()) setStartDestination(startRoute);
-    else setStartDestination(attrs.getResourceId("startDestination", 0));
+    else setStartDestination(ta->getResourceId(ns::NavGraph_startDestination, 0));
 }
 
 std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
@@ -83,6 +90,13 @@ void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
     if (node->getId() == 0 && node->getRoute().empty()) {
         throw std::runtime_error("Destinations must have an id or a route."
                 " Call setId()/setRoute() or include android:id/app:route in your navigation XML.");
+    }
+    // androidx: a destination cannot have the same id as the graph itself.
+    if (node->getId() != 0 && node->getId() == getId()) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Destination %d cannot have the same id as graph %d",
+                 node->getId(), getId());
+        throw std::runtime_error(buf);
     }
     NavDestination* existingDestination = mNodes.get(node->getId());
     if (existingDestination == node) {
@@ -214,6 +228,13 @@ int NavGraph::getStartDestination() const{
  * @param startDestId The id of the destination to be shown when navigating to this NavGraph.
  */
 void NavGraph::setStartDestination(int startDestId) {
+    // androidx: the start destination cannot use the same id as the graph itself.
+    if (startDestId != 0 && startDestId == getId()) {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "Start destination %d cannot use the same id as the graph %d",
+                 startDestId, getId());
+        throw std::runtime_error(buf);
+    }
     mStartDestId = startDestId;
 }
 
@@ -275,5 +296,16 @@ bool NavGraph::Iterator::operator!=(const Iterator& other) const {
     return mIter != other.mIter;
 }
 
-}/*endof namesapce*/
 
+// androidx NavGraph.findStartDestination(): walk nested graphs until the
+// start destination is a plain destination.
+NavDestination* NavGraph::findStartDestination(NavGraph* graph) {
+    NavDestination* startDestination = graph;
+    while (auto* g = dynamic_cast<NavGraph*>(startDestination)) {
+        startDestination = g->findNode(g->getStartDestination());
+        if (startDestination == nullptr) break;  // malformed graph; stop at the graph node
+    }
+    return startDestination;
+}
+
+}/*endof namesapce*/

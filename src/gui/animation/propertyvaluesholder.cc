@@ -18,12 +18,13 @@
 #include <animation/propertyvaluesholder.h>
 #include <porting/cdlog.h>
 #include <animation/typeevaluators.h>   // PointFEvaluator
-#include <core/pathmeasure.h>           // Path sampling for ofPointF
+#include <animation/pathkeyframes.h>    // ofPointF keyframes (AOSP KeyframeSet.ofPath)
 
 namespace cdroid{
 
 PropertyValuesHolder::PropertyValuesHolder(){
     mProperty = nullptr;
+    mKeyframes = nullptr;
     mValueType= Property::UNDEFINED;
     mEvaluator= evaluator;
     LOGD("%p,%s",this,mPropertyName.c_str());
@@ -31,7 +32,7 @@ PropertyValuesHolder::PropertyValuesHolder(){
 
 PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
     mPropertyName = o.mPropertyName;
-    mDataSource = o.mDataSource;
+    mKeyframes = o.mKeyframes ? o.mKeyframes->clone() : nullptr;   // AOSP clone(): mKeyframes.clone()
     mAnimateValue= o.mAnimateValue;
     mProperty = o.mProperty;
     mValueType= o.mValueType;
@@ -40,6 +41,7 @@ PropertyValuesHolder::PropertyValuesHolder(const PropertyValuesHolder&o){
 
 PropertyValuesHolder::PropertyValuesHolder(const Property*property){
     mProperty = property;
+    mKeyframes = nullptr;
     mValueType= property->getType();
     mEvaluator= evaluator;
     if(property)mPropertyName = property->getName();
@@ -49,11 +51,13 @@ PropertyValuesHolder::PropertyValuesHolder(const std::string&name){
     mPropertyName = name;
     mValueType= Property::UNDEFINED;
     mProperty = nullptr;
+    mKeyframes = nullptr;
     mEvaluator= evaluator;
 }
 
 PropertyValuesHolder::~PropertyValuesHolder(){
     //delete mProperty;
+    delete mKeyframes;
 }
 
 void PropertyValuesHolder::setPropertyName(const std::string& propertyName){
@@ -85,17 +89,25 @@ void PropertyValuesHolder::setupSetterAndGetter(void*target){
     if(mPropertyName.empty())return;
     if(mProperty==nullptr){
         mProperty = Property::fromName(mPropertyName);
+        if (mProperty == nullptr) {
+            // AOSP: loud error, the animation becomes a no-op instead of crashing.
+            LOGE("No property named \"%s\" registered in Property::fromName", mPropertyName.c_str());
+            return;
+        }
         mValueType= mProperty->getType();
     }
 }
 
-static int lerp(int startValue, int endValue, float fraction) {
-    return int(startValue + std::round(fraction * (endValue - startValue)));
-}
-
 AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, const AnimateValue& from, const AnimateValue& to){
 #if VARIANT_AS_ANIMATEDVAUE
-    switch(from.index()){
+    // Mixed int/float endpoints (property getter float vs XML int literal) lerp
+    // in float — numeric promotion instead of bad_variant_access.
+    const bool eitherFloat = (from.index() == 1) || (to.index() == 1);
+    if (eitherFloat) {
+        const float f = (from.index() == 0) ? (float)GET_VARIANT(from,int) : GET_VARIANT(from,float);
+        const float t = (to.index()   == 0) ? (float)GET_VARIANT(to,int)   : GET_VARIANT(to,float);
+        out = f * (1.f - fraction) + t * fraction;
+    } else switch(from.index()){
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
         break;
@@ -157,29 +169,26 @@ AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValu
 }
 
 void PropertyValuesHolder::setValues(const std::vector<int>&values){
-    //mDataSource.resize(std::max(values.size(),size_t(2)));
-    mDataSource.clear();
+    delete mKeyframes;
+    mKeyframes = KeyframeSet::ofInt(values);
     mValueType = Property::INT_TYPE;
-    for(size_t i = 0;i < values.size();i++)
-       mDataSource.push_back(values.at(i));
-    mAnimateValue = values[0];
+    if(!values.empty()) mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<float>&values){
-    //mDataSource.resize(std::max(values.size(),size_t(2)));
-    mDataSource.clear();
+    delete mKeyframes;
+    mKeyframes = KeyframeSet::ofFloat(values);
     mValueType = Property::FLOAT_TYPE;
-    for(size_t i = 0;i < values.size();i++)
-       mDataSource.push_back(values.at(i));
-    mAnimateValue = values[0];
+    if(!values.empty()) mAnimateValue = values[0];
 }
 
 void PropertyValuesHolder::setValues(const std::vector<PathParser::PathData>&values){
-    mDataSource.clear();
+    std::vector<AnimateValue> objectValues;
+    for(const auto&v:values)objectValues.push_back(v);
+    delete mKeyframes;
+    mKeyframes = KeyframeSet::ofObject(objectValues);
     mValueType = Property::PATH_TYPE;
-    for(size_t i = 0;i < values.size();i++)
-       mDataSource.push_back(values.at(i));
-    mAnimateValue = values[0];
+    if(!values.empty()) mAnimateValue = values[0];
     mEvaluator= PathDataEvaluator;
 }
 
@@ -187,22 +196,17 @@ void PropertyValuesHolder::init(){
     if(mEvaluator==nullptr){
         mEvaluator = evaluator;
     }
-    mAnimateValue =mDataSource[0];
+    // AOSP PHV.init(): hand the evaluator to the keyframes (they evaluate).
+    if(mKeyframes) mKeyframes->setEvaluator(mEvaluator);
 }
 
 void PropertyValuesHolder::setEvaluator(TypeEvaluator evaluator){
     mEvaluator = evaluator;
+    if(mKeyframes) mKeyframes->setEvaluator(mEvaluator);
 }
 
 void PropertyValuesHolder::calculateValue(float fraction){
-    if (fraction <= 0.0f) mAnimateValue = mDataSource.front();
-    else if (fraction >= 1.0f) mAnimateValue = mDataSource.back();
-    else {
-        fraction *= mDataSource.size() - 1;
-        const int lowIndex = std::floor(fraction);
-        fraction -= lowIndex;
-        (*mEvaluator)(fraction, mAnimateValue,mDataSource[lowIndex], mDataSource[lowIndex + 1]);
-    } 
+    mAnimateValue = mKeyframes->getValue(fraction);
 }
 
 const AnimateValue& PropertyValuesHolder::getAnimatedValue()const{
@@ -213,77 +217,65 @@ void PropertyValuesHolder::getPropertyValues(PropertyValues& values){
     init();
     values.propertyName = mPropertyName;
     values.type = mValueType;
-    values.startValue = mDataSource[0];
-    values.endValue = mDataSource[mDataSource.size()-1];
-    mAnimateValue = mDataSource[0];
-#if 0
-    values.startValue = mKeyframes.getValue(0);
-    if (values.startValue instanceof PathParser::PathData) {
-        // PathData evaluator returns the same mutable PathData object when query fraction,
-        // so we have to make a copy here.
-        values.startValue = new PathParser::PathData((PathParser::PathData) values.startValue);
-    }
-    values.endValue = mKeyframes.getValue(1);
-    if (values.endValue instanceof PathParser::PathData) {
-        // PathData evaluator returns the same mutable PathData object when query fraction,
-        // so we have to make a copy here.
-        values.endValue = new PathParser::PathData((PathParser::PathData) values.endValue);
-    }
-    // TODO: We need a better way to get data out of keyframes.
-    if (mKeyframes instanceof PathKeyframes.FloatKeyframesBase
-            || mKeyframes instanceof PathKeyframes.IntKeyframesBase
-            || (mKeyframes.getKeyframes() != null && mKeyframes.getKeyframes().size() > 2)) {
-        // When a pvh has more than 2 keyframes, that means there are intermediate values in
-        // addition to start/end values defined for animators. Another case where such
-        // intermediate values are defined is when animator has a path to animate along. In
-        // these cases, a data source is needed to capture these intermediate values.
-        values.getValueAtFraction=[this](float fraction)->AnimateValue {
-            calculateValue(fraction);
-            return mAnimateValue;
-            //return mKeyframes.getValue(fraction);
-        };
-    } else {
-        values.dataSource = nullptr;
-    }
-#endif
+    // AOSP: mKeyframes.getValue(0)/getValue(1) (copy PathData out — its
+    // evaluator returns the same mutable object).
+    values.startValue = mKeyframes->getValue(0.f);
+    if(values.startValue.index()==2/*PathData*/)
+        values.startValue = GET_VARIANT(values.startValue,PathParser::PathData);
+    values.endValue = mKeyframes->getValue(1.f);
+    if(values.endValue.index()==2/*PathData*/)
+        values.endValue = GET_VARIANT(values.endValue,PathParser::PathData);
+    mAnimateValue = values.startValue;
+    // AOSP sets a dataSource closure when the holder carries intermediate
+    // values (>2 keyframes / path-sampled). CDROID's AnimatedVectorDrawable
+    // consumers do not act on it yet, so it stays unset here (dormant, as
+    // before the keyframes migration).
 }
 
 void PropertyValuesHolder::setAnimatedValue(void*target){
     if(mProperty!=nullptr){
-        mProperty->set(target,getAnimatedValue());
+        AnimateValue value = getAnimatedValue();
+        // Numeric coercion at the property seam: an XML int literal ("55") on a
+        // float-typed property (pivotY etc.; AOSP generics would throw) crosses
+        // over instead of raising bad_variant_access, and float→int likewise.
+        if (mProperty->getType() == Property::FLOAT_TYPE && value.index() == 0/*int*/) {
+            value = (float)GET_VARIANT(value,int);
+        } else if (mProperty->getType() == Property::INT_TYPE && value.index() == 1/*float*/) {
+            value = (int)GET_VARIANT(value,float);
+        }
+        mProperty->set(target,value);
     }else if(mSetter!=0){
         AnimateValue value = getAnimatedValue();
         mSetter(target,mPropertyName,value);
     }
 }
 
+// AOSP setupValue: only fill keyframes that carry no value — XML-provided
+// start/end values win; path-sampled keyframes are never overwritten by a
+// property getter either (this replaces the old mPathBased guard).
 void PropertyValuesHolder::setupValue(void*target,int position){
+    Keyframe*keyframe = mKeyframes->getKeyframes()[position];
+    if(keyframe->hasValue())return;
     if(mProperty){
-        AnimateValue value = mProperty->get(target);
-        if(mDataSource.size()==1)
-            mDataSource.insert(mDataSource.begin()+position,value);
-        else
-            mDataSource[position] = value;
+        keyframe->setValue(mProperty->get(target));
     }else if(mGetter){
-        AnimateValue value = mGetter(target,mPropertyName);
-        if(mDataSource.size()==1)
-            mDataSource.insert(mDataSource.begin()+position,value);
-        else
-            mDataSource[position] = value;
+        keyframe->setValue(mGetter(target,mPropertyName));
     }
 }
 
+// AOSP: an empty keyframe list (PathKeyframes projections) means the values
+// are fully defined by the path — start/end setup is skipped entirely.
 void PropertyValuesHolder::setupStartValue(void*target){
-    if(mPathBased) return; // Path defines every keyframe; do not overwrite with property.get()
-    if(!mDataSource.empty()){
+    std::vector<Keyframe*>& keyframes = mKeyframes->getKeyframes();
+    if (!keyframes.empty()) {
         setupValue(target,0);
     }
 }
 
 void PropertyValuesHolder::setupEndValue(void*target){
-    if(mPathBased) return; // Path defines every keyframe; do not overwrite with property.get()
-    if(!mDataSource.empty()){
-        setupValue(target,mDataSource.size()-1);
+    std::vector<Keyframe*>& keyframes = mKeyframes->getKeyframes();
+    if (!keyframes.empty()) {
+        setupValue(target,keyframes.size()-1);
     }
 }
 
@@ -311,6 +303,40 @@ PropertyValuesHolder* PropertyValuesHolder::ofFloat(const Property*prop,const st
     return pvh;
 }
 
+PropertyValuesHolder* PropertyValuesHolder::ofKeyframes(const std::string&name,const std::vector<Keyframe*>&keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = KeyframeSet::ofKeyframe(keyframes);
+    pvh->mValueType = pvh->mKeyframes->getType();
+    pvh->init();
+    return pvh;
+}
+
+PropertyValuesHolder* PropertyValuesHolder::ofKeyframes(const Property*prop,const std::vector<Keyframe*>&keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = KeyframeSet::ofKeyframe(keyframes);
+    pvh->init();
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofKeyframes(const std::string&name,Keyframes*keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(name);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = keyframes;
+    pvh->mValueType = keyframes->getType();
+    pvh->init();
+    return pvh;
+}
+
+PropertyValuesHolder*PropertyValuesHolder::ofKeyframes(const Property*prop,Keyframes*keyframes){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = keyframes;
+    pvh->init();
+    return pvh;
+}
+
 PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyName,const std::vector<void*>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(propertyName);
     //pvh->setValues(values);
@@ -332,27 +358,21 @@ PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyNa
 // Generic ofObject: caller supplies the evaluator matching the AnimateValue type (Rect/PointF/...).
 PropertyValuesHolder*PropertyValuesHolder::ofObject(const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
-    pvh->mDataSource = values;
+    delete pvh->mKeyframes;
+    pvh->mKeyframes = KeyframeSet::ofObject(values);
     pvh->mEvaluator = evaluator;
     pvh->mAnimateValue = values.front();
     return pvh;
 }
 
-// Sample the Path into N+1 PointF keyframes; PointFEvaluator interpolates between neighbours.
+// AOSP ofPoint(property, null, path): the keyframes ARE the PathKeyframes —
+// Path::approximate's error-bounded sampling (default error 0.5f), replacing
+// the old uniform N=32 PathMeasure scheme. Raw-owned like KeyframeSet.ofPath's
+// Java new; do NOT call createX/YKeyframes() on this instance (those need
+// shared_ptr ownership — the ObjectAnimator/X-Y routes create their own).
 PropertyValuesHolder*PropertyValuesHolder::ofPointF(const Property*prop,const Cairo::RefPtr<cdroid::Path>& path){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
-    PathMeasure measure(path, false);
-    const double length = measure.getLength();
-    const int N = 32; // fine enough that linear segments approximate curved paths
-    for (int i = 0; i <= N; i++) {
-        double pos[2] = {0,0}, tan[2] = {0,0};
-        measure.getPosTan(length * i / N, pos, tan);
-        PointF p; p.x = (float)pos[0]; p.y = (float)pos[1];
-        pvh->mDataSource.push_back(p);
-    }
-    pvh->mEvaluator = PointFEvaluator;
-    pvh->mAnimateValue = pvh->mDataSource.front();
-    pvh->mPathBased = true;
+    pvh->mKeyframes = new PathKeyframes(path);
     return pvh;
 }
 

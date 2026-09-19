@@ -17,7 +17,6 @@
  *********************************************************************************/
 #include <fragment/fragmentviewlifecycleowner.h>
 namespace cdroid{
-namespace fragment{
 
 FragmentViewLifecycleOwner::FragmentViewLifecycleOwner(Fragment* /*fragment*/){
     mLifecycleRegistry = new lifecycle::LifecycleRegistry(this);
@@ -52,5 +51,4 @@ void FragmentViewLifecycleOwner::handleLifecycleEvent(lifecycle::Lifecycle::Even
     mLifecycleRegistry->handleLifecycleEvent(event);
 }
 
-}//namespace fragment
 }//namespace cdroid

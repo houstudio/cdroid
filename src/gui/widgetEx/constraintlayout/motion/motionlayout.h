@@ -60,8 +60,9 @@ class KeyFrames;
 
 class MotionLayout : public ConstraintLayout {
   public:
-    MotionLayout(Context* ctx, const AttributeSet& attrs);
-    explicit MotionLayout(int width, int height);
+    MotionLayout(Context*ctx);   // AOSP MotionLayout(Context)
+    MotionLayout(Context* ctx, const AttributeSet* attrs);
+    MotionLayout(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
     ~MotionLayout() override;
 
     // Capture each child's frame in the start/end ConstraintSets and build per-child Motion.
@@ -87,8 +88,11 @@ class MotionLayout : public ConstraintLayout {
     void transitionToStart();
     void transitionToEnd();
     // transitionToEnd with a callback invoked once the animation reaches the end (used by
-    // ViewTransition delta modes to set/clear tags on completion).
-    void transitionToEnd(const std::function<void()>& onEnd);
+    // ViewTransition delta modes to set/clear tags on completion). A Runnable (value
+    // semantics, identity-comparable) so callers can re-arm/self-chain without heap
+    // gymnastics — a std::function parameter forced apps into make_shared self-reference
+    // cycles just to recurse.
+    void transitionToEnd(const Runnable& onEnd);
     // Spring-settle to `target` (0 or 1) carrying `startVelocity` (progress/sec). Uses the OnSwipe
     // spring parameters; the spring stops itself via its energy threshold.
     void animateToWithSpring(float target, float startVelocity,
@@ -103,11 +107,17 @@ class MotionLayout : public ConstraintLayout {
     void setProgressInstant(float progress) {
         setProgress(progress);
     }
-    void setTransitionDuration(int64_t durationMs) {
-        mTransitionDuration = durationMs;
-    }
-    int64_t getTransitionDuration() const {
-        return mTransitionDuration;
+    // AndroidX setTransitionDuration (MotionLayout.java:4951): writes through to the scene
+    // (no scene → error log, no-op); defined out-of-line.
+    void setTransitionDuration(int64_t durationMs);
+    // AndroidX getTransitionTimeMs (MotionLayout.java:4481): reads through the scene so a
+    // duration defined there is visible (AndroidX divides by 1000f — its scene duration went
+    // through a µs era; CDROID keeps milliseconds end to end, so no rescale here).
+    int64_t getTransitionTimeMs();
+    // AndroidX MotionScene.isProcessingTouch (its velocity tracker's lifetime): true between
+    // ACTION_DOWN and ACTION_UP/CANCEL — MotionScene::autoTransition must not fire mid-gesture.
+    bool isProcessingTouch() const {
+        return mProcessingTouch;
     }
 
     // Per-child keyframes (must be called after setTransition). The MotionLayout stores the key
@@ -117,6 +127,10 @@ class MotionLayout : public ConstraintLayout {
     // Set the easing curve on all (or one) child Motion.
     void setTransitionEasing(const std::string& easing);
     void setTransitionEasing(int viewId, const std::string& easing);
+    // Install a platform interpolator (an @anim/... MotionScene easing reference) as every
+    // motion's easing — AndroidX INTERPOLATOR_REFERENCE_ID. The interpolator is borrowed
+    // (AnimationUtils' cache keeps it alive).
+    void setTransitionInterpolator(const Interpolator* interpolator);
 
     // Pixels-per-progress of the anchor point (locationX,locationY) on view `anchorId` at `pos`.
     // Used by TouchResponse to map drag deltas to progress (the anchor's travel is the drag range).
@@ -189,12 +203,20 @@ class MotionLayout : public ConstraintLayout {
     static void captureWidgetFrame(MotionWidget& out, View* v);
     static void applyWidgetFrame(View* v, MotionWidget& mw);
 
+    // Apply `cs`, force a measure+layout pass, then read each child's frame into `out`. The
+    // layout is left at `cs`'s solved state — callers capturing for inspection must restore.
+    // Also used by ViewTransition to solve a delta'd set offscreen for per-view end frames.
+    void captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out);
+
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int w, int h) override;
     // Drag-to-progress when the scene's current transition has an <OnSwipe>. Intercepted once the
     // drag exceeds touch slop (so taps still reach <OnClick> children); auto-completes on release.
     bool onInterceptTouchEvent(MotionEvent& evt) override;
+    // A direct child is leaving the layout: retire the ViewTransition touch cache and any
+    // in-flight Animate writing onto it (their raw View* would dangle — AndroidX leans on GC).
+    void onViewRemoved(View* child) override;
     bool onTouchEvent(MotionEvent& evt) override;
 
   private:
@@ -207,8 +229,6 @@ class MotionLayout : public ConstraintLayout {
     // Actually run the start/end capture + build motions (called once we have a real size).
     void captureAndBuild();
 
-    // Apply `cs`, force a measure+layout pass, then read each child's frame into `out`.
-    void captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out);
     // Build (or rebuild) the per-child Motion controllers from the captured start/end widgets.
     void buildMotions();
     // Apply the interpolated state at mProgress to every child view.
@@ -250,6 +270,10 @@ class MotionLayout : public ConstraintLayout {
     float mProgress = 0.0f;
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;
+    // Generation token for animateTo's completion listener: cancel() fires onAnimationEnd
+    // synchronously, so replacing the animator must retire the old listener (its "completion"
+    // would teleport the progress to the abandoned target and fire a bogus transitionCompleted).
+    int64_t mAnimatorGeneration = 0;
     std::unique_ptr<SpringStopEngine> mSpringEngine;
     // The spring is driven by a Choreographer frame callback (real frame time), not a ValueAnimator.
     // mSpringFrameCallback re-posts itself each frame until isStopped(); mSpringStartNanos is seeded
@@ -266,7 +290,7 @@ class MotionLayout : public ConstraintLayout {
 
     // Pure-XML MotionScene path (app:layoutDescription="@xml/...").
     std::unique_ptr<MotionScene> mScene;
-    std::string mSceneResource;       // resource path of the <MotionScene> XML
+    int mSceneResource = 0;           // R.xml.* resource id of the <MotionScene> XML
     KeyFrames* mKeyFramesToApply = nullptr; // borrowed from mScene's current transition; applied post-capture
     int mSceneArcMode = -1;            // Transition-level pathMotionArc, propagated to each Motion
     bool mSceneBuilt = false;
@@ -276,6 +300,8 @@ class MotionLayout : public ConstraintLayout {
     // Last touch position (set on DOWN, updated each MOVE) — the per-move drag delta for
     // pickTransitionForDrag, mirroring MotionScene.mLastTouchX/Y in processTouchEvent.
     float mLastTouchX = 0, mLastTouchY = 0;
+    // True between ACTION_DOWN and ACTION_UP/CANCEL (see isProcessingTouch()).
+    bool mProcessingTouch = false;
     TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
     std::vector<TransitionListener> mTransitionListeners; // Carousel etc. (AndroidX TransitionListener)
 };

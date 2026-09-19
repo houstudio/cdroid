@@ -41,8 +41,9 @@ class Barrier : public ConstraintHelper {
     static constexpr int START  = BOTTOM + 2;
     static constexpr int END    = START + 1;
 
-    Barrier(Context* ctx, const AttributeSet& attrs);
-    explicit Barrier(int width, int height);
+    Barrier(Context* ctx);   // AOSP Barrier(Context)
+    Barrier(Context* ctx, const AttributeSet* attrs);
+    Barrier(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     int  getType() const;
     void setType(int type);

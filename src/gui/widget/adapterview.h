@@ -21,6 +21,11 @@
 #include <widget/adapter.h>
 namespace cdroid{
 class AdapterView:public ViewGroup{
+private:
+    // Liveness belt for the posted mSelectionNotifier (PopupWindow idiom):
+    // detach-purge can be skipped on teardown paths that delete the tree
+    // directly, and the posted lambda must never fire into a freed AdapterView.
+    std::shared_ptr<bool> mSelectionNotifierAlive = nullptr;
 friend class AdapterDataSetObserver;
 public:
     enum{
@@ -110,8 +115,9 @@ protected:
     void rememberSyncState();
     int  findSyncPosition();
 public:
-    AdapterView(int w,int h);
-    AdapterView(Context*ctx,const AttributeSet&atts);
+    AdapterView(Context*ctx);   // AOSP AdapterView(Context)
+    AdapterView(Context*ctx,const AttributeSet*atts);
+    AdapterView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~AdapterView()override;
     virtual Adapter*getAdapter();
     virtual void setAdapter(Adapter*)=0;

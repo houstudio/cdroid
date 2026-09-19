@@ -111,6 +111,13 @@ int PagerAdapter::getItemPosition(void* object){
     return POSITION_UNCHANGED;
 }
 
+Parcelable* PagerAdapter::saveState(){
+    return nullptr;
+}
+
+void PagerAdapter::restoreState(Parcelable* state){
+}
+
 void PagerAdapter::setPrimaryItem(ViewGroup* container, int position,void*object) {
 }
 

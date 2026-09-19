@@ -15,11 +15,15 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
+#include <transition/transitionmanager.h>
 #include <porting/cdlog.h>
 #include <core/systemclock.h>
 
@@ -28,8 +32,9 @@
 
 using namespace Cairo;
 namespace cdroid {
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(ViewGroup)
+DECLARE_WIDGET2(ViewGroup, "android.view.ViewGroup");
 
 class TouchTarget{
 private:
@@ -126,20 +131,18 @@ HoverTarget*HoverTarget::sRecycleBin = nullptr;
 int TouchTarget::sRecycledCount = 0;
 int HoverTarget::sRecycledCount = 0;
 
-ViewGroup::ViewGroup(Context*ctx,const AttributeSet& attrs):View(ctx,attrs){
+ViewGroup::ViewGroup(Context*ctx)
+    :ViewGroup(ctx,nullptr){}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs):ViewGroup(ctx,attrs,0){
+}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr):ViewGroup(ctx,attrs,defStyleAttr,0){
+}
+
+ViewGroup::ViewGroup(Context*ctx,const AttributeSet* attrs,int defStyleAttr,int defStyleRes):View(ctx,attrs,defStyleAttr,defStyleRes){
     initGroup();
     initFromAttributes(ctx,attrs);
-}
-
-ViewGroup::ViewGroup(int w,int h)
-  : ViewGroup(0,0,w,h) {
-}
-
-ViewGroup::ViewGroup(int x,int y,int w,int h)
-:View(w,h){
-    mLeft = x;
-    mTop  = y;
-    initGroup();
 }
 
 void ViewGroup::initGroup(){
@@ -199,38 +202,40 @@ void ViewGroup::initGroup(){
     };
 }
 
-void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet&atts){
-    setClipChildren(atts.getBoolean("clipChildren",true));
-    setClipToPadding(atts.getBoolean("clipToPadding",true));
-    //setAnimationCacheEnabled
-    std::string resid = atts.getString("layoutAnimation");
-    if(!resid.empty()){
-        setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,resid));
+void ViewGroup::initFromAttributes(Context*ctx,const AttributeSet*atts){
+    auto ta = ctx->obtainStyledAttributes(atts, R::styleable::ViewGroup);
+
+    setClipChildren(true);
+    setClipToPadding(true);
+    setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
+    setLayoutMode(LAYOUT_MODE_UNDEFINED);
+
+    if (ta) {
+        for (size_t n = ta->getIndexCount(); n > 0; ) {
+            size_t i = ta->getIndex(--n);
+            switch (i) {
+            case R::styleable::ViewGroup_clipChildren:          setClipChildren(ta->getBoolean(i, true)); break;
+            case R::styleable::ViewGroup_clipToPadding:         setClipToPadding(ta->getBoolean(i, true)); break;
+            case R::styleable::ViewGroup_layoutAnimation:       { const int r=ta->getResourceId(i,0); if(r) setLayoutAnimation(AnimationUtils::loadLayoutAnimation(ctx,r)); } break;
+            case R::styleable::ViewGroup_descendantFocusability: setDescendantFocusability(ta->getInt(i, (int)FOCUS_BEFORE_DESCENDANTS)); break;
+            case R::styleable::ViewGroup_animateLayoutChanges:  if(ta->getBoolean(i,false)) setLayoutTransition(new LayoutTransition()); break;
+            case R::styleable::ViewGroup_layoutMode:            setLayoutMode(ta->getInt(i, (int)LAYOUT_MODE_UNDEFINED)); break;
+            case R::styleable::ViewGroup_addStatesFromChildren: setAddStatesFromChildren(ta->getBoolean(i, false)); break;
+            case R::styleable::ViewGroup_splitMotionEvents:     setMotionEventSplittingEnabled(ta->getBoolean(i, false)); break;
+            case R::styleable::ViewGroup_alwaysDrawnWithCache:  setAlwaysDrawnWithCacheEnabled(ta->getBoolean(i, false)); break;
+            case R::styleable::ViewGroup_transitionGroup:       setTransitionGroup(ta->getBoolean(i, false)); break;
+            case R::styleable::ViewGroup_touchscreenBlocksFocus: setTouchscreenBlocksFocus(ta->getBoolean(i, false)); break;
+            default: break;
+            }
+        }
     }
-
-    const int flags=atts.getInt("descendantFocusability",std::unordered_map<std::string,int>{
-        {"beforeDescendants",(int)FOCUS_BEFORE_DESCENDANTS},
-        {"afterDescendants" ,(int)FOCUS_AFTER_DESCENDANTS},
-        {"blocksDescendants",(int)FOCUS_BLOCK_DESCENDANTS}
-    },FOCUS_BEFORE_DESCENDANTS);
-    setDescendantFocusability(flags);
-
-    if(atts.getBoolean("animateLayoutChanges",false))
-        setLayoutTransition(new LayoutTransition());
-    const int layoutMode = atts.getInt("layoutMode",std::unordered_map<std::string,int>{
-        {"undefined" ,(int)LAYOUT_MODE_UNDEFINED},
-        {"clipBounds",(int)LAYOUT_MODE_CLIP_BOUNDS},
-        {"opticalBounds",(int)LAYOUT_MODE_OPTICAL_BOUNDS}
-    },LAYOUT_MODE_UNDEFINED);
-    setAddStatesFromChildren(atts.getBoolean("addStatesFromChildren",false));
-    setMotionEventSplittingEnabled(atts.getBoolean("splitMotionEvents",false));
-    setAlwaysDrawnWithCacheEnabled(atts.getBoolean("alwaysDrawnWithCache",false));
-    setLayoutMode(layoutMode);
-    setTransitionGroup(atts.getBoolean("transitionGroup",false));
-    setTouchscreenBlocksFocus(atts.getBoolean("touchscreenBlocksFocus",false));
 }
 
 ViewGroup::~ViewGroup() {
+    // Cancel layout transitions before destroying children: in-flight
+    // disappearing/changing animations would otherwise outlive their targets.
+    delete mTransition;
+    mTransition = nullptr;
     while(mChildren.size()){
         View*v = mChildren[0];
         removeViewAt(0);
@@ -240,7 +245,6 @@ ViewGroup::~ViewGroup() {
     delete mChildTransformation;
     delete mInvalidationTransformation;
     delete mLayoutAnimationController;
-    delete mTransition;
 }
 
 bool ViewGroup::ensureTouchMode(bool){
@@ -520,6 +524,24 @@ bool ViewGroup::hasHoveredChild() const{
     return mFirstHoverTarget != nullptr;
 }
 
+// AOSP ViewGroup.onInitializeAccessibilityNodeInfoInternal: a container node
+// lists its (a11y-included) children as node ids, so the tree is walkable via
+// getChild(). With a provider the virtual tree replaces the real children.
+void ViewGroup::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
+    View::onInitializeAccessibilityNodeInfoInternal(info);
+    if (getAccessibilityNodeProvider() != nullptr) {
+        return;
+    }
+    if (mAttachInfo != nullptr) {
+        std::vector<View*> childrenForAccessibility;
+        addChildrenForAccessibility(childrenForAccessibility);
+        const size_t childrenForAccessibilityCount = childrenForAccessibility.size();
+        for (size_t i = 0; i < childrenForAccessibilityCount; i++) {
+            info.addChildUnchecked(childrenForAccessibility.at(i));
+        }
+    }
+}
+
 void ViewGroup::addChildrenForAccessibility(std::vector<View*>& outChildren){
     if (getAccessibilityNodeProvider() != nullptr) {
         return;
@@ -656,6 +678,8 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
     }
 
     // Let our children have a shot in populating the event.
+    // AOSP wraps this walk in try/finally to recycle the ChildList; the
+    // port's early returns leaked the pooled list (and its holders).
     ChildListForAccessibility* children = ChildListForAccessibility::obtain(this, true);
     const int childCount = children->getChildCount();
     for (int i = 0; i < childCount; i++) {
@@ -663,13 +687,13 @@ bool ViewGroup::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& e
         if ((child->mViewFlags & VISIBILITY_MASK) == VISIBLE) {
             handled = child->dispatchPopulateAccessibilityEvent(event);
             if (handled) {
-                return handled;
+                break;
             }
         }
     }
     children->recycle();
 
-    return false;
+    return handled;
 }
 
 bool ViewGroup::dispatchGenericPointerEvent(MotionEvent& event) {
@@ -1461,6 +1485,11 @@ ViewGroupOverlay* ViewGroup::getOverlay() {
     if (mOverlay == nullptr) {
         mOverlay = new ViewGroupOverlay(mContext, this);
         mOverlay->getOverlayView()->setFrame(mLeft,mTop,mRight-mLeft,mBottom-mTop);
+        // android OverlayViewGroup ctor: mAttachInfo = mHostView.mAttachInfo (see the
+        // matching line in View::getOverlay -- the host is usually already attached
+        // when its overlay is created lazily, so no dispatchAttachedToWindow will
+        // deliver it later).
+        mOverlay->getOverlayView()->mAttachInfo = mAttachInfo;
     }
     return (ViewGroupOverlay*)mOverlay;
 }
@@ -1741,7 +1770,11 @@ bool ViewGroup::isViewDescendantOf(View* child, View* parent) {
         return true;
     }
     ViewGroup* theParent = child->getParent();
-    return isViewDescendantOf((View*) theParent, parent);
+    // android-36 (ViewRootImpl.isViewDescendantOf): '(theParent instanceof
+    // ViewGroup) && recurse' — the walk ends at the ViewRootImpl boundary.
+    // CDROID's tree root has a null parent (no ViewRootImpl wrapper), which
+    // is the same boundary.
+    return theParent != nullptr && isViewDescendantOf((View*) theParent, parent);
 }
 
 void ViewGroup::addView(View* view){
@@ -2848,9 +2881,11 @@ bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& e
     if (!propagate) {
         return false;
     }
-    const bool rc= mParent->requestSendAccessibilityEvent(this, event);
-    AccessibilityManager::getInstance(mContext).sendAccessibilityEvent(event);
-    return true;
+    // AOSP bubbles to the parent and returns ITS result — the terminal
+    // ViewRootImpl (CDROID: Window) sends to the manager. The direct send
+    // here was a port addition: with recycle-on-every-exit it double-sent
+    // (and double-recycled) every event ("Already in the pool").
+    return mParent->requestSendAccessibilityEvent(this, event);
 }
 
 bool ViewGroup::onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
@@ -3109,7 +3144,12 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
     rect.set(r.left,r.top,r.width,r.height);
 
     if (!child->hasIdentityMatrix()) {
-        child->getMatrix().transform_rectangle((Cairo::Rectangle&)rect);
+        Cairo::Rectangle tmp = { rect.left, rect.top, rect.width, rect.height };
+        child->getMatrix().transform_rectangle(tmp);
+        rect.left   = tmp.x;
+        rect.top    = tmp.y;
+        rect.width  = tmp.width;
+        rect.height = tmp.height;
     }
 
     const int dx = child->mLeft - mScrollX;
@@ -3141,9 +3181,8 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
 
     if ((forceParentCheck || rectIsVisible)  && ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK)) {
         // Clip to padding.
-        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop,  
-			width - mPaddingRight-mPaddingLeft, 
-			height - mPaddingBottom-mPaddingTop);
+        rectIsVisible = rect.intersect(mPaddingLeft, mPaddingTop, 
+			width - mPaddingRight-mPaddingLeft, height - mPaddingBottom-mPaddingTop);
     }
 
     if ((forceParentCheck || rectIsVisible) && (mClipBounds.empty()==false)) {
@@ -3254,8 +3293,16 @@ void ViewGroup::setLayoutAnimationListener(const Animation::AnimationListener& a
 }
 
 void ViewGroup::requestTransitionStart(LayoutTransition* transition){
-    ViewGroup*root = getRootView();
-    if(root)root->requestTransitionStart(transition);
+    // AOSP hands the request to the ViewRootImpl host above the tree. CDROID's
+    // host is the Window itself (a ViewGroup subclass whose override records
+    // the pending transition). The walk must stop at the tree root: when the
+    // root is a plain ViewGroup with no Window host (gui_test trees, detached
+    // subtrees) recursing into it re-enters this same method forever —
+    // getRootView() keeps returning the same root — and overflows the stack.
+    ViewGroup* root = getRootView();
+    if (root != nullptr && root != this) {
+        root->requestTransitionStart(transition);
+    }
 }
 
 bool ViewGroup::resolveRtlPropertiesIfNeeded(){
@@ -4227,6 +4274,15 @@ void ViewGroup::dispatchDetachedFromWindow(){
     for (View*view:mTransientViews){//int i = 0; i < transientCount; ++i) {
         view->dispatchDetachedFromWindow();
     }
+    // A scene root dying with pending/running transition clones (a pager torn
+    // down mid page-flip, a window recreate landing while an exit transition
+    // settles) leaves them keyed in TransitionManager forever: the clone never
+    // gets another frame to end itself, so it leaks with every start/end value
+    // it captured, and hasActiveTransitions stays true making reclaim hops
+    // poll a dead container. End everything keyed on THIS group while the
+    // captured views are still alive (children detached above, tree sweep not
+    // run yet). Android cancels scene-root transitions at detach likewise.
+    TransitionManager::endTransitions(this);
     View::dispatchDetachedFromWindow();
 }
 
@@ -4487,7 +4543,8 @@ void ViewGroup::ViewLocationHolder::setComparisonStrategy(int strategy) {
 
 void ViewGroup::ViewLocationHolder::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; free here (AccessibilityEvent::recycle idiom).
+    if (!sPool.release(this)) delete this;
 }
 
 int  ViewGroup::ViewLocationHolder::compareTo(ViewLocationHolder* another) {
@@ -4609,7 +4666,8 @@ ViewGroup::ChildListForAccessibility* ViewGroup::ChildListForAccessibility::obta
 
 void ViewGroup::ChildListForAccessibility::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; free here (AccessibilityEvent::recycle idiom).
+    if (!sPool.release(this)) delete this;
 }
 
 int ViewGroup::ChildListForAccessibility::getChildCount() {

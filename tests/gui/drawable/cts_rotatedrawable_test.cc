@@ -29,7 +29,6 @@
 #include <gtest/gtest.h>
 #include <drawable/rotatedrawable.h>
 #include <drawable/drawables.h>
-#include <core/app.h>
 #include <core/porterduff.h>
 #include <core/rect.h>
 #include <view/view.h>

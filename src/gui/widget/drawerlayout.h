@@ -18,10 +18,12 @@
 #ifndef __DRAWER_LAYOUT_H__
 #define __DRAWER_LAYOUT_H__
 #include <view/viewgroup.h>
+#include <view/accessibility/accessibilityviewcommand.h>
 #include <widget/viewdraghelper.h>
+#include <widget/openable.h>
 namespace cdroid{
 
-class DrawerLayout:public ViewGroup{
+class DrawerLayout:public ViewGroup, public Openable{
 public:
     static constexpr int STATE_IDLE = ViewDragHelper::STATE_IDLE;
     static constexpr int STATE_DRAGGING = ViewDragHelper::STATE_DRAGGING;
@@ -92,6 +94,29 @@ private:
     static constexpr float TOUCH_SLOP_SENSITIVITY = 1.f;
     static constexpr bool CAN_HIDE_DESCENDANTS=true;
     static constexpr bool SET_DRAWER_SHADOW_FROM_ELEVATION=false;
+
+    static constexpr const char* ACCESSIBILITY_CLASS_NAME = "androidx.drawerlayout.widget.DrawerLayout";
+
+    /*androidx DrawerLayout.AccessibilityDelegate: this view reports itself
+      focusable-in-touch-mode only to intercept the back button — hide that
+      from accessibility services.*/
+    class AccessibilityDelegate:public View::AccessibilityDelegate {
+    public:
+        void onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info)override;
+        void onInitializeAccessibilityEvent(View& host, AccessibilityEvent& event)override;
+    };
+
+    /*androidx mActionDismiss lambda: closes an open, unlocked drawer child.
+      Bound to this layout at initView (the lambda captures the outer this).*/
+    class DismissDrawerCommand:public AccessibilityViewCommand {
+    public:
+        DismissDrawerCommand():mLayout(nullptr){}
+        void init(DrawerLayout* layout){ mLayout = layout; }
+        bool perform(View& view, CommandArguments* arguments)override;
+    private:
+        DrawerLayout* mLayout;
+    };
+    DismissDrawerCommand mActionDismiss;
 
     class ViewDragCallback:public ViewDragHelper::Callback{
     private:
@@ -213,14 +238,15 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 public:
-    DrawerLayout(int w,int h);
-    DrawerLayout(Context*ctx,const AttributeSet&atts); 
+    DrawerLayout(Context*ctx);   // AOSP DrawerLayout(Context)
+    DrawerLayout(Context*ctx,const AttributeSet*atts);
+    DrawerLayout(Context*ctx,const AttributeSet* attrs,int defStyleAttr); 
     ~DrawerLayout()override;
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;
     void setChildInsets(const WindowInsets& insets, bool draw);
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);
-    void setDrawerShadow(const std::string& resId,int gravity);
+    void setDrawerShadow(int resId,int gravity);
     void setScrimColor(int color);
     void addDrawerListener(const DrawerListener& listener);
     void removeDrawerListener(const DrawerListener& listener);
@@ -237,7 +263,7 @@ public:
     void computeScroll()override;
     void setStatusBarBackground(Drawable* bg);
     Drawable* getStatusBarBackgroundDrawable() ;
-    void setStatusBarBackground(const std::string& resId);
+    void setStatusBarBackground(int resId);
     void setStatusBarBackgroundColor(int color);
     void onRtlPropertiesChanged(int layoutDirection)override;
     void onDraw(Canvas& c)override;
@@ -259,10 +285,11 @@ public:
     bool isDrawerOpen(int drawerGravity)const;
     bool isDrawerVisible(View* drawer)const;
     bool isDrawerVisible(int drawerGravity)const;
-    // Openable contract: open()/close() act on the start drawer; isOpen() queries it.
-    void open();
-    void close();
-    bool isOpen();
+    // androidx.customview.widget.Openable: open()/close() act on the drawer
+    // matching the default (start) gravity.
+    void open() override;
+    void close() override;
+    bool isOpen() override;
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;

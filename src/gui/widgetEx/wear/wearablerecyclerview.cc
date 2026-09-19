@@ -16,27 +16,35 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/wearablerecyclerview.h>
+#include <widgetEx/widgetex_styleable.h>
+
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(WearableRecyclerView);
+DECLARE_WIDGET2(WearableRecyclerView, "androidx.wear.widget.WearableRecyclerView");
 
-WearableRecyclerView::WearableRecyclerView(int w,int h)
-    :RecyclerView(w,h){
-    mScrollManager = new ScrollManager();
-}
+WearableRecyclerView::WearableRecyclerView(Context*ctx):WearableRecyclerView(ctx,nullptr){}
 
-WearableRecyclerView::WearableRecyclerView(Context* context, const AttributeSet& attrs)
-    :RecyclerView(context, attrs){
+WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* attrs):WearableRecyclerView(context,attrs,0){}
+
+WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :RecyclerView(context, pAttrs, defStyleAttr){
     mScrollManager = new ScrollManager();
     setHasFixedSize(true);
     // Padding is used to center the top and bottom items in the list, don't clip to padding to
     // allows the items to draw in that space.
     setClipToPadding(false);
 
-    setCircularScrollingGestureEnabled(attrs.getBoolean("circularScrollingGestureEnabled",mCircularScrollingEnabled));
-    setBezelFraction(attrs.getFloat("bezelWidth",mScrollManager->getBezelWidth()));
-    setScrollDegreesPerScreen(attrs.getFloat("scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+    // androidx R.styleable.WearableRecyclerView (TypedArray; binary AXML ids)
+    if (pAttrs) {
+        auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::WearableRecyclerView);
+        if (ta) {
+            setCircularScrollingGestureEnabled(ta->getBoolean(internal::R::styleable::WearableRecyclerView_circularScrollingGestureEnabled, mCircularScrollingEnabled));
+            setBezelFraction(ta->getFraction(internal::R::styleable::WearableRecyclerView_bezelWidth, 1, 1, mScrollManager->getBezelWidth()));
+            setScrollDegreesPerScreen(ta->getFloat(internal::R::styleable::WearableRecyclerView_scrollDegreesPerScreen, mScrollManager->getScrollDegreesPerScreen()));
+        }
+    }
 }
 
 WearableRecyclerView::~WearableRecyclerView(){

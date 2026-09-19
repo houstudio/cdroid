@@ -15,28 +15,34 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/scrollview.h>
-#include <widget/R.h>
+#include <widget/framework_styleable.h>
 #include <view/focusfinder.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/hapticscrollfeedbackprovider.h>
 #include <porting/cdlog.h>
 namespace cdroid {
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ScrollView,"cdroid:attr/scrollViewStyle")
+DECLARE_WIDGET2(ScrollView, "android.widget.ScrollView");
 
-ScrollView::ScrollView(int w,int h):FrameLayout(w,h){
+ScrollView::ScrollView(Context*ctx)
+    :ScrollView(ctx,nullptr){}
+
+ScrollView::ScrollView(Context*context,const AttributeSet* atts):ScrollView(context,atts,cdroid::internal::R::attr::scrollViewStyle){}
+
+ScrollView::ScrollView(Context*context,const AttributeSet* pAttrs,int defStyleAttr)
+  :FrameLayout(context,pAttrs, defStyleAttr){
     initScrollView();
-    AttributeSet attrs;
-    mIsBeingDragged=false;
-    mActivePointerId=INVALID_POINTER;
-}
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollView, defStyleAttr);
+    
+setFillViewport(ta->getBoolean(R::styleable::ScrollView_fillViewport, false));
+{ auto ta2 = context->obtainStyledAttributes(pAttrs, R::styleable::ScrollViewCdroid);
+  mScrollDuration = ta2->getInt(R::styleable::ScrollViewCdroid_scrollDuration, 400); }
 
-ScrollView::ScrollView(Context*context,const AttributeSet&atts)
-  :FrameLayout(context,atts){
-    initScrollView();
-    setFillViewport(atts.getBoolean("fillViewport", false));
-    mScrollDuration = atts.getInt("scrollDuration",400);
 }
 
 ScrollView::~ScrollView(){
@@ -747,11 +753,11 @@ void ScrollView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo
             info.setScrollable(true);
             if (mScrollY > 0) {
                 info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD);
-                info.addAction(R::id::accessibilityActionScrollUp);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_UP);
             }
             if (mScrollY < scrollRange) {
                 info.addAction(AccessibilityNodeInfo::ACTION_SCROLL_FORWARD);
-                info.addAction(R::id::accessibilityActionScrollDown);//AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
+                info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_DOWN);
             }
         }
     }

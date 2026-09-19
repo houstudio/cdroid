@@ -44,6 +44,12 @@ class XmlPullParser; // expat-backed pull parser (src/gui/core/xmlpullparser.h);
 
 class ConstraintSet {
   public:
+    // AndroidX ConstraintSet.parseDimensionRatioString (ConstraintSet.java:970-1021): parses
+    // "16:9", "1.5", "W,16:9", "H,3:2" into (ratio, side). The VERTICAL side inverts the
+    // fraction; a non-positive endpoint or unparseable number leaves NaN (Java keeps NaN;
+    // consumers test with `> 0`). side: -1 UNKNOWN, 0 HORIZONTAL, 1 VERTICAL. The single
+    // shared parser — ConstraintLayout's LayoutParams parsing calls it too.
+    static void parseDimensionRatioString(const std::string& value, float& ratio, int& side);
     // Anchor/side constants used by connect()/setMargin() (Android ConstraintSet values).
     static const int LEFT    = 3;
     static const int RIGHT   = 4;
@@ -161,9 +167,9 @@ class ConstraintSet {
 
     // Parse a <CustomAttribute> element (attributeName + one of customColorValue/customIntegerValue/
     // customFloatValue/customStringValue/customBooleanValue) at `parser`'s current START_TAG.
-    static CustomAttribute parseCustomAttribute(const AttributeSet& parser);
+    static CustomAttribute parseCustomAttribute(Context* ctx, const AttributeSet& parser);
     // Parse a <CustomAttribute> at `parser` and append it to this set's set-level custom collection.
-    void loadCustomAttribute(const AttributeSet& parser);
+    void loadCustomAttribute(Context* ctx, const AttributeSet& parser);
 
     // Java: ConstraintSet.Constraint — one per referenced view id.
     struct Constraint {
@@ -173,16 +179,16 @@ class ConstraintSet {
         Motion motion;
         std::vector<CustomAttribute> mCustomAttributes;
         int mViewId = -1;
-        // The XML attribute names this Constraint actually authored (populated by
+        // The styleable indices this Constraint actually authored (populated by
         // fillFromAttributeList). applyDelta copies only these fields onto a target, so a delta
         // setting a field to its default value IS applied (precise), unlike a default-difference guess.
-        std::unordered_set<std::string> mAuthored;
+        std::unordered_set<int> mAuthored;
 
         void fillFrom(int viewId, const ConstraintLayout::LayoutParams& param);
         void applyTo(ConstraintLayout::LayoutParams& param) const;
         // Read every attribute on the current START_TAG (a <Constraint>/<Layout>/<Transform>/
         // <PropertySet>/<Motion> element) into the matching sub-struct. (Java: populateConstraint.)
-        void fillFromAttributeList(const AttributeSet& attrs);
+        void fillFromAttributeList(Context* ctx, const AttributeSet& attrs);
     };
 
     // --- core API ---
@@ -197,7 +203,7 @@ class ConstraintSet {
     // element's START_TAG; this reads its attributes + nested <PropertySet>/<Transform>/<Layout>/
     // <Motion>/<CustomAttribute> children and consumes through the matching END_TAG. Shared by load()
     // and ViewTransition (which builds its mConstraintDelta from <Constraint> children).
-    void loadConstraint(XmlPullParser& parser);
+    void loadConstraint(Context* ctx, XmlPullParser& parser);
     // Overlay this set's constraint for target.mViewId onto `target` — each authored sub-struct
     // (Layout/Transform/PropertySet/Motion, gated by mApply) replaces the target's; custom attributes
     // are appended. (Java: ConstraintSet.applyDelta(Constraint).)

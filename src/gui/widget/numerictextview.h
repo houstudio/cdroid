@@ -26,7 +26,9 @@ private:
 protected:
     void onFocusChanged(bool focused, int direction,Rect* previouslyFocusedRect)override;
 public:
-    NumericTextView(Context* context,const AttributeSet& attrs);
+    NumericTextView(Context*ctx);   // AOSP NumericTextView(Context)
+    NumericTextView(Context* context,const AttributeSet* attrs);
+    NumericTextView(Context* context,const AttributeSet* attrs,int defStyleAttr);
 
     /**
      * Sets the currently displayed value.

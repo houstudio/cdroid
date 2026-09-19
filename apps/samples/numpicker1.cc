@@ -7,9 +7,9 @@ int main(int argc,const char*argv[]){
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     Window*w=new Window(0,0,size.x,size.y);
 
-    LinearLayout*layout=new LinearLayout(size.x,size.y);
+    LinearLayout*layout=new LinearLayout(&App::getInstance());
     for(int i=0;i<1;i++){
-        NumberPicker*np1=new NumberPicker(100,600);
+        NumberPicker*np1=new NumberPicker(&app);
         EditText*edt =(EditText*)np1->findViewById(cdroid::R::id::numberpicker_input);
 	if(edt){
 	   edt->setBackgroundColor(0xFFFF1100+(i*33)+11);

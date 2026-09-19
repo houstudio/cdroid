@@ -22,10 +22,6 @@
 #include <systemclock.h>
 
 namespace cdroid{
-AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
-    initAdapterView();
-}
-
 void AdapterView::initAdapterView(){
     mFirstPosition=0;
     mIsVertical = true;
@@ -63,14 +59,21 @@ void AdapterView::initAdapterView(){
     }
 }
 
-AdapterView::AdapterView(Context*ctx,const AttributeSet&atts)
-  :ViewGroup(ctx,atts){
+AdapterView::AdapterView(Context*ctx)
+    :AdapterView(ctx,nullptr){}
+
+AdapterView::AdapterView(Context*ctx,const AttributeSet* atts):AdapterView(ctx,atts,0){}
+
+AdapterView::AdapterView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewGroup(ctx,pAttrs, defStyleAttr){
+    mSelectionNotifierAlive = std::make_shared<bool>(true);
     initAdapterView();
 }
 
 AdapterView::~AdapterView(){
+    if (mSelectionNotifierAlive) *mSelectionNotifierAlive = false;  // belt
     //delete mAdapter;
-    //adapter maybe shared by morethan one adapterview,we consider 
+    //adapter maybe shared by morethan one adapterview,we consider
     //it's good idea to freed by the owner who created it
 }
 
@@ -432,8 +435,12 @@ void AdapterView::doSectionNotify(){
     mPendingSelectionNotifier = nullptr;
     ViewGroup*root=getRootView();
     if(mDataChanged && root && root->isLayoutRequested()){
-        if(getAdapter())
-            mPendingSelectionNotifier = [this](){doSectionNotify();};
+        if(getAdapter()) {
+            auto alive = mSelectionNotifierAlive;
+            mPendingSelectionNotifier = [this, alive](){
+                if (*alive) doSectionNotify();  // freed-tree guard (same belt)
+            };
+        }
     }else{
         dispatchOnItemSelected();
     }
@@ -449,7 +456,10 @@ void AdapterView::selectionChanged(){
             // in a consistent state and is able to accommodate
             // new layout or invalidate requests.
             if (mSelectionNotifier==nullptr) {
-                mSelectionNotifier = [this](){doSectionNotify();};
+                auto alive = mSelectionNotifierAlive;
+                mSelectionNotifier = [this, alive](){
+                    if (*alive) doSectionNotify();  // freed-tree guard (PopupWindow idiom)
+                };
             } else {
                 removeCallbacks(mSelectionNotifier);
             }
@@ -474,7 +484,11 @@ void AdapterView::fireOnSelected() {
     int selection = getSelectedItemPosition();
     if (selection >= 0) {
         View* v = getSelectedView();
-        if(mOnItemSelectedListener.onItemSelected)
+        // Deferred notifications can outlive the selected view (AOSP keeps it
+        // alive via GC). The listener takes a View& — there is no null to hand
+        // out, so a missing or stale view skips the callback (the selection
+        // itself is already gone by then anyway).
+        if (v != nullptr && v->isAttachedToWindow() && mOnItemSelectedListener.onItemSelected)
             mOnItemSelectedListener.onItemSelected(*this, *v, selection,getAdapter()->getItemId(selection));
     } else if(mOnItemSelectedListener.onNothingSelected){
         mOnItemSelectedListener.onNothingSelected(*this);
@@ -498,6 +512,18 @@ std::string AdapterView::getAccessibilityClassName()const{
 
 bool AdapterView::dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event){
     View* selectedView = getSelectedView();
+    // The selected child can be a stale entry when a deferred selection
+    // notification runs after the layout churn that freed the old selection
+    // (AOSP: the view stays alive via GC). Membership in mChildren is NOT a
+    // liveness proof — a deleted view can still sit in the array (scrap-path
+    // dangling entries); dispatchDetachedFromWindow clears mAttachInfo, so
+    // !isAttachedToWindow() catches the corpse. A stale one is skipped — the
+    // reader only misses one utterance for a selection that no longer exists.
+    if (selectedView != nullptr && !selectedView->isAttachedToWindow()) {
+        LOGW("dispatchPopulate: selected view %p is detached — stale selection",
+             (void*)selectedView);
+        selectedView = nullptr;
+    }
     if (selectedView && selectedView->getVisibility() == VISIBLE
             && selectedView->dispatchPopulateAccessibilityEvent(event)) {
         return true;
@@ -522,7 +548,7 @@ void AdapterView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInf
    ViewGroup::onInitializeAccessibilityNodeInfoInternal(info);
    info.setScrollable(isScrollableForAccessibility());
    View* selectedView = getSelectedView();
-   if (selectedView != nullptr) {
+   if (selectedView != nullptr && selectedView->isAttachedToWindow()) {  // stale-selection guard
         info.setEnabled(selectedView->isEnabled());
     }
 }
@@ -531,7 +557,7 @@ void AdapterView::onInitializeAccessibilityEventInternal(AccessibilityEvent& eve
     ViewGroup::onInitializeAccessibilityEventInternal(event);
     event.setScrollable(isScrollableForAccessibility());
     View* selectedView = getSelectedView();
-    if (selectedView != nullptr) {
+    if (selectedView != nullptr && selectedView->isAttachedToWindow()) {  // stale-selection guard
         event.setEnabled(selectedView->isEnabled());
     }
     event.setCurrentItemIndex(getSelectedItemPosition());

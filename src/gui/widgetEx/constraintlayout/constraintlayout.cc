@@ -20,9 +20,13 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintLayout.
  * Faithful port — see header for the supported feature surface.
  */
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
+#include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/sharedvalues.h>
 
 #include <algorithm>
@@ -44,123 +48,110 @@
 #include <widgetEx/constraintlayout/helpers/layer.h>
 #include <widgetEx/constraintlayout/helpers/placeholder.h>
 
-DECLARE_WIDGET(ConstraintLayout)
+DECLARE_WIDGET2(ConstraintLayout, "androidx.constraintlayout.widget.ConstraintLayout");
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 // out-of-line definition (PARENT_ID is odr-used as a map key)
 constexpr int ConstraintLayout::PARENT_ID;
-
-namespace {
-// Parse a ratio string like "16:9", "1.5", "W,16:9", "H,3:2" into (ratio, side).
-void parseDimensionRatio(const std::string& str, float& ratio, int& side) {
-    side = -1; // UNKNOWN
-    std::string s = str;
-    if (s.size() > 2 && s[1] == ',') {
-        if (s[0] == 'W' || s[0] == 'w') side = ConstraintWidget::HORIZONTAL;
-        else if (s[0] == 'H' || s[0] == 'h') side = ConstraintWidget::VERTICAL;
-        s = s.substr(2);
-    }
-    size_t colon = s.find(':');
-    if (colon != std::string::npos) {
-        float num = std::stof(s.substr(0, colon));
-        float den = std::stof(s.substr(colon + 1));
-        ratio = (den != 0) ? num / den : 0;
-    } else {
-        ratio = std::stof(s);
-    }
-}
-} // anonymous namespace
 
 // ===========================================================================
 // ConstraintLayout::LayoutParams
 // ===========================================================================
 ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
     : MarginLayoutParams(c, attrs) {
-    // Anchor targets — accept either a resource id ("parent" -> PARENT_ID=0) or an int.
-    leftToLeft   = attrs.getResourceId("layout_constraintLeft_toLeftOf",   UNSET);
-    leftToRight  = attrs.getResourceId("layout_constraintLeft_toRightOf",  UNSET);
-    rightToLeft  = attrs.getResourceId("layout_constraintRight_toLeftOf",  UNSET);
-    rightToRight = attrs.getResourceId("layout_constraintRight_toRightOf", UNSET);
-    // Start/End (RTL-aware) — stored raw; resolved to Left/Right at measure time in
-    // applyConstraintsFromLayoutParams based on the container's isRtl(). Explicit Left/Right
-    // overrides these. Modern layouts emit Start/End, so without reading them a 0dp view
-    // constrained only via Start/End gets no horizontal anchor → collapses to 0 width.
-    startToStart = attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
-    startToEnd   = attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
-    endToStart   = attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
-    endToEnd     = attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
-    topToTop     = attrs.getResourceId("layout_constraintTop_toTopOf",     UNSET);
-    topToBottom  = attrs.getResourceId("layout_constraintTop_toBottomOf",  UNSET);
-    bottomToTop  = attrs.getResourceId("layout_constraintBottom_toTopOf",  UNSET);
-    bottomToBottom = attrs.getResourceId("layout_constraintBottom_toBottomOf", UNSET);
+    // AOSP switch-loop (ConstraintLayout.java:3171): single pass over SET indices.
+    // aapt2 pre-resolves enums (orientation/chainStyle/matchDefault) → getInt direct.
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    namespace SCL = R::styleable;
+    std::string ratioStr;
+    // Anchor targets are declared format="reference|enum" with <enum name="parent" value="0"/>:
+    // "@id/x" is stored as a reference (resource id), "parent" as an int enum (0). Match androidx
+    // (ConstraintLayout.java:3311) — getResourceId for the @id/x case, getInt fallback for "parent"
+    // — else binary AXML leaves every parent-anchored constraint at UNSET.
+    auto anchor = [&](size_t idx) -> int {
+        int v = (int) ta->getResourceId(idx, UNSET);
+        if (v == UNSET) v = ta->getInt(idx, UNSET);
+        return v;
+    };
+    for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
+        size_t i = ta->getIndex(k);
+        switch (i) {
 
-    horizontalBias = attrs.getFloat("layout_constraintHorizontal_bias", 0.5f);
-    verticalBias   = attrs.getFloat("layout_constraintVertical_bias",   0.5f);
+        // --- anchors (reference id; "parent" sentinel → 0 via getInt fallback) ---
+        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toLeftOf:     leftToLeft   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintLeft_toRightOf:    leftToRight  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintRight_toLeftOf:    rightToLeft  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintRight_toRightOf:   rightToRight = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintStart_toStartOf:   startToStart = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintStart_toEndOf:     startToEnd   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toStartOf:     endToStart   = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintEnd_toEndOf:       endToEnd     = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintTop_toTopOf:       topToTop     = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintTop_toBottomOf:    topToBottom  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toTopOf:    bottomToTop  = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBottom_toBottomOf: bottomToBottom = anchor(i); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintBaseline_toBaselineOf: baselineToBaseline = anchor(i); break;
 
-    constraintTag = attrs.getString("constraintTag", "");
+        // --- bias ---
+        case SCL::ConstraintLayoutLayout_layout_constraintHorizontal_bias: horizontalBias = ta->getFloat(i, 0.5f); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintVertical_bias:   verticalBias   = ta->getFloat(i, 0.5f); break;
 
-    goneLeftMargin   = attrs.getDimensionPixelSize("layout_goneMarginLeft",   GONE_UNSET);
-    goneTopMargin    = attrs.getDimensionPixelSize("layout_goneMarginTop",    GONE_UNSET);
-    goneRightMargin  = attrs.getDimensionPixelSize("layout_goneMarginRight",  GONE_UNSET);
-    goneBottomMargin = attrs.getDimensionPixelSize("layout_goneMarginBottom", GONE_UNSET);
-    // RTL-aware gone margins (resolved to goneLeft/goneRight at measure time per layout direction).
-    goneStartMargin  = attrs.getDimensionPixelSize("layout_goneMarginStart", GONE_UNSET);
-    goneEndMargin    = attrs.getDimensionPixelSize("layout_goneMarginEnd",   GONE_UNSET);
+        // --- circular constraint ---
+        case SCL::ConstraintLayoutLayout_layout_constraintCircle:       circleConstraint = (int)ta->getResourceId(i, UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintCircleAngle:  circleAngle      = ta->getFloat(i, 0); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintCircleRadius: circleRadius     = ta->getDimensionPixelSize(i, 0); break;
 
-    // Guideline
-    guideBegin   = attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
-    guideEnd     = attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
-    guidePercent = attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
-    guidelineUseRtl = attrs.getBoolean("layout_guidelineUseRtl", true);
-    // Orientation: bare key (namespace stripped) + map so "vertical"/"horizontal"
-    // resolve (plain getInt treats a leading letter as non-numeric → def).
-    // Mirrors LinearLayout; -1 (absent) falls back to HORIZONTAL in validate().
-    orientation  = attrs.getInt("orientation", std::unordered_map<std::string,int>{
-        {"horizontal", (int)ConstraintWidget::HORIZONTAL},
-        {"vertical",   (int)ConstraintWidget::VERTICAL}}, -1);
+        // --- gone margins (RTL-aware start/end resolved at measure time) ---
+        case SCL::ConstraintLayoutLayout_layout_goneMarginLeft:   goneLeftMargin   = ta->getDimensionPixelSize(i, GONE_UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_goneMarginTop:    goneTopMargin    = ta->getDimensionPixelSize(i, GONE_UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_goneMarginRight:  goneRightMargin  = ta->getDimensionPixelSize(i, GONE_UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_goneMarginBottom: goneBottomMargin = ta->getDimensionPixelSize(i, GONE_UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_goneMarginStart:  goneStartMargin  = ta->getDimensionPixelSize(i, GONE_UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_goneMarginEnd:    goneEndMargin    = ta->getDimensionPixelSize(i, GONE_UNSET); break;
 
-    // Ratio (parse "16:9", "1.5", "W,16:9", "H,3:2")
-    std::string ratioStr = attrs.getString("layout_constraintDimensionRatio", "");
-    if (!ratioStr.empty()) {
-        parseDimensionRatio(ratioStr, dimensionRatio, dimensionRatioSide);
+        // --- guideline ---
+        case SCL::ConstraintLayoutLayout_layout_constraintGuide_begin:  guideBegin   = ta->getDimensionPixelSize(i, UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintGuide_end:    guideEnd     = ta->getDimensionPixelSize(i, UNSET); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintGuide_percent: guidePercent = ta->getFloat(i, UNSET_FLOAT); break;
+        case SCL::ConstraintLayoutLayout_guidelineUseRtl:               guidelineUseRtl = ta->getBoolean(i, true); break;
+
+        // --- orientation (aapt2 enum: horizontal=0/vertical=1) ---
+        case SCL::ConstraintLayoutLayout_orientation: orientation = ta->getInt(i, -1); break;
+
+        // --- dimension ratio (string, parsed post-loop) ---
+        case SCL::ConstraintLayoutLayout_layout_constraintDimensionRatio: ratioStr = ta->getString(i); break;
+
+        // --- chain style (aapt2 enum: spread/spread_inside/packed) ---
+        case SCL::ConstraintLayoutLayout_layout_constraintHorizontal_chainStyle: horizontalChainStyle = ta->getInt(i, (int)ConstraintWidget::CHAIN_SPREAD); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintVertical_chainStyle:   verticalChainStyle   = ta->getInt(i, (int)ConstraintWidget::CHAIN_SPREAD); break;
+
+        // --- chain weight ---
+        case SCL::ConstraintLayoutLayout_layout_constraintHorizontal_weight: horizontalWeight = ta->getFloat(i, ConstraintWidget::UNKNOWN); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintVertical_weight:   verticalWeight   = ta->getFloat(i, ConstraintWidget::UNKNOWN); break;
+
+        // --- match constraint sizing (0dp) ---
+        case SCL::ConstraintLayoutLayout_layout_constraintWidth_default:   matchConstraintDefaultWidth  = ta->getInt(i, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintHeight_default:  matchConstraintDefaultHeight = ta->getInt(i, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintWidth_percent:   matchConstraintPercentWidth  = ta->getFloat(i, 1.0f); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintHeight_percent:  matchConstraintPercentHeight = ta->getFloat(i, 1.0f); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintWidth_min:       matchConstraintMinWidth   = ta->getDimensionPixelSize(i, 0); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintWidth_max:       matchConstraintMaxWidth   = ta->getDimensionPixelSize(i, 0); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintHeight_min:      matchConstraintMinHeight  = ta->getDimensionPixelSize(i, 0); break;
+        case SCL::ConstraintLayoutLayout_layout_constraintHeight_max:      matchConstraintMaxHeight  = ta->getDimensionPixelSize(i, 0); break;
+
+        // --- tag ---
+        case SCL::ConstraintLayoutLayout_layout_constraintTag: constraintTag = ta->getString(i); break;
+
+        default: break;
+        }
     }
 
-    // Baseline
-    baselineToBaseline = attrs.getResourceId("layout_constraintBaseline_toBaselineOf", UNSET);
-
-    // Circular constraint
-    circleConstraint = attrs.getResourceId("layout_constraintCircle", UNSET);
-    circleAngle      = attrs.getFloat("layout_constraintCircleAngle", 0);
-    circleRadius     = attrs.getDimensionPixelSize("layout_constraintCircleRadius", 0);
-
-    // Chain styles
-    static const std::unordered_map<std::string,int> chainStyles = {
-        {"spread", (int)ConstraintWidget::CHAIN_SPREAD},
-        {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
-        {"packed", (int)ConstraintWidget::CHAIN_PACKED}
-    };
-    horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
-    verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
-
-    // chain weights (layout_constraintHorizontal/Vertical_weight).
-    horizontalWeight = attrs.getFloat("layout_constraintHorizontal_weight", ConstraintWidget::UNKNOWN);
-    verticalWeight   = attrs.getFloat("layout_constraintVertical_weight",   ConstraintWidget::UNKNOWN);
-
-    // match_constraint (0dp) sizing: default spread/wrap/percent + percent value + min/max.
-    static const std::unordered_map<std::string,int> matchDefault = {
-        {"spread",  (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
-        {"wrap",    (int)ConstraintWidget::MATCH_CONSTRAINT_WRAP},
-        {"percent", (int)ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
-    };
-    matchConstraintDefaultWidth  = attrs.getInt("layout_constraintWidth_default",  matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
-    matchConstraintDefaultHeight = attrs.getInt("layout_constraintHeight_default", matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
-    matchConstraintPercentWidth  = attrs.getFloat("layout_constraintWidth_percent",  1.0f);
-    matchConstraintPercentHeight = attrs.getFloat("layout_constraintHeight_percent", 1.0f);
-    matchConstraintMinWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_min",  0);
-    matchConstraintMaxWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_max",  0);
-    matchConstraintMinHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_min", 0);
-    matchConstraintMaxHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_max", 0);
+    // Post-loop: parse ratio string ("16:9", "1.5", "W,16:9", "H,3:2").
+    if (!ratioStr.empty()) {
+        ConstraintSet::parseDimensionRatioString(ratioStr, dimensionRatio, dimensionRatioSide);
+    }
 
     validate();
 }
@@ -193,43 +184,58 @@ void ConstraintLayout::LayoutParams::validate() {
 // ===========================================================================
 // ConstraintLayout
 // ===========================================================================
-ConstraintLayout::ConstraintLayout(Context* ctx, const AttributeSet& attrs)
-    : ViewGroup(ctx, attrs) {
+ConstraintLayout::ConstraintLayout(Context*ctx):ConstraintLayout(ctx,nullptr){}
+
+ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* attrs):ConstraintLayout(ctx,attrs,0){}
+
+ConstraintLayout::ConstraintLayout(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ViewGroup(ctx, pAttrs, defStyleAttr) {
     mLayoutWidget.setMeasurer(asMeasurer());
     mLayoutWidget.setCompanionWidget(this);
-    mMinWidth  = attrs.getDimensionPixelSize("android_minWidth", 0);
-    mMinHeight = attrs.getDimensionPixelSize("android_minHeight", 0);
-    mMaxWidth  = attrs.getDimensionPixelSize("android_maxWidth", INT_MAX);
-    mMaxHeight = attrs.getDimensionPixelSize("android_maxHeight", INT_MAX);
 
-    // app:layoutDescription may point at a <StateSet> (adaptive layout) for a ConstraintLayout, or a
-    // <MotionScene> for the MotionLayout subclass. Peek the root: build a StateSet only for non-
-    // MotionScene roots (MotionLayout builds its own scene from the same attr).
-    const std::string layoutDesc = attrs.getString("layoutDescription", "");
-    if (!layoutDesc.empty()) {
-        XmlPullParser parser(ctx, layoutDesc);
-        while (parser.getEventType() != XmlPullParser::START_TAG &&
-                parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-                parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
-            parser.next();
-        }
-        if (parser.getEventType() == XmlPullParser::START_TAG && parser.getName() != "MotionScene") {
-            mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, parser);
+    // AOSP ConstraintLayout.init: read container-level attrs from the SAME
+    // ConstraintLayout_Layout styleable as LayoutParams (minWidth/maxHeight/
+    // optimizationLevel/layoutDescription/constraintSet).
+    auto ta = ctx->obtainStyledAttributes(*pAttrs, R::styleable::ConstraintLayoutLayout, defStyleAttr);
+    namespace SCL = R::styleable;
+    int layoutDesc = 0;   // android:description is a @reference attr (getResourceId)
+    for (size_t k = 0, n = ta->getIndexCount(); k < n; k++) {
+        size_t i = ta->getIndex(k);
+        switch (i) {
+        case SCL::ConstraintLayoutLayout_minWidth:  mMinWidth  = ta->getDimensionPixelSize(i, 0); break;
+        case SCL::ConstraintLayoutLayout_minHeight: mMinHeight = ta->getDimensionPixelSize(i, 0); break;
+        case SCL::ConstraintLayoutLayout_maxWidth:  mMaxWidth  = ta->getDimensionPixelSize(i, INT_MAX); break;
+        case SCL::ConstraintLayoutLayout_maxHeight: mMaxHeight = ta->getDimensionPixelSize(i, INT_MAX); break;
+        // AndroidX ConstraintLayout.init (ConstraintLayout.java:1062): aapt compiles
+        // "none"/"standard"/"direct|barrier|..." into a flag mask — plain getInt.
+        case SCL::ConstraintLayoutLayout_layout_optimizationLevel:
+            mLayoutWidget.setOptimizationLevel(ta->getInt(i, mLayoutWidget.getOptimizationLevel()));
+            break;
+        case SCL::ConstraintLayoutLayout_layoutDescription: layoutDesc = ta->getResourceId(i, 0); break;
+        default: break;
         }
     }
-}
 
-ConstraintLayout::ConstraintLayout(int width, int height)
-    : ViewGroup(width, height) {
-    mLayoutWidget.setMeasurer(asMeasurer());
-    mLayoutWidget.setCompanionWidget(this);
+    // layoutDescription: build a StateSet (adaptive layout) if the root tag isn't
+    // MotionScene (MotionLayout builds its own scene from the same attr).
+    if (layoutDesc != 0) {
+        auto parser = ctx->getResources().getXml(layoutDesc);
+        while (parser->getEventType() != XmlPullParser::START_TAG &&
+                parser->getEventType() != XmlPullParser::END_DOCUMENT &&
+                parser->getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser->next();
+        }
+        if (parser->getEventType() == XmlPullParser::START_TAG && parser->getName() != "MotionScene") {
+            mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, *parser);
+        }
+    }
 }
 
 // Defined here (not defaulted in the header) so the unique_ptr<ConstraintLayoutStates> member
 // destroys with a complete type.
 ConstraintLayout::~ConstraintLayout() = default;
 
-void ConstraintLayout::loadLayoutDescription(const std::string& resource) {
+void ConstraintLayout::loadLayoutDescription(int resource) {
     mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(getContext(), this, resource);
 }
 
@@ -268,6 +274,10 @@ ConstraintWidget* ConstraintLayout::getViewWidget(View* view) {
 }
 
 void ConstraintLayout::onViewAdded(View* child) {
+    // AndroidX onViewAdded (ConstraintLayout.java:1116-1124): the hierarchy capture is stale,
+    // and the View-level id map gains the child.
+    mDirtyHierarchy = true;
+    mChildrenByIds[child->getId()] = child;
     if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
         helper->validateParams();
         if (auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams())) {
@@ -282,10 +292,20 @@ void ConstraintLayout::onViewAdded(View* child) {
 }
 
 void ConstraintLayout::onViewRemoved(View* child) {
+    // AndroidX onViewRemoved (ConstraintLayout.java:1130-1138): the hierarchy capture is stale,
+    // and the View-level id map loses the child.
+    mDirtyHierarchy = true;
+    mChildrenByIds.erase(child->getId());
     if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
         auto it = std::find(mConstraintHelpers.begin(), mConstraintHelpers.end(), helper);
         if (it != mConstraintHelpers.end()) mConstraintHelpers.erase(it);
     }
+}
+
+View* ConstraintLayout::getViewById(int id) {
+    // AndroidX getViewById (ConstraintLayout.java:2157-2159): mChildrenByIds.get(id).
+    auto it = mChildrenByIds.find(id);
+    return (it != mChildrenByIds.end()) ? it->second : nullptr;
 }
 
 void ConstraintLayout::setChildrenConstraints() {
@@ -542,59 +562,252 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
 }
 
 // --- BasicMeasure::Measurer ---
+// AndroidX Measurer.measure (ConstraintLayout.java:656-945), including the virtual-layout
+// routing (:853-860): a child whose core widget is a VirtualLayout is measured through the
+// helper view's onMeasure(VirtualLayout*, ...) entry instead of View::measure — that path
+// both bypasses the View measure cache and hands the core layout the specs directly.
 void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* m) {
-    if (widget->getVisibility() == ConstraintWidget::GONE) {
+    if (widget == nullptr) {
+        return;
+    }
+    if (widget->getVisibility() == ConstraintWidget::GONE && !widget->isInPlaceholder()) {
         m->measuredWidth = 0;
         m->measuredHeight = 0;
         m->measuredBaseline = 0;
-        m->measuredHasBaseline = false;
-        m->measuredNeedsSolverPass = false;
         return;
     }
-    View* child = static_cast<View*>(widget->getCompanionWidget());
-    if (child == nullptr || child->getParent() == nullptr) return;
+    if (widget->getParent() == nullptr) {
+        return;
+    }
 
-    auto specFor = [&](ConstraintWidget::DimensionBehaviour b, int dim, bool horizontal) -> int {
-        int parentSpec = horizontal ? mWidthSpec : mHeightSpec;
-        int padding   = horizontal ? mPaddingWidth : mPaddingHeight;
-        if (b == ConstraintWidget::DimensionBehaviour::FIXED) {
-            return View::MeasureSpec::makeMeasureSpec(dim, View::MeasureSpec::EXACTLY);
-        } else if (b == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT) {
-            return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::WRAP_CONTENT);
-        } else if (b == ConstraintWidget::DimensionBehaviour::MATCH_PARENT) {
-            return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::MATCH_PARENT);
-        }
-        // MATCH_CONSTRAINT (0dp). `dim` is widget->getWidth()/Height() — after a solve it is the
-        // resolved size; honor the measure strategy so the child's content-dependent dimension
-        // (e.g. text height under the resolved width) can adapt, then re-solve if it changed.
+    ConstraintWidget::DimensionBehaviour horizontalBehavior = m->horizontalBehavior;
+    ConstraintWidget::DimensionBehaviour verticalBehavior   = m->verticalBehavior;
+    int horizontalDimension = m->horizontalDimension;
+    int verticalDimension   = m->verticalDimension;
+
+    int horizontalSpec = 0;
+    int verticalSpec   = 0;
+
+    const int heightPadding = mPaddingHeight;
+    const int widthPadding  = mPaddingWidth;
+
+    View* child = static_cast<View*>(widget->getCompanionWidget());
+
+    switch (horizontalBehavior) {
+    case ConstraintWidget::DimensionBehaviour::FIXED:
+        horizontalSpec = View::MeasureSpec::makeMeasureSpec(horizontalDimension,
+                                                            View::MeasureSpec::EXACTLY);
+        break;
+    case ConstraintWidget::DimensionBehaviour::WRAP_CONTENT:
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec, widthPadding,
+                                                        LayoutParams::WRAP_CONTENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_PARENT:
+        // Horizontal spec must account for margin as well as padding here (java:706-711).
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec,
+                widthPadding + widget->getAnchor(ConstraintAnchor::Type::LEFT)->getMargin()
+                            + widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getMargin(),
+                LayoutParams::MATCH_PARENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT: {
+        horizontalSpec = ViewGroup::getChildMeasureSpec(mWidthSpec, widthPadding,
+                                                        LayoutParams::WRAP_CONTENT);
+        const bool shouldDoWrap =
+                widget->mMatchConstraintDefaultWidth == ConstraintWidget::MATCH_CONSTRAINT_WRAP;
         if (m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
                 || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS) {
-            return View::MeasureSpec::makeMeasureSpec(dim, View::MeasureSpec::EXACTLY);
+            // The solver gives us our new dimension, but if we previously measured it with a
+            // wrap, it can be incorrect if the other side was also variable — double-check
+            // the other side is stable before trusting the wrap value (java:718-739).
+            const bool otherDimensionStable =
+                    child != nullptr && child->getMeasuredHeight() == widget->getHeight();
+            const bool useCurrent = m->measureStrategy
+                                            == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS
+                                    || !shouldDoWrap
+                                    || (shouldDoWrap && otherDimensionStable)
+                                    || dynamic_cast<Placeholder*>(child) != nullptr
+                                    || widget->isResolvedHorizontally();
+            if (useCurrent) {
+                horizontalSpec = View::MeasureSpec::makeMeasureSpec(widget->getWidth(),
+                                                                    View::MeasureSpec::EXACTLY);
+            }
         }
-        // SELF_DIMENSIONS: not solved yet — measure wrap to seed the solver.
-        return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::WRAP_CONTENT);
-    };
+        break;
+    }
+    }
 
-    int wSpec = specFor(m->horizontalBehavior, m->horizontalDimension, true);
-    int hSpec = specFor(m->verticalBehavior, m->verticalDimension, false);
-    child->measure(wSpec, hSpec);
+    switch (verticalBehavior) {
+    case ConstraintWidget::DimensionBehaviour::FIXED:
+        verticalSpec = View::MeasureSpec::makeMeasureSpec(verticalDimension,
+                                                          View::MeasureSpec::EXACTLY);
+        break;
+    case ConstraintWidget::DimensionBehaviour::WRAP_CONTENT:
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec, heightPadding,
+                                                      LayoutParams::WRAP_CONTENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_PARENT:
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec,
+                heightPadding + widget->getAnchor(ConstraintAnchor::Type::TOP)->getMargin()
+                              + widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getMargin(),
+                LayoutParams::MATCH_PARENT);
+        break;
+    case ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT: {
+        verticalSpec = ViewGroup::getChildMeasureSpec(mHeightSpec, heightPadding,
+                                                      LayoutParams::WRAP_CONTENT);
+        const bool shouldDoWrap =
+                widget->mMatchConstraintDefaultHeight == ConstraintWidget::MATCH_CONSTRAINT_WRAP;
+        if (m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
+                || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS) {
+            const bool otherDimensionStable =
+                    child != nullptr && child->getMeasuredWidth() == widget->getWidth();
+            const bool useCurrent = m->measureStrategy
+                                            == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS
+                                    || !shouldDoWrap
+                                    || (shouldDoWrap && otherDimensionStable)
+                                    || dynamic_cast<Placeholder*>(child) != nullptr
+                                    || widget->isResolvedVertically();
+            if (useCurrent) {
+                verticalSpec = View::MeasureSpec::makeMeasureSpec(widget->getHeight(),
+                                                                  View::MeasureSpec::EXACTLY);
+            }
+        }
+        break;
+    }
+    }
 
-    int w = child->getMeasuredWidth();
-    int h = child->getMeasuredHeight();
-    int baseline = child->getBaseline();
-    m->measuredWidth = w;
-    m->measuredHeight = h;
+    // OPTIMIZATION_CACHE_MEASURES reuse block (java:793-821) is not ported: the core widget
+    // carries no last-spec bookkeeping and the flag is off in every shipped optimization level.
+
+    const bool horizontalMatchConstraints =
+            (horizontalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    const bool verticalMatchConstraints =
+            (verticalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    const bool verticalDimensionKnown =
+            verticalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_PARENT
+            || verticalBehavior == ConstraintWidget::DimensionBehaviour::FIXED;
+    const bool horizontalDimensionKnown =
+            horizontalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_PARENT
+            || horizontalBehavior == ConstraintWidget::DimensionBehaviour::FIXED;
+    const bool horizontalUseRatio =
+            horizontalMatchConstraints && widget->mDimensionRatio > 0;
+    const bool verticalUseRatio =
+            verticalMatchConstraints && widget->mDimensionRatio > 0;
+
+    if (child == nullptr) {
+        return;
+    }
+
+    int width = 0;
+    int height = 0;
+    int baseline = 0;
+
+    // Under SELF_DIMENSIONS a fully solver-determined 0dp/0dp (spread) widget is left
+    // unmeasured (java:846-851) — the solver will size it; the strategy passes measure it.
+    if ((m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
+                || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS)
+            || !(horizontalMatchConstraints
+                    && widget->mMatchConstraintDefaultWidth
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
+                    && verticalMatchConstraints
+                    && widget->mMatchConstraintDefaultHeight
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD)) {
+
+        auto* coreVirtualLayout = dynamic_cast<clcore::VirtualLayout*>(widget);
+        auto* childVirtualLayout = dynamic_cast<VirtualLayout*>(child);
+        if (childVirtualLayout != nullptr && coreVirtualLayout != nullptr) {
+            // Virtual-layout routing (java:853-860): measure through the helper entry.
+            childVirtualLayout->onMeasure(coreVirtualLayout, horizontalSpec, verticalSpec);
+        } else {
+            child->measure(horizontalSpec, verticalSpec);
+        }
+
+        const int w = child->getMeasuredWidth();
+        const int h = child->getMeasuredHeight();
+        baseline = child->getBaseline();
+
+        width  = w;
+        height = h;
+
+        if (widget->mMatchConstraintMinWidth > 0) {
+            width = std::max(widget->mMatchConstraintMinWidth, width);
+        }
+        if (widget->mMatchConstraintMaxWidth > 0) {
+            width = std::min(widget->mMatchConstraintMaxWidth, width);
+        }
+        if (widget->mMatchConstraintMinHeight > 0) {
+            height = std::max(widget->mMatchConstraintMinHeight, height);
+        }
+        if (widget->mMatchConstraintMaxHeight > 0) {
+            height = std::min(widget->mMatchConstraintMaxHeight, height);
+        }
+
+        const bool optimizeDirect = Optimizer::enabled(
+                mLayoutWidget.getOptimizationLevel(), Optimizer::OPTIMIZATION_DIRECT);
+        if (!optimizeDirect) {
+            if (horizontalUseRatio && verticalDimensionKnown) {
+                const float ratio = widget->mDimensionRatio;
+                width = (int) (0.5f + height * ratio);
+            } else if (verticalUseRatio && horizontalDimensionKnown) {
+                const float ratio = widget->mDimensionRatio;
+                height = (int) (0.5f + width / ratio);
+            }
+        }
+
+        if (w != width || h != height) {
+            // A clamp (match min/max or the ratio re-derive) changed a dimension — re-measure
+            // with the enforced size (java:903-923).
+            if (w != width) {
+                horizontalSpec = View::MeasureSpec::makeMeasureSpec(width,
+                                                                    View::MeasureSpec::EXACTLY);
+            }
+            if (h != height) {
+                verticalSpec = View::MeasureSpec::makeMeasureSpec(height,
+                                                                  View::MeasureSpec::EXACTLY);
+            }
+            child->measure(horizontalSpec, verticalSpec);
+
+            width  = child->getMeasuredWidth();
+            height = child->getMeasuredHeight();
+            baseline = child->getBaseline();
+        }
+    }
+
+    const bool hasBaseline = baseline != -1;
+
+    m->measuredNeedsSolverPass = (width != horizontalDimension) || (height != verticalDimension);
+    // LayoutParams.mNeedsBaseline (java:931-933) is not in CDROID's LayoutParams — no
+    // consumer reads it, so the forced-baseline bit is omitted.
+    if (hasBaseline && baseline != -1 && widget->getBaselineDistance() != baseline) {
+        m->measuredNeedsSolverPass = true;
+    }
+    m->measuredWidth = width;
+    m->measuredHeight = height;
+    m->measuredHasBaseline = hasBaseline;
     m->measuredBaseline = baseline;
-    m->measuredHasBaseline = (baseline != -1);
-    m->measuredNeedsSolverPass = (w != m->horizontalDimension) || (h != m->verticalDimension);
 }
 
 void ConstraintLayout::didMeasures() {
-    // No-op: Placeholder/helper post-measure work is driven directly from onMeasure
-    // (Placeholder::updatePostMeasure loop + the helper updatePostLayout pass in onLayout).
+    // AndroidX Measurer.didMeasures (ConstraintLayout.java:1022-1035): placeholders adopt
+    // their resolved size, then every ConstraintHelper gets its updatePostMeasure. (The old
+    // body was a no-op whose comment claimed onMeasure drove this — it never did, so
+    // updatePostMeasure had zero callers module-wide.)
+    const int n = getChildCount();
+    for (int i = 0; i < n; i++) {
+        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
+            placeholder->updatePostMeasure(this);
+        }
+    }
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePostMeasure(this);
+    }
 }
 
 void ConstraintLayout::dispatchDraw(Canvas& canvas) {
+    // AndroidX dispatchDraw (ConstraintLayout.java:2165-2174): helpers prepare their draw
+    // state before the children render (e.g. Layer's group rotation).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePreDraw(this);
+    }
     ViewGroup::dispatchDraw(canvas);
     if (debugDraw()) {
         drawDebugOverlays(canvas);
@@ -823,16 +1036,28 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // ahead of updateHierarchy — Start/End anchor resolution, chains (ChainHead) and helpers
     // (Barrier.resolveRtl) all read mLayoutWidget.isRtl() during setChildrenConstraints().
     mLayoutWidget.setRtl(isLayoutRtl());
-    setChildrenConstraints();
-    resolveSystem(widthMeasureSpec, heightMeasureSpec);
-    // Placeholders adopt their content's resolved size post-solve (BasicMeasure's match-constraint
-    // convergence loop runs before this; Placeholder itself needs a single post-solve adoption).
-    const int count = getChildCount();
-    for (int i = 0; i < count; i++) {
-        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
-            placeholder->updatePostMeasure(this);
+    // AndroidX onMeasure (ConstraintLayout.java:1776-1858): the hierarchy capture only reruns
+    // when dirty — a child was added/removed, or any child still requests layout (an already-
+    // flagged relayout may swallow a child's request). The solver itself always reruns.
+    // (AndroidX's sameSpecsAsPreviousMeasure and OPTIMIZE_HEIGHT_CHANGE shortcuts are
+    // disabled upstream by `false &&` / a false constant — not ported.)
+    if (!mDirtyHierarchy) {
+        const int n = getChildCount();
+        for (int i = 0; i < n; i++) {
+            if (getChildAt(i)->isLayoutRequested()) {
+                mDirtyHierarchy = true;
+                break;
+            }
         }
     }
+    if (mDirtyHierarchy) {
+        mDirtyHierarchy = false;   // cleared BEFORE the capture (java:1854-1858) — a view added
+        setChildrenConstraints(); // during it (Grid's box views) re-marks dirty and is captured
+    }                             // on the next pass instead of being lost.
+    resolveSystem(widthMeasureSpec, heightMeasureSpec);
+    // Placeholders adopt their content's resolved size post-solve — driven from
+    // didMeasures() (the BasicMeasure completion callback) like AndroidX's Measurer.didMeasures
+    // (ConstraintLayout.java:1027); no second call here.
     // For a WRAP_CONTENT dimension (AT_MOST/UNSPECIFIED spec) the solver pins the container to its
     // desired (AT_MOST max) size; shrink it to the actual content extent of the solved children so a
     // WRAP container sizes to its content. EXACTLY dimensions keep the solver's size. Virtual helpers

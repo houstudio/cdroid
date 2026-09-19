@@ -20,24 +20,27 @@
 namespace cdroid{
 static constexpr float FLOAT_MIN = FLT_MIN;//std::numeric_limits<float>::min();
 
-PatternLockView::PatternLockView(int w,int h):View(w,h){
-    initView();
-    setDotCount(DEFAULT_PATTERN_DOT_COUNT);
-}
+PatternLockView::PatternLockView(Context*ctx)
+    :PatternLockView(ctx,nullptr){}
 
-PatternLockView::PatternLockView(Context* context,const AttributeSet& attrs)
-   :View::View(context,attrs){
-    mDotCount = attrs.getInt("dotCount",DEFAULT_PATTERN_DOT_COUNT);
-    mAspectRatioEnabled = attrs.getBoolean("aspectRatioEnabled",false);
-    mAspectRatio = attrs.getInt("aspectRatio",ASPECT_RATIO_SQUARE);
-    mPathWidth = (int) attrs.getDimensionPixelSize("pathWidth",3);//sourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_path_width));
-    mNormalStateColor = attrs.getColor("normalStateColor",Color::WHITE);//ResourceUtils.getColor(getContext(), R.color.white));
-    mCorrectStateColor = attrs.getColor("correctStateColor",Color::WHITE);//ResourceUtils.getColor(getContext(), R.color.white));
-    mWrongStateColor = attrs.getColor("wrongStateColor",Color::RED); //ResourceUtils.getColor(getContext(), R.color.pomegranate));
-    mDotNormalSize = (int) attrs.getDimensionPixelSize("dotNormalSize",10); //ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_size));
-    mDotSelectedSize = (int) attrs.getDimensionPixelSize("dotSelectedSize",24);//ResourceUtils.getDimensionInPx(getContext(), R.dimen.pattern_lock_dot_selected_size));
-    mDotAnimationDuration = attrs.getInt("dotAnimationDuration",DEFAULT_DOT_ANIMATION_DURATION);
-    mPathEndAnimationDuration = attrs.getInt("pathEndAnimationDuration",DEFAULT_PATH_END_ANIMATION_DURATION);
+PatternLockView::PatternLockView(Context* context,const AttributeSet* attrs):PatternLockView(context,attrs,0){}
+
+PatternLockView::PatternLockView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+   :View::View(context,pAttrs, defStyleAttr){
+    (void)pAttrs;
+    // The pattern attrs (dotCount/pathWidth/...) are not registered resource ids
+    // (the string reads always fell through) — keep the fallback values.
+    mDotCount = DEFAULT_PATTERN_DOT_COUNT;
+    mAspectRatioEnabled = false;
+    mAspectRatio = ASPECT_RATIO_SQUARE;
+    mPathWidth = 3;
+    mNormalStateColor = Color::WHITE;
+    mCorrectStateColor = Color::WHITE;
+    mWrongStateColor = Color::RED;
+    mDotNormalSize = 10;
+    mDotSelectedSize = 24;
+    mDotAnimationDuration = DEFAULT_DOT_ANIMATION_DURATION;
+    mPathEndAnimationDuration = DEFAULT_PATH_END_ANIMATION_DURATION;
 }
 
 PatternLockView::~PatternLockView(){

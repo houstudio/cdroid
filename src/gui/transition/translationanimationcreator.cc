@@ -10,11 +10,12 @@
 #include <animation/objectanimator.h>
 #include <core/path.h>
 #include <view/view.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 
 #include <transition/transitionlisteneradapter.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 

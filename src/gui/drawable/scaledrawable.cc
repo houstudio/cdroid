@@ -15,15 +15,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/scaledrawable.h>
+#include <widget/framework_styleable.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 ScaleDrawable::ScaleState::ScaleState():DrawableWrapperState(){
     mScaleWidth = DO_NOT_SCALE;
     mScaleHeight= DO_NOT_SCALE;
     mGravity = Gravity::LEFT;
     mUseIntrinsicSizeAsMin = false;
+    mInitialLevel = 0;
 }
 
 ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
@@ -36,19 +40,27 @@ ScaleDrawable::ScaleState::ScaleState(const ScaleState& orig)
 }
 
 ScaleDrawable* ScaleDrawable::ScaleState::newDrawable(){
-    return new ScaleDrawable(std::dynamic_pointer_cast<ScaleState>(shared_from_this()));
+    return (ScaleDrawable*)newDrawable(nullptr);
+}
+
+Drawable* ScaleDrawable::ScaleState::newDrawable(Resources* res){
+    return new ScaleDrawable(std::dynamic_pointer_cast<ScaleState>(shared_from_this()), res);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-ScaleDrawable::ScaleDrawable():ScaleDrawable(std::make_shared<ScaleState>()){
+ScaleDrawable::ScaleDrawable():ScaleDrawable(std::make_shared<ScaleState>(), nullptr){
 }
 
-ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state):DrawableWrapper(state){
+ScaleDrawable::ScaleDrawable(std::shared_ptr<ScaleState> state,Resources*res):DrawableWrapper(state,res){
     mState = state;
+    // AOSP ctor ends with updateLocalState(): initialize the local level to
+    // the state's initial level — without it android:level never applied and
+    // clones started at level 0 (invisible for a scale-based progress layer).
+    setLevel(mState->mInitialLevel);
 }
 
 ScaleDrawable::ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight)
-    :ScaleDrawable(std::make_shared<ScaleState>()){
+    :ScaleDrawable(std::make_shared<ScaleState>(), nullptr){
     mState->mGravity    = gravity;
     mState->mScaleWidth = scaleWidth;
     mState->mScaleHeight= scaleHeight;
@@ -123,17 +135,40 @@ void ScaleDrawable::draw(Canvas& canvas) {
 
 extern int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def);
 
-void ScaleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    updateStateFromTypedArray(atts);
-    DrawableWrapper::inflate(parser,atts);
+// AOSP ScaleDrawable.canApplyTheme/applyTheme.
+bool ScaleDrawable::canApplyTheme(){
+    return (mState && !mState->mThemeAttrs.empty()) || DrawableWrapper::canApplyTheme();
 }
 
-void ScaleDrawable::updateStateFromTypedArray(const AttributeSet&atts){
-    mState->mScaleWidth = getDimensionOrFraction(atts,"scaleWidth", 100, mState->mScaleWidth);
-    mState->mScaleHeight = getDimensionOrFraction(atts,"scaleHeight", 100, mState->mScaleHeight);
-    mState->mGravity = atts.getGravity("scaleGravity", mState->mGravity);
-    mState->mUseIntrinsicSizeAsMin = atts.getBoolean("useIntrinsicSizeAsMinimum", mState->mUseIntrinsicSizeAsMin);
-    mState->mInitialLevel = atts.getInt("level", mState->mInitialLevel);
+void ScaleDrawable::applyTheme(const Resources::Theme& t){
+    DrawableWrapper::applyTheme(t);
+    if (mState && !mState->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(mState->mThemeAttrs, R::styleable::ScaleDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        mState->mThemeAttrs.clear();
+    }
+}
+
+void ScaleDrawable::inflate(Resources&r,XmlPullParser&parser,const AttributeSet&atts,const Resources::Theme* theme){
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ScaleDrawable);
+    if (ta) {
+        mState->mThemeAttrs = ta->extractThemeAttrs();
+        // AOSP updateStateFromTypedArray: getFraction(scaleWidth, 1, 1, ...) —
+        // a fraction is 0..1 (100% = 1.0). The old base=100 hack assumed the
+        // text-XML string parser's percent units and produced 100.0, which
+        // made onBoundsChange's AOSP formula compute a negative width (no
+        // child bounds were ever set, so the progress layer never drew).
+        mState->mScaleWidth = ta->getFraction(R::styleable::ScaleDrawable_scaleWidth, 1, 1, mState->mScaleWidth);
+        mState->mScaleHeight = ta->getFraction(R::styleable::ScaleDrawable_scaleHeight, 1, 1, mState->mScaleHeight);
+        updateStateFromTypedArray(*ta);
+    }
+    DrawableWrapper::inflate(r,parser,atts, theme);
+}
+
+void ScaleDrawable::updateStateFromTypedArray(const TypedArray& a){
+    mState->mGravity = a.getInt(R::styleable::ScaleDrawable_scaleGravity, mState->mGravity);
+    mState->mUseIntrinsicSizeAsMin = a.getBoolean(R::styleable::ScaleDrawable_useIntrinsicSizeAsMinimum, mState->mUseIntrinsicSizeAsMin);
+    mState->mInitialLevel = a.getInt(R::styleable::ScaleDrawable_level, mState->mInitialLevel);
 }
 
 }

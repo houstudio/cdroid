@@ -34,6 +34,7 @@ private:
     bool mColonBlinking;
     Runnable mTickRunnable;
     std::string mFormat;
+    std::string mRecycle;   // AOSP: recycled StringBuilder for formatElapsedTime
     Formatter mFormatter;
     OnChronometerTickListener mOnChronometerTickListener;
     bool mCountDown;
@@ -42,12 +43,19 @@ private:
     void tickRunner();
     void updateText(int64_t now);
     void updateRunning();
+    // AOSP: aim the tick at the actual second boundary instead of drifting
+    // on a flat 1000ms cadence.
+    void postTickOnNextSecond();
+    // AOSP visibility hooks drive mVisible → updateRunning.
+    void onWindowVisibilityChanged(int visibility)override;
+    void onVisibilityChanged(View& changedView,int visibility)override;
     static std::string formatDuration(int64_t ms);
 protected:
     void dispatchChronometerTick();
 public:
-    Chronometer(int w,int h);
-    Chronometer(Context*ctx,const AttributeSet&);
+    Chronometer(Context*ctx);   // AOSP Chronometer(Context)
+    Chronometer(Context*ctx,const AttributeSet*);
+    Chronometer(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     void setCountDown(bool countDown);
     bool isCountDown()const;
     bool isTheFinalCountDown()const;

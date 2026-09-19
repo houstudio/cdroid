@@ -165,8 +165,11 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
 }
 
 const std::string KeyEvent::keyCodeToString(int keyCode){
-    std::string symbolicName = InputEventLookup::getLabelByKeyCode(keyCode);
-    if(!symbolicName.empty())
+    // getLabelByKeyCode returns nullptr for unmapped codes — constructing a
+    // std::string from it throws (process-fatal). AOSP falls back to the
+    // numeric form for unknown keycodes.
+    const char* symbolicName = InputEventLookup::getLabelByKeyCode(keyCode);
+    if(symbolicName != nullptr)
         return std::string("KEYCODE_")+symbolicName;
     return std::to_string(keyCode);
 }

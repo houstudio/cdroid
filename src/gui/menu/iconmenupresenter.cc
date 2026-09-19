@@ -3,11 +3,13 @@
 #include <menu/menudialoghelper.h>
 #include <menu/menuitemimpl.h>
 #include <menu/submenubuilder.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 IconMenuPresenter::IconMenuPresenter(Context* context)
-    :BaseMenuPresenter(context,"cdroid:layout/icon_menu_layout",
-            "cdroid:layout/icon_menu_item_layout"){
+    :BaseMenuPresenter(context,R::layout::icon_menu_layout,
+            R::layout::icon_menu_item_layout){
 }
 
 void IconMenuPresenter::initForMenu(Context* context,MenuBuilder* menu){

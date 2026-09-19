@@ -20,19 +20,26 @@
 
 namespace cdroid{
 
-DECLARE_WIDGET(ImageSwitcher)
+DECLARE_WIDGET2(ImageSwitcher, "android.widget.ImageSwitcher");
 
-ImageSwitcher::ImageSwitcher(int w,int h)
-    :ViewSwitcher(w,h){
-}
+ImageSwitcher::ImageSwitcher(Context*ctx)
+    :ImageSwitcher(ctx,nullptr){}
 
-ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet&atts)
-  :ViewSwitcher(ctx,atts){
+ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet* atts):ImageSwitcher(ctx,atts,0){}
+
+ImageSwitcher::ImageSwitcher(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :ViewSwitcher(ctx,pAttrs, defStyleAttr){
 }
 
 void ImageSwitcher::setImageResource(const std::string&resid){
     ImageView* image = (ImageView*)getNextView();
     image->setImageResource(resid);
+    showNext();
+}
+
+void ImageSwitcher::setImageURI(const std::string&uri){
+    ImageView* image = (ImageView*)getNextView();
+    image->setImageURI(uri);
     showNext();
 }
 

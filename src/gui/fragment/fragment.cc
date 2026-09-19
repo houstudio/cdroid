@@ -17,8 +17,10 @@
  *********************************************************************************/
 #include <fragment/fragment.h>
 #include <fragment/fragmentmanager.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmentviewlifecycleowner.h>
+#include <fragment/specialeffectscontroller.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -29,7 +31,6 @@
 #include <stdexcept>
 
 namespace cdroid{
-namespace fragment{
 
 std::string Fragment::generateWho(){
     static std::atomic<long> sCounter{0};
@@ -91,6 +92,38 @@ Fragment::~Fragment(){
     delete mChildHost;
     delete mViewLifecycleOwner;
     // mChildFragmentManager (unique_ptr) releases automatically.
+    // Last-resort reclaim for the fragment view. Its sole deleter is the exit effect's
+    // scheduleDelete post (SpecialEffectsController), which needs the transition clone to end
+    // and the looper to still run. At process exit neither holds: App::exit drains the queue
+    // while the clone never gets another frame, so a view that was already detached by
+    // TransitionEffect (removeView) is orphaned — the host window's view-tree teardown cannot
+    // see it either. A non-null mView with no parent here IS that orphan tree; one still
+    // parented (normal close, effect never detached it) stays owned by the container and must
+    // not be freed here (the tree teardown would double-free it).
+    if (mView != nullptr && mView->getParent() == nullptr) {
+        // A sibling transition clone's ObjectAnimator (per-view Fade
+        // transitionAlpha) can still be ticking for a view in this tree when
+        // the fragment is reclaimed mid-transition — freeing first leaves the
+        // animator dereferencing dead memory (valgrind: invalid read/write in
+        // View::setTransitionAlpha; escalates to SIGSEGV under --auto-test
+        // sweeps). End every running animator over the subtree, same as
+        // scheduleViewReclaim/reclaimDeferredExitViews, before the delete.
+        endAnimatorsOver(mView);
+        endTransitionsOver(mView);
+        // The exit effect's removeView may have parked this tree in the parent's
+        // mDisappearingChildren (mParent cleared, no detach dispatch): posted
+        // callbacks holding raw view pointers (a11y scrolled/content-changed)
+        // would fire after the delete and read freed memory. Dispatch the detach
+        // so onDetachedFromWindowInternal cancels them before we free the tree.
+        if (mView->isAttachedToWindow()) mView->dispatchDetachedFromWindow();
+        delete mView;
+        mView = nullptr;
+    }
+    // setArguments owns (delete-then-assign); the dtor must close that ownership
+    // too or every fragment created with arguments leaks its Bundle (valgrind:
+    // the newInstance 56B records).
+    delete mArguments;
+    mArguments = nullptr;
 }
 
 // Fragment owns its 6 Transition* (androidx fields; GC reclaims there). On replace, delete the
@@ -281,6 +314,26 @@ void Fragment::setHasOptionsMenu(bool hasMenu){
     }
 }
 
+void Fragment::setUserVisibleHint(bool isVisibleToUser){
+    mUserVisibleHint = isVisibleToUser;
+}
+
+Fragment::SavedState::SavedState(FragmentState* state){
+    mState = state;
+}
+
+Fragment::SavedState::~SavedState(){
+    delete mState;
+}
+
+void Fragment::setInitialSavedState(SavedState* state){
+    if (mState > INITIALIZING) {
+        throw std::runtime_error("Fragment already active");
+    }
+    mSavedFragmentState = state != nullptr ? state->mState : nullptr;
+    if (state != nullptr) state->mState = nullptr;
+}
+
 void Fragment::setMenuVisibility(bool menuVisible){
     if(mMenuVisible != menuVisible){
         mMenuVisible = menuVisible;
@@ -339,5 +392,4 @@ void Fragment::performOptionsMenuClosed(Menu& menu){
     }
 }
 
-}//namespace fragment
 }//namespace cdroid

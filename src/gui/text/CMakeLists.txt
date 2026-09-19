@@ -27,6 +27,8 @@ add_library(cdtext
     linkify.cc
     style/metricaffectingspan.cc
     style/replacementspan.cc
+    format/dateutils.cc     # android.text.format.DateUtils (in-tree subset)
+    format/formatter.cc     # android.text.format.Formatter
     method/basemovementmethod.cc
     method/arrowkeymovementmethod.cc
     method/scrollingmovementmethod.cc

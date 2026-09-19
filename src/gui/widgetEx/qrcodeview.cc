@@ -18,6 +18,8 @@
 #include <widgetEx/qrcodeview.h>
 #if ENABLE(QRCODE)
 #include <widgetEx/qrcodegen.h>
+#include <widgetEx/widgetex_styleable.h>
+#include <content/typedarray.h>
 #include <float.h>
 #include <cdlog.h>
 
@@ -27,31 +29,21 @@ namespace cdroid{
 
 DECLARE_WIDGET(QRCodeView)
 
-QRCodeView::QRCodeView(int w,int h):View(w,h){
+QRCodeView::QRCodeView(Context*ctx):QRCodeView(ctx,nullptr){}
+
+QRCodeView::QRCodeView(Context*ctx,const AttributeSet*attrs):QRCodeView(ctx,attrs,0){}
+
+QRCodeView::QRCodeView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
     initView();
-    encode();
-};
 
-QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
-    initView();
-
-    mEccLevel = attrs.getInt("eccLevel",std::unordered_map<std::string,int>{
-            {"low",ECC_LOW},    /* 7%*/
-            {"medium",ECC_MEDIUM}, /*15%*/
-            {"quartor",ECC_QUARTOR},/*20%*/
-            {"high",ECC_HIGH}    /*30%*/
-    },mEccLevel);
-
-    mEncodeMode = attrs.getInt("encodeMode",std::unordered_map<std::string,int>{
-            {"numberic",MODE_NUMERIC},
-            {"alphanumeric",MODE_ALPHANUMERIC},
-            {"utf8" , MODE_UTF8},
-            {"kanji", MODE_KANJI}
-    },mEncodeMode);
-
-    mDotColor  = attrs.getColor("dotColor",mDotColor);
-    mBarBgColor= attrs.getColor("barBgColor", (~mDotColor)|0xFF000000);
-    mLogoDrawable = attrs.getDrawable("logo");
+    // declare-styleable reads (widgetEx 0x02 attr ids); the eccLevel/encodeMode
+    // enum names pre-resolve to ints by aapt2.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, cdroid::internal::R::styleable::QRCodeView, defStyleAttr);
+    mEccLevel   = ta->getInt(cdroid::internal::R::styleable::QRCodeView_eccLevel, mEccLevel);
+    mEncodeMode = ta->getInt(cdroid::internal::R::styleable::QRCodeView_encodeMode, mEncodeMode);
+    mDotColor   = ta->getColor(cdroid::internal::R::styleable::QRCodeView_dotColor, mDotColor);
+    mBarBgColor = ta->getColor(cdroid::internal::R::styleable::QRCodeView_barBgColor, (~mDotColor)|0xFF000000);
+    mLogoDrawable = ta->getDrawable(cdroid::internal::R::styleable::QRCodeView_logo);
     encode();
 }
 
@@ -127,7 +119,7 @@ void QRCodeView::setText(const std::string&text){
     }
 }
 
-void QRCodeView::setLogoResource(const std::string&resid){
+void QRCodeView::setLogoResource(int resid){
     setLogo(mContext->getDrawable(resid));
 }
 

@@ -60,7 +60,9 @@ protected:
     void onDetachedFromWindow()override;
     //void encodeProperties(ViewHierarchyEncoder& stream)override;
 public:
-    TextClock(Context* context,const AttributeSet& attrs);
+    TextClock(Context*ctx);   // AOSP TextClock(Context)
+    TextClock(Context* context,const AttributeSet* attrs);
+    TextClock(Context* context,const AttributeSet* attrs,int defStyleAttr);
     
     std::string getFormat12Hour() const;
     void setFormat12Hour(const std::string& format);

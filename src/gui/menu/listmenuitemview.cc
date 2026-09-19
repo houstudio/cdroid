@@ -16,21 +16,33 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <menu/listmenuitemview.h>
+#include <widget/internal_R.h>
 #include <menu/menuitemimpl.h>
 #include <widget/textview.h>
 #include <widget/checkbox.h>
 #include <widget/imageview.h>
 #include <widget/radiobutton.h>
-#include <widget/R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ListMenuItemView,"cdroid:attr/listMenuViewStyle")
-ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
-    :LinearLayout(context, attrs){
+DECLARE_WIDGET2(ListMenuItemView, "androidx.appcompat.view.menu.ListMenuItemView");
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* attrs):ListMenuItemView(context,attrs,R::attr::listMenuViewStyle){}
 
-    mBackground = attrs.getDrawable("itemBackground");
-    mTextAppearance = attrs.getString("itemTextAppearance");
-    mPreserveIconSpacing = attrs.getBoolean("preserveIconSpacing", false);
+ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    // Upstream super(context, attrs): the base LinearLayout gets defStyleAttr 0;
+    // listMenuViewStyle only feeds the MenuView styleable reads below.
+    :LinearLayout(context, pAttrs){
+
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.ListMenuItemView, defStyleAttr).
+    // The item attrs carry no generated styleable; resolve them by attr id directly.
+    static const uint32_t LIST_MENU_ITEM_ATTRS[] = {
+        (uint32_t)R::attr::itemBackground, (uint32_t)R::attr::itemTextAppearance,
+        (uint32_t)R::attr::preserveIconSpacing, (uint32_t)R::attr::subMenuArrow, 0 };
+    auto ta = context->obtainStyledAttributes(pAttrs, LIST_MENU_ITEM_ATTRS, defStyleAttr);
+
+    mBackground = ta->getDrawable(0);
+    mTextAppearance = ta->getResourceId(1, 0);
+    mPreserveIconSpacing = ta->getBoolean(2, false);
     mTextAppearanceContext = context;
     mItemData = nullptr;
     mIconView = nullptr;
@@ -38,12 +50,13 @@ ListMenuItemView::ListMenuItemView(Context* context,const AttributeSet& attrs)
     mRadioButton = nullptr;
     mInflater = nullptr;
     mForceShowIcon = false;
-    mSubMenuArrow = attrs.getDrawable("subMenuArrow");
+    mSubMenuArrow = ta->getDrawable(3);
 
-    /*final TypedArray b = context.getTheme()
-            .obtainStyledAttributes(null, new int[] { com.android.internal.R.attr.divider },
-                    com.android.internal.R.attr.dropDownListViewStyle, 0);*/
-    mHasListDivider = false;//b.hasValue(0);
+    // AOSP: theme.obtainStyledAttributes(null, {divider}, dropDownListViewStyle, 0).
+    static const uint32_t DIVIDER_ATTR[] = { (uint32_t)R::attr::divider, 0 };
+    auto b = context->obtainStyledAttributes(nullptr, DIVIDER_ATTR,
+            R::attr::dropDownListViewStyle, 0);
+    mHasListDivider = b->hasValue(0);
 }
 
 void ListMenuItemView::onFinishInflate() {
@@ -51,19 +64,19 @@ void ListMenuItemView::onFinishInflate() {
 
     setBackground(mBackground);
 
-    mTitleView = (TextView*)findViewById(cdroid::R::id::title);
-    if (!mTextAppearance.empty()) {
+    mTitleView = (TextView*)findViewById(R::id::title);
+    if (mTextAppearance != 0) {
         mTitleView->setTextAppearance(mTextAppearanceContext,mTextAppearance);
     }
 
-    mShortcutView = (TextView*)findViewById(cdroid::R::id::shortcut);
-    mSubMenuArrowView = (ImageView*)findViewById(cdroid::R::id::submenuarrow);
+    mShortcutView = (TextView*)findViewById(R::id::shortcut);
+    mSubMenuArrowView = (ImageView*)findViewById(R::id::submenuarrow);
     if (mSubMenuArrowView != nullptr) {
         mSubMenuArrowView->setImageDrawable(mSubMenuArrow);
     }
-    mGroupDivider = (ImageView*)findViewById(cdroid::R::id::group_divider);
+    mGroupDivider = (ImageView*)findViewById(R::id::group_divider);
 
-    mContent = (LinearLayout*)findViewById(cdroid::R::id::content);
+    mContent = (LinearLayout*)findViewById(R::id::content);
 }
 
 void ListMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
@@ -208,7 +221,17 @@ void ListMenuItemView::setIcon(Drawable* icon) {
     }
 
     if ((icon != nullptr) || mPreserveIconSpacing) {
-        mIconView->setImageDrawable(showIcon ? icon : nullptr);
+        // The icon belongs to the MenuItemImpl (freed with the menu); the view
+        // must not hand the borrowed instance to ImageView::setImageDrawable,
+        // which OWNS what it is given. Derive a private copy (same contract as
+        // NavigationBarItemView::setIcon).
+        Drawable* own = nullptr;
+        if (icon != nullptr) {
+            auto cs = icon->getConstantState();
+            if (cs != nullptr) own = cs->newDrawable();
+            else LOGE("ListMenuItemView: icon without constant state");
+        }
+        mIconView->setImageDrawable(showIcon ? own : nullptr);
 
         if (mIconView->getVisibility() != VISIBLE) {
             mIconView->setVisibility(VISIBLE);
@@ -232,19 +255,19 @@ void ListMenuItemView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
 void ListMenuItemView::insertIconView() {
     LayoutInflater* inflater = getInflater();
-    mIconView = (ImageView*) inflater->inflate("android:layout/list_menu_item_icon", this, false);
+    mIconView = (ImageView*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_icon, this, false);
     addContentView(mIconView, 0);
 }
 
 void ListMenuItemView::insertRadioButton() {
     LayoutInflater* inflater = getInflater();
-    mRadioButton =(RadioButton*) inflater->inflate("android/layout/list_menu_item_radio", this, false);
+    mRadioButton =(RadioButton*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_radio, this, false);
     addContentView(mRadioButton);
 }
 
 void ListMenuItemView::insertCheckBox() {
     LayoutInflater* inflater = getInflater();
-    mCheckBox =(CheckBox*) inflater->inflate("android:/layout/list_menu_item_checkbox", this, false);
+    mCheckBox =(CheckBox*) inflater->inflate(cdroid::internal::R::layout::list_menu_item_checkbox, this, false);
     addContentView(mCheckBox);
 }
 

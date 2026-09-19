@@ -35,13 +35,177 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # (reusing idgen.py) and builds the pak — stripped XML + aapt-compiled 9-patch
     # (cdNp chunk, borderless) + verbatim binaries. lxml+Pillow are hard deps;
     # pakbuilder.py fails loud if either is missing (no silent half-broken path).
+    #
+    # Binary AXML is the only mode: pakbuilder gets the extra aapt2 args and
+    # produces binary AXML layouts + resources.arsc (no ENABLE_BINARY_XML gate
+    # anymore — the text-XML path is retired).
+    #
+    # Shared-lib mode (SHARED_LIB): for plugin libraries that ship their OWN pak
+    # at a fixed package id (multi-pak recipe: framework 0x01 / widgetEx 0x02 /
+    # plugins 0x03+ / app 0x7f — runtime ResTable dedups by id). Same call shape
+    # as app paks; no executable target required, so a project that packages
+    # ONLY a shared pak works too. NAMESPACE feeds the R.h namespace and the
+    # manifest package (dotted-qualified, e.g. cdroid.<ns>); PACKAGE_ID
+    # defaults to 0x03.
+    set(_pak_options SHARED_LIB EMBED_EXE)
+    set(_pak_one_value NAMESPACE PACKAGE_ID)
+    cmake_parse_arguments(PAK "${_pak_options}" "${_pak_one_value}" "" ${ARGN})
+    if(PAK_SHARED_LIB)
+        if(NOT PAK_NAMESPACE)
+            set(PAK_NAMESPACE ${project})
+        endif()
+        if(NOT PAK_PACKAGE_ID)
+            set(PAK_PACKAGE_ID 0x03)
+        endif()
+        add_custom_target(${project}_assets
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py --shared-lib
+                    ${ResourceDIR} ${PakPath} ${rhpath}
+                    --namespace ${PAK_NAMESPACE} --package-id ${PAK_PACKAGE_ID}
+                    --aapt2 ${CDROID_AAPT2} -I ${CMAKE_BINARY_DIR}/framework.apk
+            COMMAND ${CMAKE_COMMAND} -E copy ${PakPath} ${CMAKE_BINARY_DIR}
+            WORKING_DIRECTORY ${ResourceDIR}
+            COMMENT "Package ${project} assets (shared-lib package-id ${PAK_PACKAGE_ID})")
+        if(TARGET ${project})
+            add_dependencies(${project} ${project}_assets)
+        endif()
+        # The -I framework.apk input is produced by cdroid_assets — build it first.
+        if(TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
+            add_dependencies(${project}_assets cdroid_assets)
+        endif()
+        return()
+    endif()
+    set(extra_args "")
+    set(_framework_apk "${CMAKE_BINARY_DIR}/framework.apk")
+    if(EXISTS "${CDROID_SDK_RES}")
+        if("${project}" STREQUAL "cdroid")
+            # Only cdroid.pak gets the full SDK framework res. The built framework.apk
+            # is also persisted (--framework-apk-out) so app paks can -I CDROID's own
+            # framework: package 'android', real public ids, plus the 0x010d CDROID
+            # extension attrs (pattern/frameDuration/wheelItemCount/...) that a stock
+            # android.jar doesn't expose (private or absent).
+            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}"
+                           "--framework-apk-out" "${_framework_apk}")
+            if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
+                list(APPEND extra_args "${CDROID_SDK_RES_FILTER}")
+            endif()
+            # Global overlay (all apps of this build): shadow the shared cdroid.pak
+            # values, e.g. per-chipset touch/fling tuning via the <product>.txt
+            # options file.
+            if(CDROID_OVERLAY AND EXISTS "${CDROID_OVERLAY}")
+                list(APPEND extra_args "--overlay" "${CDROID_OVERLAY}")
+                message(STATUS "CreatePAK(${project}): global overlay ${CDROID_OVERLAY}")
+            endif()
+            message(STATUS "CreatePAK(${project}): SDK framework res mode")
+        else()
+            # App paks: compile their own XML via aapt2 (binary AXML), no SDK res.
+            # Framework -I = CDROID's own framework.apk (NOT android.jar): it carries
+            # the same public attr table the runtime arsc was built from, including
+            # the 0x010d extensions, so compiled attr ids match the runtime exactly.
+            # --widgetex-apk lets app aapt2 link -I the fixed-id 0x02 shared lib so
+            # widgetEx attrs resolve to 0x02 (matching the runtime styleable) instead
+            # of being re-declared at 0x7f in the app's own arsc.
+            set(extra_args "${CDROID_AAPT2}" "${_framework_apk}"
+                           "--widgetex-apk" "${CMAKE_BINARY_DIR}/widgetex.apk")
+            message(STATUS "CreatePAK(${project}): app binary AXML mode (own res only)")
+        endif()
+    endif()
+    # Apps that bundle their own fonts/ directory (beside assets/, with or
+    # without a legacy fonts.conf) get an Android-format fonts.xml generated
+    # next to the app binary at build time — Typeface probes it by walking up
+    # from the executable, so the app's own font world wins over the shared
+    # out-root snapshot without any runtime configuration.
+    set(_app_fonts_cmd "")
+    set(_app_fonts_dir "${ResourceDIR}/../fonts")
+    if(EXISTS "${_app_fonts_dir}" AND NOT DEFINED CDROID_FC_SCAN)
+        find_program(CDROID_FC_SCAN fc-scan)
+    endif()
+    if(EXISTS "${_app_fonts_dir}" AND CDROID_FC_SCAN)
+        set(_app_fonts_cmd COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/genfontsxml.sh
+                --dir "${_app_fonts_dir}" "${CMAKE_CURRENT_BINARY_DIR}/fonts.xml")
+        message(STATUS "CreatePAK(${project}): app fonts -> ${CMAKE_CURRENT_BINARY_DIR}/fonts.xml")
+    endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
-                ${project} ${ResourceDIR} ${PakPath} ${rhpath}
+                ${project} ${ResourceDIR} ${PakPath} ${rhpath} ${extra_args}
+        ${_app_fonts_cmd}
         COMMAND cp ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
-    add_dependencies(${project} ${project}_assets)
+    # Pak-only projects (no executable named ${project}) skip this link.
+    if(TARGET ${project})
+        add_dependencies(${project} ${project}_assets)
+    endif()
+    # App paks need widgetex.apk (for -I linking); ensure widgetex builds first.
+    if(TARGET widgetex_assets AND NOT "${project}" STREQUAL "widgetex" AND NOT "${project}" STREQUAL "cdroid")
+        add_dependencies(${project}_assets widgetex_assets)
+    endif()
+    # App paks -I framework.apk, which the cdroid SDK pak produces — build it first.
+    if(TARGET cdroid_assets AND NOT "${project}" STREQUAL "cdroid")
+        add_dependencies(${project}_assets cdroid_assets)
+    endif()
+    # Per-app framework overlay: apps/<name>/overlay/ shadows the framework res
+    # with the same --overlay semantics (values* entries merge by (type,name),
+    # everything else whole-file). Builds a dedicated cdroid.pak into the app's
+    # binary dir — App::findSharedPak probes the binary's own directory first,
+    # so the overlaid pak applies to THIS app only; other apps/samples keep the
+    # shared out-dir-root cdroid.pak. Details worth keeping straight:
+    #  - namespace "cdroid" reuses the SDK -x pipeline (scrubs + pinned ids);
+    #    its work dir <app>/cdroid_pakbuild cannot collide with the shared build.
+    #  - rh_path points into that work dir: R.h/internal_R.h regenerate there and
+    #    never race the shared build's source-tree headers (ids are identical —
+    #    overlay only changes values of pinned names).
+    #  - NO --framework-apk-out: the shared framework.apk that app paks -I stays
+    #    the base one; ids match, only default values differ.
+    #  - No cp to the binary root and no install: must not shadow the shared pak.
+    #  - If a global CDROID_OVERLAY is set it applies first, the app overlay wins.
+    if(NOT "${project}" STREQUAL "cdroid" AND NOT "${project}" STREQUAL "widgetex"
+       AND EXISTS "${CDROID_SDK_RES}" AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+        set(_ov_extra "")
+        if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
+            set(_ov_extra "${CDROID_SDK_RES_FILTER}")
+        endif()
+        set(_ov_flags "")
+        if(CDROID_OVERLAY AND EXISTS "${CDROID_OVERLAY}")
+            list(APPEND _ov_flags "--overlay" "${CDROID_OVERLAY}")
+        endif()
+        list(APPEND _ov_flags "--overlay" "${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+        add_custom_target(${project}_framework_assets
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py cdroid
+                    ${CDROID_SDK_RES} ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak
+                    ${CMAKE_CURRENT_BINARY_DIR}/cdroid_pakbuild/R.h
+                    ${CDROID_AAPT2} ${CDROID_ANDROID_JAR} ${CDROID_SDK_RES} ${_ov_extra}
+                    ${_ov_flags}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Framework overlay pak for ${project} (${CMAKE_CURRENT_SOURCE_DIR}/overlay)")
+        add_custom_command(TARGET ${project} POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    ${CMAKE_CURRENT_BINARY_DIR}/cdroid.pak
+                    $<TARGET_FILE_DIR:${project}>/cdroid.pak
+            COMMENT "Deploy overlaid cdroid.pak beside ${project} binary")
+        add_dependencies(${project} ${project}_framework_assets)
+        message(STATUS "CreatePAK(${project}): framework overlay from ${CMAKE_CURRENT_SOURCE_DIR}/overlay")
+    endif()
+    # EMBED_EXE: bundle the linked app binary into the pak as a `bin/<name>`
+    # entry (the APK lib/<abi>/* slot) — one self-contained file for
+    # `adb install` / `pm install`. A custom target (not POST_BUILD) so a
+    # res-only pak rebuild — which wipes the bin/ entry — re-embeds too; the
+    # script itself is idempotent (skips when the entry is current).
+    if(PAK_EMBED_EXE)
+        if(NOT TARGET ${project})
+            message(FATAL_ERROR "CreatePAK(${project}): EMBED_EXE needs an executable target named ${project}")
+        endif()
+        add_custom_target(${project}_embed_exe ALL
+            COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py --embed-exe
+                    ${PakPath} $<TARGET_FILE:${project}>
+            COMMAND ${CMAKE_COMMAND} -E copy ${PakPath} ${CMAKE_BINARY_DIR}
+            DEPENDS ${project} ${project}_assets
+            COMMENT "Embed ${project} exe into ${PakPath} (installable bundle)")
+        # The pak itself is rebuilt by ${project}_assets; embed reads it after.
+        # The copy refreshes the binary-root copy AFTER embedding — the one in
+        # ${project}_assets predates the bin/ entry, so without this the root
+        # copy ships without the binary.
+        add_dependencies(${project}_embed_exe ${project}_assets)
+    endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 

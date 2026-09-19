@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ph_messages_t"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="@string/ph_messages_d"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- Rich text spans -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Spannable styles"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextView
+                android:id="@+id/span_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <!-- Emoji rendering & cluster editing -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Emoji"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:text="☺ ❤ 😀 ☀ ★ ✓ ✈ ☺️ ❤️" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="24sp"
+                android:text="🇨🇳 🇺🇸 👨‍👩‍👧 👍🏽 1️⃣ ⚠️" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:text="Symbols come from the fallback font in fonts.xml; flags, ZWJ families, skin tones and keycaps need a full emoji font (e.g. Noto Emoji) — boxes until it is added."
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+            <EditText
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_outline"
+                android:padding="10dp"
+                android:textColor="@color/text_primary"
+                android:text="☺ ❤ 😀 edit me: caret moves and backspace deletes whole clusters"
+                android:hint="Emoji cluster editing" />
+        </LinearLayout>
+
+        <!-- Justification & phrase-based line breaking -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_justify"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:justificationMode="inter_word"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_word_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:justificationMode="inter_character"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/justify_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/justify_char_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/phrase_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/phrase_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:lineBreakWordStyle="phrase"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/phrase_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/phrase_word_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Marquee -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Marquee (auto-scrolling)"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <TextView
+                android:id="@+id/marquee_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:textColor="@color/accent"
+                android:textSize="16sp"
+                android:text="CDROID ports Android's TextView layout engine line-by-line — BiDi, spans, ellipsize and marquee all included — StaticLayout line breaking, minikin measurement, spannable rich text, and a faithful marquee that keeps scrolling forever like a status-bar notification on a real device." />
+        </LinearLayout>
+
+        <!-- Ellipsize & line behavior variants -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_ellipsize"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:singleLine="true"
+                android:ellipsize="none"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_none_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_end_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="middle"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_middle_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:singleLine="true"
+                android:ellipsize="start"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_start_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:maxLines="2"
+                android:ellipsize="end"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:text="@string/ellip_demo_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_maxlines_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:id="@+id/marquee2_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:singleLine="true"
+                android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
+                android:textColor="@color/good"
+                android:textSize="15sp"
+                android:text="@string/marquee2_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_marquee_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textAllCaps="true"
+                android:lineSpacingExtra="4dp"
+                android:textColor="@color/text_primary"
+                android:textSize="13sp"
+                android:text="@string/ellip_caps_text" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ellip_caps_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- EditText input types -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="EditText"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <EditText
+                android:id="@+id/edit_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_outline"
+                android:padding="10dp"
+                android:textColor="@color/text_primary"
+                android:hint="Type some text…"
+                android:text="Editable text" />
+            <EditText
+                android:id="@+id/edit_pwd"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_outline"
+                android:padding="10dp"
+                android:textColor="@color/text_primary"
+                android:password="true"
+                android:text="secret"
+                android:hint="Password field" />
+            <EditText
+                android:id="@+id/edit_num"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/row_gap"
+                android:background="@drawable/btn_outline"
+                android:padding="10dp"
+                android:inputType="number"
+                android:textColor="@color/text_primary"
+                android:text="12345"
+                android:hint="Number field" />
+        </LinearLayout>
+
+        <!-- Spinner -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Spinner (dropdown)"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <Spinner
+                android:id="@+id/spinner1"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_marginTop="@dimen/row_gap"
+                android:spinnerMode="dropdown"
+                android:background="@drawable/btn_outline" />
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

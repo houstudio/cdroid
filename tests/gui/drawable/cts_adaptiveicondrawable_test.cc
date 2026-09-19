@@ -17,7 +17,8 @@ using namespace cdroid;
 class CtsAdaptiveIconDrawableTest : public testing::Test {};
 
 TEST_F(CtsAdaptiveIconDrawableTest, testConstructor) {
-    AdaptiveIconDrawable d(nullptr, nullptr);
+    // Cast disambiguates from the (LayerState*, Resources*) constant-state ctor.
+    AdaptiveIconDrawable d((Drawable*)nullptr, nullptr);
 }
 
 TEST_F(CtsAdaptiveIconDrawableTest, testGetChangingConfigurations) {

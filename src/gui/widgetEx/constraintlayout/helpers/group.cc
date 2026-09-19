@@ -25,17 +25,14 @@
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
-DECLARE_WIDGET(Group)
+DECLARE_WIDGET2(Group, "androidx.constraintlayout.widget.Group");
 
 namespace cdroid {
 
-Group::Group(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
-    mUseViewMeasure = false;
-}
+Group::Group(Context* ctx,const AttributeSet* attrs):Group(ctx,attrs,0){}
 
-Group::Group(int width, int height)
-    : ConstraintHelper(width, height) {
+Group::Group(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
     mUseViewMeasure = false;
 }
 

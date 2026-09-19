@@ -32,7 +32,6 @@
 #include <savedstate/savedstateregistryowner.h>
 #include <savedstate/savedstateregistrycontroller.h>
 namespace cdroid{
-namespace fragment{
 
 class FragmentManager;
 
@@ -78,6 +77,5 @@ private:
     HostCallbacks* mHost;
 };
 
-}//namespace fragment
 }//namespace cdroid
 #endif

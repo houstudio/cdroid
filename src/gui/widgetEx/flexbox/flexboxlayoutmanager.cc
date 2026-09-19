@@ -41,9 +41,9 @@ FlexboxLayoutManager::FlexboxLayoutManager(Context* context, int flexDirection, 
     init();
 }
 
-FlexboxLayoutManager::FlexboxLayoutManager(Context* context, const AttributeSet& attrs)
+FlexboxLayoutManager::FlexboxLayoutManager(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
     : mContext(context) {
-    auto properties = getProperties(context, attrs, 0, 0);
+    auto properties = getProperties(context, pAttrs, defStyleAttr, defStyleRes);
     switch (properties.orientation) {
         case LinearLayoutManager::HORIZONTAL:
             mFlexDirection = properties.reverseLayout
@@ -1482,7 +1482,7 @@ bool FlexboxLayoutManager::computeScrollVectorForPosition(int targetPosition, Po
     return true;
 }
 
-RecyclerView::LayoutParams* FlexboxLayoutManager::generateLayoutParams(Context* c, const AttributeSet& attrs) const {
+RecyclerView::LayoutParams* FlexboxLayoutManager::generateLayoutParams(Context* c, const AttributeSet* attrs) const {
     return new FlexboxLayoutManager::LayoutParams(c, attrs);
 }
 

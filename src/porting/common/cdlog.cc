@@ -61,6 +61,16 @@ static constexpr int kMaxMessageSize=2048;
 static char msgBoddy[kMaxMessageSize];
 
 static void LogInit() {
+    // A redirected stdout (file/pipe: autotest soaks, valgrind, CI) defaults to
+    // full 4K buffering — a healthy-but-quiet GUI then presents as a hung main
+    // loop and has been misdiagnosed as a deadlock more than once. A tty is
+    // line-buffered already; match that for non-tty sinks (cout rides stdio
+    // while sync_with_stdio holds, so the async path is covered too).
+    static std::once_flag sStdoutMode;
+    std::call_once(sStdoutMode, []() {
+        if (!isatty(fileno(stdout)))
+            setvbuf(stdout, nullptr, _IOLBF, 0);
+    });
 #if defined(ASYNC_LOG)&&ASYNC_LOG
     static std::once_flag sInit;
     std::call_once(sInit,[&]() {

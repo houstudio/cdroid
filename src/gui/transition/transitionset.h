@@ -64,7 +64,7 @@ class TransitionSet: public Transition {
     }
     TransitionSet& setInterpolator(const TimeInterpolator* interpolator) override;
     void setPathMotion(PathMotion* pathMotion) override;
-    void setPropagation(TransitionPropagation* transitionPropagation) override;
+    void setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation) override;
     void setEpicenterCallback(EpicenterCallback* epicenterCallback) override;
 
     Transition& addTarget(View* target) override;

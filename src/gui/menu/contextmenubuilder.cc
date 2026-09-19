@@ -15,11 +15,13 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <menu/menuitemimpl.h>
 #include <menu/menupopuphelper.h>
 #include <menu/menudialoghelper.h>
 #include <menu/contextmenubuilder.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ContextMenuBuilder::ContextMenuBuilder(Context*context)
     :MenuBuilder(context){
@@ -29,21 +31,13 @@ ContextMenu& ContextMenuBuilder::setHeaderIcon(Drawable* icon) {
     return (ContextMenu&) MenuBuilder::setHeaderIconInt(icon);
 }
 
-ContextMenu& ContextMenuBuilder::setHeaderIcon(const std::string& iconRes) {
+ContextMenu& ContextMenuBuilder::setHeaderIcon(int iconRes) {
     return (ContextMenu&) MenuBuilder::setHeaderIconInt(iconRes);
 }
-
-/*ContextMenu& ContextMenuBuilder::setHeaderIcon(int iconRes) {
-    return (ContextMenu&) MenuBuilder::setHeaderIconInt(iconRes);
-}*/
 
 ContextMenu& ContextMenuBuilder::setHeaderTitle(const std::string& title) {
     return (ContextMenu&) MenuBuilder::setHeaderTitleInt(title);
 }
-
-/*ContextMenu& ContextMenuBuilder::setHeaderTitle(int titleRes) {
-    return (ContextMenu&) MenuBuilder::setHeaderTitleInt(titleRes);
-}*/
 
 ContextMenu& ContextMenuBuilder::setHeaderView(View* view) {
     return (ContextMenu&) MenuBuilder::setHeaderViewInt(view);
@@ -83,7 +77,7 @@ MenuPopupHelper* ContextMenuBuilder::showPopup(Context* context, View* originalV
 
         MenuPopupHelper* helper = new MenuPopupHelper(
                 context, this, originalView, false /* overflowOnly */,
-                "android:attr/contextPopupMenuStyle");
+                R::attr::contextPopupMenuStyle);
         helper->show(std::round(x), std::round(y));
         return helper;
     }

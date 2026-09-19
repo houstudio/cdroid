@@ -29,8 +29,10 @@
 #include <core/context.h>
 #include <core/path.h>
 #include <core/rect.h>
+#include <content/typedarray.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/framework_styleable.h>
 
 #include <transition/transitionlisteneradapter.h>
 #include <transition/transitionutils.h>
@@ -162,11 +164,9 @@ ChangeBounds::ChangeBounds() = default;
 
 ChangeBounds::ChangeBounds(Context* context, AttributeSet* attrs)
     : Transition(context, attrs) {
-    // android: obtainStyledAttributes(attrs, R.styleable.ChangeBounds) → resizeClip.
-    if (attrs != nullptr) {
-        std::string v = attrs->getAttributeValue("resizeClip");
-        setResizeClip(v == "true" || v == "1");
-    }
+    auto a = context->obtainStyledAttributes(attrs, internal::R::styleable::ChangeBounds);
+    const bool resizeClip = a->getBoolean(internal::R::styleable::ChangeBounds_resizeClip, false);
+    setResizeClip(resizeClip);
 }
 
 std::vector<std::string> ChangeBounds::getTransitionProperties() {
@@ -299,6 +299,18 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
                     ObjectAnimator* bottomRightAnimator = ObjectAnimator::ofObject(viewBounds, &BOTTOM_RIGHT_PROPERTY, nullptr, bottomRightPath);
                     AnimatorSet* set = new AnimatorSet();
                     set->playTogether({topLeftAnimator, bottomRightAnimator});
+                    // viewBounds is shared by both child animators (AOSP news it per
+                    // call and lets GC reclaim). Own it for the set's lifetime: the set
+                    // always ends — normally, or forced by endAnimatorsOver at teardown —
+                    // and its children are finished then (valgrind: 32B definite per
+                    // size-changing ChangeBounds pair otherwise, deskclock sweep).
+                    auto* vb = viewBounds;
+                    auto fired = std::make_shared<bool>(false);
+                    Animator::AnimatorListener vbOwner;
+                    vbOwner.onAnimationEnd = [vb, fired](Animator&, bool){
+                        if(*fired) return; *fired = true; delete vb;
+                    };
+                    set->addListener(vbOwner);
                     anim = set;
                 }
             } else if (startLeft != endLeft || startTop != endTop) {

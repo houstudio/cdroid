@@ -26,6 +26,7 @@
 #include <queue>
 #include <atomic>
 namespace cdroid{
+class Asset;
 class FrameSequence;
 class FrameSequenceState;
 /*for drawing animated images (like GIFi/apng/webp)*/
@@ -38,7 +39,13 @@ private:
         int mRepeatCount;
         int mAlpha;
         int mChangingConfigurations;
-        FrameSequence*mFrameSequence;
+        // Shared with every state copy (mutate()/newDrawable()): AOSP leans on
+        // GC here — any state keeps the decoder alive. A raw pointer + an
+        // "owner" flag can't express that under refcounting: mutate()'s
+        // copy-on-write dropped the LAST owning state and freed the sequence
+        // out from under the borrowing copies (kaidu_ms7 startup crash in
+        // DrawableContainer::addChild's mutate()). The shared_ptr IS the GC.
+        std::shared_ptr<FrameSequence>mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
         ~AnimatedImageState();
@@ -78,11 +85,27 @@ private:
     static std::once_flag sDecodeOnce;
     static std::mutex sDecodeMutex;
     static std::condition_variable sDecodeCV;
+    static std::atomic<bool> sDecodeShutdown;   // process-exit reaper flips this (see the .cc)
     void postOnAnimationStart();
     void postOnAnimationEnd();
-    void updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride);
+    void updateStateFromTypedArray(Resources&r,const AttributeSet&atts,const Resources::Theme* theme,int srcDensityOverride);
     void submitDecodeTask(int frameIndex, int prevFrame);
     static void decodeWorker();
+    // Shared tail of the source ctors: adopt a sequence, build the surfaces.
+    void setFrameSequence(FrameSequence* frmSequence, const char* source);
+private:
+    // ImageDecoder's factories (the AOSP decodeDrawable internals): resource
+    // id / decoded-source Asset / plain file. Not for app use.
+    friend class ImageDecoder;
+    /** Zero-copy consume of a decoded source held by an Asset (getBuffer is a
+        view for stored pak entries; compressed entries inflate once). The
+        Asset is closed before returning — the frame-sequence backends slurp
+        the whole stream inside FrameSequence::create(), nothing borrows it. */
+    AnimatedImageDrawable(cdroid::Asset* asset);
+    /** AOSP ImageDecoder.createSource(Resources, resId) analog. */
+    AnimatedImageDrawable(cdroid::Context*, int resid);
+    /** AOSP ImageDecoder.createSource(File) analog. */
+    AnimatedImageDrawable(const std::string& path);
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 protected:
     void onBoundsChange(const Rect& bounds)override;
@@ -90,9 +113,15 @@ public:
     static constexpr int REPEAT_INFINITE=-1;
     static constexpr int LOOP_INFINITE = REPEAT_INFINITE;
     static constexpr int REPEAT_UNDEFINED = -2;
+    // Process-exit hook for the shared decode daemon (AOSP relies on the JVM
+    // reaping daemon threads; C++ must collect the thread itself). The .cc's
+    // file-scope reaper calls this while the sDecode* statics are still alive.
+    static void stopDecodeWorker();
 public:
+    // AOSP surface: a public no-arg ctor only. Loading is ImageDecoder's job
+    // ("Created by ImageDecoder#decodeDrawable" — the P-era setInputStream is
+    // long gone); these loading ctors are ImageDecoder's private factories.
     AnimatedImageDrawable();
-    AnimatedImageDrawable(cdroid::Context*,const std::string&res);
     ~AnimatedImageDrawable();
     std::shared_ptr<ConstantState>getConstantState()override;
     int getChangingConfigurations()const override;
@@ -115,7 +144,7 @@ public:
     void registerAnimationCallback(const Animatable2::AnimationCallback& callback)override;
     bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback)override;
     void clearAnimationCallbacks();
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 
 }//end namespace

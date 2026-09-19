@@ -85,7 +85,7 @@ public:
     static const bool registered##FactoryName = cdroid::ClassLoader<BaseClass, ##__VA_ARGS__>::instance().template registerClass<ClassName>(#ClassName, create##FactoryName);
 
 #define DECLARE_MYWIDGET(ClassName)\
-    REGISTER_CLASS_2ARG(ClassName,View,Context*,const AttributeSet&)
+    REGISTER_CLASS_2ARG(ClassName,View,Context*,const AttributeSet*)
 
 } /*namespace cdroid*/
 #endif/*__CLASS_LOADER_H__*/

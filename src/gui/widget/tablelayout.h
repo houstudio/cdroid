@@ -59,8 +59,9 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
 public:
-    TableLayout(int w,int h);
-    TableLayout(Context*,const AttributeSet&atts);
+    TableLayout(Context*ctx);   // AOSP TableLayout(Context)
+    TableLayout(Context*,const AttributeSet*atts);
+    TableLayout(Context*,const AttributeSet* attrs,int defStyleAttr);
     void requestLayout()override;
 
     bool isShrinkAllColumns()const;

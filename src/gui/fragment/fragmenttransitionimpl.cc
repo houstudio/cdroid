@@ -23,7 +23,6 @@
 #include <transition/transitionset.h>
 
 namespace cdroid{
-namespace fragment{
 
 Transition* FragmentTransitionImpl::makeEnterTransition(const SharedElementMapping& sharedElements){
     if(!sharedElements.empty()){
@@ -47,5 +46,4 @@ Transition* FragmentTransitionImpl::makeExitTransition(const SharedElementMappin
     return new Fade();
 }
 
-}//namespace fragment
 }//namespace cdroid

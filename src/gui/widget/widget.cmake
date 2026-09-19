@@ -1,5 +1,56 @@
 
+
+# --- Generated styleable headers (R.styleable.X[] equivalent) -----------------
+# gen_styleable.py emits framework_styleable.{h,cc} into widget/, alongside R.h
+# (which CreatePAK generates into widget/R.h). The files are checked in for
+# IDE/clangd and regenerated whenever their inputs change. To grow the framework
+# styleable set, edit src/gui/res/values/attrs.xml + the include list in
+# widget/framework_styleable_include.txt (one styleable name per line).
+set(_FW_STYLEABLE_GEN ${CMAKE_SOURCE_DIR}/scripts/gen_styleable.py)
+set(_FW_STYLEABLE_INCLUDE ${PROJECT_SOURCE_DIR}/widget/framework_styleable_include.txt)
+# Drift tripwire: the 0x010d private-attr ids are ASSIGNED BY aapt2 (not
+# pinned), so hand-maintained id tables drift when attrs.xml changes — a
+# drifted table makes every styleable array resolve a NEIGHBOR attr (see the
+# 2026-08-15 TimePicker legacyLayout->lightZ crash). Before regenerating the
+# styleables, cross-check the tables against the compiled framework arsc and
+# auto-rewrite drifted entries (--fix): the arsc is the single source of
+# truth, so the tables follow it instead of failing the build.
+set(_ATTRIDS_CHECK ${CMAKE_SOURCE_DIR}/scripts/check_attrids.py)
+set(_FRAMEWORK_APK ${CMAKE_BINARY_DIR}/framework.apk)
+add_custom_command(
+    OUTPUT  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
+    COMMAND ${Python_EXECUTABLE} ${_ATTRIDS_CHECK}
+            --framework-apk ${_FRAMEWORK_APK}
+            --table ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            --table ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
+            --fix
+    COMMAND ${Python_EXECUTABLE} ${_FW_STYLEABLE_GEN}
+            --attrs ${PROJECT_SOURCE_DIR}/res/values/attrs.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_manifest.xml,${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
+            --fw-ids ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            --cdroid-ids ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
+            --name-map ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
+            --include-file ${_FW_STYLEABLE_INCLUDE}
+            --out-h  ${PROJECT_SOURCE_DIR}/widget/framework_styleable.h
+            --out-cc ${PROJECT_SOURCE_DIR}/widget/framework_styleable.cc
+            --guard __FRAMEWORK_STYLEABLE_H__ --header framework_styleable.h
+    DEPENDS ${PROJECT_SOURCE_DIR}/res/values/attrs.xml
+            ${PROJECT_SOURCE_DIR}/res/values/attrs_manifest.xml
+            ${PROJECT_SOURCE_DIR}/res/values/attrs_cdroid.xml
+            ${CMAKE_SOURCE_DIR}/scripts/framework_attrids.txt
+            ${CMAKE_SOURCE_DIR}/scripts/cdroid_attrids.txt
+            ${CMAKE_SOURCE_DIR}/scripts/framework_namemap.txt
+            ${_FW_STYLEABLE_GEN}
+            ${_FW_STYLEABLE_INCLUDE}
+            ${_ATTRIDS_CHECK}
+            ${_FRAMEWORK_APK}
+    COMMENT "Checking attr id tables, then generating widget/framework_styleable.{h,cc}"
+    VERBATIM
+)
+
+
 list(APPEND WIDGET_SOURCES
+    widget/framework_styleable.cc
     widget/edgeeffect.cc
     widget/scroller.cc
     widget/fastscroller.cc
@@ -9,6 +60,9 @@ list(APPEND WIDGET_SOURCES
     widget/nestedscrollinghelper.cc
     widget/scrollbardrawable.cc
     widget/cdwindow.cc
+    widget/cdwindowmenus.cc
+    widget/cdwindowtransitions.cc
+    widget/activitytransitioncoordinator.cc
     widget/cardview.cc
     widget/floatingtoolbar.cc
     widget/localfloatingtoolbarpopup.cc
@@ -26,6 +80,8 @@ list(APPEND WIDGET_SOURCES
     widget/ratingbar.cc
     widget/space.cc
     widget/textview.cc
+    # android.widget.AccessibilityIterators (widget half: Line/Page)
+    widget/accessibilityiterators.cc
     widget/editor.cc
     widget/edittext.cc
     widget/textclock.cc
@@ -76,7 +132,6 @@ list(APPEND WIDGET_SOURCES
     widget/tabwidget.cc
     widget/gridlayout.cc
     widget/tablerow.cc
-    widget/tablayout.cc
     widget/tablelayout.cc
     widget/drawerlayout.cc
 )
@@ -131,6 +186,7 @@ endif(ENABLE_KPLOT)
 
 list(APPEND WIDGET_SOURCES
     widget/viewanimator.cc
+    widget/dialogviewanimator.cc
     widget/viewflipper.cc
     widget/viewswitcher.cc
     widget/textswitcher.cc

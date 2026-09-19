@@ -33,7 +33,13 @@ size_t AccessibilityEvent::getRecordCount()const{
     return (int)mRecords.size();
 }
 
-void AccessibilityEvent::appendRecord(AccessibilityRecord*){
+void AccessibilityEvent::appendRecord(AccessibilityRecord* record) {
+    // AOSP appends to mRecords — the record becomes owned by the event and is
+    // recycled with it (clear()). The body was empty: every appended record
+    // (e.g. AdapterView's ancestor record) was dropped on the floor, leaking
+    // it AND losing the ancestor info from the dispatched event.
+    if (record == nullptr) return;
+    mRecords.push_back(record);
 }
 
 AccessibilityRecord* AccessibilityEvent::getRecord(int i){
@@ -194,7 +200,8 @@ AccessibilityEvent*AccessibilityEvent::obtain() {
 
 void AccessibilityEvent::recycle() {
     clear();
-    sPool.release(this);
+    // Pool-full overflow is GC'd in AOSP; delete here (see NodeInfo::recycle).
+    if (!sPool.release(this)) delete this;
 }
 
 void AccessibilityEvent::clear() {

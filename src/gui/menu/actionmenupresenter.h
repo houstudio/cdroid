@@ -80,7 +80,9 @@ private:
 public:
     ActionMenuPresenter(Context* context);
     void initForMenu(Context* context, MenuBuilder* menu)override;
-    //void onConfigurationChanged(Configuration newConfig)override;
+    // AOSP ActionMenuPresenter.onConfigurationChanged — not a View override
+    // (MenuPresenter has no base here); driven by the owning ActionMenuView.
+    void onConfigurationChanged(Configuration& newConfig);
     void setWidthLimit(int width, bool strict);
     void setReserveOverflow(bool reserveOverflow);
 

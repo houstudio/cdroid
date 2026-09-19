@@ -60,7 +60,8 @@ public:
 
     virtual MenuItem& setIcon(Drawable* icon)=0;
 
-    virtual MenuItem& setIcon(const std::string& iconRes)=0;
+    // AOSP setIcon(@DrawableRes int)
+    virtual MenuItem& setIcon(int iconRes)=0;
 
     virtual Drawable* getIcon()=0;
 
@@ -126,7 +127,7 @@ public:
 
     virtual MenuItem& setActionView(View* view)=0;
 
-    virtual MenuItem& setActionView(const std::string& resId)=0;
+    virtual MenuItem& setActionView(int resId)=0;
 
     virtual View* getActionView()=0;
 

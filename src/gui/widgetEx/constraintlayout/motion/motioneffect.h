@@ -45,8 +45,8 @@ class MotionEffect : public MotionHelper {
     static constexpr int EAST  = 2;
     static constexpr int WEST  = 3;
 
-    MotionEffect(Context* ctx, const AttributeSet& attrs);
-    explicit MotionEffect(int width, int height);
+    MotionEffect(Context* ctx, const AttributeSet* attrs);
+    MotionEffect(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     bool isDecorator() const override { return true; }
     void onPreSetup(MotionLayout* motionLayout, MotionMap& motions) override;
@@ -56,7 +56,7 @@ class MotionEffect : public MotionHelper {
     static int computeFadeDirection(const std::vector<std::pair<float, float>>& deltas);
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
 
   private:
     float mMotionEffectAlpha = 0.1f;

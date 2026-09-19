@@ -33,15 +33,21 @@ private:
     DatePickerDelegate* mDelegate;
     int mMode;
 private:
-    DatePickerDelegate* createSpinnerUIDelegate(Context*,const AttributeSet& attrs);
-    DatePickerDelegate* createCalendarUIDelegate(Context*,const AttributeSet& attrs);
+    DatePickerDelegate* createSpinnerUIDelegate(Context*,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
+    DatePickerDelegate* createCalendarUIDelegate(Context*,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
 protected:
-    //void onConfigurationChanged(Configuration newConfig)override;
+    void onConfigurationChanged(Configuration& newConfig)override;
     void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container)override;
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable&state)override;
 public:
-    DatePicker(Context* context,const AttributeSet& attrs);
+    DatePicker(Context*ctx);   // AOSP DatePicker(Context)
+    DatePicker(Context* context,const AttributeSet* attrs);
+    DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    DatePicker(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
+    ~DatePicker() override;   // deletes mDelegate (Java relies on GC)
     int getMode();
 
     void init(int year, int monthOfYear, int dayOfMonth,const OnDateChangedListener& onDateChangedListener);
@@ -128,7 +134,9 @@ public:
 
     virtual void setValidationCallback(const ValidationCallback& callback)=0;
 
-    //void onConfigurationChanged(Configuration newConfig);
+    virtual void onConfigurationChanged(Configuration& newConfig) {
+        (void)newConfig;
+    }
 
     virtual Parcelable* onSaveInstanceState(Parcelable& superState)=0;
     virtual void onRestoreInstanceState(Parcelable& state)=0;
@@ -145,16 +153,17 @@ protected:
     DatePicker* mDelegator;
     Context* mContext;
     Calendar mCurrentDate;
-    //Locale mCurrentLocale;
+    // The current locale
+    Locale mCurrentLocale;
 
     OnDateChangedListener mOnDateChangedListener;
     OnDateChangedListener mAutoFillChangeListener;
     ValidationCallback mValidationCallback;
     long mAutofilledValue;
-    //void setCurrentLocale(Locale& locale);
+    void setCurrentLocale(const Locale& locale);
     void resetAutofilledValue();
     void onValidationChanged(bool valid);
-    //void onLocaleChanged(Locale& locale);
+    virtual void onLocaleChanged(const Locale& locale);
     std::string getFormattedCurrentDate();
 public:
     AbstractDatePickerDelegate(DatePicker* delegator, Context* context);

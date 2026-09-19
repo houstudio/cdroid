@@ -52,7 +52,7 @@ private:
     Context* mContext;
     OnMenuItemClickListener mClickListener;
 
-    std::string mIconResId;
+    int mIconResId = NO_ICON;
     std::string mContentDescription;
     std::string mTooltipText;
 private:
@@ -98,7 +98,7 @@ public:
 
     MenuItem& setIcon(Drawable* icon) override;
 
-    MenuItem& setIcon(const std::string& iconRes) override;
+    MenuItem& setIcon(int iconRes) override;
 
     MenuItem& setIconTintList(const RefPtr<ColorStateList>& iconTintList) override;
     const RefPtr<ColorStateList> getIconTintList() override;
@@ -128,7 +128,7 @@ public:
     MenuItem& setActionView(View* actionView) override;
     View* getActionView() override;
 
-    MenuItem& setActionView(const std::string& resId) override;
+    MenuItem& setActionView(int resId) override;
     ActionProvider* getActionProvider() override;
     MenuItem& setActionProvider(ActionProvider* actionProvider) override;
 

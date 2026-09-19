@@ -15,15 +15,16 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/menupopupwindow.h>
 #include <menu/menuadapter.h>
 #include <menu/menupopuphelper.h>
 #include <menu/submenubuilder.h>
 #include <menu/standardmenupopup.h>
 namespace cdroid{
+using namespace cdroid::internal;
 //private static final int ITEM_LAYOUT = com.android.internal.R.layout.popup_menu_item_layout;
-static constexpr const char* ITEM_LAYOUT_MATERIAL ="cdroid:layout/popup_menu_item_layout_material";
+static constexpr int ITEM_LAYOUT_MATERIAL = cdroid::internal::R::layout::popup_menu_item_layout_material;
 
 void StandardMenuPopup::onGlobalLayout() {
     // Only move the popup if it's showing and non-modal. We don't want
@@ -49,7 +50,7 @@ void StandardMenuPopup::onViewDetachedFromWindow(View& v) {
 }
 
 StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
-        const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly) {
+        int popupStyleAttr, int popupStyleRes, bool overflowOnly) {
     mContext = context;//Objects.requireNonNull(context);
     mMenu = menu;
     mWasDismissed = false;
@@ -67,9 +68,9 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     mGlobalLayoutListener=[this](){
         onGlobalLayout();
     };
-    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize("cdroid:dimen/config_prefDialogWidth"));
+    mPopupMaxWidth = std::max(context->getDisplayMetrics().widthPixels / 2,context->getDimensionPixelSize(R::dimen::config_prefDialogWidth));
     mAnchorView = anchorView;
-    mPopup = new MenuPopupWindow(mContext,AttributeSet(mContext,"cdroid"), mPopupStyleAttr, mPopupStyleRes);
+    mPopup = new MenuPopupWindow(mContext,nullptr, mPopupStyleAttr, mPopupStyleRes);
 
     // Present the menu using our context, not the menu builder's context.
     menu->addMenuPresenter(this, context);
@@ -143,8 +144,8 @@ bool StandardMenuPopup::tryShow() {
 
     if (mShowTitle && mMenu->getHeaderTitle().size()){// != null) {
         FrameLayout* titleItemView =(FrameLayout*) LayoutInflater::from(mContext)->inflate(
-                        "cdroid:layout/popup_menu_header_item_layout",listView, false);
-        TextView* titleView = (TextView*) titleItemView->findViewById(cdroid::R::id::title);
+                        cdroid::internal::R::layout::popup_menu_header_item_layout,listView, false);
+        TextView* titleView = (TextView*) titleItemView->findViewById(R::id::title);
         if (titleView != nullptr) {
             titleView->setText(mMenu->getHeaderTitle());
         }
@@ -233,7 +234,7 @@ bool StandardMenuPopup::onSubMenuSelected(SubMenuBuilder* subMenu) {
 
         if (subPopup->tryShow(horizontalOffset, verticalOffset)) {
             if (mPresenterCallback.onOpenSubMenu != nullptr) {
-                mPresenterCallback.onOpenSubMenu(*subMenu);
+                mPresenterCallback.onOpenSubMenu(subMenu);
             }
             return true;
         }

@@ -22,35 +22,37 @@
 #include <widgetEx/constraintlayout/helpers/constrainthelper.h>
 
 #include <porting/cdlog.h>
+#include <text/textutils.h>   // TextUtils::trim (the module's four hand-rolled copies retired)
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-ConstraintHelper::ConstraintHelper(Context* ctx, const AttributeSet& attrs)
-    : View(ctx, attrs) {
-    init(attrs);
+ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet* attrs):ConstraintHelper(ctx,attrs,0){}
+
+ConstraintHelper::ConstraintHelper(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : View(ctx, pAttrs, defStyleAttr) {
+    init(pAttrs);
 }
 
-ConstraintHelper::ConstraintHelper(int width, int height)
-    : View(width, height) {
-    // ConstraintHelper is an invisible layout aid — it must not paint. Android's
-    // ConstraintHelper has no background and (with the default willNotDraw) draws
-    // nothing. The CDROID View(int,int) ctor hands every view a default opaque
-    // black background, which here would cover the very views the helper arranges
-    // (e.g. Flow drawn over its referenced boxes). Drop that inherited background.
-    setBackground(nullptr);
-}
-
-void ConstraintHelper::init(const AttributeSet& attrs) {
-    mReferenceIds = attrs.getString("constraint_referenced_ids", "");
-    if (!mReferenceIds.empty()) {
-        setIds(attrs,mReferenceIds);
+void ConstraintHelper::init(const AttributeSet* attrs) {
+    if (attrs == nullptr) return;
+    // constraint_referenced_ids/tags: read via TypedArray (binary AXML stores them as typed
+    // string values the name-based getString cannot decode) — the AOSP getContext()
+    // .obtainStyledAttributes(attrs, styleable) call. Names resolve to view ids in setIds via
+    // Resources.getIdentifier (arsc-backed, works for binary).
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    if (ta) {
+        mReferenceIds = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_ids);
+        mReferenceTags = ta->getString(R::styleable::ConstraintLayoutLayout_constraint_referenced_tags);
     }
-    // Tags are stored raw and resolved lazily in updatePreLayout (the parent container isn't available
-    // at construction, mirroring AndroidX which resolves in onAttachedToWindow).
-    mReferenceTags = attrs.getString("constraint_referenced_tags", "");
+    if (!mReferenceIds.empty()) {
+        setIds(mReferenceIds);
+    }
 }
 
 void ConstraintHelper::addRscID(int id) {
@@ -66,34 +68,28 @@ void ConstraintHelper::addID(int id) {
     }
 }
 
-void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idList) {
+// androidx setIds(String): split on ',', each bare name (no @id/ prefix —
+// that is the attribute's documented form) resolved through
+// Resources.getIdentifier (androidx's addID/findId scans the container's
+// sibling names first; the arsc lookup alone covers the binary resource
+// world, so that fallback loop is not carried over).
+void ConstraintHelper::setIds(const std::string& idList) {
     mReferenceIds = idList;
     if (idList.empty()) {
         return;
     }
     mIds.clear();
-    auto trim = [](std::string s) -> std::string {
-        auto notspace = [](unsigned char c) {
-            return !std::isspace(c);
-        };
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
-        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
-        return s;
-    };
     size_t begin = 0;
     while (true) {
         size_t end = idList.find(',', begin);
-        std::string token = trim((end == std::string::npos)
-                                 ? idList.substr(begin)
-                                 : idList.substr(begin, end - begin));
+        std::string raw = (end == std::string::npos)
+                ? idList.substr(begin) : idList.substr(begin, end - begin);
+        std::string token = TextUtils::trim(raw);   // trimmed (shared helper)
         if (!token.empty()) {
-            // Android's constraint_referenced_ids holds bare names ("btn1, btn2"), resolved via
-            // Resources.getIdentifier(name, "id", pkg). Context::getId is the CDROID equivalent;
-            // the "id/" type prefix plays the role of the "id" type argument so a bare name
-            // resolves (returns NO_ID/-1 on miss).
-            std::string idname = std::string("id/") + token;
-            int id = atts.getContext()->getId(idname);
-            if (id == View::NO_ID) {
+            // getIdentifier resolves bare names through the arsc — not the
+            // retired text id-table. Not-found is 0, not View::NO_ID (-1).
+            int id = getContext()->getResources().getIdentifier(token, "id", "");
+            if (id == 0) {
                 LOGW("ConstraintHelper: could not resolve referenced id \"%s\"", token.c_str());
             }
             addID(id);
@@ -127,18 +123,13 @@ void ConstraintHelper::setReferenceTags(ConstraintLayout* container, const std::
     if (container == nullptr || tagList.empty()) {
         return;
     }
-    auto trim = [](std::string s) -> std::string {
-        auto notspace = [](unsigned char c) { return !std::isspace(c); };
-        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
-        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
-        return s;
-    };
     size_t begin = 0;
     while (true) {
         size_t end = tagList.find(',', begin);
-        std::string token = trim((end == std::string::npos)
+        std::string raw = (end == std::string::npos)
                                  ? tagList.substr(begin)
-                                 : tagList.substr(begin, end - begin));
+                                 : tagList.substr(begin, end - begin);
+        std::string token = TextUtils::trim(raw);   // trimmed (shared helper)
         if (!token.empty()) {
             addTag(container, token);
         }
@@ -250,7 +241,7 @@ void ConstraintHelper::updatePreLayout(ConstraintLayout* container) {
     }
     mHelperWidget->removeAllIds();
     for (int id : mIds) {
-        View* view = container->findViewById(id);
+        View* view = container->getViewById(id);
         if (view != nullptr) {
             ConstraintWidget* widget = container->getViewWidget(view);
             if (widget != nullptr) {
@@ -278,7 +269,7 @@ void ConstraintHelper::applyLayoutFeatures(ConstraintLayout* container) {
     }
     int visibility = getVisibility();
     for (int id : mIds) {
-        View* view = container->findViewById(id);
+        View* view = container->getViewById(id);
         if (view != nullptr) {
             view->setVisibility(visibility);
             // TODO: elevation/translationZ propagation (CDROID View lacks setElevation).

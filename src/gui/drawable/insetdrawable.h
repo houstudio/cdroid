@@ -32,6 +32,9 @@ private:
         void set(float);
     };
     class InsetState:public DrawableWrapper::DrawableWrapperState{
+    public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
     private:
         void applyDensityScaling(int sourceDensity, int targetDensity);
     public:
@@ -44,12 +47,13 @@ private:
         InsetState(const InsetState& orig);
         void onDensityChanged(int sourceDensity, int targetDensity)override;
         InsetDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<InsetState>mState;
-    InsetDrawable(std::shared_ptr<InsetState>state);
+    InsetDrawable(std::shared_ptr<InsetState>state,Resources*res);
     void getInsets(Rect& out)const;
     void verifyRequiredAttributes();
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     void onBoundsChange(const Rect&)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
@@ -64,7 +68,9 @@ public:
     bool getPadding(Rect& padding)override;
     int getOpacity()const override;
     Insets getOpticalInsets()override;
-    void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
+    void inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }//namespace

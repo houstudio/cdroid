@@ -6,15 +6,11 @@
 namespace cdroid{
 
 DECLARE_WIDGET(RLottieView)
-RLottieView::RLottieView(Context *ctx, const AttributeSet &attrs) : View(ctx, attrs) {
+RLottieView::RLottieView(Context *ctx, const AttributeSet *attrs) : View(ctx, attrs) {
     initViewData();
-    mAutoStart = attrs.getBoolean("autoStart", mAutoStart);
-    mOneShot   = attrs.getBoolean("oneShot", mOneShot);
-    loadFromFile(attrs.getString("src"));
-}
-
-RLottieView::RLottieView(int width, int height) : View(width, height) {
-    initViewData();
+    mAutoStart = attrs.getAttributeBooleanValue(std::string(), "autoStart", mAutoStart);
+    mOneShot   = attrs.getAttributeBooleanValue(std::string(), "oneShot", mOneShot);
+    loadFromFile(attrs.getAttributeValue(std::string(), "src"));
 }
 
 RLottieView::~RLottieView() {

@@ -77,6 +77,12 @@ class ViewTransitionController {
     // Touch dispatch from MotionLayout::onInterceptTouchEvent.
     void touchEvent(const MotionEvent& evt);
 
+    // A direct child left the layout (MotionLayout::onViewRemoved forwards here).
+    // AndroidX's caches lean on GC; ours hold raw View*, so drop every reference:
+    // flag the touch cache dirty and retire the in-flight Animates that write
+    // onto that view each tick (a later tick would be a use-after-free).
+    void onViewRemoved(View* view);
+
     // Per-frame tick (Android animate(), called from dispatchDraw). Mutates active Animates by the
     // elapsed wall-clock and reaps finished ones.
     void animate();

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/device_picker.xml: the pair-new-device
+     screen. The available-devices ProgressCategory is created in code
+     (BluetoothProgressCategory); this stub carries the key. -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="bluetooth_pairing_screen"
+    android:title="@string/bluetooth_pair_new_device">
+
+    <PreferenceCategory
+        android:key="bt_device_list"
+        android:title="@string/bluetooth_pair_new_device" />
+
+</PreferenceScreen>

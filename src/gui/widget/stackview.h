@@ -97,7 +97,8 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
     class LayoutParams;
-    StackView(Context* context,const  AttributeSet& attrs);
+    StackView(Context*ctx);   // AOSP StackView(Context)
+    StackView(Context* context,const  AttributeSet* attrs);
     ~StackView()override;
     void transformViewForTransition(int fromIndex, int toIndex, View* view, bool animate);
 

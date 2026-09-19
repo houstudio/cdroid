@@ -15,27 +15,29 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <menu/menupopup.h>
 #include <menu/menupopuphelper.h>
 #include <menu/standardmenupopup.h>
 #include <menu/cascadingmenupopup.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu)
-    :MenuPopupHelper(context, menu, nullptr, false,"android:attr/popupMenuStyle",""){
+    :MenuPopupHelper(context, menu, nullptr, false, R::attr::popupMenuStyle, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView)
-    :MenuPopupHelper(context, menu, anchorView, false, "android:attr/popupMenuStyle",""){
+    :MenuPopupHelper(context, menu, anchorView, false, R::attr::popupMenuStyle, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context, MenuBuilder* menu, View* anchorView,
-        bool overflowOnly,const std::string& popupStyleAttr)
-    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr,""){
+        bool overflowOnly, int popupStyleAttr)
+    :MenuPopupHelper(context, menu, anchorView, overflowOnly, popupStyleAttr, 0){
 }
 
 MenuPopupHelper::MenuPopupHelper(Context* context,MenuBuilder* menu, View* anchorView, bool overflowOnly,
-        const std::string& popupStyleAttr, const std::string& popupStyleRes) {
+        int popupStyleAttr, int popupStyleRes) {
     mContext = context;
     mMenu = menu;
     mPopup= nullptr;
@@ -130,7 +132,7 @@ MenuPopup* MenuPopupHelper::createPopup() {
     Rect maxWindowBounds = {0,0,size.x,size.y};
 
     const int smallestWidth = std::min(maxWindowBounds.width, maxWindowBounds.height);
-    const int minSmallestWidthCascading = mContext->getDimensionPixelSize("android:dimen/cascading_menus_min_smallest_width");
+    const int minSmallestWidthCascading = mContext->getDimensionPixelSize(R::dimen::cascading_menus_min_smallest_width);
     const bool enableCascadingSubmenus = (smallestWidth >= minSmallestWidthCascading);
 
     MenuPopup* popup = nullptr;

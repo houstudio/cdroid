@@ -22,6 +22,7 @@
 #include <core/typeface.h>
 #include <widget/scroller.h>
 #include <text/spanwatcher.h>
+#include <text/parcelablespan.h>   // NoCopySpan (ChangeWatcher ownership)
 #include <text/textwatcher.h>
 #include <text/textutils.h>
 #include <text/spannablestring.h>
@@ -299,6 +300,7 @@ protected:
     void onAttachedToWindow()override;
     void onDetachedFromWindowInternal()override;
     std::vector<int> onCreateDrawableState(int)override;
+    void onConfigurationChanged(Configuration& newConfig)override;
     bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
     void stopTextActionMode();
@@ -321,9 +323,9 @@ protected:
     Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
-    TextView(Context*ctx,const AttributeSet&attrs);
-    TextView(int width, int height);
-    TextView(const std::string& text, int width, int height);
+    TextView(Context*ctx);   // AOSP TextView(Context)
+    TextView(Context*ctx,const AttributeSet*attrs);
+    TextView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~TextView()override;
     void setAutoSizeTextTypeWithDefaults(int autoSizeTextType);
     void setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,
@@ -339,6 +341,8 @@ public:
     void setTypeface(Typeface* tf,int style);///
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
+    void setText(int resid);
+    void setText(int resid, BufferType type);
     virtual void setText(const std::string&txt);
     virtual void setText(CharSequence* txt);
     virtual void setText(CharSequence* text, BufferType type);
@@ -356,8 +360,9 @@ public:
     MovementMethod* getMovementMethod() const { return mMovement; }
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
-    void setTextAppearance(const std::string&);
-    void setTextAppearance(Context*,const std::string&);
+    void setTextAppearance(int resId);
+    void setTextAppearance(Context*,int resId);
+    void setHint(int resid);
     virtual void setHint(const std::string&txt);
     virtual void setHint(CharSequence*);
     CharSequence* getHint()const;
@@ -377,6 +382,21 @@ public:
     int getSelectionStartTransformed() const;
     int getSelectionEndTransformed() const;
     bool hasSelection()const;
+    // Accessibility text-traversal hooks (android-36 TextView.java:16099+):
+    // iterable text = mText, selection mirrors the real Selection spans, and
+    // LINE/PAGE granularities resolve against the current Layout.
+    std::string getIterableTextForAccessibility()override;
+    TextSegmentIterator* getIteratorForGranularity(int granularity)override;
+    int getAccessibilitySelectionStart()const override;
+    int getAccessibilitySelectionEnd()const override;
+    bool isAccessibilitySelectionExtendable()const override;
+    void setAccessibilitySelection(int start, int end)override;
+    void prepareForExtendedAccessibilitySelection()override;
+private:
+    void requestFocusOnNonEditableSelectableText();
+    void ensureIterableTextForAccessibilitySelectable();
+public:
+    bool hasOverlappingRendering()const override;
     std::string getSelectedText()const;
     // Text context menu (align android.R.id.*; Editor.java/TextView.java:15179).
     // clipboard 本轮留空: copy/cut/paste 为桩, selectAll 实操。
@@ -427,6 +447,15 @@ public:
     int getImeOptions()const;
     bool isInputMethodTarget()const;
     void setImeOptions(int imeOptions);
+    /* AOSP TextView.onEditorAction(actionCode): the IME's action key lands here
+     * (in-process stand-in for InputConnection.performEditorAction). Virtual:
+     * widgets override instead of installing a listener (e.g. NumberPicker
+     * clears focus on IME_ACTION_DONE). */
+    virtual void onEditorAction(int actionCode);
+    // Sets the languages the user is supposed to switch to (an empty list
+    // clears the hint — Java null maps to LocaleList::getEmptyLocaleList()).
+    void setImeHintLocales(const LocaleList& hintLocales);
+    LocaleList getImeHintLocales() const;
     bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);
     std::vector<InputFilter*> getFilters();
@@ -570,8 +599,7 @@ public:
     void invalidateDrawable(Drawable& drawable)override;
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
-    void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
-                const std::string& right,const std::string& bottom);
+    void setCompoundDrawablesWithIntrinsicBounds(int left,int top,int right,int bottom);
     int computeHorizontalScrollRange()override;
     int computeVerticalScrollRange()override;
 
@@ -713,7 +741,14 @@ public:
             int offset, int cursorOpt, Paint& p);
 };
 
-class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+// NoCopySpan base is required by the span ownership model: ChangeWatcher is
+// allocated once per TextView and re-installed on every spannable setText, so
+// the Spannable container must treat it as BORROWED. Without it the owned-span
+// sweep in ~SpannableStringInternal deletes the live member whenever a
+// buffer-replacing setText frees the previous Editable, and the next setText
+// re-installs the dangling pointer (crash later in replace()'s watcher
+// snapshot). Same recipe as the watcher-family fix 37a8edce3.
+class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher,virtual public NoCopySpan {
 private:
     CharSequence* mBeforeText;
     TextView*mTV;

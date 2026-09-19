@@ -85,7 +85,7 @@ private:
      * Preview image resource IDs for left- and right-aligned layouts. See
      * {@link #PREVIEW_LEFT} and {@link #PREVIEW_RIGHT}.
      */
-    std::string mPreviewResId[2];
+    int mPreviewResId[2] = {0, 0};
 
     /** The minimum touch target size in pixels. */
     int mMinimumTouchTarget;
@@ -109,7 +109,7 @@ private:
 
     Drawable* mThumbDrawable;
     Drawable* mTrackDrawable;
-    std::string mTextAppearance;
+    int mTextAppearance = 0;
     int mThumbPosition;
 
     // Used to convert between y-coordinate and thumb position within track.
@@ -219,7 +219,7 @@ private:
     static Animator* animateAlpha(View* v, float alpha);
     static Animator* animateBounds(View* v,const Rect& bounds);
 public:
-    FastScroller(AbsListView*,const std::string& scrollstyle);
+    FastScroller(AbsListView*, int styleResId);
     ~FastScroller();
     void remove();
     void setEnabled(bool);
@@ -227,7 +227,7 @@ public:
     void setAlwaysShow(bool);
     bool isAlwaysShowEnabled()const;
     void onStateDependencyChanged(bool peekIfEnabled);
-    void setStyle(const std::string&styleResId);
+    void setStyle(int styleResId);
     void setScrollBarStyle(int);
     void stop();
     void setScrollbarPosition(int position);

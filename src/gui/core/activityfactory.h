@@ -26,11 +26,15 @@ public:
 
 // Register a Window subclass for startActivity-by-name. The class MUST have a default constructor
 // whose body chains to a Window(...) ctor (so it self-registers with WindowManager). Place at file
-// scope (analogous to REGISTER_FRAGMENT).
+// scope (analogous to REGISTER_FRAGMENT). The factory stamps the activity name on the new window so
+// Window::recreate() can relaunch it (AOSP Activity.recreate).
 #define REGISTER_ACTIVITY(ClassName)                                                                \
     static const int _cdroid_act_reg_##ClassName =                                                  \
         (::cdroid::ActivityFactory::registerActivity(                                               \
-             #ClassName, []() -> ::cdroid::Window* { return new ClassName(); }), 0)
+             #ClassName, []() -> ::cdroid::Window* {                                                \
+                 ::cdroid::Window* w = new ClassName();                                             \
+                 w->setActivityName(#ClassName);                                                    \
+                 return w; }), 0)
 
 }//namespace
 #endif

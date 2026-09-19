@@ -19,6 +19,10 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintSet.
  */
+#include <widget/framework_styleable.h>
+#include <core/context.h>
+#include <content/typedarray.h>
+#include <widget/internal_R.h>
 #include <climits>
 #include <cctype>
 
@@ -27,9 +31,11 @@
 #include <view/layoutinflater.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 
@@ -39,20 +45,53 @@ std::unordered_map<std::string, ConstraintSet::CustomAttributeHandler>& customHa
     return handlers;
 }
 
-// Parse a ratio string ("16:9", "1.5", "W,16:9") into a float ratio (0 if unparseable).
-float parseRatio(const std::string& s) {
-    if (s.empty()) return 0;
-    std::string str = s;
-    if (str.size() > 2 && str[1] == ',') str = str.substr(2); // strip "W,"/"H," side hint
-    size_t colon = str.find(':');
-    if (colon != std::string::npos) {
-        float num = std::stof(str.substr(0, colon));
-        float den = std::stof(str.substr(colon + 1));
-        return (den != 0) ? num / den : 0;
-    }
-    return std::stof(str);
-}
 } // namespace
+
+// Parse a ratio string ("16:9", "1.5", "W,16:9", "H,3:2") into (ratio, side) — the faithful
+// port of ConstraintSet.java:970-1021 (the two former hand-rolled copies had both lost the
+// VERTICAL fraction inversion and the positive-endpoint guard).
+void ConstraintSet::parseDimensionRatioString(const std::string& value, float& ratio, int& side) {
+    float ratioValue = std::nanf("");
+    int ratioSide = -1;   // UNKNOWN
+    const size_t len = value.size();
+    size_t commaIndex = value.find(',');
+    if (commaIndex != std::string::npos && commaIndex > 0 && commaIndex < len - 1) {
+        const std::string dimension = value.substr(0, commaIndex);
+        if (dimension == "W" || dimension == "w")      ratioSide = 0;  // HORIZONTAL
+        else if (dimension == "H" || dimension == "h") ratioSide = 1;  // VERTICAL
+        commaIndex++;   // any recognized-or-not "x," prefix skips its own character
+    } else {
+        commaIndex = 0;
+    }
+    const size_t colonIndex = value.find(':');
+    // (colon >= commaIndex guards Java's substring(begin,end) index throw on inputs like
+    // ":W,1" — AndroidX would crash there; we fall through to the single-number branch.)
+    if (colonIndex != std::string::npos && colonIndex < len - 1 && colonIndex >= commaIndex) {
+        const std::string nominator = value.substr(commaIndex, colonIndex - commaIndex);
+        const std::string denominator = value.substr(colonIndex + 1);
+        if (!nominator.empty() && !denominator.empty()) {
+            try {
+                const float nominatorValue = std::stof(nominator);
+                const float denominatorValue = std::stof(denominator);
+                if (nominatorValue > 0 && denominatorValue > 0) {
+                    // The VERTICAL side animates height against width — the fraction inverts.
+                    ratioValue = (ratioSide == 1)
+                            ? std::fabs(denominatorValue / nominatorValue)
+                            : std::fabs(nominatorValue / denominatorValue);
+                }
+            } catch (const std::exception&) {
+                // Ignore — Java swallows NumberFormatException and keeps NaN.
+            }
+        }
+    } else {
+        const std::string r = value.substr(commaIndex);
+        if (!r.empty()) {
+            try { ratioValue = std::stof(r); } catch (const std::exception&) { }
+        }
+    }
+    ratio = ratioValue;   // NaN on parse failure (Java writes it unconditionally)
+    side = ratioSide;
+}
 
 // ===========================================================================
 // Constraint
@@ -69,6 +108,14 @@ void ConstraintSet::Constraint::fillFrom(int viewId, const ConstraintLayout::Lay
     l.bottomToTop = param.bottomToTop;
     l.bottomToBottom = param.bottomToBottom;
     l.baselineToBaseline = param.baselineToBaseline;
+    // AndroidX fillFrom (ConstraintSet.java:2351-2353): the RTL-aware start/end anchors
+    // round-trip too — dropping them here meant a captureState -> applyTo cycle silently
+    // stripped every Start_toStartOf-style constraint (the view collapsed to (0,0)).
+    // (baselineToTop/Bottom also map in AndroidX; the LayoutParams port has no such fields yet.)
+    l.startToEnd = param.startToEnd;
+    l.startToStart = param.startToStart;
+    l.endToStart = param.endToStart;
+    l.endToEnd = param.endToEnd;
     l.horizontalBias = param.horizontalBias;
     l.verticalBias = param.verticalBias;
     l.orientation = param.orientation;
@@ -97,6 +144,10 @@ void ConstraintSet::Constraint::fillFrom(int viewId, const ConstraintLayout::Lay
     l.heightMin = param.matchConstraintMinHeight;
     l.widthPercent = param.matchConstraintPercentWidth;
     l.heightPercent = param.matchConstraintPercentHeight;
+    // AndroidX fillFrom (ConstraintSet.java:2359-2361).
+    l.circleConstraint = param.circleConstraint;
+    l.circleRadius = param.circleRadius;
+    l.circleAngle = param.circleAngle;
 }
 
 void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) const {
@@ -110,6 +161,12 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.bottomToTop = l.bottomToTop;
     param.bottomToBottom = l.bottomToBottom;
     param.baselineToBaseline = l.baselineToBaseline;
+    // AndroidX applyTo (ConstraintSet.java:2426-2429): the start/end anchors ride back out
+    // (the mirror of fillFrom above).
+    param.startToEnd = l.startToEnd;
+    param.startToStart = l.startToStart;
+    param.endToStart = l.endToStart;
+    param.endToEnd = l.endToEnd;
     param.horizontalBias = l.horizontalBias;
     param.verticalBias = l.verticalBias;
     param.orientation = l.orientation;
@@ -126,6 +183,10 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.goneTopMargin = l.goneTopMargin;
     param.goneRightMargin = l.goneRightMargin;
     param.goneBottomMargin = l.goneBottomMargin;
+    // AndroidX applyTo (ConstraintSet.java:2440-2442).
+    param.circleConstraint = l.circleConstraint;
+    param.circleRadius = l.circleRadius;
+    param.circleAngle = l.circleAngle;
     param.verticalWeight = l.verticalWeight;
     param.horizontalWeight = l.horizontalWeight;
     param.verticalChainStyle = l.verticalChainStyle;
@@ -139,7 +200,10 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     param.matchConstraintPercentWidth = l.widthPercent;
     param.matchConstraintPercentHeight = l.heightPercent;
     if (!l.dimensionRatio.empty()) {
-        param.dimensionRatio = parseRatio(l.dimensionRatio);
+        // ConstraintSet.java:970 — the shared parser, threading the side through
+        // (the old local parseRatio dropped it, so "H,3:2"-style ratios lost their flip here).
+        ConstraintSet::parseDimensionRatioString(l.dimensionRatio, param.dimensionRatio,
+                                                 param.dimensionRatioSide);
     }
     if (propertySet.visibility == (int)View::GONE) {
         param.width = 0;
@@ -157,34 +221,42 @@ ConstraintSet::Constraint& ConstraintSet::get(int id) {
     return c;
 }
 
-ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const AttributeSet& parser) {
+ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(Context* ctx, const AttributeSet& parser) {
     using CustomAttribute = ConstraintSet::CustomAttribute;
     CustomAttribute ca;
-    ca.name = parser.getAttributeValue("attributeName");
-    // Presence is detected via getAttributeValue (the hasValue equivalent); the
-    // value is then read with the matching typed getter, which resolves @dimen/
-    // @color/@string refs and handles numeric formats instead of parsing inline.
-    if (!parser.getAttributeValue("customColorValue").empty()) {
-        ca.type = CustomAttribute::COLOR;
-        ca.intValue = parser.getColor("customColorValue", 0);
-    } else if (!parser.getAttributeValue("customIntegerValue").empty()) {
-        ca.type = CustomAttribute::INTEGER;
-        ca.intValue = parser.getInt("customIntegerValue", 0);
-    } else if (!parser.getAttributeValue("customFloatValue").empty()) {
-        ca.type = CustomAttribute::FLOAT;
-        ca.floatValue = parser.getFloat("customFloatValue", 0.f);
-    } else if (!parser.getAttributeValue("customStringValue").empty()) {
-        ca.type = CustomAttribute::STRING;
-        ca.stringValue = parser.getString("customStringValue");
-    } else if (!parser.getAttributeValue("customBooleanValue").empty()) {
-        ca.type = CustomAttribute::BOOLEAN;
-        ca.boolValue = parser.getBoolean("customBooleanValue", false);
+    // androidx ConstraintAttribute.extractAttributes: TypedArray index-count loop; presence is
+    // "the authored index appears", each value read with the type-matching getter (aapt2 has
+    // already resolved @color/@string refs and numeric formats into typed values).
+    if (ctx == nullptr) return ca;
+    auto ta = ctx->obtainStyledAttributes(parser, R::styleable::CustomAttribute);
+    if (!ta) return ca;
+    namespace CU = R::styleable;
+    ca.name = ta->getString(CU::CustomAttribute_attributeName);
+    const size_t n = ta->getIndexCount();
+    for (size_t i = 0; i < n; i++) {
+        const size_t attr = ta->getIndex(i);
+        if (attr == (size_t)CU::CustomAttribute_customColorValue) {
+            ca.type = CustomAttribute::COLOR;
+            ca.intValue = (int)ta->getColor(attr, 0);
+        } else if (attr == (size_t)CU::CustomAttribute_customIntegerValue) {
+            ca.type = CustomAttribute::INTEGER;
+            ca.intValue = ta->getInteger(attr, -1);
+        } else if (attr == (size_t)CU::CustomAttribute_customFloatValue) {
+            ca.type = CustomAttribute::FLOAT;
+            ca.floatValue = ta->getFloat(attr, 0.f);
+        } else if (attr == (size_t)CU::CustomAttribute_customStringValue) {
+            ca.type = CustomAttribute::STRING;
+            ca.stringValue = ta->getString(attr);
+        } else if (attr == (size_t)CU::CustomAttribute_customBoolean) {
+            ca.type = CustomAttribute::BOOLEAN;
+            ca.boolValue = ta->getBoolean(attr, false);
+        }
     }
     return ca;
 }
 
-void ConstraintSet::loadCustomAttribute(const AttributeSet& parser) {
-    mCustomAttributes.push_back(parseCustomAttribute(parser));
+void ConstraintSet::loadCustomAttribute(Context* ctx, const AttributeSet& parser) {
+    mCustomAttributes.push_back(parseCustomAttribute(ctx, parser));
 }
 
 void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
@@ -212,7 +284,11 @@ void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
 void ConstraintSet::clone(Context* context, const std::string& resource) {
     // Inflate the layout offscreen (no parent) and clone its children's LayoutParams, then discard
     // the inflated tree (we only needed its constraints). Supports StateSet `constraints="@layout/.."`.
-    View* root = LayoutInflater::from(context)->inflate(resource, nullptr, false);
+    std::string resName = resource;
+    { const size_t slash = resName.rfind('/');
+      if (slash != std::string::npos) resName = resName.substr(slash + 1); }
+    const int resId = context->getResources().getIdentifier(resName, "layout", "");
+    View* root = LayoutInflater::from(context)->inflate(resId, nullptr, false);
     auto* cl = dynamic_cast<ConstraintLayout*>(root);
     if (cl != nullptr) {
         clone(cl);
@@ -632,164 +708,154 @@ void ConstraintSet::createHorizontalChainRtl(int startId, int startSide, int end
 // Java iterating only the present attrs).
 // ===========================================================================
 
-// Enum-name -> int maps for the enum-valued attributes (mirrors attrs.xml enum values).
-static const std::unordered_map<std::string,int> kChainStyles = {
-    {"spread", (int)ConstraintWidget::CHAIN_SPREAD},
-    {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
-    {"packed", (int)ConstraintWidget::CHAIN_PACKED}
-};
-static const std::unordered_map<std::string,int> kMatchDefault = {
-    {"spread",  (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
-    {"wrap",    (int)ConstraintWidget::MATCH_CONSTRAINT_WRAP},
-    {"percent", (int)ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
-};
-static const std::unordered_map<std::string,int> kVisibility = {
-    {"visible",   0}, {"invisible", 4}, {"gone", 8}
-};
-static const std::unordered_map<std::string,int> kPathMotionArc = {
-    {"none", 0}, {"startVertical", 1}, {"startHorizontal", 2},
-    {"flip", 3}, {"below", 4}, {"above", 5}
-};
-static const std::unordered_map<std::string,int> kBarrierDirection = {
-    {"left", 0}, {"right", 1}, {"top", 2}, {"bottom", 3}, {"start", 5}, {"end", 6}
-};
-static const std::unordered_map<std::string,int> kWrapBehavior = {
-    {"included", 0}, {"horizontal_only", 1}, {"vertical_only", 2}, {"skipped", 3}
-};
-static const std::unordered_map<std::string,int> kVisibilityMode = {
-    {"normal", 0}, {"ignore", 1}
-};
-
-void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
+void ConstraintSet::Constraint::fillFromAttributeList(Context* ctx, const AttributeSet& a) {
     // Any parsed attribute marks these sub-structs as authored (Java sets mApply on each present attr).
     layout.mApply = transform.mApply = propertySet.mApply = motion.mApply = true;
-    // Record every attribute this element actually authored by iterating AttributeSet directly, so
-    // applyDelta overlays precisely (only the authored fields) instead of guessing by default-difference.
-    // copyAuthoredField maps the known field names; structural attrs (id/motionTarget) are recorded
-    // too but ignored by copyAuthoredField's no-op default.
-    a.forEachAttribute([&](const std::string& name, const std::string&) {
-        mAuthored.insert(name);
-    });
 
     Layout& l = layout;
     Transform& t = transform;
     PropertySet& p = propertySet;
     Motion& m = motion;
+    // TypedArray (binary AXML typed resolution). Never null at runtime —
+    // obtainStyledAttributes returns null only for a null mCtx, which never
+    // happens post-init (a null return means the widget is unusable: a dev-time
+    // bug to fix, not a condition to guard against). Dereferenced unconditionally.
+    auto ta = ctx->obtainStyledAttributes(a, R::styleable::Constraint);
+
+    // Record every styleable index this element actually authored, so applyDelta overlays precisely
+    // (only the authored fields) instead of guessing by default-difference. Mirrors AndroidX, which
+    // drives its sparse Delta from the TypedArray's present indices (a.getIndex(i)); attrs not in the
+    // Constraint styleable (e.g. motionTarget) never appear here and are resolved separately below.
+    for (size_t i = 0, n = ta->getIndexCount(); i < n; i++) {
+        mAuthored.insert((int)ta->getIndex(i));
+    }
 
     // --- id + anchor targets (resolve "parent"/"@id/x" -> int via Context) ---
     // <Constraint> uses android:id; <ConstraintOverride> (ViewTransition delta) uses motionTarget.
-    mViewId      = a.getResourceId("id", mViewId);
-    if (mViewId == View::NO_ID) mViewId = a.getResourceId("motionTarget", mViewId);
-    l.leftToLeft   = a.getResourceId("layout_constraintLeft_toLeftOf",   l.leftToLeft);
-    l.leftToRight  = a.getResourceId("layout_constraintLeft_toRightOf",  l.leftToRight);
-    l.rightToLeft  = a.getResourceId("layout_constraintRight_toLeftOf",  l.rightToLeft);
-    l.rightToRight = a.getResourceId("layout_constraintRight_toRightOf", l.rightToRight);
-    l.topToTop     = a.getResourceId("layout_constraintTop_toTopOf",     l.topToTop);
-    l.topToBottom  = a.getResourceId("layout_constraintTop_toBottomOf",  l.topToBottom);
-    l.bottomToTop  = a.getResourceId("layout_constraintBottom_toTopOf",  l.bottomToTop);
-    l.bottomToBottom = a.getResourceId("layout_constraintBottom_toBottomOf", l.bottomToBottom);
-    l.baselineToBaseline = a.getResourceId("layout_constraintBaseline_toBaselineOf", l.baselineToBaseline);
-    l.baselineToTop    = a.getResourceId("layout_constraintBaseline_toTopOf",    l.baselineToTop);
-    l.baselineToBottom = a.getResourceId("layout_constraintBaseline_toBottomOf", l.baselineToBottom);
-    l.startToStart = a.getResourceId("layout_constraintStart_toStartOf", l.startToStart);
-    l.startToEnd   = a.getResourceId("layout_constraintStart_toEndOf",   l.startToEnd);
-    l.endToStart   = a.getResourceId("layout_constraintEnd_toStartOf",   l.endToStart);
-    l.endToEnd     = a.getResourceId("layout_constraintEnd_toEndOf",     l.endToEnd);
-    l.circleConstraint = a.getResourceId("layout_constraintCircle", l.circleConstraint);
+    mViewId      = (int)ta->getResourceId(R::styleable::Constraint_id, mViewId);
+    // motionTarget is a ConstraintOverride attr (not in the Constraint styleable) — attrs bridge only.
+    if (mViewId == View::NO_ID) mViewId = a.getAttributeResourceValue(std::string(), "motionTarget", mViewId);
+    // Anchor targets are reference|enum with <enum name="parent" value="0"/>: "@id/x" is stored
+    // as a reference (resource id), "parent" as an int enum (0). Match androidx — getResourceId
+    // for @id/x, getInt fallback for the "parent" sentinel — else binary AXML leaves every
+    // parent-anchored constraint at the member default (UNSET).
+    auto anchor = [&](int idx, int def) -> int {
+        int v = (int) ta->getResourceId(idx, -1);  // -1 = anchor "unset" sentinel
+        if (v == -1) v = ta->getInt(idx, def);
+        return v;
+    };
+    l.leftToLeft   = anchor(R::styleable::Constraint_layout_constraintLeft_toLeftOf, l.leftToLeft);
+    l.leftToRight  = anchor(R::styleable::Constraint_layout_constraintLeft_toRightOf, l.leftToRight);
+    l.rightToLeft  = anchor(R::styleable::Constraint_layout_constraintRight_toLeftOf, l.rightToLeft);
+    l.rightToRight = anchor(R::styleable::Constraint_layout_constraintRight_toRightOf, l.rightToRight);
+    l.topToTop     = anchor(R::styleable::Constraint_layout_constraintTop_toTopOf, l.topToTop);
+    l.topToBottom  = anchor(R::styleable::Constraint_layout_constraintTop_toBottomOf, l.topToBottom);
+    l.bottomToTop  = anchor(R::styleable::Constraint_layout_constraintBottom_toTopOf, l.bottomToTop);
+    l.bottomToBottom = anchor(R::styleable::Constraint_layout_constraintBottom_toBottomOf, l.bottomToBottom);
+    l.baselineToBaseline = anchor(R::styleable::Constraint_layout_constraintBaseline_toBaselineOf, l.baselineToBaseline);
+    l.baselineToTop    = anchor(R::styleable::Constraint_layout_constraintBaseline_toTopOf, l.baselineToTop);
+    l.baselineToBottom = anchor(R::styleable::Constraint_layout_constraintBaseline_toBottomOf, l.baselineToBottom);
+    l.startToStart = anchor(R::styleable::Constraint_layout_constraintStart_toStartOf, l.startToStart);
+    l.startToEnd   = anchor(R::styleable::Constraint_layout_constraintStart_toEndOf, l.startToEnd);
+    l.endToStart   = anchor(R::styleable::Constraint_layout_constraintEnd_toStartOf, l.endToStart);
+    l.endToEnd     = anchor(R::styleable::Constraint_layout_constraintEnd_toEndOf, l.endToEnd);
+    l.circleConstraint = (int)ta->getResourceId(R::styleable::Constraint_layout_constraintCircle, l.circleConstraint);
 
     // --- guideline / editor absolute ---
-    l.guideBegin   = a.getDimensionPixelOffset("layout_constraintGuide_begin", l.guideBegin);
-    l.guideEnd     = a.getDimensionPixelOffset("layout_constraintGuide_end",   l.guideEnd);
-    l.guidePercent = a.getFloat("layout_constraintGuide_percent", l.guidePercent);
-    l.editorAbsoluteX = a.getDimensionPixelOffset("layout_editor_absoluteX", l.editorAbsoluteX);
-    l.editorAbsoluteY = a.getDimensionPixelOffset("layout_editor_absoluteY", l.editorAbsoluteY);
-    l.orientation     = a.getInt("orientation", l.orientation);
+    l.guideBegin   = ta->getDimensionPixelOffset(R::styleable::Constraint_layout_constraintGuide_begin, l.guideBegin);
+    l.guideEnd     = ta->getDimensionPixelOffset(R::styleable::Constraint_layout_constraintGuide_end,   l.guideEnd);
+    l.guidePercent = ta->getFloat(R::styleable::Constraint_layout_constraintGuide_percent, l.guidePercent);
+    l.editorAbsoluteX = ta->getDimensionPixelOffset(R::styleable::Constraint_layout_editor_absoluteX, l.editorAbsoluteX);
+    l.editorAbsoluteY = ta->getDimensionPixelOffset(R::styleable::Constraint_layout_editor_absoluteY, l.editorAbsoluteY);
+    l.orientation     = ta->getInt(R::styleable::Constraint_orientation, l.orientation);
 
     // --- margins ---
-    l.leftMargin   = a.getDimensionPixelSize("layout_marginLeft",  l.leftMargin);
-    l.rightMargin  = a.getDimensionPixelSize("layout_marginRight", l.rightMargin);
-    l.topMargin    = a.getDimensionPixelSize("layout_marginTop",   l.topMargin);
-    l.bottomMargin = a.getDimensionPixelSize("layout_marginBottom",l.bottomMargin);
-    l.startMargin  = a.getDimensionPixelSize("layout_marginStart", l.startMargin);
-    l.endMargin    = a.getDimensionPixelSize("layout_marginEnd",   l.endMargin);
-    l.goneLeftMargin   = a.getDimensionPixelSize("layout_goneMarginLeft",   l.goneLeftMargin);
-    l.goneTopMargin    = a.getDimensionPixelSize("layout_goneMarginTop",    l.goneTopMargin);
-    l.goneRightMargin  = a.getDimensionPixelSize("layout_goneMarginRight",  l.goneRightMargin);
-    l.goneBottomMargin = a.getDimensionPixelSize("layout_goneMarginBottom", l.goneBottomMargin);
-    l.goneStartMargin  = a.getDimensionPixelSize("layout_goneMarginStart",  l.goneStartMargin);
-    l.goneEndMargin    = a.getDimensionPixelSize("layout_goneMarginEnd",    l.goneEndMargin);
+    l.leftMargin   = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginLeft,  l.leftMargin);
+    l.rightMargin  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginRight, l.rightMargin);
+    l.topMargin    = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginTop,   l.topMargin);
+    l.bottomMargin = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginBottom,l.bottomMargin);
+    l.startMargin  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginStart, l.startMargin);
+    l.endMargin    = ta->getDimensionPixelSize(R::styleable::Constraint_layout_marginEnd,   l.endMargin);
+    l.goneLeftMargin   = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginLeft,   l.goneLeftMargin);
+    l.goneTopMargin    = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginTop,    l.goneTopMargin);
+    l.goneRightMargin  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginRight,  l.goneRightMargin);
+    l.goneBottomMargin = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginBottom, l.goneBottomMargin);
+    l.goneStartMargin  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginStart,  l.goneStartMargin);
+    l.goneEndMargin    = ta->getDimensionPixelSize(R::styleable::Constraint_layout_goneMarginEnd,    l.goneEndMargin);
 
     // --- bias / chain / weight / ratio ---
-    l.horizontalBias = a.getFloat("layout_constraintHorizontal_bias", l.horizontalBias);
-    l.verticalBias   = a.getFloat("layout_constraintVertical_bias",   l.verticalBias);
-    l.horizontalWeight = a.getFloat("layout_constraintHorizontal_weight", l.horizontalWeight);
-    l.verticalWeight   = a.getFloat("layout_constraintVertical_weight",   l.verticalWeight);
-    l.horizontalChainStyle = a.getInt("layout_constraintHorizontal_chainStyle", kChainStyles, l.horizontalChainStyle);
-    l.verticalChainStyle   = a.getInt("layout_constraintVertical_chainStyle",   kChainStyles, l.verticalChainStyle);
-    l.dimensionRatio = a.getString("layout_constraintDimensionRatio", l.dimensionRatio);
+    l.horizontalBias = ta->getFloat(R::styleable::Constraint_layout_constraintHorizontal_bias, l.horizontalBias);
+    l.verticalBias   = ta->getFloat(R::styleable::Constraint_layout_constraintVertical_bias,   l.verticalBias);
+    l.horizontalWeight = ta->getFloat(R::styleable::Constraint_layout_constraintHorizontal_weight, l.horizontalWeight);
+    l.verticalWeight   = ta->getFloat(R::styleable::Constraint_layout_constraintVertical_weight,   l.verticalWeight);
+    l.horizontalChainStyle = ta->getInt(R::styleable::Constraint_layout_constraintHorizontal_chainStyle, l.horizontalChainStyle);
+    l.verticalChainStyle   = ta->getInt(R::styleable::Constraint_layout_constraintVertical_chainStyle,   l.verticalChainStyle);
+    l.dimensionRatio = ta->hasValue(R::styleable::Constraint_layout_constraintDimensionRatio) ? ta->getString(R::styleable::Constraint_layout_constraintDimensionRatio) : l.dimensionRatio;
 
     // --- dimensions / match_constraint ---
-    l.mWidth  = a.getLayoutDimension("layout_width",  l.mWidth);
-    l.mHeight = a.getLayoutDimension("layout_height", l.mHeight);
-    l.widthDefault  = a.getInt("layout_constraintWidth_default",  kMatchDefault, l.widthDefault);
-    l.heightDefault = a.getInt("layout_constraintHeight_default", kMatchDefault, l.heightDefault);
-    l.widthPercent  = a.getFloat("layout_constraintWidth_percent",  l.widthPercent);
-    l.heightPercent = a.getFloat("layout_constraintHeight_percent", l.heightPercent);
-    l.widthMin  = a.getDimensionPixelSize("layout_constraintWidth_min",  l.widthMin);
-    l.widthMax  = a.getDimensionPixelSize("layout_constraintWidth_max",  l.widthMax);
-    l.heightMin = a.getDimensionPixelSize("layout_constraintHeight_min", l.heightMin);
-    l.heightMax = a.getDimensionPixelSize("layout_constraintHeight_max", l.heightMax);
-    l.constrainedWidth  = a.getBoolean("layout_constrainedWidth",  l.constrainedWidth);
-    l.constrainedHeight = a.getBoolean("layout_constrainedHeight", l.constrainedHeight);
-    l.mWrapBehavior = a.getInt("layout_wrapBehaviorInParent", kWrapBehavior, l.mWrapBehavior);
+    l.mWidth  = ta->getLayoutDimension(R::styleable::Constraint_layout_width,  l.mWidth);
+    l.mHeight = ta->getLayoutDimension(R::styleable::Constraint_layout_height, l.mHeight);
+    l.widthDefault  = ta->getInt(R::styleable::Constraint_layout_constraintWidth_default,  l.widthDefault);
+    l.heightDefault = ta->getInt(R::styleable::Constraint_layout_constraintHeight_default, l.heightDefault);
+    l.widthPercent  = ta->getFloat(R::styleable::Constraint_layout_constraintWidth_percent,  l.widthPercent);
+    l.heightPercent = ta->getFloat(R::styleable::Constraint_layout_constraintHeight_percent, l.heightPercent);
+    l.widthMin  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintWidth_min,  l.widthMin);
+    l.widthMax  = ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintWidth_max,  l.widthMax);
+    l.heightMin = ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintHeight_min, l.heightMin);
+    l.heightMax = ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintHeight_max, l.heightMax);
+    l.constrainedWidth  = ta->getBoolean(R::styleable::Constraint_layout_constrainedWidth,  l.constrainedWidth);
+    l.constrainedHeight = ta->getBoolean(R::styleable::Constraint_layout_constrainedHeight, l.constrainedHeight);
+    l.mWrapBehavior = ta->getInt(R::styleable::Constraint_layout_wrapBehaviorInParent, l.mWrapBehavior);
 
     // --- circle / barrier / helper ---
-    l.circleRadius = a.getDimensionPixelSize("layout_constraintCircleRadius", l.circleRadius);
-    l.circleAngle  = a.getFloat("layout_constraintCircleAngle", l.circleAngle);
-    l.mBarrierDirection    = a.getInt("barrierDirection", kBarrierDirection, l.mBarrierDirection);
-    l.mBarrierMargin       = a.getDimensionPixelSize("barrierMargin", l.mBarrierMargin);
-    l.mBarrierAllowsGoneWidgets = a.getBoolean("barrierAllowsGoneWidgets", l.mBarrierAllowsGoneWidgets);
-    l.mReferenceIdString   = a.getString("constraint_referenced_ids", l.mReferenceIdString);
-    l.constraintTag        = a.getString("layout_constraintTag", l.constraintTag);
+    l.circleRadius = ta->getDimensionPixelSize(R::styleable::Constraint_layout_constraintCircleRadius, l.circleRadius);
+    l.circleAngle  = ta->getFloat(R::styleable::Constraint_layout_constraintCircleAngle, l.circleAngle);
+    l.mBarrierDirection    = ta->getInt(R::styleable::Constraint_barrierDirection, l.mBarrierDirection);
+    l.mBarrierMargin       = ta->getDimensionPixelSize(R::styleable::Constraint_barrierMargin, l.mBarrierMargin);
+    l.mBarrierAllowsGoneWidgets = ta->getBoolean(R::styleable::Constraint_barrierAllowsGoneWidgets, l.mBarrierAllowsGoneWidgets);
+    l.mReferenceIdString   = ta->hasValue(R::styleable::Constraint_constraint_referenced_ids) ? ta->getString(R::styleable::Constraint_constraint_referenced_ids) : l.mReferenceIdString;
+    l.constraintTag        = ta->hasValue(R::styleable::Constraint_layout_constraintTag) ? ta->getString(R::styleable::Constraint_layout_constraintTag) : l.constraintTag;
 
     // --- property set (visibility / alpha / progress) ---
-    p.visibility = a.getInt("visibility", kVisibility, p.visibility);
-    p.alpha      = a.getFloat("alpha", p.alpha);
-    p.mProgress  = a.getFloat("motionProgress", p.mProgress);
-    p.mVisibilityMode = a.getInt("visibilityMode", kVisibilityMode, p.mVisibilityMode);
+    // android:visibility's attr enum is 0/1/2 (framework res); translate through the
+    // flags table right after the read, exactly like androidx populateConstraint
+    // (VISIBILITY_FLAGS[a.getInt(...)]) — consumers compare View::INVISIBLE/GONE (0/4/8).
+    static constexpr int VISIBILITY_FLAGS[] = {View::VISIBLE, View::INVISIBLE, View::GONE};
+    const int visibility = ta->getInt(R::styleable::Constraint_visibility, -1);
+    if (visibility >= 0) p.visibility = VISIBILITY_FLAGS[visibility];
+    p.alpha      = ta->getFloat(R::styleable::Constraint_alpha, p.alpha);
+    p.mProgress  = ta->getFloat(R::styleable::Constraint_motionProgress, p.mProgress);
+    p.mVisibilityMode = ta->getInt(R::styleable::Constraint_visibilityMode, p.mVisibilityMode);
 
     // --- transforms ---
-    t.rotation    = a.getFloat("rotation",    t.rotation);
-    t.rotationX   = a.getFloat("rotationX",   t.rotationX);
-    t.rotationY   = a.getFloat("rotationY",   t.rotationY);
-    t.scaleX      = a.getFloat("scaleX",      t.scaleX);
-    t.scaleY      = a.getFloat("scaleY",      t.scaleY);
-    t.translationX = a.getDimension("translationX", t.translationX);
-    t.translationY = a.getDimension("translationY", t.translationY);
-    t.translationZ = a.getDimension("translationZ", t.translationZ);
-    t.transformPivotX = a.getDimension("transformPivotX", t.transformPivotX);
-    t.transformPivotY = a.getDimension("transformPivotY", t.transformPivotY);
-    t.transformPivotTarget = a.getResourceId("transformPivotTarget", t.transformPivotTarget);
-    {
-        float elev = a.getDimension("elevation", t.elevation);
-        if (a.hasAttribute("elevation")) {
-            t.applyElevation = true;
-            t.elevation = elev;
-        }
+    t.rotation    = ta->getFloat(R::styleable::Constraint_rotation,    t.rotation);
+    t.rotationX   = ta->getFloat(R::styleable::Constraint_rotationX,   t.rotationX);
+    t.rotationY   = ta->getFloat(R::styleable::Constraint_rotationY,   t.rotationY);
+    t.scaleX      = ta->getFloat(R::styleable::Constraint_scaleX,      t.scaleX);
+    t.scaleY      = ta->getFloat(R::styleable::Constraint_scaleY,      t.scaleY);
+    t.translationX = ta->getDimension(R::styleable::Constraint_translationX, t.translationX);
+    t.translationY = ta->getDimension(R::styleable::Constraint_translationY, t.translationY);
+    t.translationZ = ta->getDimension(R::styleable::Constraint_translationZ, t.translationZ);
+    t.transformPivotX = ta->getDimension(R::styleable::Constraint_transformPivotX, t.transformPivotX);
+    t.transformPivotY = ta->getDimension(R::styleable::Constraint_transformPivotY, t.transformPivotY);
+    t.transformPivotTarget = (int)ta->getResourceId(R::styleable::Constraint_transformPivotTarget, t.transformPivotTarget);
+    if (ta->hasValue(R::styleable::Constraint_elevation)) {
+        t.applyElevation = true;
+        t.elevation = ta->getDimension(R::styleable::Constraint_elevation, t.elevation);
     }
 
     // --- motion ---
-    m.mAnimateRelativeTo = a.getResourceId("animateRelativeTo", m.mAnimateRelativeTo);
-    m.mTransitionEasing  = a.getString("transitionEasing", m.mTransitionEasing);
-    m.mPathMotionArc     = a.getInt("pathMotionArc", kPathMotionArc, m.mPathMotionArc);
-    m.mPathRotate        = a.getFloat("transitionPathRotate", m.mPathRotate);
-    m.mMotionStagger     = a.getFloat("motionStagger", m.mMotionStagger);
-    m.mDrawPath          = a.getInt("drawPath", m.mDrawPath);
-    m.mQuantizeMotionSteps = a.getInt("quantizeMotionSteps", m.mQuantizeMotionSteps);
-    m.mQuantizeMotionPhase = a.getFloat("quantizeMotionPhase", m.mQuantizeMotionPhase);
+    m.mAnimateRelativeTo = (int)ta->getResourceId(R::styleable::Constraint_animateRelativeTo, m.mAnimateRelativeTo);
+    m.mTransitionEasing  = ta->hasValue(R::styleable::Constraint_transitionEasing) ? ta->getString(R::styleable::Constraint_transitionEasing) : m.mTransitionEasing;
+    m.mPathMotionArc     = ta->getInt(R::styleable::Constraint_pathMotionArc, m.mPathMotionArc);
+    m.mPathRotate        = ta->getFloat(R::styleable::Constraint_transitionPathRotate, m.mPathRotate);
+    m.mMotionStagger     = ta->getFloat(R::styleable::Constraint_motionStagger, m.mMotionStagger);
+    m.mDrawPath          = ta->getInt(R::styleable::Constraint_drawPath, m.mDrawPath);
+    m.mQuantizeMotionSteps = ta->getInt(R::styleable::Constraint_quantizeMotionSteps, m.mQuantizeMotionSteps);
+    m.mQuantizeMotionPhase = ta->getFloat(R::styleable::Constraint_quantizeMotionPhase, m.mQuantizeMotionPhase);
 }
 
-void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
+void ConstraintSet::load(Context* context, XmlPullParser& parser) {
     // Caller positions `parser` at the <ConstraintSet> START_TAG. We consume through its END_TAG.
     auto toLower = [](std::string s) {
         for (auto& c : s) c = (char)std::tolower((unsigned char)c);
@@ -805,7 +871,7 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
             const std::string tag = parser.getName();
             if (tag == "Constraint" || tag == "ConstraintOverride" ||
                     tag == "Guideline"   || tag == "Barrier") {
-                loadConstraint(parser); // consumes through the element's END_TAG
+                loadConstraint(context, parser); // consumes through the element's END_TAG
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (toLower(parser.getName()) == "constraintset") {
@@ -816,12 +882,12 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
     }
 }
 
-void ConstraintSet::loadConstraint(XmlPullParser& parser) {
+void ConstraintSet::loadConstraint(Context* ctx, XmlPullParser& parser) {
     // `parser` is at the <Constraint>/<ConstraintOverride>/<Guideline>/<Barrier> START_TAG. Read its
     // own attributes, then its nested sub-elements, and consume through the matching END_TAG.
     Constraint current;
     const std::string openTag = parser.getName();
-    current.fillFromAttributeList(parser); // parser IS-A AttributeSet
+    current.fillFromAttributeList(ctx, parser); // parser IS-A AttributeSet
     if (openTag == "Guideline") {
         current.layout.mIsGuideline = true;
         current.layout.mApply = true;
@@ -842,9 +908,9 @@ void ConstraintSet::loadConstraint(XmlPullParser& parser) {
             const std::string tag = parser.getName();
             if (tag == "PropertySet" || tag == "Transform" ||
                     tag == "Layout" || tag == "Motion") {
-                current.fillFromAttributeList(parser); // nested sub-element dispatches into sub-structs
+                current.fillFromAttributeList(ctx, parser); // nested sub-element dispatches into sub-structs
             } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
-                current.mCustomAttributes.push_back(parseCustomAttribute(parser));
+                current.mCustomAttributes.push_back(parseCustomAttribute(ctx, parser));
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             if (toLower(parser.getName()) == openLower) break; // matching close of this constraint
@@ -853,103 +919,115 @@ void ConstraintSet::loadConstraint(XmlPullParser& parser) {
     mConstraints[current.mViewId] = current;
 }
 
-// Copy the single field named `name` (a bare XML attribute name) from `src` onto `dst`. This is the
-// precise per-attribute overlay (Android ConstraintSet.Delta + setDeltaValue): only authored fields
-// are touched, so a delta that sets a field to its default value IS applied (the old default-difference
-// guess skipped those).
-static void copyAuthoredField(const std::string& name,
+// Copy the single field identified by its styleable index from `src` onto `dst`. This is the precise
+// per-attribute overlay (Android ConstraintSet.Delta + setDeltaValue): only authored indices are
+// touched, so a delta that sets a field to its default value IS applied (the old default-difference
+// guess skipped those). Dispatch is an int switch on the styleable index, mirroring AndroidX
+// setDeltaValue's switch on its type constant.
+static void copyAuthoredField(int attr,
                               const ConstraintSet::Constraint& src,
                               ConstraintSet::Constraint& dst) {
-    // --- Layout ---
-    if (name == "layout_constraintLeft_toLeftOf")        dst.layout.leftToLeft = src.layout.leftToLeft;
-    else if (name == "layout_constraintLeft_toRightOf")  dst.layout.leftToRight = src.layout.leftToRight;
-    else if (name == "layout_constraintRight_toLeftOf")  dst.layout.rightToLeft = src.layout.rightToLeft;
-    else if (name == "layout_constraintRight_toRightOf") dst.layout.rightToRight = src.layout.rightToRight;
-    else if (name == "layout_constraintTop_toTopOf")     dst.layout.topToTop = src.layout.topToTop;
-    else if (name == "layout_constraintTop_toBottomOf")  dst.layout.topToBottom = src.layout.topToBottom;
-    else if (name == "layout_constraintBottom_toTopOf")  dst.layout.bottomToTop = src.layout.bottomToTop;
-    else if (name == "layout_constraintBottom_toBottomOf") dst.layout.bottomToBottom = src.layout.bottomToBottom;
-    else if (name == "layout_constraintBaseline_toBaselineOf") dst.layout.baselineToBaseline = src.layout.baselineToBaseline;
-    else if (name == "layout_constraintBaseline_toTopOf") dst.layout.baselineToTop = src.layout.baselineToTop;
-    else if (name == "layout_constraintBaseline_toBottomOf") dst.layout.baselineToBottom = src.layout.baselineToBottom;
-    else if (name == "layout_constraintStart_toStartOf") dst.layout.startToStart = src.layout.startToStart;
-    else if (name == "layout_constraintStart_toEndOf")   dst.layout.startToEnd = src.layout.startToEnd;
-    else if (name == "layout_constraintEnd_toStartOf")   dst.layout.endToStart = src.layout.endToStart;
-    else if (name == "layout_constraintEnd_toEndOf")     dst.layout.endToEnd = src.layout.endToEnd;
-    else if (name == "layout_constraintCircle")          dst.layout.circleConstraint = src.layout.circleConstraint;
-    else if (name == "layout_constraintGuide_begin")     dst.layout.guideBegin = src.layout.guideBegin;
-    else if (name == "layout_constraintGuide_end")       dst.layout.guideEnd = src.layout.guideEnd;
-    else if (name == "layout_constraintGuide_percent")   dst.layout.guidePercent = src.layout.guidePercent;
-    else if (name == "layout_editor_absoluteX")          dst.layout.editorAbsoluteX = src.layout.editorAbsoluteX;
-    else if (name == "layout_editor_absoluteY")          dst.layout.editorAbsoluteY = src.layout.editorAbsoluteY;
-    else if (name == "orientation")                      dst.layout.orientation = src.layout.orientation;
-    else if (name == "layout_marginLeft")                dst.layout.leftMargin = src.layout.leftMargin;
-    else if (name == "layout_marginRight")               dst.layout.rightMargin = src.layout.rightMargin;
-    else if (name == "layout_marginTop")                 dst.layout.topMargin = src.layout.topMargin;
-    else if (name == "layout_marginBottom")              dst.layout.bottomMargin = src.layout.bottomMargin;
-    else if (name == "layout_marginStart")               dst.layout.startMargin = src.layout.startMargin;
-    else if (name == "layout_marginEnd")                 dst.layout.endMargin = src.layout.endMargin;
-    else if (name == "layout_goneMarginLeft")            dst.layout.goneLeftMargin = src.layout.goneLeftMargin;
-    else if (name == "layout_goneMarginTop")             dst.layout.goneTopMargin = src.layout.goneTopMargin;
-    else if (name == "layout_goneMarginRight")           dst.layout.goneRightMargin = src.layout.goneRightMargin;
-    else if (name == "layout_goneMarginBottom")          dst.layout.goneBottomMargin = src.layout.goneBottomMargin;
-    else if (name == "layout_goneMarginStart")           dst.layout.goneStartMargin = src.layout.goneStartMargin;
-    else if (name == "layout_goneMarginEnd")             dst.layout.goneEndMargin = src.layout.goneEndMargin;
-    else if (name == "layout_constraintHorizontal_bias") dst.layout.horizontalBias = src.layout.horizontalBias;
-    else if (name == "layout_constraintVertical_bias")   dst.layout.verticalBias = src.layout.verticalBias;
-    else if (name == "layout_constraintHorizontal_weight") dst.layout.horizontalWeight = src.layout.horizontalWeight;
-    else if (name == "layout_constraintVertical_weight") dst.layout.verticalWeight = src.layout.verticalWeight;
-    else if (name == "layout_constraintHorizontal_chainStyle") dst.layout.horizontalChainStyle = src.layout.horizontalChainStyle;
-    else if (name == "layout_constraintVertical_chainStyle") dst.layout.verticalChainStyle = src.layout.verticalChainStyle;
-    else if (name == "layout_constraintDimensionRatio")  dst.layout.dimensionRatio = src.layout.dimensionRatio;
-    else if (name == "layout_width")                     dst.layout.mWidth = src.layout.mWidth;
-    else if (name == "layout_height")                    dst.layout.mHeight = src.layout.mHeight;
-    else if (name == "layout_constraintWidth_default")   dst.layout.widthDefault = src.layout.widthDefault;
-    else if (name == "layout_constraintHeight_default")  dst.layout.heightDefault = src.layout.heightDefault;
-    else if (name == "layout_constraintWidth_percent")   dst.layout.widthPercent = src.layout.widthPercent;
-    else if (name == "layout_constraintHeight_percent")  dst.layout.heightPercent = src.layout.heightPercent;
-    else if (name == "layout_constraintWidth_min")       dst.layout.widthMin = src.layout.widthMin;
-    else if (name == "layout_constraintWidth_max")       dst.layout.widthMax = src.layout.widthMax;
-    else if (name == "layout_constraintHeight_min")      dst.layout.heightMin = src.layout.heightMin;
-    else if (name == "layout_constraintHeight_max")      dst.layout.heightMax = src.layout.heightMax;
-    else if (name == "layout_constrainedWidth")          dst.layout.constrainedWidth = src.layout.constrainedWidth;
-    else if (name == "layout_constrainedHeight")         dst.layout.constrainedHeight = src.layout.constrainedHeight;
-    else if (name == "layout_wrapBehaviorInParent")      dst.layout.mWrapBehavior = src.layout.mWrapBehavior;
-    else if (name == "layout_constraintCircleRadius")    dst.layout.circleRadius = src.layout.circleRadius;
-    else if (name == "layout_constraintCircleAngle")     dst.layout.circleAngle = src.layout.circleAngle;
-    else if (name == "barrierDirection")                 dst.layout.mBarrierDirection = src.layout.mBarrierDirection;
-    else if (name == "barrierMargin")                    dst.layout.mBarrierMargin = src.layout.mBarrierMargin;
-    else if (name == "barrierAllowsGoneWidgets")         dst.layout.mBarrierAllowsGoneWidgets = src.layout.mBarrierAllowsGoneWidgets;
-    else if (name == "constraint_referenced_ids")        dst.layout.mReferenceIdString = src.layout.mReferenceIdString;
-    else if (name == "layout_constraintTag")             dst.layout.constraintTag = src.layout.constraintTag;
+    using namespace internal::R::styleable;
+    switch (attr) {
+    // --- Layout: anchor targets ---
+    case Constraint_layout_constraintLeft_toLeftOf:         dst.layout.leftToLeft = src.layout.leftToLeft; break;
+    case Constraint_layout_constraintLeft_toRightOf:        dst.layout.leftToRight = src.layout.leftToRight; break;
+    case Constraint_layout_constraintRight_toLeftOf:        dst.layout.rightToLeft = src.layout.rightToLeft; break;
+    case Constraint_layout_constraintRight_toRightOf:       dst.layout.rightToRight = src.layout.rightToRight; break;
+    case Constraint_layout_constraintTop_toTopOf:           dst.layout.topToTop = src.layout.topToTop; break;
+    case Constraint_layout_constraintTop_toBottomOf:        dst.layout.topToBottom = src.layout.topToBottom; break;
+    case Constraint_layout_constraintBottom_toTopOf:        dst.layout.bottomToTop = src.layout.bottomToTop; break;
+    case Constraint_layout_constraintBottom_toBottomOf:     dst.layout.bottomToBottom = src.layout.bottomToBottom; break;
+    case Constraint_layout_constraintBaseline_toBaselineOf: dst.layout.baselineToBaseline = src.layout.baselineToBaseline; break;
+    case Constraint_layout_constraintBaseline_toTopOf:      dst.layout.baselineToTop = src.layout.baselineToTop; break;
+    case Constraint_layout_constraintBaseline_toBottomOf:   dst.layout.baselineToBottom = src.layout.baselineToBottom; break;
+    case Constraint_layout_constraintStart_toStartOf:       dst.layout.startToStart = src.layout.startToStart; break;
+    case Constraint_layout_constraintStart_toEndOf:         dst.layout.startToEnd = src.layout.startToEnd; break;
+    case Constraint_layout_constraintEnd_toStartOf:         dst.layout.endToStart = src.layout.endToStart; break;
+    case Constraint_layout_constraintEnd_toEndOf:           dst.layout.endToEnd = src.layout.endToEnd; break;
+    case Constraint_layout_constraintCircle:                dst.layout.circleConstraint = src.layout.circleConstraint; break;
+    // --- Layout: guideline / editor / orientation ---
+    case Constraint_layout_constraintGuide_begin:   dst.layout.guideBegin = src.layout.guideBegin; break;
+    case Constraint_layout_constraintGuide_end:     dst.layout.guideEnd = src.layout.guideEnd; break;
+    case Constraint_layout_constraintGuide_percent: dst.layout.guidePercent = src.layout.guidePercent; break;
+    case Constraint_layout_editor_absoluteX:        dst.layout.editorAbsoluteX = src.layout.editorAbsoluteX; break;
+    case Constraint_layout_editor_absoluteY:        dst.layout.editorAbsoluteY = src.layout.editorAbsoluteY; break;
+    case Constraint_orientation:                    dst.layout.orientation = src.layout.orientation; break;
+    // --- Layout: margins ---
+    case Constraint_layout_marginLeft:    dst.layout.leftMargin = src.layout.leftMargin; break;
+    case Constraint_layout_marginRight:   dst.layout.rightMargin = src.layout.rightMargin; break;
+    case Constraint_layout_marginTop:     dst.layout.topMargin = src.layout.topMargin; break;
+    case Constraint_layout_marginBottom:  dst.layout.bottomMargin = src.layout.bottomMargin; break;
+    case Constraint_layout_marginStart:   dst.layout.startMargin = src.layout.startMargin; break;
+    case Constraint_layout_marginEnd:     dst.layout.endMargin = src.layout.endMargin; break;
+    case Constraint_layout_goneMarginLeft:   dst.layout.goneLeftMargin = src.layout.goneLeftMargin; break;
+    case Constraint_layout_goneMarginTop:    dst.layout.goneTopMargin = src.layout.goneTopMargin; break;
+    case Constraint_layout_goneMarginRight:  dst.layout.goneRightMargin = src.layout.goneRightMargin; break;
+    case Constraint_layout_goneMarginBottom: dst.layout.goneBottomMargin = src.layout.goneBottomMargin; break;
+    case Constraint_layout_goneMarginStart:  dst.layout.goneStartMargin = src.layout.goneStartMargin; break;
+    case Constraint_layout_goneMarginEnd:    dst.layout.goneEndMargin = src.layout.goneEndMargin; break;
+    // --- Layout: bias / chain / weight / ratio ---
+    case Constraint_layout_constraintHorizontal_bias:       dst.layout.horizontalBias = src.layout.horizontalBias; break;
+    case Constraint_layout_constraintVertical_bias:         dst.layout.verticalBias = src.layout.verticalBias; break;
+    case Constraint_layout_constraintHorizontal_weight:     dst.layout.horizontalWeight = src.layout.horizontalWeight; break;
+    case Constraint_layout_constraintVertical_weight:       dst.layout.verticalWeight = src.layout.verticalWeight; break;
+    case Constraint_layout_constraintHorizontal_chainStyle: dst.layout.horizontalChainStyle = src.layout.horizontalChainStyle; break;
+    case Constraint_layout_constraintVertical_chainStyle:   dst.layout.verticalChainStyle = src.layout.verticalChainStyle; break;
+    case Constraint_layout_constraintDimensionRatio:        dst.layout.dimensionRatio = src.layout.dimensionRatio; break;
+    // --- Layout: dimensions / match_constraint ---
+    case Constraint_layout_width:                  dst.layout.mWidth = src.layout.mWidth; break;
+    case Constraint_layout_height:                 dst.layout.mHeight = src.layout.mHeight; break;
+    case Constraint_layout_constraintWidth_default:  dst.layout.widthDefault = src.layout.widthDefault; break;
+    case Constraint_layout_constraintHeight_default: dst.layout.heightDefault = src.layout.heightDefault; break;
+    case Constraint_layout_constraintWidth_percent:  dst.layout.widthPercent = src.layout.widthPercent; break;
+    case Constraint_layout_constraintHeight_percent: dst.layout.heightPercent = src.layout.heightPercent; break;
+    case Constraint_layout_constraintWidth_min:  dst.layout.widthMin = src.layout.widthMin; break;
+    case Constraint_layout_constraintWidth_max:  dst.layout.widthMax = src.layout.widthMax; break;
+    case Constraint_layout_constraintHeight_min: dst.layout.heightMin = src.layout.heightMin; break;
+    case Constraint_layout_constraintHeight_max: dst.layout.heightMax = src.layout.heightMax; break;
+    case Constraint_layout_constrainedWidth:  dst.layout.constrainedWidth = src.layout.constrainedWidth; break;
+    case Constraint_layout_constrainedHeight: dst.layout.constrainedHeight = src.layout.constrainedHeight; break;
+    case Constraint_layout_wrapBehaviorInParent: dst.layout.mWrapBehavior = src.layout.mWrapBehavior; break;
+    // --- Layout: circle / barrier / helper ---
+    case Constraint_layout_constraintCircleRadius: dst.layout.circleRadius = src.layout.circleRadius; break;
+    case Constraint_layout_constraintCircleAngle:  dst.layout.circleAngle = src.layout.circleAngle; break;
+    case Constraint_barrierDirection:              dst.layout.mBarrierDirection = src.layout.mBarrierDirection; break;
+    case Constraint_barrierMargin:                 dst.layout.mBarrierMargin = src.layout.mBarrierMargin; break;
+    case Constraint_barrierAllowsGoneWidgets:      dst.layout.mBarrierAllowsGoneWidgets = src.layout.mBarrierAllowsGoneWidgets; break;
+    case Constraint_constraint_referenced_ids:     dst.layout.mReferenceIdString = src.layout.mReferenceIdString; break;
+    case Constraint_layout_constraintTag:          dst.layout.constraintTag = src.layout.constraintTag; break;
     // --- PropertySet ---
-    else if (name == "visibility")      dst.propertySet.visibility = src.propertySet.visibility;
-    else if (name == "alpha")           dst.propertySet.alpha = src.propertySet.alpha;
-    else if (name == "motionProgress")  dst.propertySet.mProgress = src.propertySet.mProgress;
-    else if (name == "visibilityMode")  dst.propertySet.mVisibilityMode = src.propertySet.mVisibilityMode;
+    case Constraint_visibility:     dst.propertySet.visibility = src.propertySet.visibility; break;
+    case Constraint_alpha:          dst.propertySet.alpha = src.propertySet.alpha; break;
+    case Constraint_motionProgress: dst.propertySet.mProgress = src.propertySet.mProgress; break;
+    case Constraint_visibilityMode: dst.propertySet.mVisibilityMode = src.propertySet.mVisibilityMode; break;
     // --- Transform ---
-    else if (name == "rotation")          dst.transform.rotation = src.transform.rotation;
-    else if (name == "rotationX")         dst.transform.rotationX = src.transform.rotationX;
-    else if (name == "rotationY")         dst.transform.rotationY = src.transform.rotationY;
-    else if (name == "scaleX")            dst.transform.scaleX = src.transform.scaleX;
-    else if (name == "scaleY")            dst.transform.scaleY = src.transform.scaleY;
-    else if (name == "translationX")      dst.transform.translationX = src.transform.translationX;
-    else if (name == "translationY")      dst.transform.translationY = src.transform.translationY;
-    else if (name == "translationZ")      dst.transform.translationZ = src.transform.translationZ;
-    else if (name == "transformPivotX")   dst.transform.transformPivotX = src.transform.transformPivotX;
-    else if (name == "transformPivotY")   dst.transform.transformPivotY = src.transform.transformPivotY;
-    else if (name == "transformPivotTarget") dst.transform.transformPivotTarget = src.transform.transformPivotTarget;
-    else if (name == "elevation") { dst.transform.elevation = src.transform.elevation; dst.transform.applyElevation = true; }
+    case Constraint_rotation:            dst.transform.rotation = src.transform.rotation; break;
+    case Constraint_rotationX:           dst.transform.rotationX = src.transform.rotationX; break;
+    case Constraint_rotationY:           dst.transform.rotationY = src.transform.rotationY; break;
+    case Constraint_scaleX:              dst.transform.scaleX = src.transform.scaleX; break;
+    case Constraint_scaleY:              dst.transform.scaleY = src.transform.scaleY; break;
+    case Constraint_translationX:        dst.transform.translationX = src.transform.translationX; break;
+    case Constraint_translationY:        dst.transform.translationY = src.transform.translationY; break;
+    case Constraint_translationZ:        dst.transform.translationZ = src.transform.translationZ; break;
+    case Constraint_transformPivotX:     dst.transform.transformPivotX = src.transform.transformPivotX; break;
+    case Constraint_transformPivotY:     dst.transform.transformPivotY = src.transform.transformPivotY; break;
+    case Constraint_transformPivotTarget: dst.transform.transformPivotTarget = src.transform.transformPivotTarget; break;
+    case Constraint_elevation:
+        dst.transform.elevation = src.transform.elevation;
+        dst.transform.applyElevation = true;
+        break;
     // --- Motion ---
-    else if (name == "animateRelativeTo")   dst.motion.mAnimateRelativeTo = src.motion.mAnimateRelativeTo;
-    else if (name == "transitionEasing")    dst.motion.mTransitionEasing = src.motion.mTransitionEasing;
-    else if (name == "pathMotionArc")       dst.motion.mPathMotionArc = src.motion.mPathMotionArc;
-    else if (name == "transitionPathRotate") dst.motion.mPathRotate = src.motion.mPathRotate;
-    else if (name == "motionStagger")       dst.motion.mMotionStagger = src.motion.mMotionStagger;
-    else if (name == "drawPath")            dst.motion.mDrawPath = src.motion.mDrawPath;
-    else if (name == "quantizeMotionSteps") dst.motion.mQuantizeMotionSteps = src.motion.mQuantizeMotionSteps;
-    else if (name == "quantizeMotionPhase") dst.motion.mQuantizeMotionPhase = src.motion.mQuantizeMotionPhase;
-    // Unknown/structural names (id, motionTarget, xmlns) are intentionally ignored.
+    case Constraint_animateRelativeTo:    dst.motion.mAnimateRelativeTo = src.motion.mAnimateRelativeTo; break;
+    case Constraint_transitionEasing:     dst.motion.mTransitionEasing = src.motion.mTransitionEasing; break;
+    case Constraint_pathMotionArc:        dst.motion.mPathMotionArc = src.motion.mPathMotionArc; break;
+    case Constraint_transitionPathRotate: dst.motion.mPathRotate = src.motion.mPathRotate; break;
+    case Constraint_motionStagger:        dst.motion.mMotionStagger = src.motion.mMotionStagger; break;
+    case Constraint_drawPath:             dst.motion.mDrawPath = src.motion.mDrawPath; break;
+    case Constraint_quantizeMotionSteps:  dst.motion.mQuantizeMotionSteps = src.motion.mQuantizeMotionSteps; break;
+    case Constraint_quantizeMotionPhase:  dst.motion.mQuantizeMotionPhase = src.motion.mQuantizeMotionPhase; break;
+    default: break; // structural/unknown indices (id, motionTarget, xmlns) are not copied fields.
+    }
 }
 
 void ConstraintSet::applyDelta(Constraint& target) const {
@@ -960,7 +1038,7 @@ void ConstraintSet::applyDelta(Constraint& target) const {
     auto it = mConstraints.find(target.mViewId);
     if (it != mConstraints.end()) {
         const Constraint& d = it->second;
-        for (const auto& name : d.mAuthored) copyAuthoredField(name, d, target);
+        for (int attr : d.mAuthored) copyAuthoredField(attr, d, target);
         for (const auto& ca : d.mCustomAttributes) target.mCustomAttributes.push_back(ca);
     }
     // Set-level customs (a ViewTransition's direct <CustomAttribute> children) apply to every target.

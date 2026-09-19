@@ -37,8 +37,8 @@ namespace cdroid {
 
 class CircularFlow : public ConstraintHelper {
   public:
-    CircularFlow(Context* ctx, const AttributeSet& attrs);
-    explicit CircularFlow(int width, int height);
+    CircularFlow(Context* ctx, const AttributeSet* attrs);
+    CircularFlow(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     std::vector<float> getAngles() const;
     std::vector<int>   getRadius() const;
@@ -49,11 +49,14 @@ class CircularFlow : public ConstraintHelper {
     void setRadius(const std::vector<int>& radius);
     void setDefaultAngle(float angle);
     void setDefaultRadius(int radius);
-    void setViewCenter(int id) { mViewCenter = id; }
+    // CDROID extension (no AndroidX runtime setter for viewCenter): re-anchoring on the
+    // new center rides the next hierarchy capture — request the layout so the dirty gate
+    // reopens it (same contract as setAngles/setRadius).
+    void setViewCenter(int id) { mViewCenter = id; requestLayout(); }
     void addViewToCircularFlow(View* view, int radius, float angle);
 
   protected:
-    void init(const AttributeSet& attrs) override;
+    void init(const AttributeSet* attrs) override;
     void updatePreLayout(ConstraintLayout* container) override;  // = AndroidX anchorReferences
 
   private:

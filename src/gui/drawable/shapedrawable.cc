@@ -15,9 +15,12 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <porting/cdlog.h>
 #include <drawable/shapedrawable.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 ShapeDrawable::ShapeState::ShapeState(){
     mChangingConfigurations = 0;
@@ -47,7 +50,14 @@ ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
 }
 
 ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
-    return new ShapeDrawable(shared_from_this());
+    // AOSP java:597: new ShapeDrawable(new ShapeState(this), null) — every
+    // clone gets its own copy of the state (the mPaint/mShape are cloned by
+    // the copy ctor).
+    return new ShapeDrawable(std::make_shared<ShapeState>(*this), nullptr);
+}
+
+Drawable* ShapeDrawable::ShapeState::newDrawable(Resources* res){
+    return new ShapeDrawable(std::make_shared<ShapeState>(*this), res);
 }
 
 ShapeDrawable::ShapeState::~ShapeState(){
@@ -60,7 +70,7 @@ int ShapeDrawable::ShapeState::getChangingConfigurations()const{
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state){
+ShapeDrawable::ShapeDrawable(std::shared_ptr<ShapeState>state, Resources* res){
     mShapeState = state;
     mMutated = false;
     mTintFilter = nullptr;
@@ -233,21 +243,27 @@ void ShapeDrawable::draw(Canvas&canvas){
     }
 }
 
-int ShapeDrawable::inflateTag(const std::string&name,XmlPullParser&parser,const AttributeSet&a){
+int ShapeDrawable::inflateTag(const std::string&name,Resources&r,XmlPullParser&parser,const AttributeSet&a){
     if (name.compare("padding")==0) {
-        setPadding(a.getDimensionPixelOffset("left", 0),
-                a.getDimensionPixelOffset("top", 0),
-                a.getDimensionPixelOffset("right", 0),
-                a.getDimensionPixelOffset("bottom", 0));
+        // AOSP ShapeDrawable.inflateTag: r.obtainAttributes(attrs, R.styleable.ShapeDrawablePadding).
+        auto ta = r.obtainAttributes(&a, R::styleable::ShapeDrawablePadding);
+        if (ta) {
+            setPadding(ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_left, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_top, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_right, 0),
+                    ta->getDimensionPixelOffset(R::styleable::ShapeDrawablePadding_bottom, 0));
+        }
         return true;
     }
     return false;
 }
 
 
-void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    Drawable::inflate(parser,atts);
-    updateStateFromTypedArray(atts);
+void ShapeDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    Drawable::inflate(r,parser,atts, theme);
+
+    auto ta = obtainAttributes(r, theme, atts, R::styleable::ShapeDrawable);
+    if (ta) updateStateFromTypedArray(*ta);
 
     int type;
     const int outerDepth = parser.getDepth();
@@ -259,7 +275,7 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 
         const std::string name = parser.getName();
         // call our subclass
-        if (!inflateTag(name,parser,atts)) {
+        if (!inflateTag(name,r,parser,atts)) {
             LOGW("Unknown element: %s for ShapeDrawable %p",name.c_str(),this);
         }
     }
@@ -268,30 +284,25 @@ void ShapeDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     updateLocalState();
 }
 
-void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
+void ShapeDrawable::updateStateFromTypedArray(const TypedArray& a) {
+    // AOSP ShapeDrawable.updateStateFromTypedArray: index-based reads against R.styleable.ShapeDrawable.
     auto state = mShapeState;
 
-    // Account for any configuration changes.
-    //state.mChangingConfigurations |= a.getChangingConfigurations();
+    // CDROID's ShapeState has no Paint (the Shape owns drawing), so the AOSP paint color/dither
+    // pair reduces to just dither here. dither is read via the styleable index.
+    state->mDither = a.getBoolean(R::styleable::ShapeDrawable_dither, state->mDither);
 
-    // Extract the theme attributes, if any.
-    //state.mThemeAttrs = a.extractThemeAttrs();
+    state->mIntrinsicWidth = (int) a.getDimension(R::styleable::ShapeDrawable_width, state->mIntrinsicWidth);
+    state->mIntrinsicHeight = (int) a.getDimension(R::styleable::ShapeDrawable_height, state->mIntrinsicHeight);
 
-    //int color = paint.getColor();
-    //color = a.getColor("color", color);
-
-    //boolean dither = paint.isDither();
-    state->mDither = a.getBoolean("dither", state->mDither);
-
-    state->mIntrinsicWidth = (int) a.getDimension("width", state->mIntrinsicWidth);
-    state->mIntrinsicHeight = (int) a.getDimension("height", state->mIntrinsicHeight);
-
-    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
-    if (tintMode != PorterDuff::NOOP) {
+    // tintMode is a flag enum aapt2 pre-resolves to a PorterDuff::Mode value; getInt replaces the
+    // AttributeSet::getTintMode string decoder. NOOP (-1) sentinel == "not specified".
+    const int tintMode = a.getInt(R::styleable::ShapeDrawable_tintMode, PorterDuff::Mode::NOOP);
+    if (tintMode != PorterDuff::Mode::NOOP) {
         state->mTintMode = tintMode;
     }
 
-    auto tint = a.getColorStateList("tint");
+    auto tint = a.getColorStateList(R::styleable::ShapeDrawable_tint);
     if (tint != nullptr) {
         state->mTint = tint;
     }

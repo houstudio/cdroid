@@ -4,13 +4,14 @@
 //
 // CDROID adaptations:
 //  - Color literals (no android.graphics.Color): RED=0xFFFF0000 etc.
-//  - state_focused -> StateSet::FOCUSED (=3); state ints are value-agnostic otherwise ({1},{2}).
+//  - state_focused -> cdroid::internal::R::attr::state_focused (=3); state ints are value-agnostic otherwise ({1},{2}).
 //  - Runnable is CallbackBase<void> (no operator== between two runnables), so the schedule/
 //    unschedule callback-proxy cases assert the forwarded Drawable and time, not the runnable.
 //  - PixelFormat enum lives in drawable.h (TRANSLUCENT/TRANSPARENT/OPAQUE).
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/ColorStateListDrawableTest.java (Apache 2.0)
 #include <gtest/gtest.h>
+#include <widget/internal_R.h>
 #include <guienvironment.h>
 #include <drawable/colorstatelistdrawable.h>
 #include <drawable/colordrawable.h>
@@ -89,7 +90,7 @@ TEST_F(CtsColorStateListDrawableTest, testIsStateful) {
 
 TEST_F(CtsColorStateListDrawableTest, testHasFocusStateSpecified) {
     EXPECT_FALSE(mDrawable->hasFocusStateSpecified());
-    std::vector<std::vector<int>> states = {{1}, {2, StateSet::FOCUSED}};
+    std::vector<std::vector<int>> states = {{1}, {2, cdroid::internal::R::attr::state_focused}};
     std::vector<int> colors = {COLOR_MAGENTA, COLOR_CYAN};
     mDrawable->setColorStateList(std::make_shared<ColorStateList>(states, colors));
     EXPECT_TRUE(mDrawable->hasFocusStateSpecified());

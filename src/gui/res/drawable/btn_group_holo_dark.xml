@@ -16,8 +16,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_enabled="true"
-        android:drawable="@mipmap/btn_group_normal_holo_dark" />
+        android:drawable="@drawable/btn_group_normal_holo_dark" />
     <item
-        android:drawable="@mipmap/btn_group_disabled_holo_dark" />
+        android:drawable="@drawable/btn_group_disabled_holo_dark" />
 </selector>
-

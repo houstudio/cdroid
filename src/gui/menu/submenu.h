@@ -37,7 +37,7 @@ public:
      * @param iconRes The resource identifier used for the icon.
      * @return This SubMenu so additional setters can be called.
      */
-    virtual SubMenu& setHeaderIcon(const std::string&iconRes)=0;
+    virtual SubMenu& setHeaderIcon(int iconRes)=0;
 
     /**
      * Sets the submenu header's icon to the icon given in <var>icon</var>
@@ -70,7 +70,7 @@ public:
      * @param iconRes The new icon (as a resource ID) to be displayed.
      * @return This SubMenu so additional setters can be called.
      */
-    virtual SubMenu& setIcon(const std::string& iconRes)=0;
+    virtual SubMenu& setIcon(int iconRes)=0;
 
     /**
      * Change the icon associated with this submenu's item in its parent menu.

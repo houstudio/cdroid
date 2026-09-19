@@ -17,20 +17,20 @@
 */
 
 #include <widgetEx/wear/circularprogresslayout.h>
+#include <widgetEx/widgetex_styleable.h>
+
 #include <widgetEx/wear/circularprogressdrawable.h>
 #include <widgetEx/wear/circularprogresslayoutcontroller.h>
 #include <cairomm/context.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(CircularProgressLayout)
+DECLARE_WIDGET2(CircularProgressLayout, "androidx.wear.widget.CircularProgressLayout");
 
-CircularProgressLayout::CircularProgressLayout(int w,int h)
-    :FrameLayout(w,h){
-    initCircularProgressLayout();
-}
+CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* attrs):CircularProgressLayout(context,attrs,0){}
 
-CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :FrameLayout(context, pAttrs, defStyleAttr){
 
     initCircularProgressLayout();
     //Resources r = context.getResources();
@@ -39,8 +39,13 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
     if (a.getType(R.styleable.CircularProgressLayout_colorSchemeColors) == TypedValue
             .TYPE_REFERENCE || !a.hasValue(
             R.styleable.CircularProgressLayout_colorSchemeColors)) {
-        std::string arrayResId = a.getString("colorSchemeColors","@cdroid:array/circular_progress_layout_color_scheme_colors");
-        setColorSchemeColors(getColorListFromResources(r, arrayResId));
+        // AOSP passes R.array.circular_progress_layout_color_scheme_colors; the
+        // typed attr reference (or the default name) resolves to an array id.
+        int arrayResId = a.getResourceId(R::styleable.CircularProgressLayout_colorSchemeColors, 0);
+        if (!arrayResId) {
+            arrayResId = r.getIdentifier("circular_progress_layout_color_scheme_colors", "array", "cdroid");
+        }
+        setColorSchemeColors(getColorListFromResources(arrayResId));
     } else {
         setColorSchemeColors(a.getColor(R.styleable.CircularProgressLayout_colorSchemeColors, Color::BLACK));
     }
@@ -48,10 +53,14 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
     setStrokeWidth(a.getDimensionPixelSize("strokeWidth",r.getDimensionPixelSize("cdroid:dimen/circular_progress_layout_stroke_width")));
     */
 
-    setBackgroundColor(attrs.getColor("backgroundColor",
-            context->getColor("cdroid:color/circular_progress_layout_background_color")));
-
-    setIndeterminate(attrs.getBoolean("indeterminate", false));
+    // androidx R.styleable.CircularProgressLayout (TypedArray; binary AXML ids)
+    auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::CircularProgressLayout, defStyleAttr);
+    if (ta) {
+        const int defBg = context->getColor(context->getResources().getIdentifier(
+                "circular_progress_layout_background_color", "color", "cdroid.widgetex"));
+        setBackgroundColor(ta->getColor(internal::R::styleable::CircularProgressLayout_backgroundColor, defBg));
+        setIndeterminate(ta->getBoolean(internal::R::styleable::CircularProgressLayout_indeterminate, false));
+    }
 }
 
 void CircularProgressLayout::initCircularProgressLayout(){
@@ -80,10 +89,8 @@ CircularProgressLayout::~CircularProgressLayout(){
     delete mController;
 }
 
-std::vector<int> CircularProgressLayout::getColorListFromResources(const std::string& arrayResId) {
-    std::vector<int> colors;
-    mContext->getArray(arrayResId,colors);
-    return colors;
+std::vector<int> CircularProgressLayout::getColorListFromResources(int arrayResId) {
+    return arrayResId ? mContext->getResources().getIntArray(arrayResId) : std::vector<int>();
 }
 
 void CircularProgressLayout::onLayout(bool changed, int left, int top, int right, int bottom) {

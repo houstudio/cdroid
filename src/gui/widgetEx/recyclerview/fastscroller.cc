@@ -83,6 +83,9 @@ RecyclerView::FastScroller::FastScroller(RecyclerView*recyclerView, StateListDra
 }
 
 RecyclerView::FastScroller::~FastScroller(){
+    if(mRecyclerView){
+        mRecyclerView->detachItemDecoration(this); // detach only: remove deletes
+    }
     delete mVerticalThumbDrawable;
     delete mVerticalTrackDrawable;
     delete mHorizontalThumbDrawable;

@@ -17,11 +17,13 @@
  *********************************************************************************/
 #include <widget/textview.h>
 #include <widget/dropdownlistview.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 DropDownListView::DropDownListView(Context*context,bool hijackfocus)
-    :ListView(context,context->obtainStyledAttributes("cdroid:attr/dropDownListViewStyle")){
+    :ListView(context,nullptr,R::attr::dropDownListViewStyle){
     mScrollHelper = nullptr;
     mHijackFocus = hijackfocus;
     mDrawsInPressedState = false;

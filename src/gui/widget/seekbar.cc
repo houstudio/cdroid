@@ -16,16 +16,19 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/seekbar.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(SeekBar,"cdroid:attr/seekBarStyle")
+DECLARE_WIDGET2(SeekBar, "android.widget.SeekBar");
 
-SeekBar::SeekBar(Context*ctx,const AttributeSet& attrs)
-  :AbsSeekBar(ctx,attrs){
-}
+SeekBar::SeekBar(Context*ctx)
+    :SeekBar(ctx,nullptr){}
 
-SeekBar::SeekBar(int w,int h):AbsSeekBar(w,h){
+SeekBar::SeekBar(Context*ctx,const AttributeSet* attrs):SeekBar(ctx,attrs,cdroid::internal::R::attr::seekBarStyle){}
+
+SeekBar::SeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :AbsSeekBar(ctx,pAttrs, defStyleAttr){
 }
 
 void SeekBar::onProgressRefresh(float scale, bool fromUser, int progress){
@@ -60,7 +63,7 @@ std::string SeekBar::getAccessibilityClassName()const{
 void SeekBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     AbsSeekBar::onInitializeAccessibilityNodeInfoInternal(info);
     if (canUserSetProgress()) {
-        info.addAction(R::id::accessibilityActionSetProgress);//AccessibilityNodeInfo::ACTION_SET_PROGRESS);
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SET_PROGRESS);
     }
 }
 

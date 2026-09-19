@@ -80,6 +80,17 @@ private:
     cdroid::RefPtr<ColorStateList> mTextColors;
     Layout* mOnLayout;
     Layout* mOffLayout;
+    // C++ ownership: AOSP relies on GC for the CharSequence backing each
+    // Layout; these own the text so it outlives mOnLayout/mOffLayout
+    // (a Layout dtor may still dereference its text).
+    CharSequence* mOnText;
+    CharSequence* mOffText;
+    // getTransformation returns an owned CharSequence* — or the source itself
+    // when the method does not transform (AllCaps returns &source until
+    // setLengthChangesAllowed). Compare pointers before deleting, same trick
+    // as TextView's mText/mTransformed.
+    CharSequence* mOnTransformed;
+    CharSequence* mOffTransformed;
     //TransformationMethod2 mSwitchTransformationMethod;
     ObjectAnimator* mPositionAnimator;
     friend class THUMB_POS;
@@ -88,7 +99,7 @@ private:
     void setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex);
     void applyTrackTint();
     void applyThumbTint();
-    Layout* makeLayout(const std::string& text);
+    Layout* makeLayout(CharSequence* text);
     bool hitThumb(float x, float y);
     void cancelSuperTouch(MotionEvent& ev);
     void stopDrag(MotionEvent& ev);
@@ -106,10 +117,11 @@ protected:
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
 public:
-    Switch(int w,int h);
-    Switch(Context* context,const AttributeSet& attrs);
+    Switch(Context*ctx);   // AOSP Switch(Context)
+    Switch(Context* context,const AttributeSet* attrs);
+    Switch(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~Switch()override;
-    void setSwitchTextAppearance(Context* context,const std::string&resid);
+    void setSwitchTextAppearance(Context* context,int resid);
     void setSwitchTypeface(Typeface* tf, int style);
     void setSwitchTypeface(Typeface* tf);
     void setSwitchPadding(int pixels);
@@ -119,14 +131,14 @@ public:
     void setThumbTextPadding(int pixels);
     int  getThumbTextPadding()const;
     void setTrackDrawable(Drawable* track);
-    void setTrackResource(const std::string& resId);
+    void setTrackResource(int resId);
     Drawable* getTrackDrawable();
     void setTrackTintList(const cdroid::RefPtr<ColorStateList>& tint);
     const cdroid::RefPtr<ColorStateList> getTrackTintList();
     void setTrackTintMode(PorterDuffMode tintMode);
     PorterDuffMode getTrackTintMode()const;
     void setThumbDrawable(Drawable* thumb);
-    void setThumbResource(const std::string& resId);
+    void setThumbResource(int resId);
     Drawable* getThumbDrawable();
     void setThumbTintList(const cdroid::RefPtr<ColorStateList> tint);
     const cdroid::RefPtr<ColorStateList> getThumbTintList()const;

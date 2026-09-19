@@ -30,10 +30,10 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF10141c);
 
-    ScrollView*scroller=new ScrollView(-1,-1);
+    ScrollView*scroller=new ScrollView(&app);
     scroller->setVerticalScrollBarEnabled(true);
     w->addView(scroller);
-    LinearLayout*content=new LinearLayout(-1,-2);
+    LinearLayout*content=new LinearLayout(&app);
     content->setOrientation(LinearLayout::VERTICAL);
     scroller->addView(content);
 
@@ -43,23 +43,23 @@ int main(int argc,const char*argv[]){
         p->leftMargin=lm; p->topMargin=tm; return p;
     };
     auto addSection=[&](const char*title){
-        TextView*h=new TextView(0,0); h->setText(title); h->setTextSize(14);
+        TextView*h=new TextView(&app); h->setText(title); h->setTextSize(14);
         h->setTextColor(0xFF8aa0b4); content->addView(h, lp(-1,24,24,8));
     };
     auto newRow=[&](){
-        LinearLayout*r=new LinearLayout(-1,-2); r->setOrientation(LinearLayout::HORIZONTAL);
+        LinearLayout*r=new LinearLayout(&app); r->setOrientation(LinearLayout::HORIZONTAL);
         content->addView(r, lp(-1,-2,0,2)); return r;
     };
     auto addCell=[&](LinearLayout*row,const char*name,std::function<void(Drawable*)>apply){
-        LinearLayout*cell=new LinearLayout(sz,sz+labelH); cell->setOrientation(LinearLayout::VERTICAL);
-        ImageView*iv=new ImageView(sz,sz);
+        LinearLayout*cell=new LinearLayout(&app); cell->setOrientation(LinearLayout::VERTICAL);
+        ImageView*iv=new ImageView(&app);
         Drawable*dr=rainbow()->mutate();
         iv->setImageDrawable(dr);
         if(dr) apply(dr);
         iv->setBackgroundColor(0xFF1b2330);
         iv->setScaleType(ScaleType::FIT_XY);
         cell->addView(iv, lp(sz,sz));
-        TextView*lbl=new TextView(0,0); lbl->setText(name); lbl->setTextSize(11);
+        TextView*lbl=new TextView(&app); lbl->setText(name); lbl->setTextSize(11);
         lbl->setGravity(Gravity::CENTER); lbl->setTextColor(0xFFcfd8dc);
         cell->addView(lbl, lp(sz,labelH));
         row->addView(cell, lp(sz,-2,gap,0));

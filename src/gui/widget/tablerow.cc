@@ -1,8 +1,12 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/tablerow.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(TableRow)
+DECLARE_WIDGET2(TableRow, "android.widget.TableRow");
 
 TableRow::LayoutParams::LayoutParams()
     :LinearLayout::LayoutParams(MATCH_PARENT, WRAP_CONTENT){
@@ -16,9 +20,13 @@ TableRow::LayoutParams::LayoutParams(int column):LayoutParams(){
 
 TableRow::LayoutParams::LayoutParams(Context* c,const AttributeSet&attrs)
     :LinearLayout::LayoutParams(c,attrs){
-    column= attrs.getInt("layout_column",-1);
-    span  = attrs.getInt("layout_span",1);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = c->obtainStyledAttributes(attrs, R::styleable::TableRowLayout);
+    if (ta) {
+    column= ta->getInt(R::styleable::TableRowLayout_layout_column,-1);
+    span  = ta->getInt(R::styleable::TableRowLayout_layout_span,1);
     if(span<1)span=1;
+    }
 }
 
 TableRow::LayoutParams::LayoutParams(int w, int h)
@@ -47,12 +55,13 @@ TableRow::LayoutParams::LayoutParams(const MarginLayoutParams& source)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-TableRow::TableRow(int w,int h):LinearLayout(w,h){
-    initTableRow();
-}
+TableRow::TableRow(Context*ctx)
+    :TableRow(ctx,nullptr){}
 
-TableRow::TableRow(Context* context,const AttributeSet& attrs)
-  :LinearLayout(context, attrs){
+TableRow::TableRow(Context* context,const AttributeSet* attrs):TableRow(context,attrs,0){}
+
+TableRow::TableRow(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(context, pAttrs, defStyleAttr){
     initTableRow();
 }
 

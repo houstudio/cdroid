@@ -25,6 +25,15 @@ AbsSpinner::RecycleBin::RecycleBin(AbsSpinner*abs){
     ABS=abs;
 }
 void AbsSpinner::RecycleBin::put(int position, View* v) {
+    // Owning overwrite: SparseArray::put silently drops the previous entry —
+    // a same-key put (onMeasure's selected tree vs a measure tree) lost the
+    // replaced view tree (valgrind: definite, the checkmark ASLD/AVD cluster).
+    View* old = mScrapHeap.get(position);
+    if (old != nullptr && old != v) {
+
+        if (old->getParent() == ABS) ABS->removeDetachedView(old, false);
+        delete old;
+    }
     mScrapHeap.put(position, v);
 }
 
@@ -38,22 +47,36 @@ void AbsSpinner::RecycleBin::clear() {
     int count = mScrapHeap.size();
     for (int i = 0; i < count; i++) {
         View* view = mScrapHeap.valueAt(i);
-        if (view)ABS->removeDetachedView(view, true);
+        if (view == nullptr) continue;
+        // CDROID ownership: the bin owns its (detached) measure/layout views —
+        // AOSP drops them for GC. Detach first in case one is still attached,
+        // then free the tree (setAdapter/resetList run clear() repeatedly,
+        // e.g. DropDownPreference rebinds its Spinner per row bind).
+        if (view->getParent() == ABS) ABS->removeDetachedView(view, false);
+        delete view;
     }
     mScrapHeap.clear();
-}    
-
-AbsSpinner::AbsSpinner(int w,int h):AdapterView(w,h){
-    initAbsSpinner();
 }
 
-AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet&atts)
-  :AdapterView(ctx,atts){
+AbsSpinner::RecycleBin::~RecycleBin() {
+    clear();
+}
+
+AbsSpinner::AbsSpinner(Context*ctx)
+    :AbsSpinner(ctx,nullptr){}
+
+AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet* atts):AbsSpinner(ctx,atts,0){}
+
+AbsSpinner::AbsSpinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :AdapterView(ctx,pAttrs, defStyleAttr){
     initAbsSpinner();
 }
 
 AbsSpinner::~AbsSpinner(){
     delete mRecycler;
+    // Mirror AbsListView: the DataSetObserver we allocated in setAdapter() is
+    // ours — without this every Spinner leaks one (valgrind "definitely lost").
+    delete mDataSetObserver;
 }
 
 void AbsSpinner::initAbsSpinner() {
@@ -66,6 +89,7 @@ void AbsSpinner::initAbsSpinner() {
     setFocusable(true);
     setWillNotDraw(false);
     mSpinnerPadding.setEmpty();
+    mDataSetObserver = nullptr;   // dtor/setAdapter delete it: must start null
     mRecycler=new RecycleBin(this);
 }
 
@@ -76,6 +100,8 @@ int AbsSpinner::getCount(){
 void AbsSpinner::setAdapter(Adapter* adapter) {
     if (mAdapter) {
         mAdapter->unregisterDataSetObserver(mDataSetObserver);
+        delete mDataSetObserver;      // swap path: same ownership rule as AbsListView
+        mDataSetObserver = nullptr;
         resetList();
     }
     mAdapter=adapter;
@@ -111,6 +137,29 @@ void AbsSpinner::resetList() {
     mDataChanged = false;
     mNeedSync = false;
 
+    // CDROID ownership: AOSP's removeAllViewsInLayout drops the selection
+    // tree for GC here. Free it explicitly instead — resetList runs on every
+    // setAdapter (DropDownPreference rebinds its Spinner per selection), and
+    // the dropped tree leaked a full item view per selection (valgrind:
+    // one tree per round-trip selection, SPY-traced to this exact spot).
+    // NOT via recycleAllViews(): the bin is keyed by position, and a
+    // *different* adapter set next must never reuse this adapter's views.
+    // clearAnimation first: a running animation (e.g. the checkmark ASLD)
+    // makes removeViewInternal route the child to the disappearing list
+    // instead of dispatching detach — the tree-observer preDraw listener
+    // then fired on the deleted view (SIGSEGV in TextView::assumeLayout);
+    // endViewTransition is the belt that drops any such dangling entry.
+    while (getChildCount() > 0) {
+        View* v = getChildAt(0);
+        v->clearAnimation();
+        // BEFORE removeViewAt: the remove path checks isViewTransitioning()
+        // and would route the child to the disappearing list, skipping the
+        // detach dispatch — the tree-observer listeners then outlived the
+        // deleted view (preDraw SIGSEGV).
+        endViewTransition(v);
+        removeViewAt(0);
+        delete v;
+    }
     removeAllViewsInLayout();
     mOldSelectedPosition = INVALID_POSITION;
     mOldSelectedRowId = INVALID_ROW_ID;
@@ -253,5 +302,9 @@ void AbsSpinner::requestLayout() {
     if (!mBlockLayoutRequests) {
         AdapterView::requestLayout();
     }
+}
+
+std::string AbsSpinner::getAccessibilityClassName()const{
+    return "AbsSpinner";
 }
 }

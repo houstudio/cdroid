@@ -72,7 +72,7 @@ private:
     void startSoftwareEnter();
     float getCurrentRadius();
     void onAnimationPropertyChanged();
-    void pruneSwFinished();
+    void pruneSwFinished(Animator* firing = nullptr);
 protected:
     void onTargetRadiusChanged(float targetRadius)override;
     void clampStartingPosition();

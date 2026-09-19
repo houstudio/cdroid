@@ -15,41 +15,51 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <view/viewgroup.h>
 #include <widget/absseekbar.h>
-#include <widget/R.h>
+#include <widget/framework_styleable.h>
 #include <math.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 
 #define NO_ALPHA 0xFF
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(AbsSeekBar)
+DECLARE_WIDGET2(AbsSeekBar, "android.widget.AbsSeekBar");
 
-AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet&attrs):ProgressBar(ctx,attrs){
+AbsSeekBar::AbsSeekBar(Context*ctx)
+    :AbsSeekBar(ctx,nullptr){}
+
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* attrs):AbsSeekBar(ctx,attrs,0){}
+
+AbsSeekBar::AbsSeekBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):ProgressBar(ctx,pAttrs, defStyleAttr){
     initSeekBar();
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::SeekBar, defStyleAttr);
+    
 
-    setThumb(attrs.getDrawable("thumb"));
-    setTickMark(attrs.getDrawable("tickMark"));
-    mThumbTintList = attrs.getColorStateList("thumbTint");
-    mTickMarkTintList = attrs.getColorStateList("tickMarkTint");
-    const int thumbOffset = attrs.getDimensionPixelOffset("thumbOffset",getThumbOffset());
-    setThumbOffset(thumbOffset);
+setThumb(ta->getDrawable(R::styleable::SeekBar_thumb));
+setTickMark(ta->getDrawable(R::styleable::SeekBar_tickMark));
+{ auto csl = ta->getColorStateList(R::styleable::SeekBar_thumbTint);
+  if(csl) mThumbTintList = csl; }
+{ auto csl = ta->getColorStateList(R::styleable::SeekBar_tickMarkTint);
+  if(csl) mTickMarkTintList = csl; }
+const int thumbOffset = ta->getDimensionPixelOffset(R::styleable::SeekBar_thumbOffset,getThumbOffset());
+setThumbOffset(thumbOffset);
 
-    const bool useDisabledAlpha = attrs.getBoolean("useDisabledAlpha", true);
-    mDisabledAlpha = useDisabledAlpha?attrs.getFloat("disabledAlpha", 0.5f):1.f;
-    mSplitTrack = attrs.getBoolean("splitTrack",false);
-    mThumbExclusionMaxSize = ctx->getDimension("cdroid:dimen/seekbar_thumb_exclusion_max_size");
+const bool useDisabledAlpha = pAttrs ? pAttrs->getAttributeBooleanValue(std::string(), "useDisabledAlpha", true) : false;
+// disabledAlpha is not in the SeekBar styleable (only ToggleButton's), so
+// read it via the AttributeSet bridge for both modes.
+mDisabledAlpha = useDisabledAlpha && pAttrs ? pAttrs->getAttributeFloatValue(std::string(), "disabledAlpha", 0.5f) : 1.f;
+mSplitTrack = ta->getBoolean(R::styleable::SeekBar_splitTrack,false);
+mThumbExclusionMaxSize = ctx->getDimension(R::dimen::seekbar_thumb_exclusion_max_size);
 
-    applyThumbTint();
-    applyTickMarkTint();
-}
+applyThumbTint();
+applyTickMarkTint();
 
-AbsSeekBar::AbsSeekBar(int w,int h):ProgressBar(w,h){
-    initSeekBar();
-    applyThumbTint();
-    applyTickMarkTint();
 }
 
 void AbsSeekBar::initSeekBar(){
@@ -766,11 +776,13 @@ bool AbsSeekBar::performAccessibilityActionInternal(int action, Bundle* argument
          if (!canUserSetProgress()) {
              return false;
          }
-         if (arguments == nullptr /*|| !arguments.containsKey(AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE)*/) {
+         if (arguments == nullptr || !arguments->containsKey(
+                     AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE)) {
              return false;
          }
-         //const float value = arguments.getFloat( AccessibilityNodeInfo.ACTION_ARGUMENT_PROGRESS_VALUE);
-         return false;//setProgressInternal((int) value, true, true);
+         const float value = arguments->getFloat(
+                 AccessibilityNodeInfo::ACTION_ARGUMENT_PROGRESS_VALUE);
+         return setProgressInternal((int) value, true, true);
      }
      case AccessibilityNodeInfo::ACTION_SCROLL_FORWARD:
      case AccessibilityNodeInfo::ACTION_SCROLL_BACKWARD: {

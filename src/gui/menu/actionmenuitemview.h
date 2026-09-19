@@ -56,7 +56,8 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
-    ActionMenuItemView(Context* context,const AttributeSet& attrs);
+    ActionMenuItemView(Context* context,const AttributeSet* attrs);
+    ActionMenuItemView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ActionMenuItemView()override;
     //void onConfigurationChanged(Configuration newConfig) override;
 

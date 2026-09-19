@@ -22,10 +22,10 @@
 namespace cdroid{
 class Button : public TextView{
 public:
-    Button(int w, int h);
-    Button(const std::string& text, int w, int h);
-    Button(Context*ctx,const AttributeSet& attrs);
-    virtual ~Button();
+    Button(Context*ctx);
+    Button(Context*ctx,const AttributeSet* attrs);
+    Button(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
+    ~Button()override;
     PointerIcon* onResolvePointerIcon(MotionEvent& event, int pointerIndex)override;
     std::string getAccessibilityClassName()const override;
 };

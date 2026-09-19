@@ -29,15 +29,18 @@ public:
 private:
     class ClipState:public DrawableWrapperState{
     public:
+        // AOSP mThemeAttrs: ?attr ids captured at inflate, re-resolved by applyTheme.
+        std::vector<int> mThemeAttrs;
         int mGravity;
         int mOrientation;
         ClipState();
         ClipState(const ClipState& state);
         ClipDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
     };
     std::shared_ptr<ClipState>mState;
-    ClipDrawable(std::shared_ptr<ClipState>state);
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    ClipDrawable(std::shared_ptr<ClipState>state,Resources*res);
+    void updateStateFromTypedArray(const TypedArray& a);
 protected:
     bool onLevelChange(int level)override;
     std::shared_ptr<DrawableWrapperState> mutateConstantState()override;
@@ -48,7 +51,9 @@ public:
     int getGravity()const;
     int getOrientation()const;
     void draw(Canvas& canvas)override;
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r, XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
+    bool canApplyTheme()override;
+    void applyTheme(const Resources::Theme& t)override;
 };
 
 }

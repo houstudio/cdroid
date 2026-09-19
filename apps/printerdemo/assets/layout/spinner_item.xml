@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingRight="6dp">
+    <!-- closed spinner row: text left, drop-down arrow pinned to the right edge -->
+    <TextView android:id="@+id/spinner_item_text"
+        android:layout_width="0dp" android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:paddingLeft="12dp"
+        android:textSize="15sp"
+        android:textColor="?android:attr/textColorPrimary"/>
+    <ImageView android:layout_width="12dp" android:layout_height="8dp"
+        android:layout_marginStart="6dp"
+        android:src="@drawable/ic_spinner_arrow" android:importantForAccessibility="no"/>
+</LinearLayout>

@@ -18,10 +18,11 @@
 #ifndef __CDROID_VECTOR_DRAWABLE_H__
 #define __CDROID_VECTOR_DRAWABLE_H__
 #include <unordered_map>
-#include <core/typedvalue.h>
+#include <content/typedvalue.h>
 #include <drawable/drawable.h>
 #include <drawable/pathparser.h>
 #include <animation/property.h>
+#include <content/typedarray.h>
 namespace cdroid{
 namespace hwui{
     class Group;
@@ -30,7 +31,6 @@ namespace hwui{
     class FullPath;
     class Tree;
 }
-using Theme = std::string;
 class AnimatedVectorDrawable;
 class VectorDrawable:public Drawable {
 public:
@@ -60,11 +60,11 @@ private:
     int mDpiScaledHeight = 0;
     Insets mDpiScaledInsets;// = Insets.NONE;
 private:
-    VectorDrawable(std::shared_ptr<VectorDrawableState> state);
-    void updateLocalState();
+    VectorDrawable(std::shared_ptr<VectorDrawableState> state, Resources* res);
+    void updateLocalState(Resources* res);
     bool needMirroring();
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void inflateChildElements(XmlPullParser&parser,const AttributeSet&);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void inflateChildElements(Resources& r,XmlPullParser&parser,const AttributeSet&,const Resources::Theme* theme);
 protected:
     bool onStateChange(const std::vector<int>& stateSet)override;
     void computeVectorSize();
@@ -88,13 +88,14 @@ public:
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     Insets getOpticalInsets() override;
-    void* getTargetByName(const std::string& name);
+    struct VGTarget;   // defined below, after VObject (its two member types)
+    VGTarget getTargetByName(const std::string& name);
     /*
      * Update local dimensions to adjust for a target density that may differ
      * from the source density against which the constant state was loaded.
      */
     bool canApplyTheme() override;
-    //void applyTheme(Theme t) override;
+    void applyTheme(const Resources::Theme& t) override;
 
     /**
      * The size of a pixel when scaled from the intrinsic dimension to the viewport dimension.
@@ -103,13 +104,12 @@ public:
      * @hide
      */
     float getPixelSize();
-    static VectorDrawable* create(Context*,const std::string&resId);
     int getChangingConfigurations()const override;
     void setAutoMirrored(bool mirrored) override;
     bool isAutoMirrored() const override;
     long getNativeTree();
     void setAntiAlias(bool aa);
-    void inflate(XmlPullParser&,const AttributeSet&)override;
+    void inflate(Resources& r,XmlPullParser&,const AttributeSet&,const Resources::Theme* theme)override;
 public:
     class VObject {
         friend VectorDrawableState;
@@ -124,13 +124,31 @@ public:
             mTreePtr = ptr;
         }
         virtual long getNativePtr()=0;
-        virtual void inflate(XmlPullParser&,const AttributeSet& attrs)=0;
+        virtual void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs,const Resources::Theme* theme)=0;
         virtual bool canApplyTheme()=0;
-        virtual void applyTheme(Theme t)=0;
+        virtual void applyTheme(const Resources::Theme& t)=0;
         virtual bool onStateChange(const std::vector<int>& state)=0;
         virtual bool isStateful()const=0;
         virtual bool hasFocusStateSpecified()const=0;
         virtual const Property* getProperty(const std::string& propertyName)=0;
+    };
+
+    // AOSP mVGTargetsMap is ArrayMap<String, Object> (VectorDrawable.java:946):
+    // a named animation target is either the drawable's ConstantState (the
+    // root entry, java:814/:1005) or a VObject (VGroup/VPath). This pair is
+    // the C++ spelling of AnimatedVectorDrawable's instanceof dispatch
+    // (java:840-848); the "unsupported type" branch is unrepresentable by
+    // construction — only these two ever enter the map.
+    struct VGTarget {
+        VObject* object = nullptr;
+        VectorDrawableState* state = nullptr;
+        VGTarget() = default;
+        VGTarget(VObject* o) : object(o) {}
+        VGTarget(VectorDrawableState* s) : state(s) {}
+        explicit operator bool() const { return object != nullptr || state != nullptr; }
+        void* asVoid() const {
+            return object != nullptr ? static_cast<void*>(object) : static_cast<void*>(state);
+        }
     };
 };
 
@@ -139,7 +157,7 @@ protected:
     friend VectorDrawable;
     friend AnimatedVectorDrawable;
     // Variables below need to be copied (deep copy if applicable) for mutation.
-    int mThemeAttrs[2];
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     int mChangingConfigurations;
     cdroid::RefPtr<ColorStateList> mTint;
     int mTintMode = DEFAULT_TINT_MODE;
@@ -153,10 +171,10 @@ protected:
     hwui::Tree* mNativeTree = nullptr;
 
     int mDensity = DisplayMetrics::DENSITY_DEFAULT;
-    std::unordered_map<std::string,void*> mVGTargetsMap;
+    std::unordered_map<std::string,VectorDrawable::VGTarget> mVGTargetsMap;
 
     // Fields for cache
-    int mCachedThemeAttrs[2];
+    std::vector<int> mCachedThemeAttrs;
     cdroid::RefPtr<ColorStateList> mCachedTint;
     int  mCachedTintMode;
     bool mAutoMirrored;
@@ -187,9 +205,10 @@ public:
     long getNativeRenderer();
     bool canReuseCache();
     void updateCacheStates();
-    void applyTheme(Theme t);
+    void applyTheme(const Resources::Theme& t);
     bool canApplyTheme();
     Drawable* newDrawable()override;
+    Drawable* newDrawable(Resources* res)override;
     int getChangingConfigurations()const override;
     bool isStateful()const;
     bool hasFocusStateSpecified()const;
@@ -225,7 +244,7 @@ private:
     // mLocalMatrix is updated based on the update of transformation information,
     // either parsed from the XML or by animation.
     int mChangingConfigurations;
-    int mThemeAttrs[2];
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
     std::string mGroupName;
 
     // The native object will be created in the constructor and will be destroyed in native
@@ -246,7 +265,7 @@ private:
 public:
     VGroup();
     ~VGroup();
-    VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
+    VGroup(const VGroup* copy,std::unordered_map<std::string, VectorDrawable::VGTarget>& targetsMap);
     const Property* getProperty(const std::string& propertyName)override;
 
     std::string getGroupName()const;
@@ -254,13 +273,13 @@ public:
     void addChild(VObject* child);
     void setTree(hwui::Tree* treeRoot)override;
     long getNativePtr()override;
-    void updateStateFromTypedArray(Context*,const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     bool onStateChange(const std::vector<int>& stateSet)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
 
     bool canApplyTheme()override;
-    void applyTheme(Theme t)override;
+    void applyTheme(const Resources::Theme& t)override;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
     float getRotation();
     void setRotation(float rotation);
@@ -276,7 +295,7 @@ public:
     void setTranslateX(float translateX);
     float getTranslateY();
     void setTranslateY(float translateY);
-    void inflate(XmlPullParser&,const AttributeSet&atts)override;
+    void inflate(Resources&r,XmlPullParser&,const AttributeSet&atts,const Resources::Theme* theme)override;
 };
 
 /**
@@ -315,12 +334,12 @@ public:
     ~VClipPath()override;
     long getNativePtr()override;
     bool canApplyTheme() override;
-    void applyTheme(Theme theme) override;
+    void applyTheme(const Resources::Theme& theme) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;
     bool hasFocusStateSpecified() const override;
-    void updateStateFromTypedArray(const AttributeSet&atts);
-    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
+    void updateStateFromTypedArray(const TypedArray& a);
+    void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs,const Resources::Theme* theme)override;
 };
 
 /**
@@ -350,7 +369,7 @@ private:
     uint8_t* mPropertyData;
     /////////////////////////////////////////////////////
     // Variables below need to be copied (deep copy if applicable) for mutation.
-    int mThemeAttrs[2];
+    std::vector<int> mThemeAttrs;   // AOSP int[] mThemeAttrs; empty == null
 
     RefPtr<ComplexColor> mStrokeColors;
     RefPtr<ComplexColor> mFillColors;
@@ -364,9 +383,9 @@ private:
     static const FloatProperty*const TRIM_PATH_END;
     static const FloatProperty*const TRIM_PATH_OFFSET;
 private:
-    void updateStateFromTypedArray(const AttributeSet&atts);
+    void updateStateFromTypedArray(const TypedArray& a);
     bool canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor);
-    void inflateGradients(XmlPullParser&,const AttributeSet&atts);
+    void inflateGradients(Resources&r,XmlPullParser&,const AttributeSet&atts);
 public:
     VFullPath();
     VFullPath(const VFullPath* copy);
@@ -377,10 +396,10 @@ public:
     bool isStateful() const override;
     bool hasFocusStateSpecified()const override;
     long getNativePtr() override;
-    void inflate(XmlPullParser&,const AttributeSet& attrs)override;
+    void inflate(Resources&,XmlPullParser&,const AttributeSet& attrs,const Resources::Theme* theme)override;
 
     bool canApplyTheme()override;
-    void applyTheme(Theme t)override;
+    void applyTheme(const Resources::Theme& t)override;
 
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
     int getStrokeColor();

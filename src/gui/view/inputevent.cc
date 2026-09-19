@@ -19,8 +19,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
-#include <utils/atexit.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <linux/random.h>
 #include <gui_features.h>

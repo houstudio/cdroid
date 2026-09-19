@@ -9,6 +9,7 @@
 namespace cdroid{
 class View;
 class Canvas;
+class TypedArray;
 class LayoutParams{
 public:
     static constexpr int FILL_PARENT = -1;
@@ -16,7 +17,7 @@ public:
     static constexpr int WRAP_CONTENT = -2;
 protected:
     static const std::string sizeToString(int size);
-    void setBaseAttributes(const AttributeSet& a, int widthAttr, int heightAttr);
+    void setBaseAttributes(const TypedArray& a, int widthAttr, int heightAttr);
 public:
     int width;
     int height;

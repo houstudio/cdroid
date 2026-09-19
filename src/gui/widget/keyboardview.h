@@ -4,8 +4,10 @@
 #include <widget/edittext.h>
 #include <vector>
 #include <map>
+#include <memory>
 #include <core/keyboard.h>
 #include <core/handler.h>
+#include <widget/explorebytouchhelper.h>
 
 namespace cdroid{
 
@@ -53,6 +55,7 @@ public:
         std::function<void()>swipeUp;
     };
 private:
+    class KeyboardViewTouchHelper;
     static constexpr int NOT_A_KEY = -1;
     static constexpr int MSG_SHOW_PREVIEW = 1;
     static constexpr int MSG_REMOVE_PREVIEW = 2;
@@ -103,12 +106,11 @@ private:
     int  mPreviewHeight;
     int  mCoordinates[2];
     View* mPopupParent;
-    bool mMiniKeyboardOnScreen;
     int  mMiniKeyboardOffsetX;
     int  mMiniKeyboardOffsetY;
     /* The popup-keyboard container layout (AOSP android:popupKeyboard). Empty
      * => no long-press popup. Inflated by onLongPress to host the mini keyboard. */
-    std::string mPopupLayout;
+    int mPopupLayout = 0;
     /* Drives the delayed long-press (AOSP used a Handler; CDROID's Handler is
      * now usable, so we use it faithfully instead of the Runnable workaround). */
     Handler* mHandler = nullptr;
@@ -124,9 +126,20 @@ private:
     int  mVerticalCorrection;
     int  mProximityThreshold;
 
+    bool mMiniKeyboardOnScreen=false;
     bool mPreviewCentered = false;
     bool mShowPreview = true;
     bool mShowTouchPoints = true;
+    
+    bool mAbortKey=false;
+    bool mPossiblePoly = false;
+    bool mDisambiguateSwipe = false;
+    bool mProximityCorrectOn = false;
+    
+    bool mInMultiTap=false;
+    bool mKeyboardChanged=false;
+    bool mInLongPress = false;
+    
     int  mPopupPreviewX;
     int  mPopupPreviewY;
 
@@ -135,7 +148,6 @@ private:
     int  mStartX;
     int  mStartY;
 
-    bool mProximityCorrectOn;
 
     Paint mPaint;
     Rect mPadding;
@@ -154,13 +166,10 @@ private:
     int  mPopupX;
     int  mPopupY;
     int  mRepeatKeyIndex = NOT_A_KEY;
-    bool mAbortKey;
     Keyboard::Key* mInvalidatedKey;
     Rect mClipRegion;
-    bool mPossiblePoly;
     //SwipeTracker *mSwipeTracker;
     int  mSwipeThreshold;
-    bool mDisambiguateSwipe;
 
     // Variables for dealing with multiple pointers
     int  mOldPointerCount = 1;
@@ -174,13 +183,10 @@ private:
     int  mLastSentIndex;
     int  mTapCount;
     int64_t mLastTapTime;
-    bool mInMultiTap;
-    bool mKeyboardChanged;
-    /* True while a finger is down on a key (DOWN..UP/CANCEL). Gates the
-     * MSG_LONGPRESS callback so a flaky removeMessages() can't fire the popup
-     * after the finger has lifted (which would freeze input behind the popup). */
-    bool mInLongPress = false;
     Rect mDirtyRect;
+
+    /* Exposes the keys as virtual a11y views (see KeyboardViewTouchHelper). */
+    std::shared_ptr<KeyboardViewTouchHelper> mTouchHelper;
 private:
     void init();
     std::string adjustCase(const std::string& label);
@@ -199,8 +205,10 @@ private:
 protected:
     bool onLongPress(Keyboard::Key* popupKey);
 public:
-    KeyboardView(int w,int h);
-    KeyboardView(Context*context,const AttributeSet&atts);
+    KeyboardView(Context*ctx);   // AOSP KeyboardView(Context)
+    KeyboardView(Context*context,const AttributeSet*atts);
+    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr);
+    KeyboardView(Context*context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
     ~KeyboardView()override;
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();
@@ -217,9 +225,12 @@ public:
     void setPopupOffset(int x, int y);
     /* Override the long-press accent popup's container layout (the window that
      * hosts the mini KeyboardView). The active InputMethod's getKeyboardLayout
-     * (POPUP) feeds this so a product can customize the popup appearance. Empty
+     * (POPUP) feeds this so a product can customize the popup appearance. 0
      * keeps the layout declared via android:popupLayout. */
-    void setPopupLayout(const std::string& popupLayout);
+    void setPopupLayout(int popupLayoutResId);
+    /* AOSP keyboards relabel the enter key with the focused editor's IME action
+     * (Go/Search/Send/Next/Done/Previous). 0 restores the plain return icon. */
+    void setImeAction(int actionId);
     void setProximityCorrectionEnabled(bool enabled);
     bool isProximityCorrectionEnabled()const;
     void onClick(View&v);
@@ -232,6 +243,33 @@ public:
     bool onTouchEvent(MotionEvent& me)override;
     void closing();
     void onDetachedFromWindow()override;
+};
+
+/**
+ * Exposes the keyboard's keys as a virtual view hierarchy for accessibility.
+ * AOSP KeyboardView leaves this as a TODO ("We need to implement
+ * AccessibilityNodeProvider for this view"); implemented here with the same
+ * ExploreByTouchHelper pattern SimpleMonthView uses. The virtual view id is
+ * the key index in the current keyboard.
+ */
+class KeyboardView::KeyboardViewTouchHelper:public ExploreByTouchHelper {
+private:
+    KeyboardView* mHost;
+    Rect mTempRect;
+
+    /**
+     * Generates a description for a given key: its label when it has one,
+     * its output text otherwise, else the keycode name (delete/enter/...).
+     */
+    std::string getKeyDescription(int virtualViewId);
+protected:
+    int getVirtualViewAt(float x, float y)override;
+    void getVisibleVirtualViews(std::vector<int>& virtualViewIds)override;
+    void onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event)override;
+    void onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node)override;
+    bool onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments)override;
+public:
+    KeyboardViewTouchHelper(KeyboardView* host);
 };
 }//namespace
 #endif

@@ -18,6 +18,7 @@
 #ifndef __GRAPH_DEVICE_H__
 #define __GRAPH_DEVICE_H__
 #include <core/rect.h>
+#include <cairomm/region.h>   // Cairo::Region (computeVisibleRegion)
 #include <cairomm/context.h>
 #include <mutex>
 #include <condition_variable>
@@ -28,7 +29,25 @@
 #endif
 
 namespace cdroid{
+class Animator;  // drives a ghost's exit animation (freed by removeGhost, off-dispatch)
+
 class GraphDevice{
+public:
+    // A compositor-owned "ghost": the snapshot surface of a window that has
+    // already been REMOVED, still playing its exit animation. The analog of
+    // AOSP WindowStateAnimator's surface outliving the view tree during window
+    // exit animations — the view teardown is synchronous (ViewRootImpl.die ->
+    // dispatchDetachedFromWindow); only the visual lingers, owned by the
+    // compositor alone. No view tree, no input, no focus behind it.
+    class GhostLayer {
+    public:
+        Cairo::RefPtr<Cairo::ImageSurface> snapshot; // window content at removal
+        Rect bounds;         // resting bounds at removal (screen space)
+        float alpha = 1.f;   // whole-surface fade (FADE exit)
+        int dx = 0, dy = 0;  // compose-time translation (SLIDE exit)
+        Rect lastRect;       // bounds at the previous compose (swept damage)
+        Animator* animator = nullptr; // drives alpha/dx/dy; freed by removeGhost
+    };
 private:
     int mScreenWidth;
     int mScreenHeight;
@@ -49,6 +68,7 @@ private:
     std::string mLogo;
     void* mPrimarySurface;
     class Canvas*mPrimaryContext;
+    std::vector<GhostLayer*> mGhosts;
     GraphDevice();
     void trackFPS(Canvas&);
     void doCompose();
@@ -72,6 +92,10 @@ public:
     void unlock();
     void composeSurfaces();
     bool needCompose()const;
+    GhostLayer* addGhost(const Cairo::RefPtr<Cairo::ImageSurface>& snap, const Rect& bounds);
+    void removeGhost(GhostLayer* ghost);
+    void clearGhosts();
+    void composeGhosts();
     Canvas*getPrimaryContext();
     void* getPrimarySurface()const;
 };

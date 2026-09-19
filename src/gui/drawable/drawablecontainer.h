@@ -28,6 +28,9 @@ protected:
         Drawable*prepareDrawable(Drawable* child);
     public:
         DrawableContainer*mOwner;
+        // AOSP java:686: resources against which the children were inflated;
+        // recycled into cs.newDrawable(mSourceRes) when futures materialize.
+        Resources*mSourceRes;
         Rect mConstantPadding;
         int mDensity;
         int mChangingConfigurations = 0;
@@ -57,7 +60,7 @@ protected:
         std::vector<Drawable*>mDrawables;
         SparseArray<std::shared_ptr<ConstantState>>mDrawableFutures;
     public:
-        DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own);
+        DrawableContainerState(const DrawableContainerState*orig,DrawableContainer*own,Resources*res);
         ~DrawableContainerState()override;
         DrawableContainer*newDrawable()override{return nullptr;}//must be overrided by inherited
         int addChild(Drawable* dr);
@@ -85,6 +88,9 @@ protected:
         void setEnterFadeDuration(int duration) {mEnterFadeDuration = duration; }
         int getExitFadeDuration()const {return mExitFadeDuration; }
         void setExitFadeDuration(int duration) {mExitFadeDuration = duration;}
+        // AOSP java:955: re-resolve the density against the resources that
+        // inflated density-dependent values.
+        void updateDensity(Resources* res);
         int getOpacity();
     };
     Rect mHotspotBounds;
@@ -103,7 +109,6 @@ protected:
 
     Drawable* mCurrDrawable;
     Drawable* mLastDrawable;
-    DrawableContainer(Context*ctx,const AttributeSet&atts);
     bool needsMirroring();
     void animate(bool schedule);
     virtual std::shared_ptr<DrawableContainerState> cloneConstantState();

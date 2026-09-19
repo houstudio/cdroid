@@ -6,18 +6,16 @@
 namespace cdroid {
 
 static std::string attr(XmlPullParser& p, const char* key) {
-    return p.hasAttribute(key) ? p.getAttributeValue(key) : std::string();
+    return p.getAttributeValue(std::string(), key);
 }
 
 static int parseInt(XmlPullParser& p, const char* key, int defVal) {
-    if (!p.hasAttribute(key)) return defVal;
-    try { return std::stoi(p.getAttributeValue(key)); }
+    try { return std::stoi(p.getAttributeValue(std::string(), key)); }
     catch (...) { return defVal; }
 }
 
 static float parseFloat(XmlPullParser& p, const char* key, float defVal) {
-    if (!p.hasAttribute(key)) return defVal;
-    try { return std::stof(p.getAttributeValue(key)); }
+    try { return std::stof(p.getAttributeValue(std::string(), key)); }
     catch (...) { return defVal; }
 }
 
@@ -51,7 +49,7 @@ static void readAxis(XmlPullParser& p, std::vector<FontVariationAxis>& axes) {
 static FontConfig::Font readFont(XmlPullParser& p, const std::string& fontDir) {
     FontConfig::Font f;
     f.weight = parseInt(p, "weight", 400);
-    f.italic = p.hasAttribute("style") && p.getAttributeValue("style") == "italic";
+    f.italic = p.getAttributeValue(std::string(), "style") == "italic";
     f.index = parseInt(p, "index", 0);
     std::string text;
     int ev;
@@ -70,7 +68,10 @@ static FontConfig::Font readFont(XmlPullParser& p, const std::string& fontDir) {
         auto b = text.find_last_not_of(" \t\r\n");
         f.fontName = text.substr(a, b - a + 1);
     }
-    f.fileName = fontDir + f.fontName;
+    // Android fonts.xml lists files relative to the xml's directory;
+    // generated snapshots (genfontsxml.sh) use absolute paths.
+    f.fileName = (!f.fontName.empty() && f.fontName[0] == '/')
+            ? f.fontName : fontDir + f.fontName;
     return f;
 }
 
@@ -104,16 +105,16 @@ FontConfig parseFontConfig(const std::string& xmlPath, const std::string& fontDi
     auto stream = std::make_unique<std::ifstream>(xmlPath);
     if (!stream->good()) return cfg;  // file missing -> empty config (caller falls back)
 
-    XmlPullParser parser(nullptr, std::move(stream));
-    if (!nextStartTag(parser)) return cfg;  // position at <familyset>
+    auto parser = XmlPullParser::detectAndCreate(nullptr, std::move(stream));
+    if (!nextStartTag(*parser)) return cfg;  // position at <familyset>
 
     int ev;
-    while ((ev = parser.next()) != XmlPullParser::END_DOCUMENT) {
+    while ((ev = parser->next()) != XmlPullParser::END_DOCUMENT) {
         if (ev == XmlPullParser::START_TAG) {
-            const std::string tag = parser.getName();
-            if (tag == "family") cfg.families.push_back(readFamily(parser, fontDir));
-            else if (tag == "alias") cfg.aliases.push_back(readAlias(parser));
-            else skipElement(parser);  // <family-list> and other unknowns
+            const std::string tag = parser->getName();
+            if (tag == "family") cfg.families.push_back(readFamily(*parser, fontDir));
+            else if (tag == "alias") cfg.aliases.push_back(readAlias(*parser));
+            else skipElement(*parser);  // <family-list> and other unknowns
         }
         // END_TAG / TEXT / COMMENT between top-level elements: ignore.
     }

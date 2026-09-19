@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/page_padding">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ph_fx_t"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/card_gap"
+            android:text="@string/ph_fx_d"
+            android:textColor="@color/text_secondary"
+            android:textSize="@dimen/body_size" />
+
+        <!-- Animation stage -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="160dp">
+                <TextView
+                    android:id="@+id/anim_target"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/tile_violet"
+                    android:gravity="center"
+                    android:text="cdroid"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <!-- AnimatedStateListDrawable -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_asld"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="@dimen/row_gap">
+                <ImageView
+                    android:id="@+id/asld_star"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:padding="8dp"
+                    android:src="@drawable/asld_star"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:contentDescription="Star state animation" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="12dp"
+                    android:text="@string/asld_hint"
+                    android:textColor="@color/text_disabled"
+                    android:textSize="11sp" />
+                <CheckBox
+                    android:id="@+id/asld_cb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/asld_cb_text"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- StateListAnimator single-label selection grow -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding"
+            android:layout_marginBottom="@dimen/card_gap">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sec_sla_grow"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap">
+                <TextView
+                    android:id="@+id/sla_tab1"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab1" />
+                <TextView
+                    android:id="@+id/sla_tab2"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab2" />
+                <TextView
+                    android:id="@+id/sla_tab3"
+                    android:layout_width="0dp"
+                    android:layout_height="52dp"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="8dp"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/nav_label_sla"
+                    android:textColor="@color/sla_label_color"
+                    android:textSize="14sp"
+                    android:text="@string/sla_tab3" />
+            </LinearLayout>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/sla_hint"
+                android:textColor="@color/text_disabled"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <!-- Controls -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/card_bg"
+            android:padding="@dimen/card_padding">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Triggers"
+                android:textColor="@color/text_secondary"
+                android:textSize="@dimen/section_size" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="@dimen/row_gap">
+                <Button
+                    android:id="@+id/anim_rotate"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Rotate" />
+                <Button
+                    android:id="@+id/anim_scale"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Scale" />
+                <Button
+                    android:id="@+id/anim_move"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_primary"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="#FFFFFFFF"
+                    android:text="Move" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+                <Button
+                    android:id="@+id/anim_fade"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Fade" />
+                <Button
+                    android:id="@+id/anim_combo"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:layout_marginRight="8dp"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Combo" />
+                <Button
+                    android:id="@+id/anim_reset"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_outline"
+                    android:stateListAnimator="@animator/press_scale"
+                    android:textColor="@color/accent"
+                    android:text="Reset" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+</ScrollView>

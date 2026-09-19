@@ -8,20 +8,20 @@ class CheckedTextView:public TextView,public Checkable{
 private:
     bool mChecked;
 
-    std::string mCheckMarkResource;
+    int mCheckMarkResource = 0;
     Drawable* mCheckMarkDrawable;
     cdroid::RefPtr<ColorStateList> mCheckMarkTintList;
     int mCheckMarkBlendMode = -1; /* null == -1; otherwise a BlendMode value */
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
 
-    int mBasePadding;
-    int mCheckMarkWidth;
+    int mBasePadding = 0;          // read by updatePadding before first measure
+    int mCheckMarkWidth = 0;       // only set once the checkmark resolves size
     int mCheckMarkGravity = Gravity::END;
 
-    bool mNeedRequestlayout;
+    bool mNeedRequestlayout = false;
 private:
-    void setCheckMarkDrawableInternal(Drawable* d,const std::string&resId);
+    void setCheckMarkDrawableInternal(Drawable* d,int resId);
     void applyCheckMarkTint();
     void updatePadding();
     void setBasePadding(bool checkmarkAtStart);
@@ -36,7 +36,9 @@ protected:
     void drawableStateChanged()override;
     void drawableHotspotChanged(float x, float y)override;
 public:
-    CheckedTextView(Context* context,const AttributeSet& attrs);
+    CheckedTextView(Context*ctx);   // AOSP CheckedTextView(Context)
+    CheckedTextView(Context* context,const AttributeSet* attrs);
+    CheckedTextView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CheckedTextView()override;
 
     void toggle()override;
@@ -44,7 +46,7 @@ public:
     void setChecked(bool checked)override;
 
     Drawable* getCheckMarkDrawable()const;
-    void setCheckMarkDrawable(const std::string&resId);
+    void setCheckMarkDrawable(int resId);
     void setCheckMarkDrawable(Drawable* d);
     void setCheckMarkTintList(const cdroid::RefPtr<ColorStateList>&tint);
     const cdroid::RefPtr<ColorStateList> getCheckMarkTintList()const;

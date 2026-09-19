@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID port of the AOSP DeskClock app (com.android.deskclock) — UI-only
+     facade modeled on the Music port: original layouts/drawables/strings,
+     in-process data model (SharedPreferences-backed DAOs), alarm/timer firing
+     driven by Handler schedules instead of AlarmManager + notifications (no
+     system notification surface on cdroid). Cut from the AOSP manifest:
+     HandleApiCalls/HandleShortcuts (voice/intent APIs), ClockProvider
+     (ContentProvider; alarm rows live in the in-process store), app widgets,
+     backup agent, boot receivers. See src/ for the deviations. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.deskclock">
+
+    <uses-sdk android:minSdkVersion="28" android:targetSdkVersion="36" />
+
+    <application android:label="@string/app_label" android:theme="@style/Theme.DeskClock">
+        <activity android:name=".DeskClock" android:label="@string/app_label"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".alarms.AlarmActivity" />
+        <activity android:name=".AlarmSelectionActivity"
+            android:label="@string/dismiss_alarm"
+            android:theme="@android:style/Theme.Holo.Light.Dialog.NoActionBar" />
+        <activity android:name=".worldclock.CitySelectionActivity"
+            android:label="@string/cities_activity_title"
+            android:theme="@style/Theme.DeskClock.CitySelection" />
+        <activity android:name=".ringtone.RingtonePickerActivity"
+            android:theme="@style/Theme.DeskClock.RingtonePicker" />
+        <activity android:name=".settings.SettingsActivity" android:label="@string/settings"
+            android:theme="@style/Theme.DeskClock.Settings" />
+        <activity android:name=".timer.ExpiredTimersActivity" android:launchMode="singleInstance" />
+        <activity android:name=".ScreensaverActivity" />
+        <activity android:name=".settings.ScreensaverSettingsActivity"
+            android:label="@string/screensaver_settings"
+            android:theme="@style/Theme.DeskClock.Settings" />
+    </application>
+</manifest>

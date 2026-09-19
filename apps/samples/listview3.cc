@@ -12,18 +12,18 @@ private:
     TextView* name;
     CheckBox* chk;
 public:
-    DataView():LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT){
-        id=new TextView("",0,0);
+    DataView(Context*ctx):LinearLayout(ctx){
+        id=new TextView(&App::getInstance()); id->setText("" );
         id->setBackgroundColor(0xFF222222);
         setGravity(Gravity::CENTER);
         LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(50,LayoutParams::WRAP_CONTENT);
         addView(id,lp);
 
-        name=new TextView("",0,0);
+        name=new TextView(&App::getInstance()); name->setText("" );
         lp=new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,5);
         addView(name,lp);
 
-        chk=new CheckBox("",0,0);
+        chk=new CheckBox(&App::getInstance()); chk->setText("" );
         chk->setClickable(true);
         lp= new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,1);
         addView(chk,lp);
@@ -71,7 +71,7 @@ public:
         DataView *dv=(DataView*)convertView;
         MyData&dt=getItemAt(position);
         if(convertView==nullptr){
-            dv=new DataView();
+            dv=new DataView(parent->getContext());
         }
         dv->setId(position);
         dv->startMarqueeIfNeed(position==10);
@@ -85,7 +85,7 @@ int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
-    ListView*lv=new ListView(460,500);
+    ListView*lv=new ListView(&App::getInstance());
     w->addView(lv);
     lv->layout(10,10,460,500);
     lv->setDivider(new ColorDrawable(0x66008800));

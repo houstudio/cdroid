@@ -9,10 +9,15 @@
 #include <text/selection.h>
 #include <text/layout.h>
 #include <text/inputtype.h>
+#include <text/character.h>
+#include <text/paint.h>
 #include <text/method/worditerator.h>
 #include <widget/textview.h>
 #include <view/keyevent.h>
+#include <unicode/uchar.h>
+#include <minikin/Emoji.h>
 #include <algorithm>
+#include <stdexcept>
 
 namespace cdroid {
 
@@ -20,6 +25,48 @@ const NoCopySpan* BaseKeyListener::OLD_SEL_START = new NoCopySpan();
 
 // BreakIterator.DONE equivalent for WordIterator results.
 static constexpr int BI_DONE = -1;
+
+// Port of android.text.Emoji (@hide) — the emoji predicates the delete state
+// machine below runs on. The four UCD-backed predicates are shared code with
+// the layout engine: minikin/Emoji.h implements the same queries (including
+// the two hand-picked Emoji-4.0 modifier bases), so delegate instead of
+// keeping a second copy of the tables. The constants and the keycap/tag
+// predicates below are android.text.Emoji's own.
+namespace {
+struct Emoji {
+    static constexpr int COMBINING_ENCLOSING_KEYCAP = 0x20E3;
+    static constexpr int ZERO_WIDTH_JOINER = 0x200D;
+    static constexpr int VARIATION_SELECTOR_16 = 0xFE0F;
+    static constexpr int CANCEL_TAG = 0xE007F;
+
+    static bool isRegionalIndicatorSymbol(int codePoint) {
+        return minikin::isRegionalIndicator(codePoint);
+    }
+    static bool isEmojiModifier(int codePoint) {
+        return minikin::isEmojiModifier(codePoint);
+    }
+    static bool isEmojiModifierBase(int c) {
+        return minikin::isEmojiBase(c);
+    }
+    static bool isEmoji(int codePoint) {
+        return minikin::isEmoji(codePoint);
+    }
+    // True if the character can be a base of COMBINING ENCLOSING KEYCAP.
+    static bool isKeycapBase(int codePoint) {
+        return ('0' <= codePoint && codePoint <= '9') || codePoint == '#' || codePoint == '*';
+    }
+    // True if the character can be part of tag_spec in an emoji tag sequence.
+    // 0xE007F (CANCEL TAG) is not included.
+    static bool isTagSpecChar(int codePoint) {
+        return 0xE0020 <= codePoint && codePoint <= 0xE007E;
+    }
+};
+
+// Returns true if the given code point is a variation selector.
+bool isVariationSelector(int codepoint) {
+    return u_hasBinaryProperty(codepoint, UCHAR_VARIATION_SELECTOR);
+}
+}  // namespace
 
 int BaseKeyListener::makeTextContentType(Capitalize caps, bool autoText) {
     int contentType = InputType::TYPE_CLASS_TEXT;
@@ -76,8 +123,19 @@ bool BaseKeyListener::backspaceOrForwardDelete(View& view, Editable& content, in
     // Selection spans (adjustSpansForReplace shifts/collapses them), so no explicit
     // setSelection is needed — matching Android's Editable contract.
     const int start = Selection::getSelectionEnd(&content);
-    const int end = isForwardDelete ? getOffsetForForwardDeleteKey(content, start)
-                                    : getOffsetForBackspaceKey(content, start);
+    int end;
+    if (isForwardDelete) {
+        // Android resolves the paint from the hosting TextView, falling back to
+        // a cached bare Paint guarded by a lock. CDROID's UI thread is single,
+        // so the plain function-local static is enough.
+        static Paint sCachedPaint;
+        TextView* textView = dynamic_cast<TextView*>(&view);
+        const Paint* paint = (textView != nullptr)
+                ? static_cast<const Paint*>(&textView->getPaint()) : &sCachedPaint;
+        end = getOffsetForForwardDeleteKey(content, start, *paint);
+    } else {
+        end = getOffsetForBackspaceKey(content, start);
+    }
     if (start != end) {
         content.Delete(std::min(start, end), std::max(start, end));
         return true;
@@ -200,32 +258,201 @@ bool BaseKeyListener::onKeyOther(View& /*view*/, Editable& /*content*/, const Ke
     return false;
 }
 
-// --- Phase-1 grapheme stubs ---
-
 int BaseKeyListener::adjustReplacementSpan(CharSequence& /*text*/, int offset, bool /*moveToStart*/) {
     // Android shifts the offset onto a ReplacementSpan edge. CDROID's
     // ReplacementSpan is not wired into editing yet; leave the offset unchanged.
     return offset;
 }
 
+// Returns the start offset to be deleted by a backspace key from the given offset.
 int BaseKeyListener::getOffsetForBackspaceKey(CharSequence& text, int offset) {
     if (offset <= 1) {
         return 0;
     }
-    // Phase-1 stub: delete one BMP char to the left. The full Android version
-    // runs a grapheme/emoji (ZWJ/VS/RIS/keycap/tag) state machine via ICU Emoji
-    // helpers, which CDROID does not have. For BMP text this matches the prior
-    // hand-written Editor behavior exactly.
-    return adjustReplacementSpan(text, offset - 1, true);
+
+    enum State {
+        STATE_START = 0,               // Initial state
+        STATE_LF = 1,                  // The offset is immediately before line feed.
+        STATE_BEFORE_KEYCAP = 2,       // .. before a KEYCAP.
+        STATE_BEFORE_VS_AND_KEYCAP = 3,// .. before a variation selector and a KEYCAP.
+        STATE_BEFORE_EMOJI_MODIFIER = 4,            // .. before an emoji modifier.
+        STATE_BEFORE_VS_AND_EMOJI_MODIFIER = 5,     // .. before a VS and an emoji modifier.
+        STATE_BEFORE_VS = 6,           // .. before a variation selector.
+        STATE_BEFORE_EMOJI = 7,        // .. before an emoji.
+        STATE_BEFORE_ZWJ = 8,          // .. before a ZWJ seen before a ZWJ emoji.
+        STATE_BEFORE_VS_AND_ZWJ = 9,   // .. before a VS and a ZWJ seen before a ZWJ emoji.
+        STATE_ODD_NUMBERED_RIS = 10,   // The number of following RIS code points is odd.
+        STATE_EVEN_NUMBERED_RIS = 11,  // .. even.
+        STATE_IN_TAG_SEQUENCE = 12,    // The offset is in an emoji tag sequence.
+        STATE_FINISHED = 13,           // The state machine has been stopped.
+    };
+    static constexpr int LINE_FEED = 0x0A;
+    static constexpr int CARRIAGE_RETURN = 0x0D;
+
+    int deleteCharCount = 0;      // Char count to be deleted by backspace.
+    int lastSeenVSCharCount = 0;  // Char count of previous variation selector.
+
+    int state = STATE_START;
+
+    int tmpOffset = offset;
+    do {
+        const int codePoint = Character::codePointBefore(&text, tmpOffset);
+        tmpOffset -= Character::charCount(codePoint);
+
+        switch (state) {
+        case STATE_START:
+            deleteCharCount = Character::charCount(codePoint);
+            if (codePoint == LINE_FEED) {
+                state = STATE_LF;
+            } else if (isVariationSelector(codePoint)) {
+                state = STATE_BEFORE_VS;
+            } else if (Emoji::isRegionalIndicatorSymbol(codePoint)) {
+                state = STATE_ODD_NUMBERED_RIS;
+            } else if (Emoji::isEmojiModifier(codePoint)) {
+                state = STATE_BEFORE_EMOJI_MODIFIER;
+            } else if (codePoint == Emoji::COMBINING_ENCLOSING_KEYCAP) {
+                state = STATE_BEFORE_KEYCAP;
+            } else if (Emoji::isEmoji(codePoint)) {
+                state = STATE_BEFORE_EMOJI;
+            } else if (codePoint == Emoji::CANCEL_TAG) {
+                state = STATE_IN_TAG_SEQUENCE;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_LF:
+            if (codePoint == CARRIAGE_RETURN) {
+                ++deleteCharCount;
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_ODD_NUMBERED_RIS:
+            if (Emoji::isRegionalIndicatorSymbol(codePoint)) {
+                deleteCharCount += 2;  // char count of RIS
+                state = STATE_EVEN_NUMBERED_RIS;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_EVEN_NUMBERED_RIS:
+            if (Emoji::isRegionalIndicatorSymbol(codePoint)) {
+                deleteCharCount -= 2;  // char count of RIS
+                state = STATE_ODD_NUMBERED_RIS;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_BEFORE_KEYCAP:
+            if (isVariationSelector(codePoint)) {
+                lastSeenVSCharCount = Character::charCount(codePoint);
+                state = STATE_BEFORE_VS_AND_KEYCAP;
+                break;
+            }
+            if (Emoji::isKeycapBase(codePoint)) {
+                deleteCharCount += Character::charCount(codePoint);
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_BEFORE_VS_AND_KEYCAP:
+            if (Emoji::isKeycapBase(codePoint)) {
+                deleteCharCount += lastSeenVSCharCount + Character::charCount(codePoint);
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_BEFORE_EMOJI_MODIFIER:
+            if (isVariationSelector(codePoint)) {
+                lastSeenVSCharCount = Character::charCount(codePoint);
+                state = STATE_BEFORE_VS_AND_EMOJI_MODIFIER;
+                break;
+            } else if (Emoji::isEmojiModifierBase(codePoint)) {
+                deleteCharCount += Character::charCount(codePoint);
+                state = STATE_BEFORE_EMOJI;
+                break;
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_BEFORE_VS_AND_EMOJI_MODIFIER:
+            if (Emoji::isEmojiModifierBase(codePoint)) {
+                deleteCharCount += lastSeenVSCharCount + Character::charCount(codePoint);
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_BEFORE_VS:
+            if (Emoji::isEmoji(codePoint)) {
+                deleteCharCount += Character::charCount(codePoint);
+                state = STATE_BEFORE_EMOJI;
+                break;
+            }
+            if (!isVariationSelector(codePoint) &&
+                    u_getIntPropertyValue(codePoint, UCHAR_CANONICAL_COMBINING_CLASS) == 0) {
+                deleteCharCount += Character::charCount(codePoint);
+            }
+            state = STATE_FINISHED;
+            break;
+        case STATE_BEFORE_EMOJI:
+            if (codePoint == Emoji::ZERO_WIDTH_JOINER) {
+                state = STATE_BEFORE_ZWJ;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_BEFORE_ZWJ:
+            if (Emoji::isEmoji(codePoint)) {
+                deleteCharCount += Character::charCount(codePoint) + 1;  // +1 for ZWJ.
+                state = Emoji::isEmojiModifier(codePoint)
+                        ? STATE_BEFORE_EMOJI_MODIFIER : STATE_BEFORE_EMOJI;
+            } else if (isVariationSelector(codePoint)) {
+                lastSeenVSCharCount = Character::charCount(codePoint);
+                state = STATE_BEFORE_VS_AND_ZWJ;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_BEFORE_VS_AND_ZWJ:
+            if (Emoji::isEmoji(codePoint)) {
+                // +1 for ZWJ.
+                deleteCharCount += lastSeenVSCharCount + 1 + Character::charCount(codePoint);
+                lastSeenVSCharCount = 0;
+                state = STATE_BEFORE_EMOJI;
+            } else {
+                state = STATE_FINISHED;
+            }
+            break;
+        case STATE_IN_TAG_SEQUENCE:
+            if (Emoji::isTagSpecChar(codePoint)) {
+                deleteCharCount += 2;  // char count of emoji tag spec character
+                // Keep the same state.
+            } else if (Emoji::isEmoji(codePoint)) {
+                deleteCharCount += Character::charCount(codePoint);
+                state = STATE_FINISHED;
+            } else {
+                // Couldn't find tag_base character. Delete the last tag_term character.
+                deleteCharCount = 2;  // for U+E007F
+                state = STATE_FINISHED;
+            }
+            // TODO: Need handle emoji variation selectors. Issue 35224297
+            break;
+        default:
+            throw std::invalid_argument("unknown backspace state machine state");
+        }
+    } while (tmpOffset > 0 && state != STATE_FINISHED);
+
+    return adjustReplacementSpan(text, offset - deleteCharCount, true /* move to the start */);
 }
 
-int BaseKeyListener::getOffsetForForwardDeleteKey(CharSequence& text, int offset) {
+// Returns the end offset to be deleted by a forward delete key from the given offset.
+int BaseKeyListener::getOffsetForForwardDeleteKey(CharSequence& text, int offset,
+        const Paint& paint) {
     const int len = (int)text.length();
+
     if (offset >= len - 1) {
         return len;
     }
-    // Phase-1 stub: delete one BMP char to the right (no Paint.getTextRunCursor).
-    return adjustReplacementSpan(text, offset + 1, false);
+
+    offset = (int)paint.getTextRunCursor(&text, offset, len, false /* LTR, not used */,
+            offset, Paint::CURSOR_AFTER);
+
+    return adjustReplacementSpan(text, offset, false /* move to the end */);
 }
 
 } // namespace cdroid

@@ -57,7 +57,7 @@ protected:
     void onStop()override;
 public:
     ProgressDialog(Context* context);
-    ProgressDialog(Context* context,const std::string& theme);
+    ProgressDialog(Context* context,int themeResId);
     static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate=false);
     static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate,bool cancelable);
     static ProgressDialog* show(Context* context,const std::string&title,const std::string&message,bool indeterminate,bool cancelable, OnCancelListener cancelListener);

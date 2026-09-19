@@ -16,19 +16,20 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/layoutinflater.h>
+#include <widget/internal_R.h>
 #include <menu/menubuilder.h>
 #include <menu/submenubuilder.h>
 #include <menu/listmenupresenter.h>
 #include <menu/expandedmenuview.h>
 namespace cdroid{
 
-ListMenuPresenter::ListMenuPresenter(Context* context, const std::string& itemLayoutRes)
+ListMenuPresenter::ListMenuPresenter(Context* context, int itemLayoutRes)
     :ListMenuPresenter(itemLayoutRes, 0){
     mContext = context;
     mInflater = LayoutInflater::from(mContext);
 }
 
-ListMenuPresenter::ListMenuPresenter(const std::string& itemLayoutRes, int themeRes) {
+ListMenuPresenter::ListMenuPresenter(int itemLayoutRes, int themeRes) {
     mItemLayoutRes = itemLayoutRes;
     mThemeRes = themeRes;
 }
@@ -51,7 +52,7 @@ void ListMenuPresenter::initForMenu(Context* context,MenuBuilder* menu) {
 
 ViewGroup* ListMenuPresenter::getMenuView(ViewGroup* root) {
     if (mMenuView == nullptr) {
-        mMenuView = (ExpandedMenuView*) mInflater->inflate("cdroid:layout/expanded_menu_layout", root, false);
+        mMenuView = (ExpandedMenuView*) mInflater->inflate(cdroid::internal::R::layout::expanded_menu_layout, root, false);
         if (mAdapter == nullptr) {
             mAdapter = new MenuAdapter(this);
         }
@@ -84,7 +85,7 @@ bool ListMenuPresenter::onSubMenuSelected(SubMenuBuilder* subMenu) {
     // The window manager will give us a token.
     //new MenuDialogHelper(subMenu).show(nullptr);
     if (mCallback.onOpenSubMenu != nullptr) {
-        mCallback.onOpenSubMenu(*subMenu);
+        mCallback.onOpenSubMenu(subMenu);
     }
     return true;
 }

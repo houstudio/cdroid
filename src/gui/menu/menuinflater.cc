@@ -22,11 +22,16 @@
 #include <menu/menuitem.h>
 #include <menu/submenu.h>
 #include <menu/menuitemimpl.h>
+#include <menu/menubuilder.h>
 #include <view/actionprovider.h>
 #include <view/layoutinflater.h>
+#include <content/typedarray.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
 #include <porting/cdlog.h>
+namespace cdroid{
+using namespace cdroid::internal;
 
-namespace cdroid{ 
 MenuInflater::MenuInflater(Context* context) {
     mContext = context;
     //mActionViewConstructorArguments = new Object[] {context};
@@ -40,10 +45,21 @@ MenuInflater::MenuInflater(Context* context, void* realOwner) {
     //mActionProviderConstructorArguments = mActionViewConstructorArguments;
 }
 
-void MenuInflater::inflate(const std::string&menuRes, Menu* menu) {
-    XmlPullParser parser(mContext,menuRes);
-    AttributeSet& attrs = parser;
-    parseMenu(parser, attrs, menu);
+void MenuInflater::inflate(int menuRes, Menu* menu) {
+    // Suppress per-add item-change dispatch while inflating (the AOSP panel
+    // idiom wraps inflate this way): menu->add() and the item attr writes in
+    // MenuState::setItem each notify, and an eager presenter rebuild in the
+    // middle re-runs createMenuItem whose setCheckable(true) is then
+    // overwritten by setItem's XML defaults — the last item never got a
+    // following rebuild and stayed non-checkable (bottom nav's final tab
+    // never tinted). One dispatch fires on startDispatchingItemsChanged if
+    // anything changed.
+    MenuBuilder* builder = dynamic_cast<MenuBuilder*>(menu);
+    if (builder) builder->stopDispatchingItemsChanged();
+    auto parser = mContext->getResources().getXml(menuRes);
+    AttributeSet& attrs = *parser;
+    parseMenu(*parser, attrs, menu);
+    if (builder) builder->startDispatchingItemsChanged();
 }
 
 void MenuInflater::parseMenu(XmlPullParser& parser,const AttributeSet& attrs, Menu* menu){
@@ -210,6 +226,7 @@ MenuInflater::MenuState::~MenuState(){
 
 void MenuInflater::MenuState::resetGroup() {
     groupId = defaultGroupId;
+    mItemIconBlendMode = PorterDuff::Mode::NOOP;
     groupCategory = defaultItemCategory;
     groupOrder = defaultItemOrder;
     groupCheckable = defaultItemCheckable;
@@ -221,77 +238,82 @@ void MenuInflater::MenuState::resetGroup() {
  * Called when the parser is pointing to a group tag.
  */
 void MenuInflater::MenuState::readGroup(const AttributeSet& attrs) {
+    // AOSP readGroup: obtainStyledAttributes(attrs, R.styleable.MenuGroup).
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::MenuGroup);
 
-    groupId = attrs.getResourceId("id", defaultGroupId);
-    groupCategory = attrs.getInt("menuCategory", defaultItemCategory);
-    groupOrder = attrs.getInt("orderInCategory", defaultItemOrder);
-    groupCheckable = attrs.getInt("checkableBehavior", defaultItemCheckable);
-    groupVisible = attrs.getBoolean("visible", defaultItemVisible);
-    groupEnabled = attrs.getBoolean("enabled", defaultItemEnabled);
+    groupId = a->getResourceId(R::styleable::MenuGroup_id, defaultGroupId);
+    groupCategory = a->getInt(R::styleable::MenuGroup_menuCategory, defaultItemCategory);
+    groupOrder = a->getInt(R::styleable::MenuGroup_orderInCategory, defaultItemOrder);
+    groupCheckable = a->getInt(R::styleable::MenuGroup_checkableBehavior, defaultItemCheckable);
+    groupVisible = a->getBoolean(R::styleable::MenuGroup_visible, defaultItemVisible);
+    groupEnabled = a->getBoolean(R::styleable::MenuGroup_enabled, defaultItemEnabled);
 }
 
 /**
  * Called when the parser is pointing to an item tag.
  */
 void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
+    // AOSP readItem: obtainStyledAttributes(attrs, R.styleable.MenuItem).
+    auto a = mContext->obtainStyledAttributes(attrs, R::styleable::MenuItem);
 
     // Inherit attributes from the group as default value
-    itemId = attrs.getResourceId("id", defaultItemId);
-    const int category = attrs.getInt("menuCategory", groupCategory);
-    const int order = attrs.getInt("orderInCategory", groupOrder);
+    itemId = a->getResourceId(R::styleable::MenuItem_id, defaultItemId);
+    const int category = a->getInt(R::styleable::MenuItem_menuCategory, groupCategory);
+    const int order = a->getInt(R::styleable::MenuItem_orderInCategory, groupOrder);
     itemCategoryOrder = (category & Menu::CATEGORY_MASK) | (order & Menu::USER_MASK);
-    itemTitle = attrs.getString("title");//getText
-    itemTitleCondensed = attrs.getString("titleCondensed");//getText
-    itemIconResId = attrs.getString("icon");
-    if (attrs.hasAttribute("iconTintMode")) {
-        /* getTintMode decodes the 6-value tintMode enum straight to a mode value
-         * (valid as BlendMode — PorterDuff and BlendMode coincide for these 6). */
-        mItemIconBlendMode = attrs.getTintMode("iconTintMode", -1);
+
+    itemTitle = a->getText(R::styleable::MenuItem_title);
+    itemTitleCondensed = a->getText(R::styleable::MenuItem_titleCondensed);
+
+    itemIconResId = a->getResourceId(R::styleable::MenuItem_icon, 0);
+
+    if (a->hasValue(R::styleable::MenuItem_iconTintMode)) {
+        /* The 6-value tintMode enum pre-resolves to a mode int (valid as
+         * BlendMode — PorterDuff and BlendMode coincide for these 6). */
+        mItemIconBlendMode = a->getInt(R::styleable::MenuItem_iconTintMode, -1);
     }
-    if (attrs.hasAttribute("iconTint")) {
-        itemIconTintList = attrs.getColorStateList("iconTint");
+    if (a->hasValue(R::styleable::MenuItem_iconTint)) {
+        itemIconTintList = a->getColorStateList(R::styleable::MenuItem_iconTint);
     } else {
         // Reset to null so that it's not carried over to the next item
         itemIconTintList = nullptr;
     }
 
-    itemAlphabeticShortcut = getShortcut(attrs.getString("alphabeticShortcut"));
-    itemAlphabeticModifiers = attrs.getInt("alphabeticModifiers", KeyEvent::META_CTRL_ON);
-    itemNumericShortcut = getShortcut(attrs.getString("numericShortcut"));
-    itemNumericModifiers = attrs.getInt("numericModifiers", KeyEvent::META_CTRL_ON);
-    if (attrs.hasAttribute("checkable")) {
+    itemAlphabeticShortcut = getShortcut(a->getString(R::styleable::MenuItem_alphabeticShortcut));
+    itemAlphabeticModifiers = a->getInt(R::styleable::MenuItem_alphabeticModifiers, KeyEvent::META_CTRL_ON);
+    itemNumericShortcut = getShortcut(a->getString(R::styleable::MenuItem_numericShortcut));
+    itemNumericModifiers = a->getInt(R::styleable::MenuItem_numericModifiers, KeyEvent::META_CTRL_ON);
+
+    if (a->hasValue(R::styleable::MenuItem_checkable)) {
         // Item has attribute checkable, use it
-        itemCheckable = attrs.getBoolean("checkable", false) ? 1 : 0;
+        itemCheckable = a->getBoolean(R::styleable::MenuItem_checkable, false) ? 1 : 0;
     } else {
         // Item does not have attribute, use the group's (group can have one more state
         // for checkable that represents the exclusive checkable)
         itemCheckable = groupCheckable;
     }
-    itemChecked = attrs.getBoolean("checked", defaultItemChecked);
-    itemVisible = attrs.getBoolean("visible", groupVisible);
-    itemEnabled = attrs.getBoolean("enabled", groupEnabled);
-    itemShowAsAction = attrs.getInt("showAsAction",std::unordered_map<std::string,int>{
-            {"always",(int)MenuItem::SHOW_AS_ACTION_ALWAYS},
-            {"ifRoom",(int)MenuItem::SHOW_AS_ACTION_IF_ROOM},
-            {"never" ,(int)MenuItem::SHOW_AS_ACTION_NEVER},
-            {"withText",(int)MenuItem::SHOW_AS_ACTION_WITH_TEXT},
-            {"collapseActionView",(int)MenuItem::SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW}
-        },-1);
-    itemListenerMethodName = attrs.getString("onClick");
-    itemActionViewLayout = attrs.getString("actionLayout");
-    itemActionViewClassName = attrs.getString("actionViewClass");
-    itemActionProviderClassName = attrs.getString("actionProviderClass");
+    itemChecked = a->getBoolean(R::styleable::MenuItem_checked, defaultItemChecked);
+    itemVisible = a->getBoolean(R::styleable::MenuItem_visible, groupVisible);
+    itemEnabled = a->getBoolean(R::styleable::MenuItem_enabled, groupEnabled);
+
+    // showAsAction flag values pre-resolve to ints by aapt2.
+    itemShowAsAction = a->getInt(R::styleable::MenuItem_showAsAction, -1);
+
+    itemListenerMethodName = a->getString(R::styleable::MenuItem_onClick);
+    itemActionViewLayout = a->getResourceId(R::styleable::MenuItem_actionLayout, 0);
+    itemActionViewClassName = a->getString(R::styleable::MenuItem_actionViewClass);
+    itemActionProviderClassName = a->getString(R::styleable::MenuItem_actionProviderClass);
 
     const bool hasActionProvider = !itemActionProviderClassName.empty();
-    if (hasActionProvider && itemActionViewLayout.empty() && itemActionViewClassName.empty()) {
+    if (hasActionProvider && itemActionViewLayout == 0 && itemActionViewClassName.empty()) {
         //itemActionProvider = newInstance(itemActionProviderClassName,ACTION_PROVIDER_CONSTRUCTOR_SIGNATURE,mActionProviderConstructorArguments);
     } else {
         LOGW_IF(hasActionProvider,"Ignoring attribute 'actionProviderClass'. Action view already specified.");
         itemActionProvider = nullptr;
     }
 
-    itemContentDescription = attrs.getString("contentDescription");//getText
-    itemTooltipText = attrs.getString("tooltipText");//getText
+    itemContentDescription = a->getText(R::styleable::MenuItem_contentDescription);
+    itemTooltipText = a->getText(R::styleable::MenuItem_tooltipText);
 
     itemAdded = false;
 }
@@ -342,13 +364,15 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
 
     bool actionViewSpecified = false;
     if (!itemActionViewClassName.empty()) {
-        AttributeSet atts(mContext,"cdroid");
+        // AOSP constructs the action view with the (Context) ctor signature —
+        // no XML attributes. Feed the typed path an empty AttributeSet.
+        AttributeSet atts;
         View* actionView = LayoutInflater::from(mContext)->createViewFromTag(nullptr,itemActionViewClassName,mContext,atts,true);
             //(View*) newInstance(itemActionViewClassName,ACTION_VIEW_CONSTRUCTOR_SIGNATURE, mActionViewConstructorArguments);
         item->setActionView(actionView);
         actionViewSpecified = true;
     }
-    if (!itemActionViewLayout.empty()) {
+    if (itemActionViewLayout != 0) {
         if (!actionViewSpecified) {
             item->setActionView(itemActionViewLayout);
             actionViewSpecified = true;

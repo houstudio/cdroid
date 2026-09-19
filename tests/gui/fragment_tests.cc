@@ -25,7 +25,7 @@ using namespace cdroid;
 namespace {
 
 // Fragment that records its lifecycle callback sequence.
-class CountingFragment : public fragment::Fragment {
+class CountingFragment : public Fragment {
 public:
     std::vector<std::string> calls;
     bool saw(const std::string& s) const {
@@ -35,7 +35,7 @@ public:
     void onCreate(Bundle*) override { calls.push_back("onCreate"); }
     View* onCreateView(LayoutInflater*, ViewGroup*, Bundle*) override {
         calls.push_back("onCreateView");
-        return new View(10, 10);
+        return new View(&App::getInstance());
     }
     void onViewCreated(View*, Bundle*) override { calls.push_back("onViewCreated"); }
     void onResume() override { calls.push_back("onResume"); }
@@ -46,7 +46,7 @@ public:
     void onDetach() override { calls.push_back("onDetach"); }
 };
 
-class TestFragmentActivity : public fragment::FragmentActivity {
+class TestFragmentActivity : public FragmentActivity {
 public:
     TestFragmentActivity() : FragmentActivity(0, 0, -1, -1) {}
 };

@@ -20,6 +20,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/helpers/barrier.cc
         widgetEx/constraintlayout/helpers/group.cc
         widgetEx/constraintlayout/helpers/placeholder.cc
+        widgetEx/constraintlayout/helpers/virtuallayout.cc
         widgetEx/constraintlayout/helpers/flow.cc
         widgetEx/constraintlayout/helpers/layer.cc
         widgetEx/constraintlayout/helpers/circularflow.cc

@@ -26,7 +26,6 @@
 #include <string>
 #include <functional>
 namespace cdroid{
-namespace fragment{
 
 class Fragment;
 
@@ -46,9 +45,8 @@ public:
 // .cc to register it under its class name with the default constructor.
 #define REGISTER_FRAGMENT(ClassName) \
     static const int _cdroid_frag_reg_##ClassName = \
-        (::cdroid::fragment::FragmentFactory::registerFragment( \
-             #ClassName, []() -> ::cdroid::fragment::Fragment* { return new ClassName(); }), 0)
+        (::cdroid::FragmentFactory::registerFragment( \
+             #ClassName, []() -> ::cdroid::Fragment* { return new ClassName(); }), 0)
 
-}//namespace fragment
 }//namespace cdroid
 #endif

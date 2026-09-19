@@ -282,6 +282,43 @@
   <!-- Accessibility action identifier for {@link android.view.accessibility.AccessibilityNodeInfo.AccessibilityAction#ACTION_SCROLL_IN_DIRECTION}. -->
   <item type="id" name="accessibilityActionScrollInDirection" />
 
+  <!-- Custom accessibility action ids handed out by View::addAccessibilityAction.
+       android.R has no such ids (verified android-12..36) — they are androidx
+       core's own R ids; CDROID pins them in the framework id space right past
+       the real AOSP watermark (0x0102005e). -->
+  <item type="id" name="accessibility_custom_action_0" />
+  <item type="id" name="accessibility_custom_action_1" />
+  <item type="id" name="accessibility_custom_action_2" />
+  <item type="id" name="accessibility_custom_action_3" />
+  <item type="id" name="accessibility_custom_action_4" />
+  <item type="id" name="accessibility_custom_action_5" />
+  <item type="id" name="accessibility_custom_action_6" />
+  <item type="id" name="accessibility_custom_action_7" />
+  <item type="id" name="accessibility_custom_action_8" />
+  <item type="id" name="accessibility_custom_action_9" />
+  <item type="id" name="accessibility_custom_action_10" />
+  <item type="id" name="accessibility_custom_action_11" />
+  <item type="id" name="accessibility_custom_action_12" />
+  <item type="id" name="accessibility_custom_action_13" />
+  <item type="id" name="accessibility_custom_action_14" />
+  <item type="id" name="accessibility_custom_action_15" />
+  <item type="id" name="accessibility_custom_action_16" />
+  <item type="id" name="accessibility_custom_action_17" />
+  <item type="id" name="accessibility_custom_action_18" />
+  <item type="id" name="accessibility_custom_action_19" />
+  <item type="id" name="accessibility_custom_action_20" />
+  <item type="id" name="accessibility_custom_action_21" />
+  <item type="id" name="accessibility_custom_action_22" />
+  <item type="id" name="accessibility_custom_action_23" />
+  <item type="id" name="accessibility_custom_action_24" />
+  <item type="id" name="accessibility_custom_action_25" />
+  <item type="id" name="accessibility_custom_action_26" />
+  <item type="id" name="accessibility_custom_action_27" />
+  <item type="id" name="accessibility_custom_action_28" />
+  <item type="id" name="accessibility_custom_action_29" />
+  <item type="id" name="accessibility_custom_action_30" />
+  <item type="id" name="accessibility_custom_action_31" />
+
   <item type="id" name="nav_controller_view_tag" />
   <!-- BadageDrawable -->
   <item type="id" name="mtrl_anchor_parent"/>

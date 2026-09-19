@@ -108,11 +108,13 @@ private:
     bool dispatchSubMenuSelected(SubMenuBuilder* subMenu,MenuPresenter* preferredPresenter);
     void dispatchSaveInstanceState(Bundle& outState);
     void dispatchRestoreInstanceState(Bundle& state);
+
+public:
     /**
      * Adds an item to the menu.  The other add methods funnel to this.
      */
     MenuItem* addInternal(int group, int id, int categoryOrder, const std::string& title);
-
+private:
     // Layoutlib overrides this method to return its custom implementation of MenuItemImpl
     MenuItemImpl* createNewMenuItem(int group, int id, int categoryOrder, int ordering,
             const std::string&title, int defaultShowAsAction);
@@ -120,7 +122,7 @@ private:
     static int getOrdering(int categoryOrder);
     void setShortcutsVisibleInner(bool shortcutsVisible);
     static int findInsertIndex(const std::vector<MenuItemImpl*>& items, int ordering);
-    void setHeaderInternal(const std::string& titleRes, const std::string& title,const std::string& iconRes, Drawable* icon,View* view);
+    void setHeaderInternal(int titleRes, const std::string& title, int iconRes, Drawable* icon,View* view);
 protected:
     /** Header title for menu types that have a header (context and submenus) */
     std::string mHeaderTitle;
@@ -134,7 +136,7 @@ protected:
     void setExclusiveItemChecked(MenuItem& item);
     MenuBuilder& setHeaderTitleInt(const std::string& title);
     MenuBuilder& setHeaderIconInt(Drawable* icon);
-    MenuBuilder& setHeaderIconInt(const std::string& iconRes);
+    MenuBuilder& setHeaderIconInt(int iconRes);
     virtual MenuBuilder& setHeaderViewInt(View* view);
 
     virtual bool isQwertyMode() const;

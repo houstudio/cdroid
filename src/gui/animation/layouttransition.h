@@ -20,6 +20,7 @@
 #include <unordered_map>
 #include <functional>
 #include <view/view.h>
+#include <view/viewtreeobserver.h>
 #include <animation/animator.h>
 
 namespace cdroid{
@@ -87,6 +88,14 @@ private:
     std::unordered_map<View*, Animator*> currentAppearingAnimations;
     std::unordered_map<View*, Animator*> currentDisappearingAnimations;
     std::unordered_map<View*, View::OnLayoutChangeListener> layoutChangeListenerMap;
+    // C++ teardown bookkeeping (AOSP leans on GC here): the one-shot cleanup
+    // listener pair from runChangeTransition and the pendingAnimRemovers from
+    // setupChangeAnimation; all detached in the destructor.
+    ViewGroup* mCleanupParent = nullptr;
+    ViewTreeObserver* mCleanupObserver = nullptr;
+    std::shared_ptr<ViewTreeObserver::OnPreDrawListener> mPreDrawCleanup;
+    std::shared_ptr<View::OnAttachStateChangeListener> mAttachStateCleanup;
+    std::vector<Animator*> mPendingAnimRemovers;
 public :
     /**
      * A flag indicating the animation that runs on those items that are changing
@@ -128,6 +137,7 @@ public:
     void setDuration(int64_t duration);
     void setDuration(int transitionType, int64_t duration);
     int64_t getDuration(int transitionType)const;
+    Animator* getAnimator(int transitionType)const;   // AOSP public getter (java:308)
     void enableTransitionType(int transitionType);
     void disableTransitionType(int transitionType);
     bool isTransitionTypeEnabled(int transitionType)const;

@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widgetEx/recyclerview/itemtouchuiutil.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 namespace cdroid{
+using namespace cdroid::internal;
 void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& view, float dX, float dY,
         int actionState, bool isCurrentlyActive){
     if (isCurrentlyActive) {

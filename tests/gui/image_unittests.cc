@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
+#include <core/context.h>
 #include <cdgraph.h>
 #include <core/canvas.h>
-#include <core/assets.h>
 #include <cdinput.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -82,8 +82,11 @@ public :
            size_t pt=path.rfind('.');
            if(pt!= std::string::npos){
               std::string ext=path.substr(pt+1);
-	          pt=path.find(filter);
-              if(filter.empty()||pt!= std::string::npos)images.push_back(path);
+              // Match by EXTENSION, not substring: the old path.find(filter) pulled in
+              // any file whose path merely contained the filter (e.g. the build tree's
+              // image-decoders/bmpdecoder.cc.o), and loadImage on it returns an empty
+              // surface that the draw loop below cannot handle.
+              if(filter.empty()||ext==filter)images.push_back(path);
            }
            return ;
        }
@@ -106,6 +109,7 @@ TEST_F(IMAGE,Bitmap){
     loadImages("./","bmp");
     for(int i=0;i<images.size();i++){
        auto img = ImageDecoder::loadImage(nullptr,images[i]);
+       if(!img) continue; // decode failure: draw_image cannot take an empty surface
        cdroid::Rect rect={0,0,800,600};
        for(int i=0;i<10;i++){
           ctx->set_color(0xFF000000|(i*20<<16));

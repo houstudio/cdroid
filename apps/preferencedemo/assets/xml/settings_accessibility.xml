@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of AOSP 12 Settings res/xml/accessibility_settings.xml fragments.
+     The last category demonstrates the ExpandButton: collapsed to three
+     children at runtime (setInitialExpandedChildrenCount from code). -->
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:key="accessibility_settings"
+    android:title="Accessibility">
+
+    <PreferenceCategory android:title="Screen readers">
+
+        <Preference android:key="talkback" android:title="TalkBack" android:summary="Off" />
+
+        <SwitchPreference
+            android:key="captions"
+            android:title="Captions"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="Display">
+
+        <SwitchPreference
+            android:key="magnification"
+            android:title="Magnification"
+            android:summary="Zoom in on screen"
+            android:defaultValue="false" />
+
+        <SwitchPreference
+            android:key="color_inversion"
+            android:title="Color inversion"
+            android:defaultValue="false" />
+
+        <SwitchPreference
+            android:key="daltonizer"
+            android:title="Color correction"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:key="category_accessibility_interaction"
+        android:title="Interaction controls">
+
+        <SwitchPreference android:key="large_text_mode" android:title="Large text" android:defaultValue="false" />
+        <SwitchPreference android:key="touch_vibration" android:title="Vibration &amp; haptic strength" android:defaultValue="false" />
+        <SwitchPreference android:key="autoclick_dwell" android:title="Timing for taps" android:defaultValue="false" />
+        <SwitchPreference android:key="switch_access" android:title="Switch Access" android:defaultValue="false" />
+        <SwitchPreference android:key="voice_access" android:title="Voice Access" android:defaultValue="false" />
+        <SwitchPreference android:key="reduce_bright_colors" android:title="Extra dim screen" android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

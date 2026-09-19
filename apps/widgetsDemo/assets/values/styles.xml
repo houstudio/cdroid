@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark showcase theme: framework Material dark parent, app palette rides
+         on top through @color/* references in the layouts (the pages carry
+         their own dark surfaces). colorAccent tints switches/seekbars/radios. -->
+    <style name="AppTheme" parent="@android:style/Theme.Material">
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:colorPrimary">@color/grad_blue_b</item>
+        <item name="android:colorBackground">@color/demo_bg</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_secondary</item>
+    </style>
+</resources>

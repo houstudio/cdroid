@@ -8,6 +8,7 @@
 namespace cdroid{
 class MediaController :public FrameLayout{
 public:
+    std::string getAccessibilityClassName()const override;
     struct MediaPlayerControl {
         std::function<void()>start;
         std::function<void()>pause;
@@ -74,7 +75,9 @@ private:
 protected:
     View* makeControllerView();
 public:
-    MediaController(Context* context,const AttributeSet& attrs);
+    MediaController(Context*ctx);   // AOSP MediaController(Context)
+    MediaController(Context* context,const AttributeSet* attrs);
+    MediaController(Context* context,const AttributeSet* attrs,int defStyleAttr);
     MediaController(Context* context, bool useFastForward);
     void onFinishInflate()override;
     void setMediaPlayer(MediaPlayerControl player);

@@ -18,12 +18,20 @@
 #include <porting/cdlog.h>
 #include <hb.h>
 #include <hb-ft.h>
+#include <cairo-ft.h>
+#include <ft2build.h>
+#include <freetype/freetype.h>
 
 namespace cdroid{
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Paint::Paint(){
+    // AOSP Paint.DEFAULT: the initial color is BLACK — an uninitialized
+    // mColor reads as fully transparent ARGB(0), which made every TextView
+    // without an explicit textColor draw invisible text (dropdown/dialog
+    // list items, spinner labels).
+    mColor = 0xFF000000;
     mTypeface = Typeface::DEFAULT;
     mStartHyphenEdit=0;
     mEndHyphenEdit=0;
@@ -33,6 +41,7 @@ Paint::Paint(){
     mTextScaleX=1.f;
     mTextSize=12;
     mAlpha=0xff;
+    mStrokeWidth=1.f;
     mTextAlign=Align::LEFT;
     mFakeBoldText=false;
     mStrikeThruText=false;
@@ -57,6 +66,25 @@ Paint::Paint(const Paint&other){
 Paint::~Paint(){
 }
 
+// AOSP Paint.setTypeface only swaps the field (minikin reads paint->typeface
+// per call); cdroid's MinikinPaint caches the resolved FontCollection, so the
+// collection must follow the typeface here or every later measurement keeps
+// drawing with the previous face. null "clears" — the cached collection falls
+// back to the default typeface's, never the stale previous face's.
+void Paint::setTypeface(Typeface*face){
+    mTypeface=face;
+    Typeface* effective = effectiveTypeface();
+    if(effective!=nullptr && mMinikinPaint!=nullptr){
+        mMinikinPaint->font = effective->getFontCollection();
+    }
+}
+
+// AOSP Paint.setTypeface(null): "Pass null to clear any previous typeface" —
+// the field stays null and metrics/draw use the default font (Paint.java:1586).
+Typeface* Paint::effectiveTypeface() const {
+    return mTypeface ? mTypeface : Typeface::getDefault();
+}
+
 void Paint::set(const Paint&o){
     mTypeface=o.mTypeface;
     mColor = o.mColor;
@@ -72,6 +100,7 @@ void Paint::set(const Paint&o){
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
     mFontFeatureSettings = o.mFontFeatureSettings;
+    mElegantTextHeight = o.mElegantTextHeight;   // AOSP nSet copies every field
     // Clone (not share) the MinikinPaint, matching android Paint's nSet deep-copy. Without this,
     // per-line mutations on a work paint (e.g. justify's setWordSpacing/setLetterSpacing) would
     // leak into the source paint's shared MinikinPaint and contaminate later lines.
@@ -122,7 +151,7 @@ void Paint::setTextSkewX(float v){
 float Paint::ascent()const{
     minikin::MinikinExtent extent;
     minikin::FontFakery  ffk;
-    auto minikinFont = mTypeface->getMinikinFont();
+    auto minikinFont = effectiveTypeface()->getMinikinFont();
     minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
     return extent.ascent;
 }
@@ -130,7 +159,7 @@ float Paint::ascent()const{
 float Paint::descent()const{
     minikin::MinikinExtent extent;
     minikin::FontFakery  ffk;
-    auto minikinFont = mTypeface->getMinikinFont();
+    auto minikinFont = effectiveTypeface()->getMinikinFont();
     minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
     return extent.descent;
 }
@@ -174,18 +203,72 @@ Paint::FontMetricsInt Paint::getFontMetricsInt()const{
     getFontMetricsInt(&fm);
     return fm;
 }
+// Fills the vertical metrics AOSP derives from the font file itself
+// (Skia's FreeType backend): top/bottom from the glyph bounding box scaled
+// by textSize/unitsPerEm, leading from the hhea line gap (face height minus
+// ascender/descender). The FT_Face is borrowed from cairo's scaled font via
+// lock/unlock — locked, its size state already matches this paint.
+static void fillGlyphBoxMetrics(Paint::FontMetricsInt* fmi, const Typeface* typeface,
+        const minikin::MinikinPaint& paint, const minikin::MinikinFont* minikinFont) {
+    std::shared_ptr<Cairo::ScaledFont> scaledFont = typeface->getScaledFont(paint, minikinFont);
+    FT_Face ftFace = nullptr;
+    cairo_scaled_font_t* cobj = (scaledFont ? scaledFont->cobj() : nullptr);
+    if (cobj != nullptr && cairo_scaled_font_get_type(cobj) == CAIRO_FONT_TYPE_FT) {
+        ftFace = cairo_ft_scaled_font_lock_face(cobj);
+    }
+    if (ftFace == nullptr) {
+        fmi->leading = 0;
+        fmi->top = fmi->ascent;
+        fmi->bottom = fmi->descent;
+        return;
+    }
+    if ((ftFace->face_flags & FT_FACE_FLAG_SCALABLE) && ftFace->units_per_EM > 0) {
+        const double scale = paint.size / (double)ftFace->units_per_EM;
+        // floor above the baseline (more negative), ceil below (more
+        // positive) — the conservative rounding android_graphics_Paint applies
+        fmi->top = (int)std::floor(-ftFace->bbox.yMax * scale);
+        fmi->bottom = (int)std::ceil(-ftFace->bbox.yMin * scale);
+        // line gap in DESIGN units (height - ascender + descender, descender
+        // negative): FT_Size_Metrics must NOT be used here — with hinting on,
+        // cairo's face rounds each field to whole pixels and the difference
+        // can go negative (e.g. Noto 18px: 24 - 20 - 6 = -2)
+        const double lineGap = (double)ftFace->height - ftFace->ascender + ftFace->descender;
+        fmi->leading = (int)std::ceil(lineGap * scale);
+    } else {  // bitmap face: keep the collapsed fallback
+        fmi->leading = 0;
+        fmi->top = fmi->ascent;
+        fmi->bottom = fmi->descent;
+    }
+    cairo_ft_scaled_font_unlock_face(cobj);
+}
+
 int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
-    std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
+    Typeface* tf = effectiveTypeface();
+    std::shared_ptr<minikin::MinikinFont> minikinFont = tf->getMinikinFont();
     minikin::MinikinExtent extent;
     minikinFont->GetFontExtent(&extent, *mMinikinPaint, minikin::FontFakery());
     if(fmi){
         fmi->ascent = extent.ascent;
         fmi->descent = extent.descent;
-        fmi->leading = 0;
-        fmi->top = fmi->ascent;           // top 等于 ascent
-        fmi->bottom = fmi->descent;       // bottom 等于 descent
+        /*fillGlyphBoxMetrics re-walks the scaled-font LRU and locks the FT
+          face on every call though its triple only depends on (typeface,
+          size) — cache the last key per Paint instance (see paint.h).*/
+        if (mGlyphBoxFace != (const void*)tf || mGlyphBoxSize != mMinikinPaint->size) {
+            FontMetricsInt box;
+            box.ascent = extent.ascent;
+            box.descent = extent.descent;
+            fillGlyphBoxMetrics(&box, tf, *mMinikinPaint, minikinFont.get());
+            mGlyphBoxFace = tf;
+            mGlyphBoxSize = mMinikinPaint->size;
+            mGlyphBoxTop = box.top;
+            mGlyphBoxBottom = box.bottom;
+            mGlyphBoxLeading = box.leading;
+        }
+        fmi->top = mGlyphBoxTop;
+        fmi->bottom = mGlyphBoxBottom;
+        fmi->leading = mGlyphBoxLeading;
     }
-    return extent.descent - extent.ascent;
+    return (int)(extent.descent - extent.ascent);
 }
 
 float Paint::getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
@@ -320,6 +403,7 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
     default: break;
     }
     std::shared_ptr<const minikin::Font> currentFontRef = nullptr;
+    const minikin::MinikinFont* currentMinikinFont = nullptr;
     Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
     size_t glyphIdx=0;
     if (mShader) {
@@ -333,10 +417,14 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         if (glyphFontRef != currentFontRef) {
             currentFontRef = glyphFontRef;
             // 从 Font 获取底层的 MinikinFont
-            const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
-            if (mTypeface != nullptr && mMinikinPaint != nullptr) {
+            currentMinikinFont = glyphFontRef->typeface().get();
+            /* setTypeface(nullptr) is the AOSP-legal "use the default" state:
+               resolve through effectiveTypeface() like every metrics reader —
+               the old raw mTypeface gate dropped the run's first glyph and
+               drew the rest in whatever scaled font cairo had left set. */
+            if (mMinikinPaint != nullptr) {
                 // 使用 Typeface::getScaledFont，传入布局中实际使用的 MinikinFont
-                auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, minikinFont);
+                auto scaledFont = effectiveTypeface()->getScaledFont(*mMinikinPaint, currentMinikinFont);
                 currentCairoFontFace = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
                 if (currentCairoFontFace) {
                     c.set_scaled_font(currentCairoFontFace);
@@ -390,8 +478,8 @@ void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int 
         const std::shared_ptr<const minikin::Font>& glyphFontRef = layout.getFontRef(glyphIdx);
         const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
         
-        if (mTypeface != nullptr && mMinikinPaint != nullptr) {
-            auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, minikinFont);
+        if (mMinikinPaint != nullptr) {
+            auto scaledFont = effectiveTypeface()->getScaledFont(*mMinikinPaint, minikinFont);
             Cairo::RefPtr<Cairo::FtScaledFont> cairoFont = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
             if (cairoFont) {
                 canvas.set_scaled_font(cairoFont);

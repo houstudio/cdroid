@@ -24,6 +24,13 @@ MessageQueue::MessageQueue(bool quitAllowed, cdroid::Looper* nativeLooper)
 }
 
 MessageQueue::~MessageQueue(){
+    // Drain messages still queued at teardown: no one can dispatch them anymore
+    // and their callbacks (std::function payloads) would otherwise leak (Java
+    // relies on GC; main queue never goes through quit(), which it rejects).
+    {
+        std::lock_guard<std::recursive_mutex> lock(mLock);
+        removeAllMessagesLocked();
+    }
     nativeDestroy();
 }
 
@@ -326,9 +333,6 @@ Message* MessageQueue::next(){
         nativePollOnce(nextPollTimeoutMillis);  // :913 blocking core
         {
             std::lock_guard<std::recursive_mutex> lock(mLock);  // :915
-            if (mQuitting) {  // :963 check quitting after processing messages
-                return nullptr;
-            }
             const int64_t now = SystemClock::uptimeMillis();  // :917
             Message* prevMsg = nullptr;                        // :918
             Message* msg = mMessages;
@@ -357,6 +361,13 @@ Message* MessageQueue::next(){
                 }
             } else {
                 nextPollTimeoutMillis = -1;  // :957 queue empty, block forever until wake
+            }
+            // :963 Process the quit message now — AFTER the retrieval attempt:
+            // quitSafely keeps already-due messages precisely so they are still
+            // delivered (drain-then-stop). Checked before the retrieval it
+            // degenerated into quit(false): the kept messages rotted in the list.
+            if (mQuitting) {
+                return nullptr;
             }
             mBlocked = true;  // about to block: enqueueMessage head-insert wakes based on this
         }
@@ -454,9 +465,15 @@ void MessageQueue::removeAllFutureMessagesLocked(){  // :2093
 // returns nullptr when nothing is due.
 // ============================================================================
 
+Message* MessageQueue::peek() const {
+    // The raw pending head, barriers included — what upstream espresso's
+    // QueueInterrogator reflects out of the private mMessages.
+    std::lock_guard<std::recursive_mutex> lock(mLock);
+    return mMessages;
+}
+
 Message* MessageQueue::nextDue(){
     std::lock_guard<std::recursive_mutex> lock(mLock);
-    if (mQuitting) return nullptr;
     const int64_t now = SystemClock::uptimeMillis();
     Message* prevMsg = nullptr;
     Message* msg = mMessages;
@@ -479,7 +496,12 @@ Message* MessageQueue::nextDue(){
         if (msg->isAsynchronous()) mAsyncMessageCount--;
         return msg;
     }
-    return nullptr;  // empty / no async after a barrier / nothing due
+    // Nothing due: empty, only future messages (a quitting queue removed them
+    // or nothing was posted), or no async behind a barrier. A quitting queue
+    // lands here only after quitSafely's kept due messages were consumed above
+    // — the check is intentionally AFTER the retrieval (next() :963 parity),
+    // so quitSafely drains-then-stops instead of degenerating into quit().
+    return nullptr;
 }
 
 // ============================================================================

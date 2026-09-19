@@ -89,15 +89,33 @@ class ConstraintWidgetContainer : public WidgetContainer {
 
     void reset() override;
     void layout() override; // linear-solve driver (≤8 iters, nested-first, chain rebuild); only the OPTIMIZATION_GRAPH fast-paths (Direct/Grouping/graph) are deferred
+    // The children half of AndroidX addChildrenToSolver (ConstraintWidgetContainer.java
+    // :335-448): barriers mark, addFirst widgets (Guidelines) resolve, virtual layouts
+    // dependency-order, nested containers join at WRAP->FIXED, chains apply. The
+    // container's own join (java:334) stays hand-pinned in layout() — see the note there.
+    bool addChildrenToSolverInner(LinearSystem* system);
+    // AndroidX updateChildrenFromSolver (ConstraintWidgetContainer.java:455-469): read every
+    // child back; true when any child carries a dimension override (measured too small).
+    bool updateChildrenFromSolver(LinearSystem* system);
+    // AndroidX isWidth/HeightMeasuredTooSmall (ConstraintWidgetContainer.java:259): layout
+    // override 3 shrank a WRAP dimension to the measure-pass size and flagged it.
+    bool isWidthMeasuredTooSmall() const {
+        return mWidthMeasuredTooSmall;
+    }
+    bool isHeightMeasuredTooSmall() const {
+        return mHeightMeasuredTooSmall;
+    }
 
     // --- chain bookkeeping (read by Chain.applyChainConstraints) ---
-    // Java: ChainHead[4] + mHorizontalChainsSize; here a vector + active count.
+    // Java: ChainHead[4] + mHorizontalChainsSize; here the vector's size IS the
+    // active count (the two int mirrors of it are retired).
     std::vector<ChainHead*> mHorizontalChainsArray;
-    int mHorizontalChainsSize = 0;
     std::vector<ChainHead*> mVerticalChainsArray;
-    int mVerticalChainsSize = 0;
 
     bool mSkipSolver = false;
+    // AndroidX mWidth/mHeightMeasuredTooSmall (ConstraintWidgetContainer.java:172).
+    bool mWidthMeasuredTooSmall = false;
+    bool mHeightMeasuredTooSmall = false;
 
   private:
     void clearChains(); // delete owned ChainHead* + reset arrays/sizes

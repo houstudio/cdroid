@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App manifest: pakbuilder compiles it into the pak; App parses it at boot
+     (PackageManager role) for the application theme/label and the MAIN/LAUNCHER
+     window. package MUST match the arsc package name (cdroid.<namespace>). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.widgetsDemo">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+    <application android:label="@string/app_title" android:theme="@style/AppTheme">
+        <activity android:name="WidgetsDemoActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden|locale">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

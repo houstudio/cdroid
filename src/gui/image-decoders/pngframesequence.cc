@@ -267,7 +267,16 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
 
 bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
     static constexpr const char*PNG_STAMP="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
-    return !std::memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
+    if (std::memcmp(PNG_STAMP, header, 8) != 0) return false;
+    // Animated only: the APNG acTL chunk (mandatory, before the first IDAT —
+    // in practice right behind IHDR). The bare signature matched EVERY png,
+    // so a sniff-based router (FrameSequence::isAnimated) misrouted plain
+    // static pngs into 0-frame sequences.
+    static constexpr const char*ACTL="acTL";
+    for (uint32_t i = 8; i + 4 <= head_size; i++) {
+        if (std::memcmp(ACTL, header + i, 4) == 0) return true;
+    }
+    return false;
 }
 
 }/*endof namespace*/

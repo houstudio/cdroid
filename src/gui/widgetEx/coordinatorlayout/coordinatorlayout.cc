@@ -15,36 +15,55 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <unordered_map>
+#include <functional>
+
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widgetEx/coordinatorlayout/coordinatorlayout.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/viewgrouputils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(CoordinatorLayout)
-
-CoordinatorLayout::CoordinatorLayout(int w, int h) :ViewGroup(w, h) {
-    initView();
+namespace {
+// Single UI thread (see ActivityFactory); a function-local static map is sufficient.
+std::unordered_map<std::string,
+        std::function<CoordinatorLayout::Behavior*(Context*, const AttributeSet*)>>&
+behaviorRegistry() {
+    static std::unordered_map<std::string,
+            std::function<CoordinatorLayout::Behavior*(Context*, const AttributeSet*)>> r;
+    return r;
 }
+} // namespace
 
-CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+DECLARE_WIDGET2(CoordinatorLayout, "androidx.coordinatorlayout.widget.CoordinatorLayout");
+
+CoordinatorLayout::CoordinatorLayout(Context*ctx):CoordinatorLayout(ctx,nullptr){}
+
+CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* attrs):CoordinatorLayout(context,attrs,0){}
+
+CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
+    // androidx CoordinatorLayout ctor: the layout itself is the a11y container.
+    if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+        setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
+    }
     initView();
-    /*final TypedArray a = (defStyleAttr == 0)
-            ? context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
-                0, R.style.Widget_Support_CoordinatorLayout)
-            : context.obtainStyledAttributes(attrs, R.styleable.CoordinatorLayout,
-                defStyleAttr, 0);*/
-    std::string keylineArrayRes = attrs.getString("keylines");
-    if (!keylineArrayRes.empty()) {
-        context->getArray(keylineArrayRes,mKeylines);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::CoordinatorLayout, defStyleAttr);
+    const int keylineArrayRes = ta->getResourceId(R::styleable::CoordinatorLayout_keylines, 0);
+    if (keylineArrayRes != 0) {
+        mKeylines = context->getResources().getIntArray(keylineArrayRes);
         const float density = context->getDisplayMetrics().density;
         const size_t count = mKeylines.size();
         for (size_t i = 0; i < count; i++) {
             mKeylines[i] = (int) (mKeylines[i] * density);
         }
     }
-    mStatusBarBackground = attrs.getDrawable("statusBarBackground");
+    mStatusBarBackground = ta->getDrawable(R::styleable::CoordinatorLayout_statusBarBackground);
 }
 
 void CoordinatorLayout::initView() {
@@ -73,6 +92,10 @@ void CoordinatorLayout::initView() {
 }
 
 CoordinatorLayout::~CoordinatorLayout() {
+    // Clear the internal hierarchy-change listener BEFORE the base ViewGroup dtor
+    // removes children: onChildViewsChanged would touch child LayoutParams that the
+    // teardown may already have freed (upstream is GC and has no dtor path).
+    ViewGroup::setOnHierarchyChangeListener(OnHierarchyChangeListener());
     delete mStatusBarBackground;
     delete mNestedScrollingParentHelper;
 }
@@ -165,8 +188,8 @@ void CoordinatorLayout::setVisibility(int visibility) {
     }
 }
 
-void CoordinatorLayout::setStatusBarBackgroundResource(const std::string& resId) {
-    setStatusBarBackground(!resId.empty() ? mContext->getDrawable(resId) : nullptr);
+void CoordinatorLayout::setStatusBarBackgroundResource(int resId) {
+    setStatusBarBackground(resId ? mContext->getDrawable(resId) : nullptr);
 }
 
 void CoordinatorLayout::setStatusBarBackgroundColor(int color) {
@@ -416,52 +439,54 @@ int CoordinatorLayout::getKeyline(int index) const{
     return mKeylines[index];
 }
 
-CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,const AttributeSet& attrs,const std::string& name) {
+CoordinatorLayout::Behavior* CoordinatorLayout::parseBehavior(Context* context,const AttributeSet* attrs,const std::string& name) {
     if (name.empty()){//TextUtils.isEmpty(name)) {
         return nullptr;
     }
-#if 0
-    std::string fullName;
-    if (name.startsWith(".")) {
-        // Relative to the app package. Prepend the app package name.
-        fullName = context.getPackageName() + name;
-    } else if (name.indexOf('.') >= 0) {
-        // Fully qualified package name.
-        fullName = name;
-    } else {
-        // Assume stock behavior in this package (if we have one)
-        fullName = !TextUtils.isEmpty(WIDGET_PACKAGE_NAME)
-                ? (WIDGET_PACKAGE_NAME + '.' + name)
-                : name;
+    // AOSP resolves the name ("."-relative / fully-qualified / stock) via
+    // reflection and newInstance(context, attrs); CDROID consults the static
+    // BehaviorFactory registry instead (REGISTER_BEHAVIOR).
+    if (name[0] == '.') {
+        LOGW("CoordinatorLayout: app-relative Behavior names are not supported ('%s')",
+             name.c_str());
+        return nullptr;
     }
+    return BehaviorFactory::create(name, context, attrs);
+}
 
-    try {
-        Map<String, Constructor<Behavior>> constructors = sConstructors.get();
-        if (constructors == null) {
-            constructors = new HashMap<>();
-            sConstructors.set(constructors);
+void CoordinatorLayout::BehaviorFactory::registerBehavior(
+        const std::string& className, const BehaviorFactory::Constructor& ctor) {
+    behaviorRegistry()[className] = ctor;
+}
+
+CoordinatorLayout::Behavior* CoordinatorLayout::BehaviorFactory::create(
+        const std::string& className, Context* context, const AttributeSet* attrs) {
+    auto& reg = behaviorRegistry();
+    auto it = reg.find(className);
+    if (it == reg.end()) {
+        // Fully-qualified names (the upstream XML convention) match on their
+        // last '.'-segment: "com.google.android.material.appbar.AppBarLayout
+        // $ScrollingViewBehavior" -> "AppBarLayout$ScrollingViewBehavior".
+        const size_t dot = className.rfind('.');
+        if (dot != std::string::npos) {
+            it = reg.find(className.substr(dot + 1));
         }
-        Constructor<Behavior> c = constructors.get(fullName);
-        if (c == null) {
-            final Class<Behavior> clazz = (Class<Behavior>) context.getClassLoader()
-                    .loadClass(fullName);
-            c = clazz.getConstructor(CONSTRUCTOR_PARAMS);
-            c.setAccessible(true);
-            constructors.put(fullName, c);
-        }
-        return c.newInstance(context, attrs);
-    } catch (Exception e) {
-        throw std::runtime_error("Could not inflate Behavior subclass " + fullName, e);
     }
-#endif
-    return nullptr;
+    if (it == reg.end() || !it->second) {
+        LOGW("CoordinatorLayout: no Behavior registered for '%s' (REGISTER_BEHAVIOR it?)",
+             className.c_str());
+        return nullptr;
+    }
+    return it->second(context, attrs);
 }
 
 CoordinatorLayout::LayoutParams* CoordinatorLayout::getResolvedLayoutParams(View* child) {
     LayoutParams* result = (LayoutParams*) child->getLayoutParams();
     if (!result->mBehaviorResolved) {
-        if (dynamic_cast<AttachedBehavior*>(child)) {
-            Behavior* attachedBehavior = ((AttachedBehavior*) child)->getBehavior();
+        // Reuse the dynamic_cast result: a C-style cast from View* would not apply
+        // the multiple-inheritance offset to the AttachedBehavior subobject.
+        if (AttachedBehavior* attachedBehaviorChild = dynamic_cast<AttachedBehavior*>(child)) {
+            Behavior* attachedBehavior = attachedBehaviorChild->getBehavior();
             if (attachedBehavior == nullptr) {
                 LOGE("Attached behavior class is null");
             }
@@ -667,7 +692,7 @@ void CoordinatorLayout::onLayoutChild(View* child, int layoutDirection) {
     }
 }
 
-void CoordinatorLayout::onLayout(bool changed, int l, int t, int r, int b) {
+void CoordinatorLayout::onLayout(bool changed, int x, int y, int width, int height) {
     const int layoutDirection = getLayoutDirection();
     const size_t childCount = mDependencySortedChildren.size();
     for (size_t i = 0; i < childCount; i++) {
@@ -798,7 +823,7 @@ void CoordinatorLayout::getDesiredAnchoredChildRectWithoutConstraints(View* chil
         break;
     }
 
-    out.set(left, top, left + childWidth, top + childHeight);
+    out.set(left, top, childWidth, childHeight);
 }
 
 void CoordinatorLayout::constrainChildRect(const LayoutParams& lp, Rect& out, int childWidth, int childHeight) {
@@ -887,10 +912,12 @@ void CoordinatorLayout::layoutChildWithKeyline(View* child, int keyline, int lay
 void CoordinatorLayout::layoutChild(View* child, int layoutDirection) {
     const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
     Rect parent,out;
+    // Rect::set takes (x, y, width, height) — the available box is the parent
+    // inset by padding and margins, not the AOSP right/bottom edges.
     parent.set(getPaddingLeft() + lp->leftMargin,
             getPaddingTop() + lp->topMargin,
-            getWidth() - getPaddingRight() - lp->rightMargin,
-            getHeight() - getPaddingBottom() - lp->bottomMargin);
+            getWidth() - getPaddingLeft() - getPaddingRight() - lp->leftMargin - lp->rightMargin,
+            getHeight() - getPaddingTop() - getPaddingBottom() - lp->topMargin - lp->bottomMargin);
 
     if (mLastInsets && getFitsSystemWindows() && !child->getFitsSystemWindows()) {
         // If we're set to handle insets but this child isn't, then it has been measured as
@@ -1678,26 +1705,28 @@ void CoordinatorLayout::LayoutParams::init() {
 }
 
 CoordinatorLayout::LayoutParams::~LayoutParams() {
-    delete mBehavior;
+    if (mBehaviorOwned) delete mBehavior;
 }
 
 CoordinatorLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :MarginLayoutParams(context, attrs){
     init();
-    //final TypedArray a = context.obtainStyledAttributes(attrs,
-    //        R.styleable.CoordinatorLayout_Layout);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::CoordinatorLayoutLayout);
 
-    this->gravity = attrs.getGravity("layout_gravity",Gravity::NO_GRAVITY);
-    mAnchorId = attrs.getResourceId("layout_anchor",View::NO_ID);
-    anchorGravity = attrs.getGravity("layout_anchorGravity",Gravity::NO_GRAVITY);
+    this->gravity = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
+    mAnchorId = (int)ta->getResourceId(R::styleable::CoordinatorLayoutLayout_layout_anchor, (uint32_t)View::NO_ID);
+    anchorGravity = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_anchorGravity, Gravity::NO_GRAVITY);
 
-    this->keyline = attrs.getInt("layout_keyline", -1);
+    this->keyline = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_keyline, -1);
 
-    insetEdge = attrs.getGravity("layout_insetEdge", Gravity::NO_GRAVITY);
-    dodgeInsetEdges = attrs.getGravity("layout_dodgeInsetEdges", Gravity::NO_GRAVITY);
-    mBehaviorResolved = attrs.hasAttribute("layout_behavior");
+    insetEdge = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_insetEdge, Gravity::NO_GRAVITY);
+    dodgeInsetEdges = ta->getInt(R::styleable::CoordinatorLayoutLayout_layout_dodgeInsetEdges, Gravity::NO_GRAVITY);
+    mBehaviorResolved = ta->hasValue(R::styleable::CoordinatorLayoutLayout_layout_behavior);
     if (mBehaviorResolved) {
-        mBehavior = parseBehavior(context, attrs, attrs.getString("layout_behavior"));
+        mBehavior = parseBehavior(context, &attrs,
+                ta->getString(R::styleable::CoordinatorLayoutLayout_layout_behavior));
+        mBehaviorOwned = mBehavior != nullptr;
     }
 
     if (mBehavior != nullptr) {
@@ -1736,12 +1765,13 @@ CoordinatorLayout::Behavior* CoordinatorLayout::LayoutParams::getBehavior()const
 
 void CoordinatorLayout::LayoutParams::setBehavior(Behavior* behavior) {
     if (mBehavior != behavior) {
-        if (mBehavior != nullptr) {
-            // First detach any old behavior
+        if (mBehavior != nullptr && mBehaviorOwned) {
+            // First detach any old behavior (only one the params owns)
             mBehavior->onDetachedFromLayoutParams();
             delete mBehavior;
         }
         mBehavior = behavior;
+        // Borrowed from the attached view; ownership stays with it.
         mBehaviorTag = nullptr;
         mBehaviorResolved = true;
 

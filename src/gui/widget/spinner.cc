@@ -15,7 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/spinner.h>
+#include <widget/framework_styleable.h>
+#include <content/contextthemewrapper.h>
 #include <widget/listview.h>
 #include <widget/dropdownlistview.h>
 #include <widget/forwardinglistener.h>
@@ -25,10 +29,11 @@
 #include <porting/cdlog.h>
 #define MAX_ITEMS_MEASURED  15
 namespace cdroid{
+using namespace cdroid::internal;
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
-DECLARE_WIDGET2(Spinner,"cdroid:attr/spinnerStyle")
+DECLARE_WIDGET2(Spinner, "android.widget.Spinner");
 
 Spinner::SpinnerForwardingListener::SpinnerForwardingListener(View*v,Spinner::DropdownPopup*d)
 :ForwardingListener(v){
@@ -61,66 +66,76 @@ bool Spinner::SpinnerForwardingListener::onForwardingStarted(){
     return true;
 }
 
-Spinner::Spinner(int w,int h,int mode):AbsSpinner(w,h){
-    mGravity = Gravity::CENTER;
-    mDropDownWidth =0;
-    mDisableChildrenWhenDisabled = true;
-    mTempAdapter= nullptr;
-    mPopup = new DropdownPopup(mContext,this,"cdroid:attr/spinnerStyle");
-    mForwardingListener = new SpinnerForwardingListener(this,(DropdownPopup*)mPopup); 
-}
+Spinner::Spinner(Context*ctx)
+    :Spinner(ctx,nullptr){}
 
-Spinner::Spinner(Context*ctx,const AttributeSet&atts)
-  :AbsSpinner(ctx,atts){
+Spinner::Spinner(Context*ctx,const AttributeSet* atts):Spinner(ctx,atts,R::attr::spinnerStyle){}
+
+Spinner::Spinner(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :AbsSpinner(ctx,pAttrs, defStyleAttr){
     mTempAdapter = nullptr;
     mForwardingListener = nullptr;
-    mGravity = atts.getGravity("gravity",Gravity::CENTER);
-    mDisableChildrenWhenDisabled = atts.getBoolean("disableChildrenWhenDisabled",false);
-    const int mode = atts.getInt("spinnerMode",std::unordered_map<std::string,int>{
-        {"dialog",(int)MODE_DIALOG},{"dropdown",(int)MODE_DROPDOWN}
-    },MODE_DIALOG);
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::Spinner, defStyleAttr);
 
-    Drawable*dr;
-    DropdownPopup* popup;
-    switch(mode){
-    case MODE_DIALOG:
-         mPopup = new DialogPopup(this);
-         mPopup->setPromptText(atts.getString("propmt"));
-         break;
-    case MODE_DROPDOWN:
-         popup = new DropdownPopup(ctx,this,"cdroid:attr/spinnerStyle");
-         mDropDownWidth = atts.getLayoutDimension("dropDownWidth",LayoutParams::WRAP_CONTENT);
-         dr = atts.getDrawable("dropDownSelector");
-         if(dr)popup->setListSelector(dr);
-         dr = mContext->getDrawable(atts.getString("popupBackground"));
-         if(dr)popup->setBackgroundDrawable(dr);
-         popup->setPromptText(atts.getString("propmt"));
-         mPopup = popup;
-         mForwardingListener = new SpinnerForwardingListener(this,popup); 
-         break;
-    } 
-    // Base constructor can call setAdapter before we initialize mPopup.
-    // Finish setting things up if this happened.
-    if (mTempAdapter != nullptr) {
-        setAdapter(mTempAdapter);
-        mTempAdapter = nullptr;
-    }
+
+mGravity = ta->getInt(R::styleable::Spinner_gravity,Gravity::CENTER);
+mDisableChildrenWhenDisabled = ta->getBoolean(R::styleable::Spinner_disableChildrenWhenDisabled, false);
+const int mode = ta->getInt(R::styleable::Spinner_spinnerMode,MODE_DIALOG);
+
+// AOSP Spinner: android:popupTheme wraps the popup context so the dropdown
+// inflates with a different theme. The wrapper is owned by this Spinner.
+const int popupThemeResId = ta->getResourceId(R::styleable::Spinner_popupTheme, 0);
+if (popupThemeResId != 0) {
+    mPopupContext = new ContextThemeWrapper(ctx, popupThemeResId);
+    mOwnsPopupContext = true;
+} else {
+    mPopupContext = ctx;
+}
+
+Drawable*dr;
+DropdownPopup* popup;
+switch(mode){
+case MODE_DIALOG:
+     mPopup = new DialogPopup(this);
+     mPopup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
+     break;
+case MODE_DROPDOWN:
+     popup = new DropdownPopup(getPopupContext(),this,defStyleAttr);
+     mDropDownWidth = ta->getLayoutDimension(R::styleable::Spinner_dropDownWidth,LayoutParams::WRAP_CONTENT);
+     dr = ta->getDrawable(R::styleable::Spinner_dropDownSelector);
+     if(dr)popup->setListSelector(dr);
+     dr = ta->getDrawable(R::styleable::Spinner_popupBackground);
+     if(dr)popup->setBackgroundDrawable(dr);
+     popup->setPromptText(ta->getString(R::styleable::Spinner_prompt));
+     mPopup = popup;
+     mForwardingListener = new SpinnerForwardingListener(this,popup);
+     break;
+}
+// Base constructor can call setAdapter before we initialize mPopup.
+// Finish setting things up if this happened.
+if (mTempAdapter != nullptr) {
+    setAdapter(mTempAdapter);
+    mTempAdapter = nullptr;
+}
+
 }
 
 Spinner::~Spinner(){
     delete mPopup;
     delete mForwardingListener;
+    if (mOwnsPopupContext) delete mPopupContext;
 }
 
 Context* Spinner::getPopupContext()const{
-    return mContext;
+    return mPopupContext;
 }
 
 void Spinner::setPopupBackgroundDrawable(Drawable* background){
     mPopup->setBackgroundDrawable(background);
 }
 
-void Spinner::setPopupBackgroundResource(const std::string& resId){
+void Spinner::setPopupBackgroundResource(int resId){
     setPopupBackgroundDrawable(getPopupContext()->getDrawable(resId));
 }
 
@@ -351,12 +366,20 @@ int Spinner::getBaseline(){
     }
 }
 
+// AOSP Spinner.onInitializeAccessibilityNodeInfoInternal: a Spinner with an
+// adapter opens a popup (dropdown or dialog) — announce that capability.
+void Spinner::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+    AbsSpinner::onInitializeAccessibilityNodeInfoInternal(info);
+    if (mAdapter != nullptr) {
+        info.setCanOpenPopup(true);
+    }
+}
+
 View* Spinner::makeView(int position, bool addChild) {
     View* child;
     if (!mDataChanged) {
         child = mRecycler->get(position);
         if (child != nullptr) {
-            // Position the view
             setUpChild(child, addChild);
             return child;
         }
@@ -364,7 +387,6 @@ View* Spinner::makeView(int position, bool addChild) {
 
     // Nothing found in the recycler -- ask the adapter for a view
     child = mAdapter->getView(position, nullptr, this);
-    // Position the view
     setUpChild(child, addChild);
     return child;
 }
@@ -448,6 +470,7 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
         int positionType = adapter->getItemViewType(i);
         if (positionType != itemType) {
             itemType = positionType;
+            delete itemView;   // AOSP drops it for GC; we own the measure tree
             itemView = nullptr;
         }
         itemView = adapter->getView(i, itemView, this);
@@ -458,6 +481,11 @@ int Spinner::measureContentWidth(Adapter* adapter, Drawable* background){
         itemView->measure(widthMeasureSpec, heightMeasureSpec);
         width = std::max(width, itemView->getMeasuredWidth());
     }
+    // AOSP drops the measure tree here (GC reclaims it). The bin is NOT the
+    // place for it though: put(end-1) collides with AbsSpinner::onMeasure's
+    // put(selectedPosition) on the same key and used to silently overwrite a
+    // live tree — free the measure tree directly instead.
+    delete itemView;
 
     // Add background padding to measured width
     if (background) {
@@ -483,8 +511,8 @@ PointerIcon* Spinner::onResolvePointerIcon(MotionEvent& event, int pointerIndex)
 }
 
 /////////////////////////////////SpinnerPopup//////////////////////////////////////////
-Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,const std::string&defStyleAttr)
-  :ListPopupWindow(context,AttributeSet(context,""),defStyleAttr){
+Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,int defStyleAttr)
+  :ListPopupWindow(context,nullptr,defStyleAttr){
     mSpinner = sp;
     mAdapter = nullptr;
     setAnchorView(mSpinner);
@@ -512,17 +540,66 @@ Spinner::DropdownPopup::DropdownPopup(Context*context,Spinner*sp,const std::stri
 }
 
 Spinner::DropdownPopup::~DropdownPopup(){
-    delete mAdapter;
+    // The ListPopupWindow base (popup window + dropdown ListView) destructs
+    // AFTER this body, and the ListView dereferences mAdapter until its tree
+    // dies — deleting the wrap here was the Spinner::~Spinner 0x0 virtual
+    // call during an active show. With the tree up, hand both wraps to the
+    // spinner's looper so they die once this object (and the base's window
+    // teardown) has completed; otherwise free them now. Teardown-time posts
+    // can be dropped by a dying looper — same accepted edge as
+    // DialogPopup::dismiss's owner deletion.
+    Adapter* current = mAdapter;
+    Adapter* pending = mPendingAdapterDelete;
+    mAdapter = nullptr;
+    mPendingAdapterDelete = nullptr;
+    if (current == nullptr && pending == nullptr) return;
+    if (isShowing()) {
+        mSpinner->post([current, pending]() { delete current; delete pending; });
+    } else {
+        delete current;
+        delete pending;
+    }
 }
 
 void Spinner::DropdownPopup::setAdapter(Adapter* adapter){
+    // Spinner::setAdapter wraps the data adapter in a fresh DropDownAdapter
+    // per call; the replaced wrap is ours to retire. ListPopupWindow::
+    // setAdapter unregisters the observer from (and swaps the live list off)
+    // the OLD wrap, so it must stay alive for that call — retire it right
+    // after, immediately when no tree is up, deferred while it is (the
+    // popup ListView keeps calling into a retired wrap until teardown).
+    Adapter* retired = (mAdapter != nullptr && mAdapter != adapter) ? mAdapter : nullptr;
     mAdapter = adapter;
     ListPopupWindow::setAdapter(adapter);
+    if (retired == nullptr) return;
+    if (isShowing()) {
+        delete mPendingAdapterDelete;
+        mPendingAdapterDelete = retired;
+    } else {
+        delete retired;
+    }
 }
 
 void Spinner::DropdownPopup::dismiss(){
     mSpinner->mRecycler->clear();
+    // AOSP removes the layout listener from its OnDismissListener, which fires
+    // synchronously at dismiss; CDROID defers the dismiss listener to the
+    // decor's teardown-complete, so remove it here instead — otherwise the
+    // selection's layout pass re-fires the listener and re-shows the popup
+    // right after the pick (and before the list was released, crashed on it).
+    ViewTreeObserver* vto = mSpinner->getViewTreeObserver();
+    if (vto != nullptr) {
+        vto->removeOnGlobalLayoutListener(mLayoutListener);
+    }
     ListPopupWindow::dismiss();
+    // Flush a wrap retired during a show now that the dismiss has queued the
+    // decor teardown — posted AFTER it, the looper order frees the wrap only
+    // once the popup ListView has stopped touching it (DialogPopup pattern).
+    if (mPendingAdapterDelete != nullptr) {
+        Adapter* pending = mPendingAdapterDelete;
+        mPendingAdapterDelete = nullptr;
+        mSpinner->post([pending]() { delete pending; });
+    }
 }
 
 bool Spinner::DropdownPopup::isShowing(){
@@ -660,9 +737,36 @@ Spinner::DialogPopup::DialogPopup(Spinner*spinner){
 
 Spinner::DialogPopup::~DialogPopup(){
     delete mListAdapter;
+    // Not dismissed (never opened, or still showing): we own the dialog —
+    // ~Dialog removes a live window itself. ~AlertDialog stays protected
+    // ("use dismiss()"), so delete through the public base dtor; virtual
+    // dispatch still runs the full ~AlertDialog chain.
+    Dialog* owner = mPopup;
+    delete owner;
 }
 
 void Spinner::DialogPopup::setAdapter(Adapter*adapter){
+    // Spinner::setAdapter wraps the data adapter in a fresh DropDownAdapter
+    // per call; the replaced wrap is ours. A live dialog's ListView still
+    // references the old one, so free it immediately only when no popup is
+    // up — during the dismiss's posted teardown (selection rebinds the row
+    // while isShowing() is still true) hand it to the spinner's looper to
+    // die after the dialog does; dropping it there leaked one wrap per
+    // selection (valgrind: 48B x selections at spinner.cc setAdapter).
+    if (mListAdapter != nullptr && mListAdapter != adapter) {
+        if (mPopup == nullptr || !mPopup->isShowing()) {
+            delete mListAdapter;
+        } else {
+            // Defer past the dialog's OWN death, not just off this stack: the
+            // popup ListView keeps calling mAdapter (layoutChildren via the
+            // touchMode dispatch) until the dialog tree is destroyed, and a
+            // looper-order delete of the wrap crashed it (UAF in
+            // ListView::layoutChildren reading freed mAdapter). The dialog's
+            // posted teardown frees this wrap after its tree.
+            delete mPendingAdapterDelete;
+            mPendingAdapterDelete = mListAdapter;
+        }
+    }
     mListAdapter = adapter;
 }
 
@@ -694,6 +798,20 @@ void Spinner::DialogPopup::onClick(DialogInterface& dialog, int which) {
 void Spinner::DialogPopup::dismiss(){
     mSpinner->mRecycler->clear();
     mPopup->dismiss();
+    // The owner frees the shell after teardown (see dialog.h); via the public
+    // base dtor — ~AlertDialog itself stays protected. Deferred to the looper:
+    // this dismiss runs INSIDE the dialog's item-click callback (AlertController's
+    // lambda touches the dialog after the listener returns — a synchronous
+    // delete was a use-after-free, valgrind: invalid read at alertcontroller.cc:790,
+    // and the pointer-corruption fallout showed up as the 239K/632K "leak"
+    // clusters). AOSP survives the same reentry on GC.
+    Dialog* owner = mPopup;
+    Adapter* pendingWrap = mPendingAdapterDelete;
+    mPendingAdapterDelete = nullptr;
+    mSpinner->post([owner, pendingWrap]() {
+        delete owner;          // dialog dies first (its ListView stops touching mAdapter)
+        delete pendingWrap;    // then the retired wrap is safe to free
+    });
     mPopup = nullptr;
 }
 

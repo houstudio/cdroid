@@ -15,26 +15,34 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/togglebutton.h>
+#include <widget/framework_styleable.h>
 #include <cdlog.h>
-#include <widget/R.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 #define NO_ALPHA 0xFF
 
-DECLARE_WIDGET2(ToggleButton,"cdroid:attr/buttonStyleToggle")
+DECLARE_WIDGET2(ToggleButton, "android.widget.ToggleButton");
 
-ToggleButton::ToggleButton(Context*ctx,const AttributeSet& attrs)
-  :CompoundButton(ctx,attrs){
-    mIndicatorDrawable=nullptr;
-    setTextOn(ctx->getString(attrs.getString("textOn")));
-    setTextOff(ctx->getString(attrs.getString("textOff")));
-    mDisabledAlpha=attrs.getFloat("disabledAlpha",0.5f);
-}
+ToggleButton::ToggleButton(Context*ctx)
+    :ToggleButton(ctx,nullptr){}
 
-ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet* attrs):ToggleButton(ctx,attrs,cdroid::internal::R::attr::buttonStyleToggle){}
+
+ToggleButton::ToggleButton(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :CompoundButton(ctx,pAttrs, defStyleAttr){
     mIndicatorDrawable=nullptr;
-    mDisabledAlpha=0.5f;
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::ToggleButton, defStyleAttr);
+    
+
+    setTextOn(ta->getString(R::styleable::ToggleButton_textOn));
+    setTextOff(ta->getString(R::styleable::ToggleButton_textOff));
+    mDisabledAlpha= ta->getFloat(R::styleable::ToggleButton_disabledAlpha,0.5f);
+
 }
 
 void ToggleButton::setChecked(bool checked){
@@ -94,15 +102,15 @@ void ToggleButton::setBackground(Drawable* d){
     updateReferenceToIndicatorDrawable(d);
 }
 
-std::string ToggleButton::getAccessibilityName()const{
+std::string ToggleButton::getAccessibilityClassName()const{
     return "ToggleButton";
 }
 
 std::string ToggleButton::getButtonStateDescription() {
     if (isChecked()) {
-        return mTextOn.empty() ? mContext->getString("cdroid:string/capital_on") : mTextOn;
+        return mTextOn.empty() ? mContext->getString(R::string::capital_on) : mTextOn;
     } else {
-        return mTextOff.empty() ? mContext->getString("cdroid:string/capital_off") : mTextOff;
+        return mTextOff.empty() ? mContext->getString(R::string::capital_off) : mTextOff;
     }
 }
 }

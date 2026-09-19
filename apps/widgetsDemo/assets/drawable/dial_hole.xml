@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Rotary-dial finger hole: dark circle with a light rim. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <solid android:color="#0E0E1A" />
+    <stroke android:width="2dp" android:color="#59FFFFFF" />
+</shape>

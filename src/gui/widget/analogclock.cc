@@ -15,7 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/analogclock.h>
+#include <widget/framework_styleable.h>
 #include <systemclock.h>
 #include <core/calendar.h>
 #include <cdlog.h>
@@ -24,21 +27,27 @@
 #include <iomanip>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(AnalogClock)
+DECLARE_WIDGET2(AnalogClock, "android.widget.AnalogClock");
 
-AnalogClock::AnalogClock(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+AnalogClock::AnalogClock(Context*ctx)
+    :AnalogClock(ctx,nullptr){}
+
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet* attrs):AnalogClock(ctx,attrs,0){}
+
+AnalogClock::AnalogClock(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+  :View(ctx,pAttrs, defStyleAttr){
     initAnalog();
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::AnalogClock, defStyleAttr);
+    
 
-    setDial (attrs.getDrawable("dial"));
-    setHourHand( attrs.getDrawable("hand_hour"));
-    setMinuteHand( attrs.getDrawable("hand_minute"));
-    setSecondHand( attrs.getDrawable("hand_second"));
-}
+setDial (ta->getDrawable(R::styleable::AnalogClock_dial));
+setHourHand( ta->getDrawable(R::styleable::AnalogClock_hand_hour));
+setMinuteHand( ta->getDrawable(R::styleable::AnalogClock_hand_minute));
+setSecondHand( ta->getDrawable(R::styleable::AnalogClock_hand_second));
 
-AnalogClock::AnalogClock(int w,int h):View(w,h){
-    initAnalog();
 }
 
 AnalogClock::~AnalogClock(){

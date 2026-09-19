@@ -19,6 +19,8 @@
 #define __CDROID_TRANSITION_TRANSITIONUTILS_H__
 
 #include <animation/animator.h>
+#include <cairomm/surface.h>
+#include <cairomm/matrix.h>
 
 #include <vector>
 
@@ -41,13 +43,38 @@ class TransitionUtils {
     static Animator* mergeAnimators(Animator* animator1, Animator* animator2);
 
     /**
-     * Copy a view's current rendering into a static overlay view. android renders the
-     * view hierarchy into a Bitmap via DisplayList/Canvas. CDROID's cairo 2D substrate
-     * does not yet expose an equivalent snapshot, so this returns nullptr (deferred to
-     * the Crossfade batch). The overlay path in Visibility::onDisappear then produces no
-     * animator for removed-from-hierarchy views; the visibility-change path is unaffected.
+     * Creates a snapshot View of <code>view</code>, laid out at its position mapped
+     * into <code>sceneRoot</code> coordinates. android renders the view into a Bitmap
+     * wrapped in an ImageView; CDROID renders into a Cairo::ImageSurface (the same
+     * surface role the Crossfade snapshot plays) and wraps it the same way.
+     *
+     * Ownership: the caller owns the returned view and must delete it once it is no
+     * longer in the overlay (android relies on GC here; Visibility::onDisappear is
+     * the sole caller and deletes it in its cleanup paths).
+     *
+     * @param sceneRoot The ViewGroup in which the view copy will be displayed.
+     * @param view The view to create a copy of.
+     * @param parent The parent of view.
      */
     static View* copyViewImage(ViewGroup* sceneRoot, View* view, ViewGroup* parent);
+
+    /**
+     * Creates an ImageSurface of the given view, using the matrix to transform to the
+     * destination coordinates. <code>matrix</code> will be modified during the bitmap
+     * creation. If the bitmap is large, it is scaled uniformly down to at most
+     * MAX_IMAGE_SIZE pixels. A view that is not attached to a window is temporarily
+     * added to sceneRoot's overlay for the duration of the rendering.
+     *
+     * @param view The view to create a bitmap for.
+     * @param matrix The matrix converting view-local coordinates to the coordinates
+     *               the bitmap will be displayed in.
+     * @param bounds The bounds of the bitmap in the destination coordinate system.
+     * @param sceneRoot A ViewGroup attached to the window to temporarily contain the
+     *                  view if it isn't attached.
+     * @return A bitmap of the given view, or a null RefPtr if bounds has no area.
+     */
+    static Cairo::RefPtr<Cairo::ImageSurface> createViewBitmap(View* view, Cairo::Matrix& matrix,
+            Cairo::Rectangle& bounds, ViewGroup* sceneRoot);
 };
 
 } // namespace cdroid

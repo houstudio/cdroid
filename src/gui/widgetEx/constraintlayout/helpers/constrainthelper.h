@@ -40,8 +40,8 @@ class ConstraintLayout;
 
 class ConstraintHelper : public View {
   public:
-    ConstraintHelper(Context* ctx, const AttributeSet& attrs);
-    explicit ConstraintHelper(int width, int height);
+    ConstraintHelper(Context* ctx, const AttributeSet* attrs);
+    ConstraintHelper(Context* ctx,const AttributeSet* attrs,int defStyleAttr);
 
     // The owned core helper widget (Barrier/...). getViewWidget() returns this for helper children.
     HelperWidget* getHelperWidget() const {
@@ -78,7 +78,7 @@ class ConstraintHelper : public View {
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
-    virtual void init(const AttributeSet& attrs);
+    virtual void init(const AttributeSet* attrs);
 
     std::vector<int> mIds;
     std::unique_ptr<HelperWidget> mHelperWidget;
@@ -89,7 +89,7 @@ class ConstraintHelper : public View {
   private:
     void addRscID(int id);
     void addID(int id);
-    void setIds(const AttributeSet&atts, const std::string& idList);
+    void setIds(const std::string& idList);
     void setReferenceTags(ConstraintLayout* container, const std::string& tagList);
     void addTag(ConstraintLayout* container, const std::string& tagString);
 };

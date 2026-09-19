@@ -42,6 +42,10 @@ struct PRIVATE {
     int transparency;
     std::istream*istream;
     std::vector<uint8_t> ninePatchChunk;  // "cdNp" container (npTc+npLb+npOl) for 9-patch
+    // Standard aapt2 chunks captured separately when the png carries them as siblings
+    // (aapt2-compiled framework assets) instead of one cdNp bundle — see
+    // png_read_user_chunk and getNinePatchChunk.
+    std::vector<uint8_t> nptc, nplb, npol;
 };
 
 static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size_t data_size) {
@@ -68,18 +72,33 @@ static void PNGAPI pngComplete(png_structp png, png_infop){
     //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->pngComplete();
 }
 
-// libpng user-chunk callback: capture the CDROID 9-patch bundle chunk DATA (bytes after
-// the 8-byte PNG chunk header) into PRIVATE. Registered via png_set_read_user_chunk_fn
-// (user ptr = mPrivate); fires during png_read_info for unknown chunks. Returning 1 marks
-// the chunk handled. The "cdNp" bundle packs npTc (stretch/padding) + npLb (optical/layout
-// bounds) + npOl (outline) into one blob so the runtime reuses the single-chunk plumbing.
+// libpng user-chunk callback: capture the 9-patch chunk DATA (bytes after the 8-byte
+// PNG chunk header) into PRIVATE. Registered via png_set_read_user_chunk_fn (user ptr =
+// mPrivate); fires during png_read_info for unknown chunks. Returning 1 marks the chunk
+// handled. Accept both chunk forms:
+//  - "cdNp": CDROID bundle (npTc + npLb + npOl) used by pakbuilder-bundled assets.
+//  - "npTc"/"npLb"/"npOl": Android's standard aapt2 chunks, stored as separate sibling
+//    chunks in aapt2-compiled framework / SDK drawables.
+// NinePatch::Create dispatches on the data (data[0]==1 → cdNp bundle; else raw npTc), so
+// storing either form lets the runtime parse SDK 9-patches without a cdNp bundle. The
+// bare npTc form alone loses the sibling npLb (optical insets) and npOl (outline) —
+// getNinePatchChunk re-bundles the three so the cdNp parser sees them.
 static int PNGAPI png_read_user_chunk(png_structp png_ptr, png_unknown_chunkp chunk) {
     if (chunk == nullptr || chunk->size == 0 || chunk->name == nullptr) return 0;
-    if (memcmp(chunk->name, "cdNp", 4) != 0) return 0;  // not our 9-patch bundle
+    const bool isCdNp = memcmp(chunk->name, "cdNp", 4) == 0;
+    const bool isNpTc = memcmp(chunk->name, "npTc", 4) == 0;
+    const bool isNpLb = memcmp(chunk->name, "npLb", 4) == 0;
+    const bool isNpOl = memcmp(chunk->name, "npOl", 4) == 0;
+    if (!isCdNp && !isNpTc && !isNpLb && !isNpOl) return 0;
     PRIVATE* priv = static_cast<PRIVATE*>(png_get_user_chunk_ptr(png_ptr));
     if (priv == nullptr) return 0;
-    if (priv->ninePatchChunk.empty())
-        priv->ninePatchChunk.assign(chunk->data, chunk->data + chunk->size);
+    std::vector<uint8_t>* sink = isCdNp ? &priv->ninePatchChunk
+                              : isNpTc ? &priv->nptc
+                              : isNpLb ? &priv->nplb
+                              :          &priv->npol;
+    // cdNp (the full bundle) wins over a bare npTc if both are present.
+    if (isCdNp || sink->empty())
+        sink->assign(chunk->data, chunk->data + chunk->size);
     return 1;
 }
 
@@ -91,13 +110,33 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate->transparency = PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
+    // Keep all unknown chunks (npTc/npLb/npOl 9-patch chunks) so the user-chunk
+    // callback actually receives them — without this libpng warns "forcing save
+    // of an unhandled chunk; please call png_set_keep_unknown_chunks" and the
+    // 9-patch chunk capture silently fails.
+    png_set_keep_unknown_chunks(mPrivate->png_ptr, PNG_HANDLE_CHUNK_ALWAYS, nullptr, 0);
     // Must be set before png_read_info (which runs in decodeSize()); mPrivate is the
     // user-chunk ptr the callback retrieves via png_get_user_chunk_ptr.
     png_set_read_user_chunk_fn(mPrivate->png_ptr, mPrivate, png_read_user_chunk);
 }
 
 const std::vector<uint8_t>* PNGDecoder::getNinePatchChunk() const {
-    return mPrivate->ninePatchChunk.empty() ? nullptr : &mPrivate->ninePatchChunk;
+    if (!mPrivate->ninePatchChunk.empty())
+        return &mPrivate->ninePatchChunk;
+    if (mPrivate->nptc.empty())
+        return nullptr;
+    // aapt2 siblings, no cdNp bundle: synthesize one in the cdNp v1 layout
+    // ([u8 ver=1][u16 BE len + bytes] x3: npTc, npLb, npOl) that NinePatch::Create
+    // already parses. Missing npLb/npOl become zero-length sections, exactly like a
+    // pakbuilder asset compiled without them.
+    std::vector<uint8_t>& bundle = mPrivate->ninePatchChunk;
+    bundle.push_back(1);
+    for (const std::vector<uint8_t>* part : {&mPrivate->nptc, &mPrivate->nplb, &mPrivate->npol}) {
+        bundle.push_back((uint8_t)(part->size() >> 8));
+        bundle.push_back((uint8_t)(part->size() & 0xFF));
+        bundle.insert(bundle.end(), part->begin(), part->end());
+    }
+    return &bundle;
 }
 
 PNGDecoder::~PNGDecoder() {

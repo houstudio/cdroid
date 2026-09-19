@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <widget/editor.h>
 #include <widget/textview.h>
 #include <text/method/worditerator.h>
@@ -41,6 +41,7 @@
 #include <menu/menuitem.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
 namespace {
 // Cursor blink period, in milliseconds (matches Android's Editor.BLINK).
@@ -64,7 +65,12 @@ constexpr int ORDER_SELECT_ALL = 8;
 //  path is wired (and sendUpdateSelection is itself a deferred no-op). The
 //  structure is kept for parity and so future IME / EasyEdit work drops in.
 // =====================================================================================
-class Editor::SpanController : public SpanWatcher {
+// NoCopySpan base required: SpanController is an Editor member re-installed on
+// every spannable text (addSpanWatchers), so the container must treat it as
+// borrowed — without it the owned-span sweep in ~SpannableStringInternal
+// deletes the live member when a buffer is replaced (same family as the
+// ChangeWatcher fix; see textview.h).
+class Editor::SpanController : virtual public SpanWatcher, virtual public NoCopySpan {
 public:
     explicit SpanController(Editor* editor) : mEditor(editor) {}
 
@@ -233,9 +239,9 @@ void Editor::invalidateTextActionMode() {
 
 // 对齐 AOSP Editor.populateMenuWithItems (Editor.java:4751)。条件 add (不 setVisible)。
 void Editor::populateTextActionModeMenu(Menu& menu, bool /*hasSelection*/) {
-    if (mTextView->canCut()) menu.add(0, cdroid::R::id::cut,   ORDER_CUT,        "Cut");
-    if (mTextView->canCopy())  menu.add(0, cdroid::R::id::copy,  ORDER_COPY,       "Copy");
-    if (mTextView->canPaste()) menu.add(0, cdroid::R::id::paste, ORDER_PASTE,      "Paste");
+    if (mTextView->canCut()) menu.add(0, R::id::cut,   ORDER_CUT,        "Cut");
+    if (mTextView->canCopy())  menu.add(0, R::id::copy,  ORDER_COPY,       "Copy");
+    if (mTextView->canPaste()) menu.add(0, R::id::paste, ORDER_PASTE,      "Paste");
     if (mTextView->canSelectAllText())
         menu.add(0, R::id::select_all, ORDER_SELECT_ALL, "Select all");
 }
@@ -550,6 +556,9 @@ void Editor::updateCursorPosition() {
         return ;
     }
     Layout* layout = mTextView->getLayout();
+    // No layout yet (empty text before the first traversal — AOSP always has a
+    // Layout instance, the port builds lazily): nothing to position against.
+    if (layout == nullptr) return;
     // Ported from Android Editor.updateCursorPosition() (Editor.java:2428): use
     // selection START and map through OffsetMapping with the CURSOR strategy so a
     // length-altering transformation (e.g. password dots) positions the caret right.
@@ -771,6 +780,19 @@ void Editor::onTouchUpEvent(MotionEvent& event) {
     mLastUpTime = (int64_t)event.getEventTime();
     mLastUpX = event.getX();
     mLastUpY = event.getY();
+
+    // AOSP Editor.onTouchUpEvent: move the caret to the tapped offset. Focus
+    // was already taken synchronously by View.onTouchEvent's UP branch (the
+    // focusTaken block) before TextView got here, so the FIRST tap on an
+    // unfocused editor both focuses it and positions the caret -- one tap, not
+    // two. selectAllOnFocus keeps its whole-text selection (selectAllGotFocus);
+    // the action-mode/handles/spell-check follow-ups arrive with those passes.
+    const bool selectAllGotFocus = mSelectAllOnFocus && mTextView->didTouchFocusSelect();
+    CharSequence& text = mTextView->getText();
+    if (!selectAllGotFocus && text.length() > 0) {
+        const int offset = mTextView->getOffsetForPosition(event.getX(), event.getY());
+        Selection::setSelection(dynamic_cast<Spannable*>(&text), offset);
+    }
 }
 
 int Editor::getLastTapPosition() const {

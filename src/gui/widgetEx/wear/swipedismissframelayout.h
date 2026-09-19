@@ -17,7 +17,7 @@
 */
 #ifndef __SWIPE_DISMISS_FRAMELAYOUT_H__
 #define __SWIPE_DISMISS_FRAMELAYOUT_H__
-#include <widgetEx/wear/dismissableframelayout.h>
+#include <widgetEx/wear/dismissibleframelayout.h>
 namespace cdroid{
 class SwipeDismissFrameLayout:public DismissibleFrameLayout {
 public:
@@ -36,7 +36,8 @@ protected:
     void performDismissStartedCallbacks() override;
     void performDismissCanceledCallbacks() override;
 public:
-    SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs);
+    SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs);
+    SwipeDismissFrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
 
     void addCallback(const Callback& callback);
     void removeCallback(const Callback& callback);

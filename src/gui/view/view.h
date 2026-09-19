@@ -49,7 +49,7 @@
 #include <view/touchdelegate.h>
 #include <view/velocitytracker.h>
 #include <view/layoutinflater.h>
-#include <view/configuration.h>
+#include <content/configuration.h>
 #include <view/viewpropertyanimator.h>
 #include <view/viewconfiguration.h>
 #include <view/viewtreeobserver.h>
@@ -58,6 +58,7 @@
 #include <view/scrollfeedbackprovider.h>
 #include <view/accessibility/accessibilityevent.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitynodeprovider.h>
 #include <view/inputeventconsistencyverifier.h>
 #include <view/viewoutlineprovider.h>
@@ -72,6 +73,7 @@
 
 namespace cdroid{
 class DragEvent;
+class TypedArray;
 class ViewGroup;
 class ViewOverlay;
 class GhostView;
@@ -81,6 +83,7 @@ class HandlerActionQueue;
 class LayoutInflater;
 class ScrollBarDrawable;
 class HapticScrollFeedbackProvider;
+class TextSegmentIterator;
 class View:public Drawable::Callback,public KeyEvent::Callback{
 private:
     static constexpr int POPULATING_ACCESSIBILITY_EVENT_TYPES=
@@ -551,6 +554,7 @@ private:
     bool mBoundsChangedmDefaultFocusHighlightSizeChanged;
 
     ViewOverlay* mOverlay;
+    std::shared_ptr<bool> mAliveFlag;   // see getAliveFlag(); flipped in ~View
     HandlerActionQueue*mRunQueue;
     PointerIcon* mPointerIcon;
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier;
@@ -624,9 +628,12 @@ private:
     void setMeasuredDimensionRaw(int measuredWidth, int measuredHeight);
     bool isPerformHapticFeedbackSuppressed(int feedbackConstant, int flags);
     int  computeHapticFeedbackPrivateFlags();
-    void initializeScrollbarsInternal(const AttributeSet&attrs);
+    void initializeScrollbarsInternal(const TypedArray& a);
     void initializeScrollBarDrawable();
     void initScrollCache();
+    // AOSP View.getFocusableAttribute: focusable="true/false" is stored as
+    // TYPE_INT_BOOLEAN in binary AXML, so plain getInt would mis-read it.
+    int getFocusableAttribute(const TypedArray& a);
     ScrollabilityCache* getScrollCache();
     bool initialAwakenScrollBars();
     Drawable* getAutofilledDrawable();
@@ -709,7 +716,10 @@ protected:
     int mUserPaddingLeftInitial;
     /* Cache initial right padding*/
     int mUserPaddingRightInitial;
-    int mSystemUiVisibility;
+    // Java zero-initializes instance fields; the first setSystemUiVisibility()
+    // compares against this member before any assignment (android-36 View.java
+    // declares it bare and leans on that language guarantee).
+    int mSystemUiVisibility = 0;
     int mTransientStateCount;
     int mWindowAttachCount;
     int mLabelForId;
@@ -720,7 +730,21 @@ protected:
     bool mCachingFailed;
     bool mLastIsOpaque;
     bool mSendingHoverAccessibilityEvents;
-    AccessibilityDelegate* mAccessibilityDelegate;
+    // Refcounted: owning setters (the shared_ptr overload) release on the last
+    // view/ref; the raw-pointer setter stays AOSP's borrowed contract (the view
+    // never frees it — wrapped with a no-op deleter). One delegate instance may
+    // be set on many views (RecyclerViewAccessibilityDelegate::ItemDelegate),
+    // which is why the field cannot be a plain owned pointer.
+    std::shared_ptr<AccessibilityDelegate> mAccessibilityDelegate;
+    // androidx ViewCompat action list (custom + replacement actions). The view
+    // owns the action instances; the AccessibilityViewCommand each carries is
+    // borrowed (caller-owned), like every other listener in the tree.
+    std::vector<AccessibilityNodeInfo::AccessibilityAction*> mAccessibilityActions;
+    void ensureAccessibilityDelegateForActions();
+    void addAccessibilityAction(AccessibilityNodeInfo::AccessibilityAction* action);
+    void removeActionWithId(int actionId);
+    int getAvailableActionId(const std::string& label) const;
+    bool dispatchViewCommandAction(int action, Bundle* arguments);
     Rect mClipBounds;
     std::string mContentDescription;
     std::string mStateDescription;
@@ -754,8 +778,11 @@ protected:
     bool hasOpaqueScrollbars()const;
     virtual void resolveDrawables();
     bool areDrawablesResolved()const;
+public:
+    // AOSP: public API (android:duplicateParentState is its XML form).
     void setDuplicateParentStateEnabled(bool);
     bool isDuplicateParentStateEnabled()const;
+protected:
 
     int getWindowAttachCount()const;
     void recomputePadding();
@@ -842,7 +869,13 @@ protected:
     virtual void onFinishInflate();
     virtual void dispatchSetActivated(bool activated);
     virtual void dispatchAttachedToWindow(AttachInfo*info,int visibility);
+public:
+    // AOSP View.dispatchDetachedFromWindow is public (View.java) — teardown
+    // owners outside the View hierarchy (fragment special-effects reclamation)
+    // dispatch it before freeing a tree that was parked in mDisappearingChildren
+    // and never received the detach dispatch.
     virtual void dispatchDetachedFromWindow();
+protected:
     virtual void dispatchCancelPendingInputEvents();
     virtual void onCancelPendingInputEvents();
     bool canReceivePointerEvents()const;
@@ -914,10 +947,17 @@ protected:
     virtual void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
     virtual void resetSubtreeAccessibilityStateChanged();
     bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
+    void sendViewTextTraversedAtGranularityEvent(int action, int granularity,
+            int fromIndex, int toIndex);
     void ensureTransformationInfo();
 public:
-    View(Context*ctx,const AttributeSet&attrs);
-    View(int w,int h);
+    View(Context*ctx);   // AOSP View(Context)
+    View(Context*ctx,const AttributeSet*attrs);
+    // AOSP ctor: defStyleAttr flows in as a parameter (cdroid:attr/<widget>Style
+    // resolved by the inflater factory). attrs is a nullable pointer (AOSP allows
+    // constructing a styled view without XML attrs). The AttributeSet& ctor above
+    // delegates here.
+    View(Context*ctx,const AttributeSet*attrs,int defStyleAttr,int defStyleRes=0);
     virtual ~View();
     bool isShowingLayoutBounds()const;
     void setShowingLayoutBounds(bool debugLayout);
@@ -950,7 +990,6 @@ public:
     const Rect getBound()const;
     void getHitRect(Rect&);
     bool pointInView(int localX,int localY,int slop)const;
-    const Rect getDrawingRect()const;
     int64_t getDrawingTime()const;
     virtual void getFocusedRect(Rect&r);
     void getDrawingRect(Rect& outRect)const;
@@ -990,10 +1029,12 @@ public:
     virtual bool resolveLayoutDirection();
     bool canResolveTextDirection()const;
     bool canResolveLayoutDirection()const;
-    int getMinimumHeight();
+    virtual int getMinimumHeight();
     virtual void setMinimumHeight(int minHeight);
-    int getMinimumWidth();
+    virtual int getMinimumWidth();
     virtual void setMinimumWidth(int minWidth);
+    // AOSP View.getResources() (final): the Resources of the attached context.
+    Resources& getResources();
 
     Animation* getAnimation()const;
     /*The View owns the animation it is currently running (one Animation per View:
@@ -1175,7 +1216,7 @@ public:
     Drawable*getBackground()const;
     virtual void setBackground(Drawable*background);
     virtual void setBackgroundColor(int color);
-    void setBackgroundResource(const std::string&resid);
+    void setBackgroundResource(int resId);
     void setBackgroundTintList(const RefPtr<ColorStateList>& tint);
     void setBackgroundTintMode(int tintMode);
     int getBackgroundTintMode() const;
@@ -1184,6 +1225,18 @@ public:
 
     AccessibilityDelegate* getAccessibilityDelegate()const;
     void setAccessibilityDelegate(AccessibilityDelegate* delegate);
+    void setAccessibilityDelegate(std::shared_ptr<AccessibilityDelegate> delegate);
+    // androidx.core.view.ViewCompat's accessibility-action helpers, collapsed
+    // onto View per the Compat-strip rule (android-36 View itself has none).
+    bool hasAccessibilityDelegate() const;
+    /** Adds a custom action; @return its id, or NO_ID when all 32 slots are
+        taken (androidx hands out accessibility_custom_action_0..31). */
+    int addAccessibilityAction(const std::string& label, AccessibilityViewCommand* command);
+    void removeAccessibilityAction(int actionId);
+    /** Replaces an action's behavior/label — label==nullptr && command==nullptr
+        removes it (androidx replaceAccessibilityAction semantics). */
+    void replaceAccessibilityAction(const AccessibilityNodeInfo::AccessibilityAction& replacedAction,
+            const char* label, AccessibilityViewCommand* command);
     virtual AccessibilityNodeProvider* getAccessibilityNodeProvider();
     bool isActionableForAccessibility()const;
     void notifyViewAccessibilityStateChangedIfNeeded(int changeType);
@@ -1191,11 +1244,13 @@ public:
     bool dispatchNestedPrePerformAccessibilityAction(int action, Bundle* arguments);
     virtual bool performAccessibilityAction(int action, Bundle* arguments);
     virtual bool performAccessibilityActionInternal(int action, Bundle* arguments);
-    std::string getIterableTextForAccessibility();
-    bool isAccessibilitySelectionExtendable()const;
-    int getAccessibilitySelectionStart()const;
-    int getAccessibilitySelectionEnd()const;
-    void setAccessibilitySelection(int start, int end);
+    virtual std::string getIterableTextForAccessibility();
+    virtual bool isAccessibilitySelectionExtendable()const;
+    virtual int getAccessibilitySelectionStart()const;
+    virtual int getAccessibilitySelectionEnd()const;
+    virtual void setAccessibilitySelection(int start, int end);
+    virtual void prepareForExtendedAccessibilitySelection();
+    virtual TextSegmentIterator* getIteratorForGranularity(int granularity);
     void setTransitionVisibility(int visibility);
 
     bool isTemporarilyDetached()const;
@@ -1231,6 +1286,10 @@ public:
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
     virtual void setStateDescription(const std::string& stateDescription);
+    std::string getStateDescription() const;
+    /** AOSP View.announceForAccessibility: send a TYPE_ANNOUNCEMENT event
+     *  carrying the given text — screen readers speak it immediately. */
+    void announceForAccessibility(const std::string& text);
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;
@@ -1244,7 +1303,7 @@ public:
     void setScrollY(int y);
     int getScrollX()const;
     int getScrollY()const;
-    static View*inflate(Context*,const std::string& resource, ViewGroup* root);
+    static View*inflate(Context*,int, ViewGroup* root);
     int getOverScrollMode()const;
     virtual void setOverScrollMode(int overScrollMode);
     int getVerticalFadingEdgeLength()const;
@@ -1538,9 +1597,15 @@ public:
     const std::string& getTransitionName()const;
     void setTransitionName(const std::string&);
     // Whether this view may have overlapping content needing an offscreen layer
-    // when alpha-animated. Cairo is software 2D with no GPU layer, so the layer
-    // boost transitions rely on (e.g. Fade) is a no-op here; false is correct.
-    virtual bool hasOverlappingRendering()const{return false;}
+    // when alpha-animated. Default true per android-36 View.hasOverlappingRendering
+    // (widget subclasses refine it). With cairo software 2D there is no GPU layer,
+    // so consumers of a true value (e.g. Fade's temporary setLayerType(HARDWARE))
+    // degrade to per-frame cache invalidation instead of an offscreen layer.
+    virtual bool hasOverlappingRendering()const{return true;}
+    // Effective value used internally: the forced value when
+    // forceHasOverlappingRendering() was called, hasOverlappingRendering() otherwise.
+    bool getHasOverlappingRendering()const;
+    void forceHasOverlappingRendering(bool hasOverlappingRendering);
     // Stable per-window handle used by TransitionManager to group running
     // transitions. Single-process: a window-level pointer suffices (no real WindowId type).
     void* getWindowId()const;
@@ -1564,6 +1629,18 @@ public:
     bool isLayoutDirectionInherited()const;
     void setLayoutParams(LayoutParams*lp);
     virtual ViewOverlay*getOverlay();
+    /** The existing overlay, or null — unlike getOverlay() this never creates
+     *  one. Teardown-time animator sweeps must not allocate (and the host may
+     *  already be mid-destruction). */
+    ViewOverlay*peekOverlay()const{ return mOverlay; }
+    /** Liveness handle: the shared bool flips false at the TOP of ~View.
+     *  Animation/transition end-listeners hold a weak_ptr and no-op when the
+     *  target view is gone — the no-GC counterpart of the animator target
+     *  reference keeping the view reachable in Java. */
+    std::weak_ptr<bool> getAliveFlag() {
+        if (!mAliveFlag) mAliveFlag = std::make_shared<bool>(true);
+        return mAliveFlag;
+    }
     virtual bool isLayoutRequested()const;
     virtual bool isInLayout()const;
     bool isLayoutValid()const;
@@ -1611,7 +1688,7 @@ public:
     int mWindowTop;
     int mAccessibilityWindowId;
     int mAccessibilityFetchFlags;
-    int mSystemUiVisibility;
+    int mSystemUiVisibility = 0;
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
     int mDisplayState;

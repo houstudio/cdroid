@@ -1,42 +1,52 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/switch.h>
+#include <widget/framework_styleable.h>
+#include <widget/internal_R.h>
 #include <utils/mathutils.h>
 #include <text/textutils.h>
 #include <view/viewgroup.h>
 #include <text/method/allcapstransformationmethod.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(Switch,"cdroid:attr/switchStyle")
+DECLARE_WIDGET2(Switch, "android.widget.Switch");
 
-Switch::Switch(int w,int h):CompoundButton(std::string(),w,h){
+Switch::Switch(Context*ctx)
+    :Switch(ctx,nullptr){}
+
+Switch::Switch(Context* context,const AttributeSet* a):Switch(context,a,cdroid::internal::R::attr::switchStyle){}
+
+Switch::Switch(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :CompoundButton(context,pAttrs, defStyleAttr){
     init();
-}
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::Switch, defStyleAttr);
+    
 
-Switch::Switch(Context* context,const AttributeSet& a)
-  :CompoundButton(context,a){
-    init();
-    mThumbDrawable = a.getDrawable("thumb");
+    mThumbDrawable = ta->getDrawable(R::styleable::Switch_thumb);
     if (mThumbDrawable) {
         mThumbDrawable->setCallback(this);
     }
-    mTrackDrawable = a.getDrawable("track");
+    mTrackDrawable = ta->getDrawable(R::styleable::Switch_track);
     if (mTrackDrawable) {
         mTrackDrawable->setCallback(this);
     }
-    mTextOn = a.getString("textOn");
-    mTextOff = a.getString("textOff");
-    mShowText = a.getBoolean("showText", true);
-    mThumbTextPadding = a.getDimensionPixelSize("thumbTextPadding", 0);
-    mSwitchMinWidth = a.getDimensionPixelSize("switchMinWidth", 0);
-    mSwitchPadding = a.getDimensionPixelSize("switchPadding", 0);
-    mSplitTrack = a.getBoolean("splitTrack", false);
+    mTextOn = ta->getString(R::styleable::Switch_textOn);
+    mTextOff = ta->getString(R::styleable::Switch_textOff);
+    mShowText = ta->getBoolean(R::styleable::Switch_showText, true);
+    mThumbTextPadding = ta->getDimensionPixelSize(R::styleable::Switch_thumbTextPadding, 0);
+    mSwitchMinWidth = ta->getDimensionPixelSize(R::styleable::Switch_switchMinWidth, 0);
+    mSwitchPadding = ta->getDimensionPixelSize(R::styleable::Switch_switchPadding, 0);
+    mSplitTrack = ta->getBoolean(R::styleable::Switch_splitTrack, false);
 
     mUseFallbackLineSpacing = true;//context.getApplicationInfo().targetSdkVersion >= VERSION_CODES.P;
 
-    mThumbTintList = a.getColorStateList("thumbTint");
+    mThumbTintList = ta->getColorStateList(R::styleable::Switch_thumbTint);
     mHasThumbTint = (mThumbTintList!=nullptr);
 
-    const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
+    const int thumbTintMode = ta->getInt(R::styleable::Switch_thumbTintMode, -1);
     if (mThumbBlendMode != thumbTintMode) {
         mThumbBlendMode = thumbTintMode;
         mHasThumbTintMode = true;
@@ -45,10 +55,10 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyThumbTint();
     }
 
-    mTrackTintList = a.getColorStateList("trackTint");
+    mTrackTintList = ta->getColorStateList(R::styleable::Switch_trackTint);
     mHasTrackTint = (mTrackTintList!=nullptr);
 
-    const int trackTintMode = a.getTintMode("trackTintMode", -1);
+    const int trackTintMode = ta->getInt(R::styleable::Switch_trackTintMode, -1);
     if (mTrackBlendMode != trackTintMode) {
         mTrackBlendMode = trackTintMode;
         mHasTrackTintMode = true;
@@ -57,9 +67,10 @@ Switch::Switch(Context* context,const AttributeSet& a)
         applyTrackTint();
     }
 
-    const std::string appearance = a.getString("switchTextAppearance");
-    if (!appearance.empty()){
-        setSwitchTextAppearance(context, appearance);
+    // AOSP reads the @StyleRes id (TextView_appearance is a style reference).
+    const int textAppearance = ta->getResourceId(R::styleable::Switch_switchTextAppearance, 0);
+    if (textAppearance != 0){
+        setSwitchTextAppearance(context, textAppearance);
     }
     ViewConfiguration& config = ViewConfiguration::get(context);
     mTouchSlop = config.getScaledTouchSlop();
@@ -71,6 +82,7 @@ Switch::Switch(Context* context,const AttributeSet& a)
     // are updated.
     //setDefaultStateDescription();
     setChecked(isChecked());
+
 }
 
 class THUMB_POS:public FloatProperty{
@@ -98,8 +110,14 @@ void Switch::init(){
     mSwitchHeight= 0;
     mThumbWidth = 0;
     mPositionAnimator = nullptr;
-    mOnLayout  = makeLayout("");
-    mOffLayout = makeLayout("");
+    // AOSP leaves mOnLayout/mOffLayout null until the first onMeasure;
+    // pre-creating empty layouts here would defeat that caching.
+    mOnLayout  = nullptr;
+    mOffLayout = nullptr;
+    mOnText    = nullptr;
+    mOffText   = nullptr;
+    mOnTransformed  = nullptr;
+    mOffTransformed = nullptr;
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mSwitchTransformationMethod = nullptr;
@@ -110,16 +128,26 @@ Switch::~Switch(){
     delete mThumbDrawable;
     delete mTrackDrawable;
     delete mPositionAnimator;
+    // Delete the layouts before their text: a Layout dtor may deref its text.
     delete mOnLayout;
     delete mOffLayout;
+    // getTransformation may hand back the source itself instead of a new
+    // object; same pointer-compare trick as TextView's mText/mTransformed.
+    if (mOnTransformed == mOnText)   mOnTransformed  = nullptr;
+    if (mOffTransformed == mOffText) mOffTransformed = nullptr;
+    delete mOnText;
+    delete mOffText;
+    delete mOnTransformed;
+    delete mOffTransformed;
     delete mSwitchTransformationMethod;
     mVelocityTracker->recycle();
 }
 
-void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
-    AttributeSet atts = context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
+void Switch::setSwitchTextAppearance(Context* context,int resid){
+    // AOSP: obtainStyledAttributes(resid, R.styleable.TextAppearance) directly.
+    auto ta = context->obtainStyledAttributes(resid, R::styleable::TextAppearance);
 
-    auto colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
+    auto colors = ta->getColorStateList(R::styleable::TextAppearance_textColor);
     if (colors) {
         mTextColors = colors;
     } else {
@@ -127,7 +155,7 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         mTextColors = getTextColors();
     }
 
-    int ts = atts.getDimensionPixelSize("textSize", 0);
+    int ts = ta->getDimensionPixelSize(R::styleable::TextAppearance_textSize, 0);
     if (ts != 0) {
         if (ts != mTextPaint.getTextSize()) {
             mTextPaint.setTextSize(ts);
@@ -135,14 +163,15 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
         }
     }
 
-    int typefaceIndex, styleIndex;
-
-    typefaceIndex = atts.getInt("typeface",-1);//com.android.internal.R.styleable.TextAppearance_typeface, -1);
-    styleIndex = atts.getInt("textStyle",-1);//com.android.internal.R.styleable.TextAppearance_textStyle, -1);
+    int typefaceIndex = ta->getInt(R::styleable::TextAppearance_typeface, -1);
+    int styleIndex    = ta->getInt(R::styleable::TextAppearance_textStyle, -1);
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    const bool allCaps = atts.getBoolean("textAllCaps", false);
+    const bool allCaps = ta->getBoolean(R::styleable::TextAppearance_textAllCaps, false);
+    // AOSP nulls the method out when allCaps is off; delete the old one so a
+    // second call with allCaps on does not leak the previous method either.
+    delete mSwitchTransformationMethod;
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
         mSwitchTransformationMethod->setLengthChangesAllowed(true);
@@ -237,7 +266,7 @@ void Switch::setTrackDrawable(Drawable* track) {
     requestLayout();
 }
 
-void Switch::setTrackResource(const std::string& resId){
+void Switch::setTrackResource(int resId){
     setTrackDrawable(getContext()->getDrawable(resId));
 }
 
@@ -298,7 +327,7 @@ void Switch::setThumbDrawable(Drawable* thumb){
     requestLayout();   
 }
 
-void Switch::setThumbResource(const std::string& resId){
+void Switch::setThumbResource(int resId){
     setThumbDrawable(getContext()->getDrawable(resId));
 }
 
@@ -361,7 +390,7 @@ std::string Switch::getTextOn()const{
 
 void Switch::setTextOn(const std::string&text){
     mTextOn = text;
-    invalidate();
+    requestLayout();
 }
 
 std::string Switch::getTextOff()const{
@@ -370,7 +399,7 @@ std::string Switch::getTextOff()const{
 
 void Switch::setTextOff(const std::string&text){
     mTextOff = text;
-    invalidate();
+    requestLayout();
 }
 
 bool Switch::getShowText()const{
@@ -413,10 +442,18 @@ void Switch::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& in
 void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mShowText) {
         if (mOnLayout == nullptr) {
-            mOnLayout = makeLayout(mTextOn);
+            mOnText = new SpannedString(TextUtils::utf8_utf16(mTextOn));
+            mOnTransformed = (mSwitchTransformationMethod != nullptr)
+                    ? mSwitchTransformationMethod->getTransformation(*mOnText, *this)
+                    : mOnText;
+            mOnLayout = makeLayout(mOnTransformed);
         }
         if (mOffLayout == nullptr) {
-            mOffLayout = makeLayout(mTextOff);
+            mOffText = new SpannedString(TextUtils::utf8_utf16(mTextOff));
+            mOffTransformed = (mSwitchTransformationMethod != nullptr)
+                    ? mSwitchTransformationMethod->getTransformation(*mOffText, *this)
+                    : mOffText;
+            mOffLayout = makeLayout(mOffTransformed);
         }
     }
 
@@ -474,16 +511,10 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     }
 }
 
-Layout* Switch::makeLayout(const std::string& text){
-    //Layout*layout = new Layout(getTextSize(),getWidth());
-    //layout->setText(text);
-    mText = new SpannedString(TextUtils::utf8_utf16(text));
-    CharSequence* transformed = mText;
-        //(mSwitchTransformationMethod != null)? mSwitchTransformationMethod.getTransformation(text, this):text;
-
-    const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
-                transformed->length(), mTextPaint, getTextDirectionHeuristic()));
-    auto builder= StaticLayout::Builder::obtain(transformed, 0, transformed->length(), &mTextPaint, width);
+Layout* Switch::makeLayout(CharSequence* text){
+    const int width = (int) std::ceil(Layout::getDesiredWidth(text, 0,
+                text->length(), mTextPaint, getTextDirectionHeuristic()));
+    auto builder= StaticLayout::Builder::obtain(text, 0, text->length(), &mTextPaint, width);
     return builder->setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing).build();
 }
 
@@ -624,12 +655,17 @@ void Switch::animateThumbToCheckedState(bool newCheckedState){
     animator->setDuration(THUMB_ANIMATION_DURATION);
     animator->setAutoCancel(true);
     animtorListener.onAnimationEnd=[this](Animator&anim,bool){
-        delete mPositionAnimator;
-        mPositionAnimator = nullptr;
+        // Delete THE ENDING animator (AOSP: anonymous, GC-owned). Never delete
+        // through the field: a rapid re-toggle assigns mPositionAnimator = the
+        // NEW animator BEFORE start() auto-cancels the old one, so the old
+        // animator's end-listener would free the brand-new one mid-start()
+        // (valgrind: invalid writes in ValueAnimator::start, SIGSEGV).
+        if (mPositionAnimator == &anim) mPositionAnimator = nullptr;
+        delete &anim;
     };
     animator->addListener(animtorListener);
-    animator->start();
     mPositionAnimator = animator;
+    animator->start();
 }
 
 void Switch::cancelPositionAnimator(){
@@ -771,7 +807,10 @@ void Switch::draw(Canvas& c) {
                 trackBottom -= thumbInsets.bottom - padding.height;
             }
         }
-        mTrackDrawable->setBounds(trackLeft, trackTop, trackRight, trackBottom);
+        /* CDROID setBounds is (x, y, w, h) — the old AOSP (l, t, r, b) form
+           passed right/bottom as the size and the capsule's right end was
+           clipped into a square corner. */
+        mTrackDrawable->setBounds(trackLeft, trackTop, trackRight - trackLeft, trackBottom - trackTop);
     }
 
     // Layout the thumb.
@@ -810,11 +849,17 @@ void Switch::onDraw(Canvas& canvas) {
         if (mSplitTrack && mThumbDrawable) {
             Insets insets = mThumbDrawable->getOpticalInsets();
             padding = mThumbDrawable->getBounds();
+            // AOSP: padding.left += insets.left; padding.right -= insets.right
+            // → x += il and width shrinks by il + ir to keep both edges moving in.
             padding.left += insets.left;
-            padding.width -= insets.right;
+            padding.width -= insets.left + insets.right;
             canvas.save();
-            canvas.rectangle(padding.left,padding.top,padding.width,padding.height);
-            canvas.clip();//clipRect(padding, Op.DIFFERENCE);
+            /* AOSP: clipRect(padding, Op.DIFFERENCE) — draw the track everywhere
+               except the thumb's optical bounds. cairo clips by intersection only,
+               so clip to the union of the two side strips instead. */
+            canvas.rectangle(0, 0, padding.left, getHeight());
+            canvas.rectangle(padding.right(), 0, getWidth() - padding.right(), getHeight());
+            canvas.clip();
             mTrackDrawable->draw(canvas);
             canvas.restore();
         } else {
@@ -833,19 +878,22 @@ void Switch::onDraw(Canvas& canvas) {
         if (mTextColors) {
             const int stateColor = mTextColors->getColorForState(drawableState, 0);
             mTextPaint.setColor(stateColor);
-            canvas.set_color(stateColor);
         }
         //mTextPaint.drawableState = drawableState;
         int cX;
         if (mThumbDrawable) {
             Rect bounds = mThumbDrawable->getBounds();
-            cX = bounds.left + bounds.width;
+            /* AOSP: cX = bounds.left + bounds.right (both coordinates, twice the
+               thumb center). CDROID Rect stores width, so right() restores the
+               AOSP coordinate — reading bounds.width here would left-shift the
+               text center by half the thumb position. */
+            cX = bounds.left + bounds.right();
         } else {
             cX = getWidth();
         }
         const int left = cX / 2 - switchText->getWidth() / 2;
         const int top = (switchInnerTop + switchInnerBottom) / 2 - switchText->getHeight() / 2;
-        canvas.translate(left, 0);//top);
+        canvas.translate(left, top);
         switchText->draw(canvas);
     }
     canvas.restore();
@@ -909,9 +957,9 @@ int Switch::getThumbScrollRange() {
 }
 
 std::vector<int> Switch::onCreateDrawableState(int extraSpace){
-    std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace);
+    std::vector<int> drawableState = CompoundButton::onCreateDrawableState(extraSpace + 1);
     if (isChecked()) {
-        mergeDrawableStates(drawableState,StateSet::get(StateSet::VIEW_STATE_CHECKED));
+        mergeDrawableStates(drawableState,{cdroid::internal::R::attr::state_checked});
     }
     return drawableState;
 }

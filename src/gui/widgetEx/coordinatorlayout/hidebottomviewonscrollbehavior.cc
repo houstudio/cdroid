@@ -25,10 +25,12 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior() {
     mDisableOnTouchExploration = true;
 }
 
-HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,const AttributeSet& attrs)
-    :CoordinatorLayout::Behavior(context, attrs){
-    mEnterAnimDuration = attrs.getInt("enterAnimDuration",DEFAULT_ENTER_ANIMATION_DURATION_MS);
-    mExitAnimDuration = attrs.getInt("exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
+HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* attrs):HideBottomViewOnScrollBehavior(context,attrs,0){}
+
+HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :CoordinatorLayout::Behavior(context, pAttrs){
+    mEnterAnimDuration = pAttrs->getAttributeIntValue(std::string(), "enterAnimDuration",DEFAULT_ENTER_ANIMATION_DURATION_MS);
+    mExitAnimDuration = pAttrs->getAttributeIntValue(std::string(), "exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
     mEnterAnimInterpolator = nullptr;
     mExitAnimInterpolator = nullptr;
     mDisableOnTouchExploration = true;
@@ -172,4 +174,7 @@ void HideBottomViewOnScrollBehavior::disableOnTouchExploration(bool disableOnTou
 bool HideBottomViewOnScrollBehavior::isDisabledOnTouchExploration() const{
     return mDisableOnTouchExploration;
 }
+
+REGISTER_BEHAVIOR(HideBottomViewOnScrollBehavior, HideBottomViewOnScrollBehavior,
+                 "HideBottomViewOnScrollBehavior");
 }

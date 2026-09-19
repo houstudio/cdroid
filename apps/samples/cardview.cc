@@ -5,7 +5,7 @@
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-    CardView*cv=new CardView(0,0);
+    CardView*cv=new CardView(&app);
     cv->setRadius(40);
     cv->setMaxCardElevation(40);//MaxCardElevation must be set before setCardElevation or setElevation
     cv->setElevation(40);//

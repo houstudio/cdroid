@@ -68,7 +68,17 @@ int64_t SystemClock::currentTimeSeconds(){
 }
 
 int64_t SystemClock::elapsedRealtime(){
+#ifdef CLOCK_BOOTTIME
+    /* Time since boot INCLUDING deep sleep (SystemClock.java: elapsedRealtime
+     * is CLOCK_BOOTTIME); uptimeMillis() above is CLOCK_MONOTONIC, which does
+     * not advance while suspended. The two only agree before the first suspend. */
+    struct timespec ts;
+    clock_gettime(CLOCK_BOOTTIME, &ts);
+    return (int64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+#else
+    /* No suspend-aware clock on this platform; degrade to the monotonic clock. */
     return uptimeMillis();
+#endif
 }
 
 }

@@ -21,10 +21,10 @@ namespace cdroid{
 
 Navigator*SimpleNavigatorProvider::getNavigator(const std::string& name) {
     LOGE_IF(!validateName(name),"navigator name cannot be an empty string");
-    Navigator* /*<? extends NavDestination>*/navigator = mNavigators.find(name)->second;
-    FATAL_IF(navigator == nullptr,"Could not find Navigator with name "
+    auto it = mNavigators.find(name);
+    FATAL_IF(it == mNavigators.end(),"Could not find Navigator with name %s "
         "You must call NavController.addNavigator() for each navigation type.",name.c_str());
-    return  navigator;
+    return  it->second;
 }
 
 Navigator*SimpleNavigatorProvider::addNavigator(Navigator*navigator) {
@@ -33,7 +33,16 @@ Navigator*SimpleNavigatorProvider::addNavigator(Navigator*navigator) {
 
 Navigator*SimpleNavigatorProvider::addNavigator(const std::string& name,Navigator*navigator) {
     FATAL_IF(!validateName(name),"navigator name cannot be an empty string");
-    mNavigators.insert({name, navigator});
+    // androidx uses HashMap.put — a later addNavigator with the same name replaces
+    // the previous navigator (std::map::insert would keep the old one forever).
+    auto it = mNavigators.find(name);
+    if(it != mNavigators.end()){
+        if(it->second == navigator) return navigator; // re-adding same instance: no-op
+        delete it->second; // provider owns every navigator added
+        it->second = navigator;
+    }else{
+        mNavigators[name] = navigator;
+    }
     return navigator;
 }
 

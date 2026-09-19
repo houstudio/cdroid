@@ -15,37 +15,52 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <utils/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/timepickerspinnerdelegate.h>
+#include <widget/framework_styleable.h>
+#include <content/typedarray.h>
+#include <content/dateformatsymbols.h>
+#include <text/textutils.h>
 namespace cdroid{
-TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
-    :FrameLayout(context, attrs){
+using namespace cdroid::internal;
+TimePicker::TimePicker(Context*ctx)
+    :TimePicker(ctx,nullptr){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* attrs):TimePicker(context,attrs,cdroid::internal::R::attr::timePickerStyle){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TimePicker(context,pAttrs,defStyleAttr,0){}
+
+TimePicker::TimePicker(Context* context,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+    :FrameLayout(context, pAttrs, defStyleAttr, defStyleRes){
 
     // DatePicker is important by default, unless app developer overrode attribute.
     if (getImportantForAutofill() == IMPORTANT_FOR_AUTOFILL_AUTO) {
         setImportantForAutofill(IMPORTANT_FOR_AUTOFILL_YES);
     }
 
-    const bool isDialogMode = attrs.getBoolean("dialogMode", false);
-    const int requestedMode = attrs.getInt("timePickerMode", MODE_SPINNER);
+    auto a = context->obtainStyledAttributes(pAttrs, R::styleable::TimePicker, defStyleAttr, defStyleRes);
+    const bool isDialogMode = a->getBoolean(R::styleable::TimePicker_dialogMode, false);
+    const int requestedMode = a->getInt(R::styleable::TimePicker_timePickerMode, MODE_SPINNER);
 
     if (requestedMode == MODE_CLOCK && isDialogMode) {
         // You want MODE_CLOCK? YOU CAN'T HANDLE MODE_CLOCK! Well, maybe
         // you can depending on your screen size. Let's check...
-        mMode = MODE_SPINNER;//context.getResources().getInteger(R.integer.time_picker_mode);
+        mMode = context->getInteger(R::integer::time_picker_mode);
     } else {
         mMode = requestedMode;
     }
 
     switch (mMode) {
     case MODE_CLOCK:
-        mDelegate = new TimePickerClockDelegate(this, context, attrs);
+        mDelegate = new TimePickerClockDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     case MODE_SPINNER:
     default:
-        mDelegate = new TimePickerSpinnerDelegate(this, context, attrs);
+        mDelegate = new TimePickerSpinnerDelegate(this, context, pAttrs, defStyleAttr, defStyleRes);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {
@@ -54,6 +69,13 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
             afm.notifyValueChanged(this);
         }
     });*/
+}
+
+void TimePicker::onConfigurationChanged(Configuration& newConfig) {
+    FrameLayout::onConfigurationChanged(newConfig);
+    // CDROID runtime-locale extension: re-localize the delegate in place
+    // (AOSP android-36 rebuilds the activity instead).
+    mDelegate->onConfigurationChanged(newConfig);
 }
 
 TimePicker::~TimePicker(){
@@ -145,14 +167,22 @@ View* TimePicker::getPmView() {
 }
 
 std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
-    //Locale locale = context.getResources().getConfiguration().locale;
-    //DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-    std::vector<std::string> amPm={"AM","PM"};// = dfs.getAmPmStrings();
-    std::vector<std::string> narrowAmPm{"AM","PM"};// = dfs.getAmpmNarrowStrings();
+    // AOSP: DateFormat.getIcuDateFormatSymbols(locale), then pick wide vs narrow
+    // by the marker's UTF-16 length (Java String.length(); "上午" is 2 units,
+    // so it stays whole). The symbols object must outlive the references
+    // (getters return refs into it; binding to a temporary would dangle).
+    const Locale locale = context->getResources().getConfiguration().getLocales().get(0);
+    const DateFormatSymbols dfs(locale);
+    const auto& amPm = dfs.getAmPmStrings();
+    const auto& narrowAmPm = dfs.getAmpmNarrowStrings();
+
+    auto utf16Length = [](const std::string& s) {
+        return TextUtils::utf8_utf16(s).length();
+    };
 
     std::vector<std::string> result;
-    result.push_back(amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0]);
-    result.push_back(amPm[1].length() > 4 ? narrowAmPm[1] : amPm[1]);
+    result.push_back(utf16Length(amPm[0]) > 4 ? narrowAmPm[0] : amPm[0]);
+    result.push_back(utf16Length(amPm[1]) > 4 ? narrowAmPm[1] : amPm[1]);
     return result;
 }
 
@@ -162,7 +192,7 @@ std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
 TimePicker::AbstractTimePickerDelegate::AbstractTimePickerDelegate(TimePicker* delegator, Context* context) {
     mDelegator = delegator;
     mContext = context;
-    //mLocale = context.getResources().getConfiguration().locale;
+    mLocale = context->getResources().getConfiguration().getLocales().get(0);
 }
 
 void TimePicker::AbstractTimePickerDelegate::setOnTimeChangedListener(const OnTimeChangedListener& callback) {
@@ -271,6 +301,6 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
-DECLARE_WIDGET(TimePicker);
+DECLARE_WIDGET2(TimePicker, "android.widget.TimePicker");
 }/*endof namespace*/
 

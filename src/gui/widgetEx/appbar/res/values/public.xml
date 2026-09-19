@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <public type="attr" name="expanded" id="0x02010150" />
+    <public type="attr" name="layout_scrollFlags" id="0x02010151" />
+    <public type="attr" name="titleCollapseMode" id="0x02010152" />
+    <public type="attr" name="expandedTitleMargin" id="0x02010153" />
+    <public type="attr" name="toolbarId" id="0x02010154" />
+    <public type="attr" name="contentScrim" id="0x02010155" />
+    <public type="attr" name="statusBarScrim" id="0x02010156" />
+    <public type="attr" name="layout_collapseMode" id="0x02010157" />
+    <public type="attr" name="layout_collapseParallaxMultiplier" id="0x02010158" />
+    <!-- module styles (DEF_STYLE_RES constants; style type = 0x09) -->
+    <public type="style" name="Widget.Design.AppBarLayout" id="0x02090001" />
+    <public type="style" name="Widget.Design.CollapsingToolbar" id="0x02090002" />
+</resources>

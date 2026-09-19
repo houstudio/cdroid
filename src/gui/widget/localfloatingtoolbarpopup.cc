@@ -28,7 +28,7 @@
 #include <widget/popupwindow.h>
 #include <widget/textview.h>
 #include <widget/imageview.h>
-#include <widget/R.h>
+#include <widget/internal_R.h>
 #include <view/layoutinflater.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
@@ -42,6 +42,7 @@
 #include <cmath>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
 // Out-of-line definitions for the odr-used static constexpr members (C++14:
 // std::min/max take them by const reference).
@@ -98,10 +99,10 @@ LocalFloatingToolbarPopup::LocalFloatingToolbarPopup(Context* context, View* par
     mContentContainer = createContentContainer(mContext);
     mPopupWindow = createPopupWindow(mContentContainer);
 
-    mMarginHorizontal = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_horizontal_margin");
-    mMarginVertical   = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_vertical_margin");
-    mLineHeight       = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_height");
-    mIconTextSpacing  = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_icon_text_spacing");
+    mMarginHorizontal = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_horizontal_margin);
+    mMarginVertical   = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_vertical_margin);
+    mLineHeight       = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_height);
+    mIconTextSpacing  = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_icon_text_spacing);
 
     // Views. Drawables are fetched fresh per setImageDrawable (see file header note).
     mOverflowButton = createOverflowButton();
@@ -420,7 +421,7 @@ int LocalFloatingToolbarPopup::getAdjustedToolbarWidth(int suggestedWidth) {
     int maxWidth = mViewPortOnScreen.width - 2 * mMarginHorizontal;
     if (width <= 0) {
         // No suggested width; use the preferred width dimen.
-        width = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_preferred_width");
+        width = mContext->getDimensionPixelSize(R::dimen::floating_toolbar_preferred_width);
     }
     return std::min(width, maxWidth);
 }
@@ -611,11 +612,11 @@ void LocalFloatingToolbarPopup::setPanelsStatesAtRestingPosition() {
         mOverflowPanel->setVisibility(View::VISIBLE);
         // Overflow button shows the back arrow (AOSP mArrow == ft_avd_tooverflow).
         // Fresh instance: CDROID ImageView owns+deletes it (see file header note).
-        Drawable* arrowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_tooverflow");
+        Drawable* arrowIcon = mContext->getDrawable(R::drawable::ft_avd_tooverflow);
         if (arrowIcon) arrowIcon->setAutoMirrored(true);
         mOverflowButton->setImageDrawable(arrowIcon);
         mOverflowButton->setContentDescription(
-                mContext->getString("cdroid:string/floating_toolbar_close_overflow_description"));
+                mContext->getString(R::string::floating_toolbar_close_overflow_description));
 
         // Update x-coordinates. (TODO 3b-anim: RTL branch.)
         // LTR: align container right; main panel aligns right; overflow button + panel align left.
@@ -646,11 +647,11 @@ void LocalFloatingToolbarPopup::setPanelsStatesAtRestingPosition() {
         mOverflowPanel->setAlpha(0);
         mOverflowPanel->setVisibility(View::INVISIBLE);
         // Overflow button shows the more icon (AOSP mOverflow == ft_avd_toarrow).
-        Drawable* overflowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_toarrow");
+        Drawable* overflowIcon = mContext->getDrawable(R::drawable::ft_avd_toarrow);
         if (overflowIcon) overflowIcon->setAutoMirrored(true);
         mOverflowButton->setImageDrawable(overflowIcon);
         mOverflowButton->setContentDescription(
-                mContext->getString("cdroid:string/floating_toolbar_open_overflow_description"));
+                mContext->getString(R::string::floating_toolbar_open_overflow_description));
 
         if (hasOverflow()) {
             // Update x-coordinates. (TODO 3b-anim: RTL branch.)
@@ -748,14 +749,14 @@ ViewGroup* LocalFloatingToolbarPopup::createMainPanel() {
     // TODO(3b-anim): anonymous LinearLayout subclass overriding onMeasure (clamp to
     //                mMainPanelSize during overflow animation) + onInterceptTouchEvent.
     // 3b: plain horizontal LinearLayout (instant open/close => isOverflowAnimating()==false).
-    LinearLayout* panel = new LinearLayout(mContext, AttributeSet(mContext, "cdroid"));
+    LinearLayout* panel = new LinearLayout(mContext,nullptr);
     panel->setOrientation(LinearLayout::HORIZONTAL);
     return panel;
 }
 
 ViewGroup* LocalFloatingToolbarPopup::createContentContainer(Context* context) {
     ViewGroup* contentContainer = (ViewGroup*) LayoutInflater::from(context)
-            ->inflate("cdroid:layout/floating_popup_container", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_container, nullptr);
     ViewGroup::LayoutParams* lp = new ViewGroup::LayoutParams(
             ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
     contentContainer->setLayoutParams(lp);
@@ -765,7 +766,7 @@ ViewGroup* LocalFloatingToolbarPopup::createContentContainer(Context* context) {
 }
 
 PopupWindow* LocalFloatingToolbarPopup::createPopupWindow(ViewGroup* content) {
-    LinearLayout* popupContentHolder = new LinearLayout(content->getContext(), AttributeSet(content->getContext(), "cdroid"));
+    LinearLayout* popupContentHolder = new LinearLayout(content->getContext(),nullptr);
     PopupWindow* popupWindow = new PopupWindow(popupContentHolder,
             ViewGroup::LayoutParams::WRAP_CONTENT, ViewGroup::LayoutParams::WRAP_CONTENT);
     popupWindow->setClippingEnabled(false);
@@ -781,9 +782,9 @@ PopupWindow* LocalFloatingToolbarPopup::createPopupWindow(ViewGroup* content) {
 
 ImageButton* LocalFloatingToolbarPopup::createOverflowButton() {
     ImageButton* overflowButton = (ImageButton*) LayoutInflater::from(mContext)
-            ->inflate("cdroid:layout/floating_popup_overflow_button", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_overflow_button, nullptr);
     // Closed-state icon (AOSP mOverflow == ft_avd_toarrow). Fresh: ImageView owns+deletes it.
-    Drawable* overflowIcon = mContext->getDrawable("cdroid:drawable/ft_avd_toarrow");
+    Drawable* overflowIcon = mContext->getDrawable(R::drawable::ft_avd_toarrow);
     if (overflowIcon) overflowIcon->setAutoMirrored(true);
     overflowButton->setImageDrawable(overflowIcon);
     overflowButton->setOnClickListener([this](View& /*v*/) {
@@ -842,7 +843,7 @@ void LocalFloatingToolbarPopup::setHeight(View* view, int height) {
 View* LocalFloatingToolbarPopup::createMenuItemButton(
         Context* context, MenuItem* menuItem, int iconTextSpacing, bool showIcon) {
     View* menuItemButton = LayoutInflater::from(context)
-            ->inflate("cdroid:layout/floating_popup_menu_button", nullptr);
+            ->inflate(cdroid::internal::R::layout::floating_popup_menu_button, nullptr);
     if (menuItem != nullptr) {
         updateMenuItemButton(menuItemButton, menuItem, iconTextSpacing, showIcon);
     }
@@ -927,7 +928,7 @@ void LocalFloatingToolbarPopup::cancelOverflowAnimations() {
 //  OverflowPanel  (AOSP private static final class OverflowPanel extends ListView)
 // =====================================================================================
 LocalFloatingToolbarPopup::OverflowPanel::OverflowPanel(LocalFloatingToolbarPopup* popup)
-    : ListView(popup->mContext, AttributeSet(popup->mContext, "cdroid"))
+    : ListView(popup->mContext,nullptr)
     , mPopup(popup) {
     // AOSP: setScrollBarDefaultDelayBeforeFade(ViewConfiguration.getScrollDefaultDelay() * 3);
     //       setScrollIndicators(SCROLL_INDICATOR_TOP | SCROLL_INDICATOR_BOTTOM).
@@ -982,7 +983,7 @@ void LocalFloatingToolbarPopup::OverflowItemAdapter::clear() {
 LocalFloatingToolbarPopup::OverflowPanelViewHelper::OverflowPanelViewHelper(Context* context, int iconTextSpacing)
     : mContext(context)
     , mIconTextSpacing(iconTextSpacing)
-    , mSidePadding(context->getDimensionPixelSize("cdroid:dimen/floating_toolbar_overflow_side_padding"))
+    , mSidePadding(context->getDimensionPixelSize(R::dimen::floating_toolbar_overflow_side_padding))
     , mCalculator(nullptr) {
     mCalculator = createMenuButton(nullptr);
 }

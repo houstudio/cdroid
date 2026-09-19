@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- [window-bg-experiment] root android:background="@color/demo_bg" removed:
+     Window now paints the themed windowBackground itself; see how the bare
+     theme backdrop looks before restoring this if a specific look is wanted. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/card_bg"
+        android:gravity="center_vertical">
+
+        <TabLayout
+            android:id="@+id/tabs"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:background="@color/card_bg"
+            app:tabIndicatorAnimationMode="elastic"
+            app:tabIndicatorColor="@color/accent"
+            app:tabIndicatorHeight="3dp"
+            app:tabIndicatorFullWidth="true"
+            app:tabMode="scrollable"
+            app:tabRippleColor="@null"
+            app:tabPaddingStart="16dp"
+            app:tabPaddingEnd="16dp"
+            app:tabSelectedTextColor="@color/text_primary"
+            app:tabTextColor="@color/text_secondary" />
+
+        <Button
+            android:id="@+id/btn_locale"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="64dp"
+            android:layout_marginEnd="8dp"
+            android:textSize="14sp"
+            android:textColor="@color/accent"
+            android:background="@null"
+            android:text="EN" />
+    </LinearLayout>
+
+    <!-- The ViewPager is attached here in code (the legacy androidx ViewPager
+         is not registered for XML inflation; see WidgetsDemoActivity). -->
+    <FrameLayout
+        android:id="@+id/pager_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+</LinearLayout>

@@ -15,29 +15,33 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/listview.h>
+#include <widget/framework_styleable.h>
 #include <widget/checkable.h>
-#include <widget/R.h>
 #include <view/focusfinder.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(ListView,"cdroid:attr/listViewStyle")
+DECLARE_WIDGET2(ListView, "android.widget.ListView");
 
-ListView::ListView(int w,int h):AbsListView(w,h) {
-    const std::string style=LayoutInflater::from(mContext)->getDefaultStyle("ListView");
-    AttributeSet attrs=mContext->obtainStyledAttributes(style);
-    initListView(attrs);
+ListView::ListView(Context*ctx)
+    :ListView(ctx,nullptr){}
+
+ListView::ListView(Context* context,const AttributeSet* attrs)
+    :ListView(context,attrs,R::attr::listViewStyle){
 }
 
-ListView::ListView(Context* context,const AttributeSet& attrs)
-    :AbsListView(context,attrs) {
-    initListView(attrs);
+ListView::ListView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :AbsListView(context,pAttrs, defStyleAttr) {
+    initListView(pAttrs, defStyleAttr);
 }
 
-void ListView::initListView(const AttributeSet&attrs) {
+void ListView::initListView(const AttributeSet*attrs,int defStyleAttr) {
     mDividerHeight=0;
     mItemsCanFocus=false;
     mDivider=nullptr;
@@ -48,17 +52,22 @@ void ListView::initListView(const AttributeSet&attrs) {
     mFocusSelector =nullptr;
     mIsCacheColorOpaque =true;
     mDividerIsOpaque = true;
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    Context* ctx = getContext();
+    auto ta = ctx->obtainStyledAttributes(attrs, R::styleable::ListView, defStyleAttr, 0);
+    if (ta) {
 
-    Drawable* d = getContext()->getDrawable(attrs.getString("divider"));
-    Drawable* osHeader = getContext()->getDrawable(attrs.getString("overScrollHeader"));
-    Drawable* osFooter = getContext()->getDrawable(attrs.getString("overScrollFooter"));
+    Drawable* d = ta->getDrawable(R::styleable::ListView_divider);
+    Drawable* osHeader = ta->getDrawable(R::styleable::ListView_overScrollHeader);
+    Drawable* osFooter = ta->getDrawable(R::styleable::ListView_overScrollFooter);
 
     setOverscrollHeader(osHeader);
-    setOverscrollHeader(osFooter);
+    setOverscrollFooter(osFooter);
     setDivider(d);
-    mHeaderDividersEnabled = attrs.getBoolean("headerDividersEnabled",true);
-    mFooterDividersEnabled = attrs.getBoolean("footerDividersEnabled", true);
-    setDividerHeight(attrs.getDimensionPixelSize("dividerHeight",0));
+    mHeaderDividersEnabled = ta->getBoolean(R::styleable::ListView_headerDividersEnabled,true);
+    mFooterDividersEnabled = ta->getBoolean(R::styleable::ListView_footerDividersEnabled, true);
+    setDividerHeight(ta->getDimensionPixelSize(R::styleable::ListView_dividerHeight,0));
+    }
 }
 
 ListView::~ListView() {
@@ -2191,14 +2200,20 @@ ListView::ArrowScrollFocusResult* ListView::arrowScrollFocused(int direction) {
             int listTop = mListPadding.top + (topFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
             int ySearchPoint =(selectedView != nullptr  && selectedView->getTop() > listTop) ?
                               selectedView->getTop() : listTop;
-            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+            // AOSP mTempRect.set(0, ySearchPoint, 0, ySearchPoint) passes
+            // left,top,right,bottom — a ZERO-WIDTH, ZERO-HEIGHT point rect.
+            // cdroid Rect::set takes (left, top, width, height), so the last
+            // two args must both be 0 (passing ySearchPoint as the height
+            // gave the search rect a tall span that wrongly excluded
+            // adjacent candidates in isCandidate).
+            mTempRect.set(0, ySearchPoint, 0, 0);
         } else {
             bool bottomFadingEdgeShowing = (mFirstPosition + getChildCount() - 1) < mItemCount;
             int listBottom = getHeight() - mListPadding.height -
                              (bottomFadingEdgeShowing ? getArrowScrollPreviewLength() : 0);
             int ySearchPoint = (selectedView != nullptr && selectedView->getBottom() < listBottom) ?
                                selectedView->getBottom() : listBottom;
-            mTempRect.set(0, ySearchPoint, 0, ySearchPoint);
+            mTempRect.set(0, ySearchPoint, 0, 0);
         }
         newFocus = FocusFinder::getInstance().findNextFocusFromRect(this, &mTempRect, direction);
     }
@@ -2900,11 +2915,11 @@ void ListView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
     const int rowsCount = getCount();
     const int selectionMode = getSelectionModeForAccessibility();
     AccessibilityNodeInfo::CollectionInfo* collectionInfo = AccessibilityNodeInfo::CollectionInfo::obtain(
-            rowsCount, 1, false, selectionMode);
+            -1, -1, false, selectionMode);  // 1-D list: unknown rows/columns (AOSP)
     info.setCollectionInfo(collectionInfo);
 
     if (rowsCount > 0) {
-        info.addAction(AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION.getId());
+        info.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_SCROLL_TO_POSITION);
     }
 }
 
@@ -2915,7 +2930,8 @@ bool ListView::performAccessibilityActionInternal(int action, Bundle* arguments)
 
     switch (action) {
     case R::id::accessibilityActionScrollToPosition: {
-        const  int row = 0;//TODO arguments.getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1);
+        const int row = arguments != nullptr
+                ? arguments->getInt(AccessibilityNodeInfo::ACTION_ARGUMENT_ROW_INT, -1) : -1;
         const int position = std::min(row, getCount() - 1);
         if (row >= 0) {
             // The accessibility service gets data asynchronously, so

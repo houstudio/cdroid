@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <widget/internal_R.h>
 #include <cdroid.h>
 
 using namespace cdroid;
@@ -31,8 +32,8 @@ TEST_F(COLORSTATESET,color){
 }
 TEST_F(COLORSTATESET,match){
     std::vector<int>stateEmpty;
-    std::vector<int>state1={StateSet::PRESSED,StateSet::FOCUSED,StateSet::FOCUSED};
-    std::vector<int>state2={StateSet::PRESSED,StateSet::FOCUSED,StateSet::HOVERED};
+    std::vector<int>state1={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_focused};
+    std::vector<int>state2={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_hovered};
     std::vector<int>colors={0xFF0000,0x0000FF};
     std::vector<std::vector<int>>states;
     states.push_back(state1);
@@ -42,16 +43,16 @@ TEST_F(COLORSTATESET,match){
 }
 
 TEST_F(COLORSTATESET,getColorForState){
-    std::vector<int>state1={StateSet::PRESSED,StateSet::FOCUSED,-StateSet::HOVERED};
-    std::vector<int>state2={StateSet::PRESSED,-StateSet::FOCUSED,StateSet::HOVERED};
-    std::vector<int>state3={StateSet::PRESSED,StateSet::FOCUSED,StateSet::HOVERED};
-    std::vector<int>state4={-StateSet::PRESSED,StateSet::FOCUSED,StateSet::HOVERED};
+    std::vector<int>state1={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused,-cdroid::internal::R::attr::state_hovered};
+    std::vector<int>state2={cdroid::internal::R::attr::state_pressed,-cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_hovered};
+    std::vector<int>state3={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_hovered};
+    std::vector<int>state4={-cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_hovered};
 
-    std::vector<int>match1={StateSet::PRESSED,StateSet::HOVERED};
-    std::vector<int>match2={StateSet::PRESSED,StateSet::HOVERED,StateSet::FOCUSED};
-    std::vector<int>match3={StateSet::PRESSED,StateSet::FOCUSED};
-    std::vector<int>match4={StateSet::PRESSED};
-    std::vector<int>match5={StateSet::FOCUSED,StateSet::HOVERED};
+    std::vector<int>match1={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_hovered};
+    std::vector<int>match2={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_hovered,cdroid::internal::R::attr::state_focused};
+    std::vector<int>match3={cdroid::internal::R::attr::state_pressed,cdroid::internal::R::attr::state_focused};
+    std::vector<int>match4={cdroid::internal::R::attr::state_pressed};
+    std::vector<int>match5={cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_hovered};
 
     std::vector<int>colors={1111,2222,3333,4444};
     std::vector<std::vector<int>>states;
@@ -76,19 +77,19 @@ TEST_F(COLORSTATESET,getColorForState){
     ASSERT_EQ(0,cs0.getColorForState(match5,0));
 }
 TEST_F(COLORSTATESET,buttonstate){
-    std::vector<int>state0={StateSet::PRESSED};//pressed
-    std::vector<int>state1={StateSet::ENABLED,StateSet::FOCUSED};//focused enabled
-    std::vector<int>state2={StateSet::ENABLED};//enabled
-    std::vector<int>state3={StateSet::FOCUSED};//focused
+    std::vector<int>state0={cdroid::internal::R::attr::state_pressed};//pressed
+    std::vector<int>state1={cdroid::internal::R::attr::state_enabled,cdroid::internal::R::attr::state_focused};//focused enabled
+    std::vector<int>state2={cdroid::internal::R::attr::state_enabled};//enabled
+    std::vector<int>state3={cdroid::internal::R::attr::state_focused};//focused
     std::vector<int>state4={};//none
     std::vector<std::vector<int>>states={state0,state1,state2,state3,state4};
 
     std::vector<int>empty;
-    std::vector<int>s0={StateSet::PRESSED};
-    std::vector<int>s1={StateSet::ENABLED,StateSet::PRESSED};
-    std::vector<int>s2={StateSet::FOCUSED,StateSet::ENABLED};
-    std::vector<int>s3={StateSet::ENABLED};
-    std::vector<int>s4={StateSet::FOCUSED};
+    std::vector<int>s0={cdroid::internal::R::attr::state_pressed};
+    std::vector<int>s1={cdroid::internal::R::attr::state_enabled,cdroid::internal::R::attr::state_pressed};
+    std::vector<int>s2={cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_enabled};
+    std::vector<int>s3={cdroid::internal::R::attr::state_enabled};
+    std::vector<int>s4={cdroid::internal::R::attr::state_focused};
 
     ASSERT_EQ(index(states,s0),0);
     ASSERT_EQ(index(states,s1),0);
@@ -99,13 +100,13 @@ TEST_F(COLORSTATESET,buttonstate){
 }
 
 TEST_F(COLORSTATESET,match2){
-    std::vector<int>state0={/*-StateSet::ENABLED,*/ StateSet::FOCUSED,-StateSet::SELECTED,-StateSet::PRESSED,-StateSet::HOVERED};//focused
-    std::vector<int>state1={/*-StateSet::ENABLED,*/-StateSet::FOCUSED,-StateSet::SELECTED,-StateSet::PRESSED,-StateSet::HOVERED};//allmatch
+    std::vector<int>state0={/*-cdroid::internal::R::attr::state_enabled,*/ cdroid::internal::R::attr::state_focused,-cdroid::internal::R::attr::state_selected,-cdroid::internal::R::attr::state_pressed,-cdroid::internal::R::attr::state_hovered};//focused
+    std::vector<int>state1={/*-cdroid::internal::R::attr::state_enabled,*/-cdroid::internal::R::attr::state_focused,-cdroid::internal::R::attr::state_selected,-cdroid::internal::R::attr::state_pressed,-cdroid::internal::R::attr::state_hovered};//allmatch
     std::vector<std::vector<int>>states={state0,state1};
 
-    std::vector<int>match0={StateSet::FOCUSED};
-    std::vector<int>match1={StateSet::ENABLED};
-    std::vector<int>match2={StateSet::FOCUSED,StateSet::ENABLED};
+    std::vector<int>match0={cdroid::internal::R::attr::state_focused};
+    std::vector<int>match1={cdroid::internal::R::attr::state_enabled};
+    std::vector<int>match2={cdroid::internal::R::attr::state_focused,cdroid::internal::R::attr::state_enabled};
     std::vector<int>match3={};
     ASSERT_TRUE(StateSet::stateSetMatches(state0,match0));
     ASSERT_TRUE(StateSet::stateSetMatches(state1,match1));

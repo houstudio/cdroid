@@ -15,51 +15,58 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/progressbar.h>
+#include <content/numberformat.h>
+#include <content/Locale.h>
+#include <widget/framework_styleable.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
 #include <utils/mathutils.h>
-#include <widget/R.h>
 #include <porting/cdlog.h>
 
-namespace cdroid{
+namespace cdroid {
+using namespace cdroid::internal;
 
-class ProgressTintInfo{
+class ProgressTintInfo {
 public:
     cdroid::RefPtr<ColorStateList> mIndeterminateTintList;
+    cdroid::RefPtr<ColorStateList> mProgressTintList;
+    cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
+    cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
+
     int mIndeterminateTintMode;
+    int mProgressTintMode;
+    int mProgressBackgroundTintMode;
+    int mSecondaryProgressTintMode;
+
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
-    cdroid::RefPtr<ColorStateList> mProgressTintList;
-    int mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
-    cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
-    int mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
-    cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
-    int mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
-public:
-    ProgressTintInfo(){
+ public:
+    ProgressTintInfo() {
         mIndeterminateTintMode = mProgressTintMode
             = mProgressBackgroundTintMode = mSecondaryProgressTintMode = PorterDuff::Mode::NOOP;
     }
 };
 
-class RefreshData{
+class RefreshData {
 public:
     int progress;
     bool changed;
     bool fromUser;
     bool animate;
-    RefreshData(){}
-    RefreshData(int progress, bool fromUser, bool animate){
+    RefreshData() {}
+    RefreshData(int progress, bool fromUser, bool animate) {
         this->changed = true;
         this->progress= progress;
         this->fromUser= fromUser;
@@ -67,121 +74,124 @@ public:
     }
 };
 
-DECLARE_WIDGET(ProgressBar)
+DECLARE_WIDGET2(ProgressBar, "android.widget.ProgressBar");
 
-ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
-  :View(ctx,attrs){
+ProgressBar::ProgressBar(Context*ctx)
+    :ProgressBar(ctx,nullptr){
+}
+
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* attrs)
+    :ProgressBar(ctx,attrs,cdroid::internal::R::attr::progressBarStyle) {
+}
+
+ProgressBar::ProgressBar(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :View(ctx,pAttrs, defStyleAttr) {
     initProgressBar();
-    Drawable* progressDrawable = attrs.getDrawable("progressDrawable");
-    if(progressDrawable){
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::ProgressBar, defStyleAttr);
+
+
+    Drawable* progressDrawable = ta->getDrawable(R::styleable::ProgressBar_progressDrawable);
+    if(progressDrawable) {
         if(needsTileify(progressDrawable))
             setProgressDrawableTiled(progressDrawable);
         else
             setProgressDrawable(progressDrawable);
     }
 
-    Drawable* indeterminateDrawable = attrs.getDrawable("indeterminateDrawable");
-    if(indeterminateDrawable){
+    Drawable* indeterminateDrawable = ta->getDrawable(R::styleable::ProgressBar_indeterminateDrawable);
+    if(indeterminateDrawable) {
         if(needsTileify(indeterminateDrawable))
             setIndeterminateDrawableTiled(indeterminateDrawable);
         else
             setIndeterminateDrawable(indeterminateDrawable);
     }
 
-    mDuration = attrs.getInt("indeterminateDuration",mDuration);
-    mMinWidth = attrs.getDimensionPixelSize("minWidth", mMinWidth);
-    mMaxWidth = attrs.getDimensionPixelSize("maxWidth", mMaxWidth);
-    mMinHeight= attrs.getDimensionPixelSize("minHeight", mMinHeight);
-    mMaxHeight= attrs.getDimensionPixelSize("maxHeight", mMaxHeight);
-    mBehavior = attrs.getInt("inteterminateBehavior",std::unordered_map<std::string,int>{
-       {"none",0},{"repeat",(int)Animation::RESTART},{"cycle",(int)Animation::INFINITE} },mBehavior);
+    mDuration = ta->getInt(R::styleable::ProgressBar_indeterminateDuration,mDuration);
+    mMinWidth = ta->getDimensionPixelSize(R::styleable::ProgressBar_minWidth, mMinWidth);
+    mMaxWidth = ta->getDimensionPixelSize(R::styleable::ProgressBar_maxWidth, mMaxWidth);
+    mMinHeight= ta->getDimensionPixelSize(R::styleable::ProgressBar_minHeight, mMinHeight);
+    mMaxHeight= ta->getDimensionPixelSize(R::styleable::ProgressBar_maxHeight, mMaxHeight);
+    mBehavior = ta->getInt(R::styleable::ProgressBar_indeterminateBehavior,mBehavior);
 
-    mOnlyIndeterminate=attrs.getBoolean("indeterminateOnly",mOnlyIndeterminate);
+    mOnlyIndeterminate= (ta->getBoolean(R::styleable::ProgressBar_indeterminateOnly,mOnlyIndeterminate));
     mNoInvalidate = false;
-    setIndeterminate(mOnlyIndeterminate||attrs.getBoolean("indeterminate",mIndeterminate));
+    setIndeterminate(mOnlyIndeterminate|| (ta->getBoolean(R::styleable::ProgressBar_indeterminate,mIndeterminate)));
 
-    mMirrorForRtl = attrs.getBoolean("mirrorForRtl",false); 
+    mMirrorForRtl = ta->getBoolean(R::styleable::ProgressBar_mirrorForRtl,false);
 
-    setMin(attrs.getInt("min",mMin));
-    setMax(attrs.getInt("max",mMax));
+    setMin(ta->getInt(R::styleable::ProgressBar_min,mMin));
+    setMax(ta->getInt(R::styleable::ProgressBar_max,mMax));
 
-    setProgress(attrs.getInt("progress",mProgress));
-    setSecondaryProgress(attrs.getInt("secondaryProgress",mSecondaryProgress));
+    setProgress(ta->getInt(R::styleable::ProgressBar_progress,mProgress));
+    setSecondaryProgress(ta->getInt(R::styleable::ProgressBar_secondaryProgress,mSecondaryProgress));
 
-    if(attrs.hasAttribute("progressTintMode")){
+    if(ta->hasValue(R::styleable::ProgressBar_progressTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintMode = attrs.getTintMode("progressTintMode", PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mProgressTintMode = ta->getInt(R::styleable::ProgressBar_progressTintMode, PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasProgressTintMode=true;
     }
 
-    if(attrs.hasAttribute("progressTint")){
+    if(ta->hasValue(R::styleable::ProgressBar_progressTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressTintList=attrs.getColorStateList("progressTint");
-        mProgressTintInfo->mHasProgressTint = true;
+        mProgressTintInfo->mProgressTintList = ta->getColorStateList(R::styleable::ProgressBar_progressTint);
+        mProgressTintInfo->mHasProgressTint=true;
     }
 
-    if(attrs.hasAttribute("progressBackgroundTintMode")){
+    if(ta->hasValue(R::styleable::ProgressBar_progressBackgroundTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintMode = attrs.getTintMode("progressBackgroundTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasProgressBackgroundTintMode = true;
+        mProgressTintInfo->mProgressBackgroundTintMode = ta->getInt(R::styleable::ProgressBar_progressBackgroundTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mHasProgressBackgroundTintMode=true;
     }
 
-    if(attrs.hasAttribute("progressBackgroundTint")){
+    if(ta->hasValue(R::styleable::ProgressBar_progressBackgroundTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mProgressBackgroundTintList = attrs.getColorStateList("progressBackgroundTint");
-        mProgressTintInfo->mHasProgressBackgroundTint = true;
+        mProgressTintInfo->mProgressBackgroundTintList = ta->getColorStateList(R::styleable::ProgressBar_progressBackgroundTint);
+        mProgressTintInfo->mHasProgressBackgroundTint=true;
     }
 
-    if(attrs.hasAttribute("secondaryProgressTintMode")){
+    if(ta->hasValue(R::styleable::ProgressBar_secondaryProgressTintMode)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintMode = attrs.getTintMode("secondaryProgressTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasSecondaryProgressTintMode = true;
+        mProgressTintInfo->mSecondaryProgressTintMode = ta->getInt(R::styleable::ProgressBar_secondaryProgressTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mHasSecondaryProgressTintMode=true;
     }
 
-    if(attrs.hasAttribute("secondaryProgressTint")){
+    if(ta->hasValue(R::styleable::ProgressBar_secondaryProgressTint)) {
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
-        mProgressTintInfo->mSecondaryProgressTintList = attrs.getColorStateList("secondaryProgressTint");
+        mProgressTintInfo->mSecondaryProgressTintList = ta->getColorStateList(R::styleable::ProgressBar_secondaryProgressTint);
         mProgressTintInfo->mHasSecondaryProgressTint=true;
     }
 
-    if (attrs.hasAttribute("indeterminateTintMode")) {
-        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintMode = attrs.getTintMode("indeterminateTintMode", PorterDuff::Mode::NOOP);
-        mProgressTintInfo->mHasIndeterminateTintMode = true;
+    if(ta->hasValue(R::styleable::ProgressBar_indeterminateTintMode)) {
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mIndeterminateTintMode = ta->getInt(R::styleable::ProgressBar_indeterminateTintMode, PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mHasIndeterminateTintMode=true;
     }
 
-    if (attrs.hasAttribute("indeterminateTint")) {
-        if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        mProgressTintInfo->mIndeterminateTintList = attrs.getColorStateList("indeterminateTint");
-        mProgressTintInfo->mHasIndeterminateTint = true;
+    if(ta->hasValue(R::styleable::ProgressBar_indeterminateTint)) {
+        if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mIndeterminateTintList = ta->getColorStateList(R::styleable::ProgressBar_indeterminateTint);
+        mProgressTintInfo->mHasIndeterminateTint=true;
     }
     applyProgressTints();
     applyIndeterminateTint();
 
-    // If not explicitly specified this view is important for accessibility.
+// If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
+
 }
 
-ProgressBar::ProgressBar(int width, int height):View(width,height){
-    initProgressBar();
-    mMirrorForRtl = false;
-    mHasAnimation = false;
-    indeterminatePos = 0;
-    mAttached = false;
-    mShouldStartAnimationDrawable = false;
-    setProgressDrawable(mContext->getDrawable("cdroid:drawable/progress_horizontal.xml"));
-}
-
-ProgressBar::~ProgressBar(){
+ProgressBar::~ProgressBar() {
+    delete mPercentFormat;
     if(mProgressDrawable)mProgressDrawable->setCallback(nullptr);
     if(mIndeterminateDrawable)mIndeterminateDrawable->setCallback(nullptr);
     //for(auto rd:mRefreshData)rd->recycle();
-    for(int i=0;i<mRefreshData.size();i++){
+    for(int i=0; i<mRefreshData.size(); i++) {
         const int id = mRefreshData.keyAt(i);
-         auto rd = mRefreshData.get(id);
-         delete rd;
+        auto rd = mRefreshData.get(id);
+        delete rd;
     }
     delete mProgressDrawable;
     delete mIndeterminateDrawable;
@@ -195,7 +205,7 @@ void ProgressBar::setMinWidth(int minWidth) {
     requestLayout();
 }
 
-int ProgressBar::getMinWidth() const{
+int ProgressBar::getMinWidth() const {
     return mMinWidth;
 }
 
@@ -204,7 +214,7 @@ void ProgressBar::setMaxWidth(int maxWidth) {
     requestLayout();
 }
 
-int ProgressBar::getMaxWidth() const{
+int ProgressBar::getMaxWidth() const {
     return mMaxWidth;
 }
 
@@ -213,7 +223,7 @@ void ProgressBar::setMinHeight(int minHeight) {
     requestLayout();
 }
 
-int ProgressBar::getMinHeight() const{
+int ProgressBar::getMinHeight() const {
     return mMinHeight;
 }
 
@@ -222,11 +232,11 @@ void ProgressBar::setMaxHeight(int maxHeight) {
     requestLayout();
 }
 
-int ProgressBar::getMaxHeight() const{
+int ProgressBar::getMaxHeight() const {
     return mMaxHeight;
 }
 
-bool ProgressBar::needsTileify(Drawable* dr){
+bool ProgressBar::needsTileify(Drawable* dr) {
     if (dynamic_cast<LayerDrawable*>(dr)) {
         LayerDrawable* orig = (LayerDrawable*) dr;
         const int N = orig->getNumberOfLayers();
@@ -244,7 +254,21 @@ bool ProgressBar::needsTileify(Drawable* dr){
         for (int i = 0; i < N; i++) {
             if (needsTileify(in->getStateDrawable(i))) {
                 return true;
-             }
+            }
+        }
+        return false;
+    }
+
+    // Animation-list frames are unwrapped bitmaps too (the classic barberpole
+    // assets): descend into them so the style-declared indeterminate drawable
+    // takes the tiled path straight from XML.
+    if (dynamic_cast<AnimationDrawable*>(dr)) {
+        AnimationDrawable* in = (AnimationDrawable*) dr;
+        const int N = in->getNumberOfFrames();
+        for (int i = 0; i < N; i++) {
+            if (needsTileify(in->getFrame(i))) {
+                return true;
+            }
         }
         return false;
     }
@@ -256,10 +280,17 @@ bool ProgressBar::needsTileify(Drawable* dr){
     return false;
 }
 
-Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
+Drawable* ProgressBar::tileify(Drawable* drawable, bool clip) {
     // TODO: This is a terrible idea that potentially destroys any drawable
     // that extends any of these classes. We *really* need to remove this.
 
+    // A layer/state entry may be null (e.g. an empty StateListDrawable slot); pass it through so
+    // the rebuilt tree keeps a null layer — LayerDrawable tolerates null children, and the default
+    // branch below would otherwise deref null.
+    if (drawable == nullptr) return nullptr;
+
+    drawable->setCallback(nullptr);
+    unscheduleDrawable(*drawable);
     if (dynamic_cast<LayerDrawable*>(drawable)) {
         LayerDrawable* orig = (LayerDrawable*) drawable;
         const int N = orig->getNumberOfLayers();
@@ -268,7 +299,7 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
         for (int i = 0; i < N; i++) {
             const int id = orig->getId(i);
             Drawable*dr=tileify(orig->getDrawable(i),(id == R::id::progress || id == R::id::secondaryProgress));
-            outDrawables.push_back(dr); 
+            outDrawables.push_back(dr);
         }
 
         LayerDrawable* clone = new LayerDrawable(outDrawables);
@@ -298,6 +329,19 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
         return out;
     }
 
+    // Symmetric with the AnimationDrawable branch in needsTileify: rebuild the
+    // animation over tiled frames (the classic barberpole assets).
+    if (dynamic_cast<AnimationDrawable*>(drawable)) {
+        AnimationDrawable* in = (AnimationDrawable*) drawable;
+        AnimationDrawable* out = new AnimationDrawable();
+        out->setOneShot(in->isOneShot());
+        const int N = in->getNumberOfFrames();
+        for (int i = 0; i < N; i++) {
+            out->addFrame(tileify(in->getFrame(i), clip), in->getDuration(i));
+        }
+        return out;
+    }
+
     if (dynamic_cast<BitmapDrawable*>(drawable)) {
         std::shared_ptr<Drawable::ConstantState> cs = drawable->getConstantState();
         BitmapDrawable* clone = (BitmapDrawable*) cs->newDrawable();
@@ -312,10 +356,22 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
             return clone;
         }
     }
+    // Untiled child (ShapeDrawable/GradientDrawable/...): clone it so the rebuilt tree owns its
+    // own instances. The original drawable (handed in from Assets::getDrawable) is freed by the
+    // caller (setProgressDrawableTiled); passing the same instance through would leave the
+    // original and the rebuilt clone co-owning it, and freeing one would double-free.
+    std::shared_ptr<Drawable::ConstantState> cs = drawable->getConstantState();
+    if (cs) {
+        Drawable* clone = cs->newDrawable();
+        clone->setBounds(drawable->getBounds());
+        clone->setLevel(drawable->getLevel());
+        clone->setLayoutDirection(drawable->getLayoutDirection());
+        return clone;
+    }
     return drawable;
 }
 
-Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
+Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable) {
     if (dynamic_cast<AnimationDrawable*>(drawable)) {
         AnimationDrawable* background = (AnimationDrawable*) drawable;
         const int N = background->getNumberOfFrames();
@@ -332,21 +388,21 @@ Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
     return drawable;
 }
 
-class VISUAL_PROGRESS:public FloatProperty{
-public:
-    VISUAL_PROGRESS():FloatProperty("visual_progress"){}
+class VISUAL_PROGRESS:public FloatProperty {
+  public:
+    VISUAL_PROGRESS():FloatProperty("visual_progress") {}
     void set(void*object,const AnimateValue&value)const override {
         float fv = GET_VARIANT(value,float);
         ((ProgressBar*)object)->setVisualProgress(R::id::progress, fv);
         ((ProgressBar*)object)->mVisualProgress = fv;
     }
-    AnimateValue get(void*object)const override{
+    AnimateValue get(void*object)const override {
         return ((ProgressBar*)object)->mVisualProgress;
     }
 };
 static class VISUAL_PROGRESS VISUAL_PROGRESS;
 
-void ProgressBar::initProgressBar(){
+void ProgressBar::initProgressBar() {
     mMin = 0;
     mMax = 100;
     mAttached= false;
@@ -377,44 +433,44 @@ void ProgressBar::initProgressBar(){
     mRefreshIsPosted = false;
 }
 
-void ProgressBar::setMin(int value){
-    if(mMin!=value){
+void ProgressBar::setMin(int value) {
+    if(mMin!=value) {
         mMin = value;
         invalidate(true);
     }
 }
 
-void ProgressBar::setMax(int value){
-    if(mMax!=value){
+void ProgressBar::setMax(int value) {
+    if(mMax!=value) {
         mMax = value;
         invalidate(true);
     }
 }
 
-void ProgressBar::setRange(int vmin,int vmax){
-    if( (mMin!=vmin)||(mMax!=vmax)){
+void ProgressBar::setRange(int vmin,int vmax) {
+    if( (mMin!=vmin)||(mMax!=vmax)) {
         mMin = vmin;
         mMax = vmax;
         invalidate(true);
     }
 }
 
-Drawable*ProgressBar::getCurrentDrawable()const{
+Drawable*ProgressBar::getCurrentDrawable()const {
     return mCurrentDrawable;
 }
 
-void ProgressBar::drawableStateChanged(){
+void ProgressBar::drawableStateChanged() {
     View::drawableStateChanged();
     updateDrawableState();
 }
 
-void ProgressBar::drawableHotspotChanged(float x, float y){
+void ProgressBar::drawableHotspotChanged(float x, float y) {
     View::drawableHotspotChanged(x,y);
     if(mProgressDrawable)mProgressDrawable->setHotspot(x,y);
-    if(mIndeterminateDrawable)mIndeterminateDrawable->setHotspot(x,y); 
+    if(mIndeterminateDrawable)mIndeterminateDrawable->setHotspot(x,y);
 }
 
-bool ProgressBar::verifyDrawable(Drawable* who)const{
+bool ProgressBar::verifyDrawable(Drawable* who)const {
     return (who == mProgressDrawable) || (who == mIndeterminateDrawable)|| View::verifyDrawable(who);
 }
 
@@ -424,7 +480,7 @@ void ProgressBar::jumpDrawablesToCurrentState() {
     if (mIndeterminateDrawable) mIndeterminateDrawable->jumpToCurrentState();
 }
 
-void ProgressBar::onResolveDrawables(int layoutDirection){
+void ProgressBar::onResolveDrawables(int layoutDirection) {
     Drawable* d = mCurrentDrawable;
     if (d != nullptr) {
         d->setLayoutDirection(layoutDirection);
@@ -437,16 +493,16 @@ void ProgressBar::onResolveDrawables(int layoutDirection){
     }
 }
 
-void ProgressBar::onVisualProgressChanged(int id, float progress){
+void ProgressBar::onVisualProgressChanged(int id, float progress) {
     //Stub method
 }
 
-void ProgressBar::onAttachedToWindow(){
+void ProgressBar::onAttachedToWindow() {
     View::onAttachedToWindow();
-    if (mIndeterminate){
+    if (mIndeterminate) {
         startAnimation();
     }
-    for(int i=0;i< mRefreshData.size();i++){
+    for(int i=0; i< mRefreshData.size(); i++) {
         const int id =  mRefreshData.keyAt(i);
         auto rd= mRefreshData.get(id);
         doRefreshProgress(id, rd->progress, rd->fromUser, true, rd->animate);
@@ -454,15 +510,15 @@ void ProgressBar::onAttachedToWindow(){
     mAttached = true;
 }
 
-void ProgressBar::onDetachedFromWindow(){
-    if(mIndeterminate){
+void ProgressBar::onDetachedFromWindow() {
+    if(mIndeterminate) {
         stopAnimation();
     }
-    if(mRefreshProgressRunnable){
+    if(mRefreshProgressRunnable) {
         removeCallbacks(mRefreshProgressRunnable);
         mRefreshIsPosted = false;
     }
-    if(mAccessibilityEventSender){
+    if(mAccessibilityEventSender) {
         removeCallbacks(mAccessibilityEventSender);
     }
     View::onDetachedFromWindow();
@@ -471,13 +527,11 @@ void ProgressBar::onDetachedFromWindow(){
     mAttached =false;
 }
 
-void ProgressBar::setVisualProgress(int id, float progress){
+void ProgressBar::setVisualProgress(int id, float progress) {
     mVisualProgress = progress;
-
     Drawable* d = mCurrentDrawable;
     if (dynamic_cast<LayerDrawable*>(d)) {
         d = ((LayerDrawable*) d)->findDrawableByLayerId(id);
-        LOGD_IF((d==nullptr)&&(id==R::id::progress),"LayerDrawable lost layer id=%d",id);
         if (d == nullptr) {
             // If we can't find the requested layer, fall back to setting
             // the level of the entire drawable. This will break if
@@ -491,19 +545,19 @@ void ProgressBar::setVisualProgress(int id, float progress){
     onVisualProgressChanged(id, progress);
 }
 
-void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate){
+void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool callBackToApp, bool animate) {
     const int range = mMax - mMin;
     const float scale = range > 0 ? (float)(progress - mMin) / (float) range : 0;
     const bool isPrimary = id == R::id::progress;
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
     if (isPrimary && animate) {
         Animator::AnimatorListener animListener;
-        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,&VISUAL_PROGRESS/*"visual_progress"*/,{scale});
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,&VISUAL_PROGRESS/*"visual_progress"*/, {scale});
         animator->setAutoCancel(true);
         animator->setDuration(PROGRESS_ANIM_DURATION);
         animator->setInterpolator(DecelerateInterpolator::Instance);
         AnimatorListenerAdapter animtorListener;
-        animtorListener.onAnimationEnd=[this](Animator&anim,bool){
+        animtorListener.onAnimationEnd=[this](Animator&anim,bool) {
             delete mLastProgressAnimator;
             mLastProgressAnimator = nullptr;
         };
@@ -511,7 +565,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
         animator->start();
         mLastProgressAnimator = animator;
     } else {
-        if(isPrimary && mLastProgressAnimator){
+        if(isPrimary && mLastProgressAnimator) {
             mLastProgressAnimator->cancel();
             delete mLastProgressAnimator;
             mLastProgressAnimator = nullptr;
@@ -523,7 +577,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     }
 }
 
-float ProgressBar::getPercent(int progress) const{
+float ProgressBar::getPercent(int progress) const {
     const float maxProgress = getMax();
     const float minProgress = getMin();
     const float currentProgress = progress;
@@ -535,17 +589,19 @@ float ProgressBar::getPercent(int progress) const{
     return std::max(0.0f, std::min(1.0f, percent));
 }
 
-std::string ProgressBar::formatStateDescription(int progress) const{
-    // Cache the locale-appropriate NumberFormat.  Configuration locale is guaranteed
-    // non-null, so the first time this is called we will always get the appropriate
-    // NumberFormat, then never regenerate it unless the locale changes on the fly.
-    /*final Locale curLocale = mContext.getResources().getConfiguration().getLocales().get(0);
-    if (!curLocale.equals(mCachedLocale)) {
-        mCachedLocale = curLocale;
-        mPercentFormat = NumberFormat.getPercentInstance(curLocale);
+std::string ProgressBar::formatStateDescription(int progress) const {
+    // Cache the locale-appropriate NumberFormat.  Configuration locale is
+    // guaranteed non-null, so the first time this is called we will always
+    // get the appropriate NumberFormat, then never regenerate it unless the
+    // locale changes on the fly. (The engine's DECIMAL type carries no
+    // percent SIGN — the symbol slot is a number_data backlog.)
+    const Locale curLocale = Locale::getDefault();
+    if (mCachedLocaleTag != curLocale.toLanguageTag() || mPercentFormat == nullptr) {
+        mCachedLocaleTag = curLocale.toLanguageTag();
+        delete mPercentFormat;
+        mPercentFormat = NumberFormat::getPercentInstance(curLocale).release();
     }
-    return mPercentFormat.format(getPercent(progress));*/
-    return "";
+    return mPercentFormat->format(getPercent(progress));
 }
 
 void ProgressBar::setStateDescription(const std::string& stateDescription) {
@@ -559,15 +615,14 @@ void ProgressBar::setStateDescription(const std::string& stateDescription) {
 
 void ProgressBar::onProgressRefresh(float scale, bool fromUser, int progress) {
     if (AccessibilityManager::getInstance(mContext).isEnabled() && !isIndeterminate()) {
-        AccessibilityEvent* event = AccessibilityEvent::obtain();
-        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
-        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
-        //sendAccessibilityEventUnchecked(event);
+        // AOSP schedules the (deferred) sender only — no event is built here.
+        // The old obtain() here leaked the event: it was never sent nor
+        // recycled (AOSP drops nothing because it never obtains).
         scheduleAccessibilityEventSender();
     }
 }
 
-void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
+void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     int dw = 0;
     int dh = 0;
 
@@ -587,10 +642,10 @@ void ProgressBar::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     setMeasuredDimension(measuredWidth, measuredHeight);
 }
 
-void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate){
-    if(mRefreshProgressRunnable==nullptr){
-        mRefreshProgressRunnable = [this](){
-            for(size_t i=0;i<mRefreshData.size();i++){
+void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool animate) {
+    if(mRefreshProgressRunnable==nullptr) {
+        mRefreshProgressRunnable = [this]() {
+            for(size_t i=0; i<mRefreshData.size(); i++) {
                 const int id =  mRefreshData.keyAt(i);
                 auto rd= mRefreshData.get(id);
                 doRefreshProgress(id, rd->progress, rd->fromUser, true, rd->animate);
@@ -600,7 +655,7 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
         };
     }
     RefreshData* rd=mRefreshData.get(id,nullptr);
-    if(rd==nullptr){
+    if(rd==nullptr) {
         rd= new RefreshData;
         mRefreshData.put(id,rd);
     }
@@ -608,13 +663,13 @@ void ProgressBar::refreshProgress(int id, int progress, bool fromUser,bool anima
     rd->progress= progress;
     rd->fromUser= fromUser;
     rd->animate = animate;
-    if(mAttached && (!mRefreshIsPosted)){
+    if(mAttached && (!mRefreshIsPosted)) {
         post(mRefreshProgressRunnable);
         mRefreshIsPosted = true;
     }
 }
 
-bool ProgressBar::setProgressInternal(int progress, bool fromUser,bool animate){
+bool ProgressBar::setProgressInternal(int progress, bool fromUser,bool animate) {
     if(mIndeterminate)return false;
     progress = MathUtils::constrain(progress,mMin,mMax);
     if(mProgress == progress)return false;
@@ -623,11 +678,11 @@ bool ProgressBar::setProgressInternal(int progress, bool fromUser,bool animate){
     return true;
 }
 
-void ProgressBar::setProgress(int value){
+void ProgressBar::setProgress(int value) {
     setProgressInternal(value,false,false);
 }
 
-void ProgressBar::setProgress(int progress, bool animate){
+void ProgressBar::setProgress(int progress, bool animate) {
     setProgressInternal(progress, false, animate);
 }
 
@@ -644,7 +699,7 @@ void ProgressBar::setSecondaryProgress(int secondaryProgress) {
     }
 }
 
-int ProgressBar::getSecondaryProgress()const{
+int ProgressBar::getSecondaryProgress()const {
     return mIndeterminate ? 0 : mSecondaryProgress;
 }
 
@@ -652,19 +707,19 @@ void ProgressBar::incrementProgressBy(int diff) {
     setProgress(mProgress + diff);
 }
 
-void ProgressBar::incrementSecondaryProgressBy(int diff){
+void ProgressBar::incrementSecondaryProgressBy(int diff) {
     setSecondaryProgress(mSecondaryProgress + diff);
 }
 
-int ProgressBar::getProgress()const{
+int ProgressBar::getProgress()const {
     return mProgress;
 }
 
-bool ProgressBar::isIndeterminate()const{
+bool ProgressBar::isIndeterminate()const {
     return mIndeterminate;
 }
 
-void ProgressBar::setIndeterminate(bool indeterminate){
+void ProgressBar::setIndeterminate(bool indeterminate) {
     if ((!mOnlyIndeterminate || !mIndeterminate) && indeterminate != mIndeterminate) {
         mIndeterminate = indeterminate;
 
@@ -672,16 +727,16 @@ void ProgressBar::setIndeterminate(bool indeterminate){
             // swap between indeterminate and regular backgrounds
             swapCurrentDrawable(mIndeterminateDrawable);
             startAnimation();
-        } else if(mProgressDrawable){
+        } else if(mProgressDrawable) {
             swapCurrentDrawable(mProgressDrawable);
             stopAnimation();
-        }else{
+        } else {
             stopAnimation();
         }
     }
 }
 
-void ProgressBar::setProgressDrawable(Drawable*d){
+void ProgressBar::setProgressDrawable(Drawable*d) {
     if (mProgressDrawable != d) {
         if (mProgressDrawable != nullptr) {
             mProgressDrawable->setCallback(nullptr);
@@ -716,27 +771,27 @@ void ProgressBar::setProgressDrawable(Drawable*d){
         updateDrawableState();
 
         doRefreshProgress(R::id::progress, mProgress, false, false, false);
-        doRefreshProgress(R::id::secondaryProgress , mSecondaryProgress, false, false, false);
+        doRefreshProgress(R::id::secondaryProgress, mSecondaryProgress, false, false, false);
     }
 }
 
-Drawable*ProgressBar::getProgressDrawable()const{
+Drawable*ProgressBar::getProgressDrawable()const {
     return mProgressDrawable;
 }
 
-int ProgressBar::getProgressGravity()const{
-    int gravity = Gravity::NO_GRAVITY; 
-    if(dynamic_cast<LayerDrawable*>(mProgressDrawable)){
+int ProgressBar::getProgressGravity()const {
+    int gravity = Gravity::NO_GRAVITY;
+    if(dynamic_cast<LayerDrawable*>(mProgressDrawable)) {
         LayerDrawable*ld = (LayerDrawable*)mProgressDrawable;
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::progress));
         ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::progress));
-        if(cd == nullptr && sd==nullptr){
+        if(cd == nullptr && sd==nullptr) {
             cd = dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
             sd = dynamic_cast<ScaleDrawable*>(ld->findDrawableByLayerId(R::id::secondaryProgress));
         }
         if(cd)gravity = cd->getGravity();
         if(sd)gravity = sd->getGravity();
-    }else{
+    } else {
         ClipDrawable*cd = dynamic_cast<ClipDrawable*>(mProgressDrawable);
         ScaleDrawable*sd= dynamic_cast<ScaleDrawable*>(mProgressDrawable);
         if(cd)gravity = cd->getGravity();
@@ -746,18 +801,24 @@ int ProgressBar::getProgressGravity()const{
 }
 
 
-int ProgressBar::getProgressOrientation()const{
+int ProgressBar::getProgressOrientation()const {
     const int gravity = getProgressGravity();
     if(gravity==Gravity::NO_GRAVITY)
         return (getWidth()>getHeight())?HORIZONTAL:VERTICAL;
     return Gravity::isHorizontal(gravity)?HORIZONTAL:VERTICAL;
 }
 
-void ProgressBar::setIndeterminateDrawable(Drawable*d){
+void ProgressBar::setIndeterminateDrawable(Drawable*d) {
     if (mIndeterminateDrawable != d) {
         if (mIndeterminateDrawable != nullptr) {
             mIndeterminateDrawable->setCallback(nullptr);
             unscheduleDrawable(*mIndeterminateDrawable);
+            // mCurrentDrawable aliases whichever of mProgressDrawable /
+            // mIndeterminateDrawable is shown; clear the alias before deleting so
+            // the later swapCurrentDrawable() does not dereference a dangling
+            // oldDrawable (mirrors setProgressDrawable's guard; GC in Android).
+            if (mIndeterminateDrawable == mCurrentDrawable)
+                mCurrentDrawable = nullptr;
             delete mIndeterminateDrawable;
         }
 
@@ -779,16 +840,20 @@ void ProgressBar::setIndeterminateDrawable(Drawable*d){
     }
 }
 
-Drawable*ProgressBar::getIndeterminateDrawable()const{
+Drawable*ProgressBar::getIndeterminateDrawable()const {
     return mIndeterminateDrawable;
 }
 
-void ProgressBar::setIndeterminateDrawableTiled(Drawable* d){
-     if(d)d=tileifyIndeterminate(d);
-     setIndeterminateDrawable(d);
+void ProgressBar::setIndeterminateDrawableTiled(Drawable* d) {
+    if(d) {
+        Drawable* orig = d;
+        d = tileifyIndeterminate(d);
+        if(d != orig) delete orig;   // rebuilt (AnimationDrawable); the original is now unreferenced
+    }
+    setIndeterminateDrawable(d);
 }
 
-void ProgressBar::swapCurrentDrawable(Drawable*newDrawable){
+void ProgressBar::swapCurrentDrawable(Drawable*newDrawable) {
     Drawable* oldDrawable = mCurrentDrawable;
     mCurrentDrawable = newDrawable;
     if (oldDrawable != mCurrentDrawable) {
@@ -798,7 +863,7 @@ void ProgressBar::swapCurrentDrawable(Drawable*newDrawable){
     }
 }
 
-void ProgressBar::updateDrawableState(){
+void ProgressBar::updateDrawableState() {
     const std::vector<int> state = getDrawableState();
     bool changed = false;
 
@@ -820,7 +885,7 @@ void ProgressBar::startAnimation() {
     if (dynamic_cast<Animatable*>(mIndeterminateDrawable)) {
         mShouldStartAnimationDrawable = true;
         mHasAnimation = false;
-    }else{
+    } else {
         mHasAnimation = true;
         if (mInterpolator == nullptr) {
             mInterpolator = LinearInterpolator::Instance;
@@ -851,14 +916,14 @@ void ProgressBar::startAnimation() {
 void ProgressBar::stopAnimation() {
     mHasAnimation = false;
     auto animatable = dynamic_cast<Animatable*>(mIndeterminateDrawable);
-    if(animatable!=nullptr){
+    if(animatable!=nullptr) {
         animatable->stop();
         mShouldStartAnimationDrawable = false;
     }
     postInvalidate();
 }
 
-void ProgressBar::drawTrack(Canvas&canvas){
+void ProgressBar::drawTrack(Canvas&canvas) {
     Drawable* d = mCurrentDrawable;
     if (d == nullptr)return;
     // Translate canvas so a indeterminate circular progress bar with padding
@@ -884,13 +949,21 @@ void ProgressBar::drawTrack(Canvas&canvas){
     d->draw(canvas);
     canvas.restore();
     auto animatable = dynamic_cast<Animatable*>(d);
-    if(mShouldStartAnimationDrawable && (animatable!=nullptr)){
+    if(mShouldStartAnimationDrawable && (animatable!=nullptr)) {
         animatable->start();
         mShouldStartAnimationDrawable = false;
     }
+    // Keep the frame loop alive while an Animatable indeterminate drawable is
+    // running: its per-frame invalidateSelf arrives during draw, where the
+    // mInDrawing guard in invalidateDrawable drops it (AOSP runs AVDs on the
+    // RenderThread instead). Same re-schedule the transformation tween branch
+    // above relies on.
+    if ((animatable != nullptr) && animatable->isRunning()) {
+        postInvalidateOnAnimation();
+    }
 }
 
-void ProgressBar::onVisibilityAggregated(bool isVisible){
+void ProgressBar::onVisibilityAggregated(bool isVisible) {
     View::onVisibilityAggregated(isVisible);
     if (isVisible != mAggregatedIsVisible) {
         mAggregatedIsVisible = isVisible;
@@ -920,7 +993,7 @@ void ProgressBar::invalidateDrawable(Drawable& dr) {
     }
 }
 
-void ProgressBar::updateDrawableBounds(int w,int h){
+void ProgressBar::updateDrawableBounds(int w,int h) {
     w -= mPaddingRight + mPaddingLeft;
     h -= mPaddingTop + mPaddingBottom;
     int right = w;
@@ -965,7 +1038,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     }
 }
 
-void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
+void ProgressBar::onSizeChanged(int w,int h,int ow,int oh) {
     updateDrawableBounds(w,h);
 }
 
@@ -974,14 +1047,14 @@ void ProgressBar::onDraw(Canvas&canvas) {
     drawTrack(canvas);
 }
 
-void ProgressBar::setMirrorForRtl(bool mirrorRtl){
-    if(mMirrorForRtl!=mirrorRtl){
+void ProgressBar::setMirrorForRtl(bool mirrorRtl) {
+    if(mMirrorForRtl!=mirrorRtl) {
         mMirrorForRtl = mirrorRtl;
         invalidate(true);
     }
 }
 
-bool ProgressBar::getMirrorForRtl()const{
+bool ProgressBar::getMirrorForRtl()const {
     return mMirrorForRtl;
 }
 
@@ -993,9 +1066,9 @@ void ProgressBar::applyProgressTints() {
     }
 }
 
-void ProgressBar::applyPrimaryProgressTint(){
+void ProgressBar::applyPrimaryProgressTint() {
     if (mProgressTintInfo->mHasProgressTint
-          || mProgressTintInfo->mHasProgressTintMode) {
+            || mProgressTintInfo->mHasProgressTintMode) {
         Drawable* target = getTintTarget(R::id::progress, true);
         if (target != nullptr) {
             if (mProgressTintInfo->mHasProgressTint) {
@@ -1014,8 +1087,8 @@ void ProgressBar::applyPrimaryProgressTint(){
     }
 }
 
-void ProgressBar::applyProgressBackgroundTint(){
-     if (mProgressTintInfo->mHasProgressBackgroundTint
+void ProgressBar::applyProgressBackgroundTint() {
+    if (mProgressTintInfo->mHasProgressBackgroundTint
             || mProgressTintInfo->mHasProgressBackgroundTintMode) {
         Drawable* target = getTintTarget(R::id::background, false);
         if (target != nullptr) {
@@ -1035,32 +1108,32 @@ void ProgressBar::applyProgressBackgroundTint(){
     }
 }
 
-void ProgressBar::applySecondaryProgressTint(){
-     if (mProgressTintInfo->mHasSecondaryProgressTint
+void ProgressBar::applySecondaryProgressTint() {
+    if (mProgressTintInfo->mHasSecondaryProgressTint
             || mProgressTintInfo->mHasSecondaryProgressTintMode) {
         Drawable* target = getTintTarget(R::id::secondaryProgress, false);
-            if (target != nullptr) {
-                if (mProgressTintInfo->mHasSecondaryProgressTint) {
-                    target->setTintList(mProgressTintInfo->mSecondaryProgressTintList);
-                }
-                if (mProgressTintInfo->mHasSecondaryProgressTintMode) {
-                    target->setTintMode(mProgressTintInfo->mSecondaryProgressTintMode);
-                }
+        if (target != nullptr) {
+            if (mProgressTintInfo->mHasSecondaryProgressTint) {
+                target->setTintList(mProgressTintInfo->mSecondaryProgressTintList);
+            }
+            if (mProgressTintInfo->mHasSecondaryProgressTintMode) {
+                target->setTintMode(mProgressTintInfo->mSecondaryProgressTintMode);
+            }
 
-                // The drawable (or one of its children) may not have been
-                // stateful before applying the tint, so let's try again.
-                if (target->isStateful()) {
-                    target->setState(getDrawableState());
-                }
+            // The drawable (or one of its children) may not have been
+            // stateful before applying the tint, so let's try again.
+            if (target->isStateful()) {
+                target->setState(getDrawableState());
             }
         }
+    }
 }
 
-void ProgressBar::setProgressTintList(const cdroid::RefPtr<ColorStateList>&tint){
+void ProgressBar::setProgressTintList(const cdroid::RefPtr<ColorStateList>&tint) {
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if(mProgressTintInfo->mProgressTintList!=tint){
+    if(mProgressTintInfo->mProgressTintList!=tint) {
         mProgressTintInfo->mProgressTintList = tint;
         mProgressTintInfo->mHasProgressTint = (tint!=nullptr);
     }
@@ -1070,7 +1143,7 @@ void ProgressBar::setProgressTintList(const cdroid::RefPtr<ColorStateList>&tint)
     }
 }
 
-const cdroid::RefPtr<ColorStateList> ProgressBar::getProgressTintList()const{
+const cdroid::RefPtr<ColorStateList> ProgressBar::getProgressTintList()const {
     return mProgressTintInfo  ? mProgressTintInfo->mProgressTintList : nullptr;
 }
 
@@ -1086,7 +1159,7 @@ void ProgressBar::setProgressTintMode(int tintMode) {
     }
 }
 
-int ProgressBar::getProgressTintMode()const{
+int ProgressBar::getProgressTintMode()const {
     return mProgressTintInfo ? mProgressTintInfo->mProgressTintMode : 0;
 }
 
@@ -1094,7 +1167,7 @@ void ProgressBar::setProgressBackgroundTintList(const cdroid::RefPtr<ColorStateL
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if(mProgressTintInfo->mProgressBackgroundTintList!=tint ){
+    if(mProgressTintInfo->mProgressBackgroundTintList!=tint ) {
         mProgressTintInfo->mProgressBackgroundTintList = tint;
         mProgressTintInfo->mHasProgressBackgroundTint = (tint!=nullptr);
     }
@@ -1104,7 +1177,7 @@ void ProgressBar::setProgressBackgroundTintList(const cdroid::RefPtr<ColorStateL
     }
 }
 
-const cdroid::RefPtr<ColorStateList> ProgressBar::getProgressBackgroundTintList()const{
+const cdroid::RefPtr<ColorStateList> ProgressBar::getProgressBackgroundTintList()const {
     return mProgressTintInfo ? mProgressTintInfo->mProgressBackgroundTintList : nullptr;
 }
 
@@ -1120,7 +1193,7 @@ void ProgressBar::setProgressBackgroundTintMode(int tintMode) {
     }
 }
 
-int ProgressBar::getProgressBackgroundTintMode()const{
+int ProgressBar::getProgressBackgroundTintMode()const {
     return mProgressTintInfo  ? mProgressTintInfo->mProgressBackgroundTintMode :0;
 }
 
@@ -1128,7 +1201,7 @@ void ProgressBar::setSecondaryProgressTintList(const cdroid::RefPtr<ColorStateLi
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
-    if( mProgressTintInfo->mSecondaryProgressTintList!=tint ){
+    if( mProgressTintInfo->mSecondaryProgressTintList!=tint ) {
         mProgressTintInfo->mSecondaryProgressTintList = tint;
         mProgressTintInfo->mHasSecondaryProgressTint = (tint!=nullptr);
     }
@@ -1138,7 +1211,7 @@ void ProgressBar::setSecondaryProgressTintList(const cdroid::RefPtr<ColorStateLi
     }
 }
 
-const cdroid::RefPtr<ColorStateList>ProgressBar::getSecondaryProgressTintList()const{
+const cdroid::RefPtr<ColorStateList>ProgressBar::getSecondaryProgressTintList()const {
     return mProgressTintInfo ? mProgressTintInfo->mSecondaryProgressTintList : nullptr;
 }
 
@@ -1154,11 +1227,11 @@ void ProgressBar::setSecondaryProgressTintMode(int tintMode) {
     }
 }
 
-int ProgressBar::getSecondaryProgressTintMode()const{
+int ProgressBar::getSecondaryProgressTintMode()const {
     return mProgressTintInfo ? mProgressTintInfo->mSecondaryProgressTintMode : 0;
 }
 
-Drawable* ProgressBar::getTintTarget(int layerId, bool shouldFallback){
+Drawable* ProgressBar::getTintTarget(int layerId, bool shouldFallback) {
     Drawable* layer = nullptr;
 
     Drawable* d = mProgressDrawable;
@@ -1174,24 +1247,26 @@ Drawable* ProgressBar::getTintTarget(int layerId, bool shouldFallback){
     return layer;
 }
 
-void ProgressBar::applyIndeterminateTint(){
+void ProgressBar::applyIndeterminateTint() {
 
 }
 
 void ProgressBar::setProgressDrawableTiled(Drawable* d) {
     if (d != nullptr) {
-        d = tileify(d, false);
+        Drawable* orig = d;
+        d = tileify(d, false);         // rebuilds a fresh tiled drawable tree
+        if (d != orig) delete orig;    // the original (from Assets::getDrawable) is now unreferenced
     }
     setProgressDrawable(d);
 }
 
-std::string ProgressBar::getAccessibilityClassName()const{
+std::string ProgressBar::getAccessibilityClassName()const {
     return "ProgressBar";
 }
 
 void ProgressBar::scheduleAccessibilityEventSender() {
     if (mAccessibilityEventSender == nullptr) {
-        mAccessibilityEventSender = [this](){
+        mAccessibilityEventSender = [this]() {
             sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_SELECTED);
         };
     } else {
@@ -1200,20 +1275,33 @@ void ProgressBar::scheduleAccessibilityEventSender() {
     postDelayed(mAccessibilityEventSender, TIMEOUT_SEND_ACCESSIBILITY_EVENT);
 }
 
-void ProgressBar::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
+void ProgressBar::onInitializeAccessibilityEventInternal(AccessibilityEvent& event) {
     View::onInitializeAccessibilityEventInternal(event);
     event.setItemCount(mMax - mMin);
     event.setCurrentItemIndex(mProgress);
 }
 
-void ProgressBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
+void ProgressBar::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info) {
     View::onInitializeAccessibilityNodeInfoInternal(info);
 
     if (!isIndeterminate()) {
         AccessibilityNodeInfo::RangeInfo* rangeInfo = AccessibilityNodeInfo::RangeInfo::obtain(
-                AccessibilityNodeInfo::RangeInfo::RANGE_TYPE_INT, getMin(), getMax(),
-                getProgress());
+                    AccessibilityNodeInfo::RangeInfo::RANGE_TYPE_INT, getMin(), getMax(),
+                    getProgress());
         info.setRangeInfo(rangeInfo);
+    }
+    /*AOSP android-36 also swaps in RangeInfo.INDETERMINATE for the
+      indeterminate case behind the (default-off) indeterminateRangeInfo
+      flag — flag-off semantics: no range info, as here.*/
+
+    // Only set the default state description when the custom one is unset
+    // (AOSP compares getStateDescription() == null; empty means unset here).
+    if (getStateDescription().empty()) {
+        if (isIndeterminate()) {
+            info.setStateDescription(getResources().getString(R::string::in_progress));
+        } else {
+            info.setStateDescription(formatStateDescription(mProgress));
+        }
     }
 }
 

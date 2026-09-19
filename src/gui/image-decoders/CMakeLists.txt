@@ -23,7 +23,6 @@ include_directories(
     ${CAIRO_INCLUDE_DIRS}
     ${WEBP_INCLUDE_DIRS}
     ${OPENJPEG_INCLUDE_DIRS}
-    ${FONTCONFIG_INCLUDE_DIRS}
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
 )

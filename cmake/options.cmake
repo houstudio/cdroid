@@ -41,9 +41,9 @@ option(ENABLE_SAVEDSTATE "Enable SavedStateRegistry foundation" ON)
 option(ENABLE_FRAGMENT "Enable Fragment framework" ON)
 option(ENABLE_TRANSITION "Enable Transition scene animation" ON)
 option(ENABLE_FLEXBOXLAYOUT "Enable FlexboxLayout(use ConstraintLayout instead)" OFF)
-option(ENABLE_COORDINATORLAYOUT "Enable CoordinatorLayout(use MotionLayout instead)" OFF)
+option(ENABLE_COORDINATORLAYOUT "Enable CoordinatorLayout(use MotionLayout instead)" ON)
 option(ENABLE_CONSTRAINTLAYOUT "Enable ConstraintLayout(contains MotionLayout)" ON)
-option(ENABLE_I18N "Enable I18N" OFF)
+option(ENABLE_I18N "Enable I18N" ON)
 option(ENABLE_MENU "Enable MENU(Experience)" ON)
 option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" ON)
 option(ENABLE_KPLOT "Enable QT KPlot " ON)
@@ -67,7 +67,7 @@ list(APPEND CDROID_PUBLIC_DEPLIBS  ${CAIRO_LIBRARIES} ${PIXMAN_LIBRARIES})
 #  --as-needed on cdroid drops them from DT_NEEDED. Kept on the link line for static fallback.)
 list(APPEND CDROID_PRIVATE_DEPLIBS
     ${FREETYPE_LIBRARIES}
-    ${FONTCONFIG_LIBRARIES}
+    #${FONTCONFIG_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
     ${PNG_LIBRARIES}
     ${ZIP_LIBRARIES}

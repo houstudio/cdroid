@@ -2,7 +2,7 @@
 #include <cdlog.h>
 
 View* createClockView(const std::string&bgres,int num,...){
-    View*v=new View(320,320);
+    View*v=new View(&App::getInstance());
     LayerDrawable*ld=new LayerDrawable();
     cdroid::Context*ctx=&App::getInstance();
     ld->addLayer(new BitmapDrawable(ctx,bgres));//fixed background layer
@@ -25,7 +25,7 @@ int main(int argc,const char*argv[]){
     // Window::doLayout now always lays out direct children, so absolute layout() on
     // multiple direct children piles them up at (0,0). Put the two clocks side by side
     // in a horizontal LinearLayout.
-    LinearLayout*content=new LinearLayout(-1,-1);
+    LinearLayout*content=new LinearLayout(&App::getInstance());
     content->setOrientation(LinearLayout::HORIZONTAL);
     w->addView(content);
     auto add=[&](View*v,int ww,int hh){

@@ -1,3 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright (C) 2006 The Android Open Source Project
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<!--
+===============================================================
+                        PLEASE READ
+===============================================================
+
+The Holo themes must not be modified in order to pass CTS.
+Many related themes and styles depend on other values defined in this file.
+If you would like to provide custom themes and styles for your device,
+please see styles_device_defaults.xml.
+
+===============================================================
+                        PLEASE READ
+===============================================================
+ -->
 <resources>
     <!-- Holo Theme Styles -->
     <eat-comment />
@@ -1061,16 +1091,16 @@
     <!-- Dialog styles -->
 
     <style name="AlertDialog.Holo" parent="AlertDialog">
-        <item name="fullDark">@mipmap/dialog_full_holo_dark</item>
-        <item name="topDark">@mipmap/dialog_top_holo_dark</item>
-        <item name="centerDark">@mipmap/dialog_middle_holo_dark</item>
-        <item name="bottomDark">@mipmap/dialog_bottom_holo_dark</item>
-        <item name="fullBright">@mipmap/dialog_full_holo_dark</item>
-        <item name="topBright">@mipmap/dialog_top_holo_dark</item>
-        <item name="centerBright">@mipmap/dialog_middle_holo_dark</item>
-        <item name="bottomBright">@mipmap/dialog_bottom_holo_dark</item>
-        <item name="bottomMedium">@mipmap/dialog_bottom_holo_dark</item>
-        <item name="centerMedium">@mipmap/dialog_middle_holo_dark</item>
+        <item name="fullDark">@drawable/dialog_full_holo_dark</item>
+        <item name="topDark">@drawable/dialog_top_holo_dark</item>
+        <item name="centerDark">@drawable/dialog_middle_holo_dark</item>
+        <item name="bottomDark">@drawable/dialog_bottom_holo_dark</item>
+        <item name="fullBright">@drawable/dialog_full_holo_dark</item>
+        <item name="topBright">@drawable/dialog_top_holo_dark</item>
+        <item name="centerBright">@drawable/dialog_middle_holo_dark</item>
+        <item name="bottomBright">@drawable/dialog_bottom_holo_dark</item>
+        <item name="bottomMedium">@drawable/dialog_bottom_holo_dark</item>
+        <item name="centerMedium">@drawable/dialog_middle_holo_dark</item>
         <item name="layout">@layout/alert_dialog_holo</item>
         <item name="listLayout">@layout/select_dialog_holo</item>
         <item name="progressLayout">@layout/progress_dialog_holo</item>
@@ -1081,16 +1111,16 @@
     </style>
 
     <style name="AlertDialog.Holo.Light">
-        <item name="fullDark">@mipmap/dialog_full_holo_light</item>
-        <item name="topDark">@mipmap/dialog_top_holo_light</item>
-        <item name="centerDark">@mipmap/dialog_middle_holo_light</item>
-        <item name="bottomDark">@mipmap/dialog_bottom_holo_light</item>
-        <item name="fullBright">@mipmap/dialog_full_holo_light</item>
-        <item name="topBright">@mipmap/dialog_top_holo_light</item>
-        <item name="centerBright">@mipmap/dialog_middle_holo_light</item>
-        <item name="bottomBright">@mipmap/dialog_bottom_holo_light</item>
-        <item name="bottomMedium">@mipmap/dialog_bottom_holo_light</item>
-        <item name="centerMedium">@mipmap/dialog_middle_holo_light</item>
+        <item name="fullDark">@drawable/dialog_full_holo_light</item>
+        <item name="topDark">@drawable/dialog_top_holo_light</item>
+        <item name="centerDark">@drawable/dialog_middle_holo_light</item>
+        <item name="bottomDark">@drawable/dialog_bottom_holo_light</item>
+        <item name="fullBright">@drawable/dialog_full_holo_light</item>
+        <item name="topBright">@drawable/dialog_top_holo_light</item>
+        <item name="centerBright">@drawable/dialog_middle_holo_light</item>
+        <item name="bottomBright">@drawable/dialog_bottom_holo_light</item>
+        <item name="bottomMedium">@drawable/dialog_bottom_holo_light</item>
+        <item name="centerMedium">@drawable/dialog_middle_holo_light</item>
     </style>
 
     <!-- Window title -->

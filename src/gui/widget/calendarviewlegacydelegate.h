@@ -108,8 +108,8 @@ private:
     int mWeekSeparatorLineColor;
     int mWeekNumberColor;
 
-    std::string mWeekDayTextAppearanceResId;
-    std::string mDateTextAppearanceResId;
+    int mWeekDayTextAppearanceResId = 0;
+    int mDateTextAppearanceResId = 0;
 
     int mListScrollTopOffset = 2;
     int mWeekMinVisibleHeight = 12;
@@ -133,6 +133,7 @@ private:
     ViewGroup* mDayNamesHeader;
 
     std::vector<std::string> mDayNamesShort;
+    int mWeekDayNameLength = 0;  // 0 narrow (AOSP), 1 abbreviated, 2 wide
 
     std::vector<std::string> mDayNamesLong;
 
@@ -157,7 +158,8 @@ private:
 
     Calendar mMaxDate;
 public:
-    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs);
+    CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
     ~CalendarViewLegacyDelegate()override;
     void setShownWeekCount(int count) override;
     int getShownWeekCount() const override;
@@ -182,19 +184,21 @@ public:
 
     int getWeekSeparatorLineColor() const override;
 
-    void setSelectedDateVerticalBar(const std::string& resourceId) override;
+    void setSelectedDateVerticalBar(int resourceId) override;
 
     void setSelectedDateVerticalBar(Drawable* drawable) override;
 
     Drawable* getSelectedDateVerticalBar() const override;
 
-    void setWeekDayTextAppearance(const std::string& resourceId) override;
+    void setWeekDayTextAppearance(int resourceId) override;
 
-    std::string getWeekDayTextAppearance() const override;
+    int getWeekDayTextAppearance() const override;
 
-    void setDateTextAppearance(const std::string& resourceId) override;
+    void setWeekDayNameLength(int length) override;
 
-    std::string getDateTextAppearance()const override;
+    void setDateTextAppearance(int resourceId) override;
+
+    int getDateTextAppearance()const override;
 
     void setMinDate(int64_t minDate) override;
 
@@ -222,13 +226,15 @@ public:
 
     bool getBoundsForDate(int64_t date, Rect& outBounds)override;
 
-    void onConfigurationChanged(int newConfig) override;
+    void onConfigurationChanged(Configuration& newConfig) override;
+protected:
+    void setCurrentLocale(const Locale& locale) override;
 private:
     void updateDateTextSize();
 
     void invalidateAllWeekViews();
 
-    //static Calendar getCalendarForLocale(Calendar& oldCalendar, Locale locale);
+    Calendar getCalendarForLocale(Calendar& oldCalendar, const Locale& locale);
 
     static bool isSameDate(Calendar& firstDate, Calendar& secondDate);
 
@@ -265,7 +271,7 @@ private:
     void onDateTapped(Calendar& day);
 public:
     WeeksAdapter(CalendarViewLegacyDelegate*,Context* context);
-
+    ~WeeksAdapter()override;
     void setSelectedDay(Calendar& selectedDay);
 
     Calendar getSelectedDay();
@@ -281,14 +287,14 @@ public:
 
 class CalendarViewLegacyDelegate::WeekView:public View {
 private:
-    CalendarViewLegacyDelegate*mCV;
     friend CalendarViewLegacyDelegate;
+    CalendarViewLegacyDelegate*mCV;
     std::vector<std::string> mDayNumbers;
 
     std::vector<bool> mFocusDay;
 
-    bool mHasFocusedDay;
-    bool mHasUnfocusedDay;
+    bool mHasFocusedDay = false;
+    bool mHasUnfocusedDay = false;
     bool mHasSelectedDay = false;
 
     Calendar mFirstDay;
@@ -296,10 +302,10 @@ private:
     int mMonthOfFirstWeekDay = -1;
     int mLastWeekDayMonth = -1;
     int mWeek = -1;
-    int mWidth;
-    int mHeight;
+    int mWidth = 0;
+    int mHeight = 0;
     int mSelectedDay = -1;
-    int mNumCells;
+    int mNumCells = 0;
     int mSelectedLeft = -1;
     int mSelectedRight = -1;
 
@@ -317,7 +323,7 @@ protected:
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    WeekView(CalendarViewLegacyDelegate*,Context* context,const AttributeSet&);
+    WeekView(CalendarViewLegacyDelegate*,Context* context,const AttributeSet*);
 
     void init(int weekNumber, int selectedWeekDay, int focusedMonth);
 

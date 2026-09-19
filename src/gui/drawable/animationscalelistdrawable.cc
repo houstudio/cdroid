@@ -15,18 +15,33 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <drawable/drawables.h>
 #include <animation/valueanimator.h>
 #include <drawable/animationscalelistdrawable.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 AnimationScaleListDrawable::AnimationScaleListDrawable():AnimationScaleListDrawable(nullptr){
 }
 
 AnimationScaleListDrawable::AnimationScaleListDrawable(std::shared_ptr<AnimationScaleListState> state) {
     // Every scale list drawable has its own constant state.
-    auto newState = std::make_shared<AnimationScaleListState>(state.get(), this);
+    auto newState = std::make_shared<AnimationScaleListState>(state.get(), this, nullptr);
     setConstantState(newState);
     onStateChange(getState());
+}
+
+// AOSP AnimationScaleListDrawable.applyTheme: only the super dispatch and a
+// state re-selection (scale-dependent child may have changed via theming).
+void AnimationScaleListDrawable::applyTheme(const Resources::Theme& t) {
+    DrawableContainer::applyTheme(t);
+    onStateChange(getState());
+}
+
+bool AnimationScaleListDrawable::canApplyTheme() {
+    return (mAnimationScaleListState && mAnimationScaleListState->canApplyTheme())
+            || DrawableContainer::canApplyTheme();
 }
 
 /**
@@ -40,16 +55,17 @@ bool AnimationScaleListDrawable::onStateChange(const std::vector<int>& stateSet)
 }
 
 
-void AnimationScaleListDrawable::inflate(XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflate(Resources& r, XmlPullParser& parser,const AttributeSet& attrs, const Resources::Theme* theme){
+    (void)r;
     //updateDensity();
-    inflateChildElements(parser, attrs);
+    inflateChildElements(r,parser, attrs, theme);
     onStateChange(getState());
 }
 
 /**
  * Inflates child elements from XML.
  */
-void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,const AttributeSet& attrs){
+void AnimationScaleListDrawable::inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& attrs,const Resources::Theme* theme){
     auto state = mAnimationScaleListState;
     int type, depth;
     const int innerDepth = parser.getDepth()+1;
@@ -64,7 +80,8 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
         }
 
         // Either pick up the android:drawable attribute.
-        Drawable* dr = attrs.getDrawable("drawable");
+        auto ta = r.obtainStyledAttributes(&attrs, R::styleable::AnimationScaleListDrawableItem);
+        Drawable* dr = ta->getDrawable(R::styleable::AnimationScaleListDrawableItem_drawable);
 
         // Or parse the child element under <item>.
         if (dr == nullptr) {
@@ -75,7 +92,7 @@ void AnimationScaleListDrawable::inflateChildElements(XmlPullParser& parser,cons
                                 ": <item> tag requires a 'drawable' attribute or "
                                 "child tag defining a drawable");
             }
-            dr = Drawable::createFromXmlInner(parser,attrs);
+            dr = Drawable::createFromXmlInner(r,parser,attrs,theme);
         }
         state->addDrawable(dr);
     }
@@ -135,12 +152,12 @@ void AnimationScaleListDrawable::setConstantState(std::shared_ptr<DrawableContai
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner)
-    :DrawableContainerState(orig, owner){
+AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(const AnimationScaleListState* orig, AnimationScaleListDrawable* owner, Resources* res)
+    :DrawableContainerState(orig, owner, res){
 
     if (orig != nullptr) {
         // Perform a shallow copy and rely on mutate() to deep-copy.
-        //mThemeAttrs = orig->mThemeAttrs;
+        mThemeAttrs = orig->mThemeAttrs;
 
         mStaticDrawableIndex = orig->mStaticDrawableIndex;
         mAnimatableDrawableIndex = orig->mAnimatableDrawableIndex;
@@ -149,7 +166,9 @@ AnimationScaleListDrawable::AnimationScaleListState::AnimationScaleListState(con
 }
 
 void AnimationScaleListDrawable::AnimationScaleListState::mutate() {
-    //mThemeAttrs = mThemeAttrs != null ? mThemeAttrs.clone() : null;
+    // AOSP runs super.mutate() (mutates every child) before cloning mThemeAttrs.
+    DrawableContainerState::mutate();
+    // std::vector copies by value, matching AOSP's mThemeAttrs.clone().
 }
 
 /**
@@ -169,6 +188,11 @@ int AnimationScaleListDrawable::AnimationScaleListState::addDrawable(Drawable* d
 
 AnimationScaleListDrawable* AnimationScaleListDrawable::AnimationScaleListState::newDrawable(){
     return new AnimationScaleListDrawable(std::dynamic_pointer_cast<AnimationScaleListState>(shared_from_this()));
+}
+
+// AOSP AnimationScaleListState.canApplyTheme.
+bool AnimationScaleListDrawable::AnimationScaleListState::canApplyTheme() {
+    return !mThemeAttrs.empty() || DrawableContainerState::canApplyTheme();
 }
 
 /*bool AnimationScaleListDrawable::AnimationScaleListState::canApplyTheme() {

@@ -69,7 +69,8 @@ private:
 public:
     HideViewOnScrollBehavior();
     HideViewOnScrollBehavior(int viewEdge);
-    HideViewOnScrollBehavior(Context* context, const AttributeSet& attrs);
+    HideViewOnScrollBehavior(Context* context, const AttributeSet* attrs);
+    HideViewOnScrollBehavior(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~HideViewOnScrollBehavior()override;
 
     void setViewEdge(int viewEdge);

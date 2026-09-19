@@ -23,7 +23,6 @@
 #include <gtest/gtest.h>
 #include <drawable/animatedvectordrawable.h>
 #include <drawable/colorfilters.h>
-#include <core/app.h>
 #include <core/porterduff.h>
 
 using namespace cdroid;

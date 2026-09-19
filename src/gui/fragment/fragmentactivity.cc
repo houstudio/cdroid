@@ -26,7 +26,6 @@
 #include <core/handler.h>
 
 namespace cdroid{
-namespace fragment{
 
 // FragmentHostCallback implementation bound to the FragmentActivity.
 class FragmentActivity::HostCallbacks : public FragmentHostCallback{
@@ -63,9 +62,21 @@ FragmentActivity::FragmentActivity(int x, int y, int w, int h)
     mFragmentManager = new FragmentManager();
     mHost = new HostCallbacks(this);
     mFragmentManager->attachController(mHost, mHost, nullptr);
+    // AOSP framework Activity.attach() installs itself via
+    // setPrivateFactory(this) — Activity.onCreateView routes the <fragment> XML tag
+    // through FragmentController into the FragmentManager's layout factory. CDROID
+    // composes the same chain in one hop: the manager's factory
+    // (androidx FragmentActivity installs its FragmentLayoutInflaterFactory the same
+    // way). privateFactory (not setFactory2) because it carries no set-once guard,
+    // letting ~FragmentActivity detach it — the from()-cached inflater outlives the
+    // activity and must not keep calling into a dead manager.
+    LayoutInflater::from(getContext())->setPrivateFactory(mFragmentManager->getLayoutInflaterFactory());
 }
 
 FragmentActivity::~FragmentActivity(){
+    // Detach the <fragment>-tag factory before the manager dies (see ctor note: the
+    // from()-cached inflater outlives this activity).
+    LayoutInflater::from(getContext())->setPrivateFactory(nullptr);
     delete mFragmentManager;
     delete mHost;
     delete mSavedStateRegistryController;
@@ -165,5 +176,4 @@ FragmentManager* FragmentActivity::getSupportFragmentManager(){
     return mFragmentManager;
 }
 
-}//namespace fragment
 }//namespace cdroid

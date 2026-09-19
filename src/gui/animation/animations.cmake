@@ -11,11 +11,14 @@ SET(ANIMATION_SOURCES
     animation/dynamicanimation.cc
     animation/extendanimation.cc
     animation/flinganimation.cc
+    animation/keyframe.cc
+    animation/keyframeset.cc
     animation/gridlayoutanimationcontroller.cc
     animation/interpolators.cc
     animation/layoutanimationcontroller.cc
     animation/layouttransition.cc
     animation/objectanimator.cc
+    animation/pathkeyframes.cc
     animation/properties.cc
     animation/propertyvaluesholder.cc
     animation/rotateanimation.cc

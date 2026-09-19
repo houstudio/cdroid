@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Circular determinate progress: grey rail ring + accent sweep.
+     The progress layer is a ring with useLevel="true", so GradientDrawable
+     draws a sweep arc proportional to the drawable level that ProgressBar
+     drives from progress/max. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@android:id/background">
+        <shape android:shape="ring"
+            android:innerRadiusRatio="3"
+            android:thicknessRatio="9"
+            android:useLevel="false">
+            <solid android:color="#29323F"/>
+        </shape>
+    </item>
+    <item android:id="@android:id/progress">
+        <shape android:shape="ring"
+            android:innerRadiusRatio="3"
+            android:thicknessRatio="9"
+            android:useLevel="true">
+            <solid android:color="#FF4EA1FF"/>
+        </shape>
+    </item>
+</layer-list>

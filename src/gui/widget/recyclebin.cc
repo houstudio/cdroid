@@ -19,6 +19,7 @@
 #include <widget/abslistview.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <algorithm>
 
 namespace cdroid {
 
@@ -26,6 +27,16 @@ RecycleBin::RecycleBin(AbsListView*lv){
     LV=lv;
     mFirstActivePosition=0;
     mViewTypeCount=0;
+}
+
+RecycleBin::~RecycleBin() {
+    // Runs from ~AbsListView's body, while mChildren is still intact, so
+    // removeFromTreeIfPresent can still unhook a temp-detached scrap view
+    // before it is freed. mActiveViews is cleared WITHOUT deleting: those
+    // are the live children, owned and freed by ~ViewGroup.
+    clear();
+    removeSkippedScrap();
+    mActiveViews.clear();
 }
 
 Adapter*RecycleBin::getAdapter(){
@@ -78,6 +89,12 @@ void RecycleBin::fillActiveViews(int childCount, int firstActivePosition) {
     if (mActiveViews.size() < childCount) {
         mActiveViews.resize(childCount);
     }
+    // AOSP swaps in a fresh array when it grows; slots it does not overwrite
+    // (headers/footers are skipped) keep the previous fill's values — safe
+    // under GC, but here a stale slot can hold a view that has since been
+    // deleted, and scrapActiveViews would resurrect it into mChildren
+    // (dangling child -> deferred selection notify dispatched into a corpse).
+    std::fill(mActiveViews.begin(), mActiveViews.begin() + childCount, nullptr);
     mFirstActivePosition = firstActivePosition;
     //noinspection MismatchedReadAndWriteOfArray
     for (int i = 0; i < childCount; i++) {
@@ -128,7 +145,9 @@ void RecycleBin::clearTransientStateViews() {
     if (viewsByPos.size()) {
         const int N = (int)viewsByPos.size();
         for (int i = 0; i < N; i++) {
-            removeDetachedView(viewsByPos.valueAt(i), false);
+            View* v = viewsByPos.valueAt(i);
+            removeFromTreeIfPresent(v);
+            delete v;  // AOSP: GC collects the dropped transient view
         }
         viewsByPos.clear();
     }
@@ -137,7 +156,9 @@ void RecycleBin::clearTransientStateViews() {
     if (viewsById.size()) {
         const int N = (int)viewsById.size();
         for (int i = 0; i < N; i++) {
-            removeDetachedView(viewsById.valueAt(i), false);
+            View* v = viewsById.valueAt(i);
+            removeFromTreeIfPresent(v);
+            delete v;  // AOSP: GC collects the dropped transient view
         }
         viewsById.clear();
     }
@@ -222,7 +243,9 @@ std::vector<View*>RecycleBin::getSkippedScrap() {
 void RecycleBin::removeSkippedScrap() {
     size_t count = mSkippedScrap.size();
     for (size_t i = 0; i < count; i++) {
-        removeDetachedView(mSkippedScrap[i], false);
+        View* v = mSkippedScrap[i];
+        removeFromTreeIfPresent(v);
+        delete v;  // AOSP: GC collects the skipped (non-recyclable) view
     }
     mSkippedScrap.clear();
 }
@@ -252,12 +275,14 @@ void RecycleBin::scrapActiveViews() {
                 mTransientStateViews.put(mFirstActivePosition + i, victim);
             } else if (whichScrap != AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER) {
                 // The data has changed, we can't keep this view.
-                removeDetachedView(victim, false);
+                removeFromTreeIfPresent(victim);
+                delete victim;  // AOSP: GC collects the discarded view
             }
         } else if (!shouldRecycleViewType(whichScrap)) {
             // Discard non-recyclable views except headers/footers.
             if (whichScrap != AdapterView::ITEM_VIEW_TYPE_HEADER_OR_FOOTER) {
-                removeDetachedView(victim, false);
+                removeFromTreeIfPresent(victim);
+                delete victim;  // AOSP: GC collects the discarded view
             }
         } else {
             // Store everything else on the appropriate scrap heap.
@@ -266,7 +291,7 @@ void RecycleBin::scrapActiveViews() {
             }
 
             lp->scrappedFromPosition = mFirstActivePosition + i;
-            removeDetachedView(victim, false);
+            removeFromTreeIfPresent(victim);
             scrapViews.push_back(victim);//add(victim);
 
             if (mRecyclerListener) mRecyclerListener(*victim);
@@ -283,7 +308,7 @@ void RecycleBin::fullyDetachScrapViews() {
         for (int j = int(scrapPile.size() - 1); j >= 0; j--) {
             View* view = scrapPile[j];
             if (view->isTemporarilyDetached()) {
-                removeDetachedView(view, false);
+                removeFromTreeIfPresent(view);
             }
         }
     }
@@ -297,7 +322,14 @@ void RecycleBin::pruneScrapViews() {
         std::vector<View*>& scrapPile = mScrapViews[i];
         size_t size = scrapPile.size();
         while (size > maxViews) {
-            scrapPile.erase(scrapPile.begin()+(--size));//remove(--size);
+            View* v = scrapPile[--size];
+            scrapPile.erase(scrapPile.begin() + size);
+            // AOSP drops the reference and lets GC collect. Here the pruned
+            // view must also leave mChildren (scrap views taken by
+            // trackMotionScroll are only TEMP-detached and still sit in it)
+            // before it is freed — otherwise the child array keeps a corpse.
+            removeFromTreeIfPresent(v);
+            delete v;
         }
     }
 
@@ -306,9 +338,10 @@ void RecycleBin::pruneScrapViews() {
         for (int i = 0; i < transViewsByPos.size(); i++) {
             View* v = transViewsByPos.valueAt(i);
             if (!v->hasTransientState()) {
-                removeDetachedView(v, false);
+                removeFromTreeIfPresent(v);
                 transViewsByPos.removeAt(i);
                 i--;
+                delete v;  // AOSP: GC collects the removed transient view
             }
         }
     }
@@ -318,9 +351,10 @@ void RecycleBin::pruneScrapViews() {
         for (int i = 0; i < transViewsById.size(); i++) {
             View* v = transViewsById.valueAt(i);
             if (!v->hasTransientState()) {
-                removeDetachedView(v, false);
+                removeFromTreeIfPresent(v);
                 transViewsById.removeAt(i);
                 i--;
+                delete v;  // AOSP: GC collects the removed transient view
             }
         }
     }
@@ -395,8 +429,13 @@ void RecycleBin::clearScrap(std::vector<View*>& scrap) {
     for (size_t j = 0; j < scrapCount; j++) {
         View*v=scrap[scrapCount - 1 - j];
         scrap.erase(scrap.begin()+scrapCount - 1 - j);
-        removeDetachedView(v, false);
-        delete v;//when we destroy the listview'spage,if listview is fling,delete v will caused crash
+        // AOSP removeDetachedView expects the view to be out of the child
+        // array already (detachViewFromParent); scrap views taken by
+        // trackMotionScroll are only TEMPORARY-detached and still sit in
+        // mChildren — deleting one without removing it left a dangling entry
+        // (crash: deferred selection notify dispatched into a freed child).
+        removeFromTreeIfPresent(v);
+        delete v;
     }
 }
 
@@ -404,6 +443,32 @@ void RecycleBin::clearScrapForRebind(View* view) {
     LOGV("view=%p %d",view,mScrapViews[0].size());
     view->clearAccessibilityFocus();
     view->setAccessibilityDelegate(nullptr);
+}
+
+void RecycleBin::removeFromTreeIfPresent(View* v) {
+    const int idx = LV->indexOfChild(v);
+    if (idx >= 0) LV->removeViewAt(idx);
+    else removeDetachedView(v, false);
+}
+
+void RecycleBin::forgetViews(const std::vector<View*>& views) {
+    if (views.empty()) return;
+    for (View* v : views) {
+        for (View*& slot : mActiveViews) {
+            if (slot == v) slot = nullptr;
+        }
+        for (std::vector<View*>& pile : mScrapViews) {
+            pile.erase(std::remove(pile.begin(), pile.end(), v), pile.end());
+        }
+        mSkippedScrap.erase(std::remove(mSkippedScrap.begin(), mSkippedScrap.end(), v),
+                            mSkippedScrap.end());
+        for (int i = int(mTransientStateViews.size()) - 1; i >= 0; i--) {
+            if (mTransientStateViews.valueAt(i) == v) mTransientStateViews.removeAt(i);
+        }
+        for (int i = int(mTransientStateViewsById.size()) - 1; i >= 0; i--) {
+            if (mTransientStateViewsById.valueAt(i) == v) mTransientStateViewsById.removeAt(i);
+        }
+    }
 }
 
 void RecycleBin::removeDetachedView(View* child, bool animate) {

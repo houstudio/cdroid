@@ -18,6 +18,7 @@
 
 namespace cdroid {
 
+class Paint;
 class TextView;
 
 class BaseKeyListener : public MetaKeyKeyListener {
@@ -50,11 +51,12 @@ private:
     bool deleteLineFromCursor(View& view, Editable& content, bool forward);
     bool deleteUntilWordBoundary(View& view, Editable& content, bool isForwardDelete);
 
-    // Phase-1 stubs: CDROID has no ICU Emoji / Paint.getTextRunCursor, so these
-    // reduce to BMP single-char offsets (identical to prior hand-written Editor
-    // behavior for BMP text). Full grapheme/emoji state machine = later phase.
+    // Emoji/grapheme-aware delete offsets. The backspace one is a state machine
+    // over android.text.Emoji predicates (flags pairs, ZWJ sequences, variation
+    // selectors, keycaps, emoji modifiers, tag sequences); forward delete walks
+    // grapheme clusters via Paint.getTextRunCursor. Both take AOSP signatures.
     static int getOffsetForBackspaceKey(CharSequence& text, int offset);
-    static int getOffsetForForwardDeleteKey(CharSequence& text, int offset);
+    static int getOffsetForForwardDeleteKey(CharSequence& text, int offset, const Paint& paint);
     static int adjustReplacementSpan(CharSequence& text, int offset, bool moveToStart);
 };
 

@@ -15,11 +15,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/textclock.h>
+#include <widget/framework_styleable.h>
 #include <core/systemclock.h>
-#include <utils/textutils.h>
+#include <content/dateformat.h>
+#include <text/textutils.h>
+#include <climits>
+#include <cstdio>
+#include <ctime>
 
 namespace cdroid{
+using namespace cdroid::internal;
 #if 0
 private class FormatChangeObserver extends ContentObserver {
     public FormatChangeObserver(Handler handler) {
@@ -51,14 +59,54 @@ private final BroadcastReceiver mIntentReceiver = new BroadcastReceiver() {
 };
 #endif
 
-DECLARE_WIDGET(TextClock)
+DECLARE_WIDGET2(TextClock, "android.widget.TextClock");
 
-TextClock::TextClock(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){
+namespace {
+// TimeZone.getDefault() analog: the host's local UTC offset (TZ env), in
+// seconds — what a wall clock should display when no zone is set.
+int localZoneOffsetSeconds() {
+    const time_t now = ::time(nullptr);
+    return (int)localtime(&now)->tm_gmtoff;
+}
+
+// Parse a TimeZone custom ID ("GMT+08:00", "GMT-8") into offset seconds;
+// returns INT_MIN when the string is not a custom ID. Olson IDs
+// ("America/Los_Angeles") cannot be resolved without tzdata — callers fall
+// back to the local zone (documented gap).
+int parseCustomZoneSeconds(const std::string& id) {
+    if (id.compare(0, 3, "GMT") != 0 && id.compare(0, 3, "gmt") != 0) return INT_MIN;
+    const size_t sign = 3;
+    if (sign >= id.size() || (id[sign] != '+' && id[sign] != '-')) return INT_MIN;
+    int hours = 0, minutes = 0;
+    int consumed = 0;
+    if (sscanf(id.c_str() + sign + 1, "%d%n", &hours, &consumed) != 1) return INT_MIN;
+    size_t rest = sign + 1 + consumed;
+    if (rest < id.size() && id[rest] == ':') {
+        if (sscanf(id.c_str() + rest + 1, "%d", &minutes) != 1) return INT_MIN;
+    }
+    const int total = hours * 3600 + minutes * 60;
+    return id[sign] == '-' ? -total : total;
+}
+} // namespace
+
+TextClock::TextClock(Context*ctx)
+    :TextClock(ctx,nullptr){}
+
+TextClock::TextClock(Context* context,const AttributeSet* attrs):TextClock(context,attrs,0){}
+
+TextClock::TextClock(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
+    // AOSP reads the attributes first, then init() runs chooseFormat() on
+    // them (init-then-read would clobber the locale defaults with empty
+    // strings when the attributes are absent).
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    auto ta = context->obtainStyledAttributes(pAttrs, R::styleable::TextClock, defStyleAttr);
+
+    mFormat12 = ta->getString(R::styleable::TextClock_format12Hour);
+    mFormat24 = ta->getString(R::styleable::TextClock_format24Hour);
+    mTimeZone = ta->getString(R::styleable::TextClock_timeZone);
+
     init();
-    mFormat12 = attrs.getString("format12Hour");
-    mFormat24 = attrs.getString("format24Hour");
-    mTimeZone = attrs.getString("timeZone");
 }
 
 void TextClock::init() {
@@ -119,27 +167,19 @@ void TextClock::doTick() {
 }
 
 void TextClock::createTime(const std::string& timeZone) {
-#if 0
-    TimeZone tz = null;
-    if (timeZone == null) {
-        tz = TimeZone.getDefault();
-        // Note that mTimeZone should always be null if timeZone is.
-    } else {
-        tz = TimeZone.getTimeZone(timeZone);
-        try {
-            // Try converting this TZ to a zoneId to make sure it's valid. This
-            // performs a different set of checks than TimeZone.getTimeZone so
-            // we can avoid exceptions later when we do need this conversion.
-            tz.toZoneId();
-        } catch (DateTimeException ex) {
-            // If we're here, the user supplied timezone is invalid, so reset
-            // mTimeZone to something sane.
-            tz = TimeZone.getDefault();
-            mTimeZone = tz.getID();
+    // AOSP: TimeZone.getDefault() when unset, else TimeZone.getTimeZone(id).
+    // CDROID has no TimeZone engine: custom "GMT±hh[:mm]" IDs parse to a raw
+    // offset; anything else (unset or an Olson ID) uses the host's local zone.
+    if (!timeZone.empty()) {
+        const int custom = parseCustomZoneSeconds(timeZone);
+        if (custom != INT_MIN) {
+            mTime.setTimeZone(custom);
+            return;
         }
+        LOGW("TextClock: time zone '%s' is not a custom GMT id; using the local zone",
+             timeZone.c_str());
     }
-    mTime = Calendar.getInstance(tz);
-#endif
+    mTime.setTimeZone(localZoneOffsetSeconds());
 }
 
 std::string TextClock::getFormat12Hour() const{
@@ -194,9 +234,9 @@ void TextClock::refreshTime() {
 
 bool TextClock::is24HourModeEnabled()const {
     if (mShowCurrentUserTime) {
-        return false;//DateFormat.is24HourFormat(getContext(), ActivityManager.getCurrentUser());
+        return DateFormat::is24HourFormat(getContext());//, ActivityManager.getCurrentUser()
     } else {
-        return false;//DateFormat.is24HourFormat(getContext());
+        return DateFormat::is24HourFormat(getContext());
     }
 }
 
@@ -230,7 +270,7 @@ void TextClock::chooseFormat() {
     }
 
     const bool hadSeconds = mHasSeconds;
-    mHasSeconds = mFormat.find_last_of("sS")!=std::string::npos;
+    mHasSeconds = DateFormat::hasSeconds(mFormat);
 
     if (mShouldRunTicker && (hadSeconds != mHasSeconds)) {
         mTicker();
@@ -238,10 +278,12 @@ void TextClock::chooseFormat() {
 }
 
 const std::string TextClock::getBestDateTimePattern(const std::string& skeleton) {
-    /*DateTimePatternGenerator dtpg = DateTimePatternGenerator.getInstance(
-            getContext().getResources().getConfiguration().locale);
-    return dtpg.getBestPattern(skeleton);*/
-    return DEFAULT_FORMAT_24_HOUR;
+    // AOSP: DateTimePatternGenerator.getInstance(
+    //       getContext().getResources().getConfiguration().getLocales().get(0))
+    //       .getBestPattern(skeleton). CDROID has no DTPG; the content
+    //       DateFormat serves the "hm"/"Hm" skeletons from the i18n engine's
+    //       per-locale hour+minute pattern pools.
+    return DateFormat::getBestDateTimePattern(Locale::getDefault(), skeleton);
 }
 
 void TextClock::onAttachedToWindow() {
@@ -296,9 +338,11 @@ void TextClock::unregisterObserver() {
 }
 
 void TextClock::onTimeChanged() {
+    // AOSP: DateFormat.format(mFormat, mTime) — the formatter adopts the
+    // calendar's zone (set by createTime for the attr/local zone).
     mTime.setTimeInMillis(SystemClock::currentTimeMillis());
-    setText(TextUtils::formatTime(mFormat, mTime.getTimeInMillis()/1000));
-    setContentDescription(TextUtils::formatTime(mDescFormat, mTime.getTimeInMillis()/1000));
+    setText(DateFormat::format(mFormat, mTime));
+    setContentDescription(DateFormat::format(mDescFormat, mTime));
 }
 
 /*void TextClock::encodeProperties(ViewHierarchyEncoder stream) {

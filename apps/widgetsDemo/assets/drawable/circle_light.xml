@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Light circular plate for the classic Inverse spinner family: those
+     spinners are black artwork meant for light backgrounds (that is what
+     "Inverse" means), so on the dark demo cards they sit on this plate. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="#E8EAF0"/>
+</shape>

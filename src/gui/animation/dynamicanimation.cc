@@ -81,7 +81,7 @@ DynamicAnimation::DynamicAnimation(void* object,const FloatProperty* property) {
     } else if (mProperty == &ALPHA) {
         mMinVisibleChange = MIN_VISIBLE_CHANGE_ALPHA;
     } else if ((mProperty == &SCALE_X) || (mProperty == &SCALE_Y)) {
-        mMinVisibleChange = MIN_VISIBLE_CHANGE_ALPHA;
+        mMinVisibleChange = MIN_VISIBLE_CHANGE_SCALE;
     } else {
         mMinVisibleChange = MIN_VISIBLE_CHANGE_PIXELS;
     }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- CTS TypedArrayTest style1 attrs (app package, like the CTS project). -->
+    <attr name="type1" format="boolean" />
+    <attr name="type2" format="boolean" />
+    <attr name="type3" format="color" />
+    <attr name="type4" format="color|reference" />
+    <attr name="type5" format="dimension" />
+    <attr name="type6" format="dimension" />
+    <attr name="type7" format="dimension" />
+    <attr name="type8" format="reference" />
+    <attr name="type9" format="float" />
+    <attr name="type10" format="fraction" />
+    <attr name="type11" format="integer" />
+    <attr name="type12" format="integer" />
+    <attr name="type13" format="string" />
+    <attr name="type14" format="string" />
+    <attr name="type15" format="reference" />
+    <attr name="type16" format="string" />
+    <attr name="type17" format="string" />
+    <attr name="type18" format="reference" />
+    <attr name="typeEmpty" format="string" />
+    <attr name="typeUndefined" format="string" />
+</resources>

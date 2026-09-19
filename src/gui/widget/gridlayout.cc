@@ -15,15 +15,19 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
+#include <core/context.h>
 #include <widget/gridlayout.h>
+#include <widget/framework_styleable.h>
 #include <widget/space.h>
 #include <porting/cdlog.h>
 #include <sstream>
 #include <algorithm>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET(GridLayout)
+DECLARE_WIDGET2(GridLayout, "android.widget.GridLayout");
 
 GridLayout::LayoutParams::LayoutParams(int width, int height,
         int left, int top, int right, int bottom,
@@ -66,24 +70,28 @@ GridLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& params)
 // defaults to those between peers.
 
 // This method could be parametrized and moved into MarginLayout.
-void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet& attrs){
-    const int margin = attrs.getDimensionPixelSize("layout_margin", DEFAULT_MARGIN);
-    leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", margin);
-    topMargin = attrs.getDimensionPixelSize("layout_marginTop", margin);
-    rightMargin = attrs.getDimensionPixelSize("layout_marginRight", margin);
-    bottomMargin = attrs.getDimensionPixelSize("layout_marginBottom", margin);
+void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet* attrs){
+    // AOSP reInitSuper reads ViewGroup_MarginLayout (MarginLayout styleable).
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::MarginLayout);
+    const int margin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_margin, DEFAULT_MARGIN);
+    leftMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginLeft, margin);
+    topMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginTop, margin);
+    rightMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginRight, margin);
+    bottomMargin = ta->getDimensionPixelSize(R::styleable::MarginLayout_layout_marginBottom, margin);
 }
-void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
-    const int gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
- 
-    const int column = attrs.getInt("layout_column", DEFAULT_COLUMN);
-    const int colSpan = attrs.getInt("layout_columnSpan", DEFAULT_SPAN_SIZE);
-    const float colWeight = attrs.getFloat("layout_columnWeight", Spec::DEFAULT_WEIGHT);
+void GridLayout::LayoutParams::init(Context* context,const AttributeSet* attrs){
+    auto ta = context->obtainStyledAttributes(attrs, R::styleable::GridLayoutLayout);
+
+    const int gravity = ta->getInt(R::styleable::GridLayoutLayout_layout_gravity, Gravity::NO_GRAVITY);
+
+    const int column = ta->getInt(R::styleable::GridLayoutLayout_layout_column, DEFAULT_COLUMN);
+    const int colSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_columnSpan, DEFAULT_SPAN_SIZE);
+    const float colWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_columnWeight, Spec::DEFAULT_WEIGHT);
     this->columnSpec = spec(column, colSpan, getAlignment(gravity, true), colWeight);
- 
-    const int row = attrs.getInt("layout_row", DEFAULT_ROW);
-    const int rowSpan = attrs.getInt("layout_rowSpan", DEFAULT_SPAN_SIZE);
-    const float rowWeight = attrs.getFloat("layout_rowWeight", Spec::DEFAULT_WEIGHT);
+
+    const int row = ta->getInt(R::styleable::GridLayoutLayout_layout_row, DEFAULT_ROW);
+    const int rowSpan = ta->getInt(R::styleable::GridLayoutLayout_layout_rowSpan, DEFAULT_SPAN_SIZE);
+    const float rowWeight = ta->getFloat(R::styleable::GridLayoutLayout_layout_rowWeight, Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
 }
 
@@ -95,8 +103,8 @@ GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
 
 GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
     :MarginLayoutParams(context,attrs){
-    reInitSuper(context,attrs);
-    init(context,attrs);
+    reInitSuper(context,&attrs);
+    init(context,&attrs);
 }
 
 void GridLayout::LayoutParams::setGravity(int gravity){
@@ -120,27 +128,24 @@ int GridLayout::LayoutParams::hashCode()const{
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-GridLayout::GridLayout(int w,int h)
-    :ViewGroup(w,h){
-    initGridLayout();
-}
+GridLayout::GridLayout(Context*ctx)
+    :GridLayout(ctx,nullptr){}
 
-GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
-    :ViewGroup(ctx,attrs){
+GridLayout::GridLayout(Context*ctx,const AttributeSet* attrs):GridLayout(ctx,attrs,0){}
+
+GridLayout::GridLayout(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(ctx,pAttrs, defStyleAttr){
     initGridLayout();
-    setOrientation(attrs.getInt("orientation",std::unordered_map<std::string,int>{
-        {"horizontal",(int)HORIZONTAL},
-        {"vertical",(int)VERTICAL}//
-    },DEFAULT_ORIENTATION));
-    setRowCount(attrs.getInt("rowCount", DEFAULT_COUNT));
-    setColumnCount(attrs.getInt("columnCount", DEFAULT_COUNT));
-    setUseDefaultMargins(attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
-    setAlignmentMode(attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
-        {"alignBounds",(int)ALIGN_BOUNDS},
-        {"alignMargins",(int)ALIGN_MARGINS}//
-    },DEFAULT_ALIGNMENT_MODE));
-    setRowOrderPreserved(attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
-    setColumnOrderPreserved(attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::GridLayout, defStyleAttr);
+
+    // Enum attrs (orientation/alignmentMode) arrive pre-resolved to ints by aapt2.
+    setOrientation(ta->getInt(R::styleable::GridLayout_orientation, DEFAULT_ORIENTATION));
+    setRowCount(ta->getInt(R::styleable::GridLayout_rowCount, DEFAULT_COUNT));
+    setColumnCount(ta->getInt(R::styleable::GridLayout_columnCount, DEFAULT_COUNT));
+    setUseDefaultMargins(ta->getBoolean(R::styleable::GridLayout_useDefaultMargins, DEFAULT_USE_DEFAULT_MARGINS));
+    setAlignmentMode(ta->getInt(R::styleable::GridLayout_alignmentMode, DEFAULT_ALIGNMENT_MODE));
+    setRowOrderPreserved(ta->getBoolean(R::styleable::GridLayout_rowOrderPreserved, DEFAULT_ORDER_PRESERVED));
+    setColumnOrderPreserved(ta->getBoolean(R::styleable::GridLayout_columnOrderPreserved, DEFAULT_ORDER_PRESERVED));
 }
 
 GridLayout::~GridLayout(){
@@ -149,7 +154,7 @@ GridLayout::~GridLayout(){
 }
 
 void GridLayout::initGridLayout(){
-    mDefaultGap = getContext()->getDimensionPixelSize("default_gap", 0);
+    mDefaultGap = getContext()->getDimensionPixelSize(R::dimen::default_gap);
     mOrientation    = DEFAULT_ORIENTATION;//HORIZONTAL
     mAlignmentMode  = DEFAULT_ALIGNMENT_MODE;
     mHorizontalAxis = new Axis(this,true);
@@ -1021,7 +1026,7 @@ public:
     int getAlignmentValue(View* view, int viewSize, int mode) const override{
         return GridLayout::UNDEFINED;
     }
-    int getSizeInCell(View* view, int viewSize, int cellSize) {
+    int getSizeInCell(View* view, int viewSize, int cellSize) const override {
         return cellSize;
     }
 };

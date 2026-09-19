@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground"
+    android:fillViewport="true">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:background="@drawable/hero_bg"
+            android:padding="32dp">
+            <FrameLayout android:layout_width="72dp" android:layout_height="72dp"
+                android:background="@drawable/pill_bg">
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_gravity="center" android:text="CD" android:textSize="28sp"
+                    android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+            </FrameLayout>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:layout_marginTop="14dp" android:text="CDroid" android:textSize="30sp"
+                android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:id="@+id/about_subtitle" android:layout_marginTop="4dp" android:text="@string/about_subtitle"
+                android:textSize="13sp" android:textColor="#E6FFFFFF"/>
+        </LinearLayout>
+
+        <!-- 简介 (HTML) -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_margin="20dp"
+            android:background="?attr/cardBackground" android:padding="18dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/about_intro" android:textSize="16sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/about_intro"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" android:lineSpacingExtra="3dp" android:textColor="?android:attr/textColorPrimary"/>
+        </LinearLayout>
+
+        <!-- 架构亮点 (HTML) -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="?attr/cardBackground" android:padding="18dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/about_highlights" android:textSize="16sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/about_arch"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" android:lineSpacingExtra="3dp" android:textColor="?android:attr/textColorPrimary"/>
+        </LinearLayout>
+
+        <!-- 已移植特性 (HTML) -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="16dp"
+            android:background="?attr/cardBackground" android:padding="18dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/about_features" android:textSize="16sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/about_features"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" android:lineSpacingExtra="4dp" android:textColor="?android:attr/textColorPrimary"/>
+        </LinearLayout>
+
+        <!-- 适用场景 (HTML) -->
+        <LinearLayout
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="vertical" android:layout_marginHorizontal="20dp"
+            android:layout_marginBottom="24dp"
+            android:background="?attr/cardBackground" android:padding="18dp">
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="@string/about_use_cases" android:textSize="16sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+            <TextView android:id="@+id/about_usecases"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp" android:lineSpacingExtra="4dp" android:textColor="?android:attr/textColorPrimary"/>
+        </LinearLayout>
+
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:gravity="center" android:layout_marginBottom="24dp"
+            android:text="www.cdroid.org" android:textSize="13sp" android:textColor="#FF9AA0A6"/>
+    </LinearLayout>
+</ScrollView>

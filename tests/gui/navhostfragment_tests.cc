@@ -5,6 +5,7 @@
  * onCreate) must still land the start destination and publish the NavController.
  *********************************************************************************/
 #include <gtest/gtest.h>
+#include "R.h"
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenttransaction.h>
@@ -21,17 +22,17 @@ using namespace cdroid;
 
 // Backs the <fragment> destinations in nav_host_test.xml. At global scope (with using namespace
 // cdroid) so REGISTER_FRAGMENT can reference it by unqualified name.
-class NavTestFragment : public fragment::Fragment {
+class NavTestFragment : public Fragment {
 public:
     View* onCreateView(LayoutInflater*, ViewGroup*, Bundle*) override {
-        return new View(10, 10);
+        return new View(&App::getInstance());
     }
 };
 REGISTER_FRAGMENT(NavTestFragment);
 
 namespace {
 
-class TestFragmentActivity : public fragment::FragmentActivity {
+class TestFragmentActivity : public FragmentActivity {
 public:
     TestFragmentActivity() : FragmentActivity(0, 0, -1, -1) {}
 };
@@ -47,7 +48,7 @@ TEST(NavHostFragment, SetGraphInOnCreateLoadsStart) {
     auto* activity = new TestFragmentActivity();
     pumpFor(100); // drive the activity's posted onCreate..onResume
 
-    NavHostFragment* host = new NavHostFragment("@navigation/nav_host_test");
+    NavHostFragment* host = new NavHostFragment(gui_test::R::navigation::nav_host_test);
     activity->getSupportFragmentManager()
         ->beginTransaction()->replace(activity->getFragmentContainerId(), host).commit();
     activity->getSupportFragmentManager()->executePendingTransactions();
@@ -65,7 +66,7 @@ TEST(NavHostFragment, FindNavControllerFromHostView) {
     auto* activity = new TestFragmentActivity();
     pumpFor(100);
 
-    NavHostFragment* host = new NavHostFragment("@navigation/nav_host_test");
+    NavHostFragment* host = new NavHostFragment(gui_test::R::navigation::nav_host_test);
     activity->getSupportFragmentManager()
         ->beginTransaction()->replace(activity->getFragmentContainerId(), host).commit();
     activity->getSupportFragmentManager()->executePendingTransactions();

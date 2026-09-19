@@ -11,6 +11,8 @@ include(savedstate/savedstate.cmake)
 include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
 include(navigation/navigation.cmake)
+include(content/content.cmake)
+include(preference/preference.cmake)
 
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc
@@ -27,6 +29,14 @@ list(APPEND CDROID_SOURCES
     ${WIDGETEX_SOURCES}
     ${WEAR_SOURCES}
     ${NAVIGATION_SOURCES}
+    ${CONTENT_SOURCES}
+    ${PREFERENCE_SOURCES}
+)
+
+# android.app services not tied to the dialog feature set
+list(APPEND CDROID_SOURCES
+    app/alarmmanager.cc
+    app/pendingintent.cc
 )
 
 if(ENABLE_AUDIO)
@@ -56,7 +66,12 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
     list(APPEND CDROID_SOURCES
         app/alertcontroller.cc
         app/alertdialog.cc
+        app/alertdialoglayout.cc   # com.android.internal.widget.AlertDialogLayout
+        app/buttonbarlayout.cc     # com.android.internal.widget.ButtonBarLayout
         app/dialog.cc
+        app/uiautomation.cc
+        app/autotest.cc
+        app/dialogtitle.cc         # com.android.internal.widget.DialogTitle
         app/progressdialog.cc
     )
 endif(ENABLE_DIALOGS)

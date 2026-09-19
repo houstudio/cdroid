@@ -15,6 +15,7 @@
 //
 // Original: cts/tests/tests/graphics/src/android/graphics/drawable/cts/RippleDrawableTest.java (Apache 2.0)
 #include <gtest/gtest.h>
+#include "R.h"
 #include <drawable/rippledrawable.h>
 #include <drawable/colorstatelist.h>
 #include <drawable/colordrawable.h>
@@ -47,8 +48,8 @@ public:
 
 // Loads a cached, resource-inflated RippleDrawable. getDrawable() returns a borrowed (cached)
 // instance — do not delete.
-RippleDrawable* loadRippleDrawable(const std::string& ref) {
-    return dynamic_cast<RippleDrawable*>(App::getInstance().getDrawable(ref));
+RippleDrawable* loadRippleDrawable(int resId) {
+    return dynamic_cast<RippleDrawable*>(App::getInstance().getDrawable(resId));
 }
 } // namespace
 
@@ -66,7 +67,7 @@ TEST_F(CtsRippleDrawableTest, testAccessRadius) {
 }
 
 TEST_F(CtsRippleDrawableTest, testRadiusAttr) {
-    RippleDrawable* drawable = loadRippleDrawable("@drawable/cts_ripple_radius");
+    RippleDrawable* drawable = loadRippleDrawable(gui_test::R::drawable::cts_ripple_radius);
     ASSERT_NE(nullptr, drawable);
     EXPECT_EQ(10, drawable->getRadius());
 }
@@ -89,7 +90,7 @@ TEST_F(CtsRippleDrawableTest, testEffectColor) {
 }
 
 TEST_F(CtsRippleDrawableTest, testEffectColorInflation) {
-    RippleDrawable* drawable = loadRippleDrawable("@drawable/cts_ripple_effect");
+    RippleDrawable* drawable = loadRippleDrawable(gui_test::R::drawable::cts_ripple_effect);
     ASSERT_NE(nullptr, drawable);
     EXPECT_EQ(COLOR_YELLOW, drawable->getEffectColor()->getDefaultColor());
 }

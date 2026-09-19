@@ -1,3 +1,4 @@
+#include <drawable/drawable.h>
 #include <text/html.h>
 #include <text/textutils.h>
 #include <text/style/alignmentspan.h>
@@ -13,6 +14,8 @@
 #include <expat.h>
 #include <text/spannablestringbuilder.h>
 #include <core/color.h>
+#include <core/app.h>
+#include <widget/internal_R.h>
 #include <regex>
 #include <cstdint>
 #include <initializer_list>
@@ -539,10 +542,23 @@ private:
     }
 
     void startImg(const XML_Char** atts) {
-        // Reserved: ImageSpan/ImageGetter are unavailable in this port. Re-enable
-        // once ImageSpan exists (mirrors Android's behavior):
         std::string src = getAttr(atts, "src");
         Drawable* d = mImageGetter ? mImageGetter(src) : nullptr;
+        if (d == nullptr) {
+            // AOSP Html.startImg: when the ImageGetter is absent or yields null,
+            // fall back to the system "unknown image" placeholder at intrinsic
+            // bounds. Without this the bare U+FFFC replacement char renders as a
+            // tofu box where the picture belongs.
+            d = App::getInstance().getDrawable(internal::R::drawable::unknown_image);
+            /* AOSP throws NotFoundException here; CDROID's getDrawable returns
+               nullptr on a resolution miss (an app pak built from stripped res,
+               a density-bucket miss — unknown_image has no default bucket), and
+               dereferencing that crashed HTML inflation itself. Fall back to the
+               U+FFFC glyph, the documented old behavior, instead. */
+            if (d != nullptr) {
+                d->setBounds(0, 0, d->getIntrinsicWidth(), d->getIntrinsicHeight());
+            }
+        }
 
         // 解析对齐参数：优先使用 img 的 align 属性，其次在 style 中解析 vertical-align
         int valign = DynamicDrawableSpan::ALIGN_BOTTOM;
@@ -568,9 +584,16 @@ private:
 
         const int len = (int)mBuilder.length();
         mBuilder.append(u'￼');/*0xFFFC*/
-        mBuilder.setSpan(new ImageSpan(d, valign), len, (int)mBuilder.length(),
-                            Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
-        (void)mImageGetter;
+        if (d != nullptr) {
+            /*AOSP startImg: new ImageSpan(d, src) — the src string rides in
+              the span so toHtml can emit it back (<img src="..."> round-trip).
+              The valign parsing above is CDROID's align extension, passed
+              through the 3-arg constructor variant.*/
+            mBuilder.setSpan(new ImageSpan(d, src, valign), len, (int)mBuilder.length(),
+                                Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+        /* d == nullptr: no ImageGetter result AND no resolvable placeholder —
+           the bare U+FFFC glyph stands in (the pre-placeholder behavior). */
     }
 
     int getHtmlColor(const std::string& color) const {
@@ -885,8 +908,11 @@ void Html::withinParagraph(std::stringstream& out,const Spanned& text, int start
                 out<<"\">";
             }
             if (dynamic_cast<const ImageSpan*>(style[j])) {
+                // AOSP appends getSource() directly; a null Java source
+                // (bare-Drawable/resource-id span) prints as "null".
+                const ImageSpan* imgSpan = dynamic_cast<const ImageSpan*>(style[j]);
                 out<<"<img src=\"";
-                out<<dynamic_cast<const ImageSpan*>(style[j])->getSource();
+                out<<(imgSpan->getSource().empty() ? "null" : imgSpan->getSource().c_str());
                 out<<"\">";
 
                 // Don't output the placeholder character underlying the image.

@@ -33,12 +33,12 @@ TEST(NavOptions, PopUpToId) {
 
 TEST(NavOptions, Animations) {
     NavOptions* o = NavOptions::Builder()
-        .setEnterAnim("enter").setExitAnim("exit")
-        .setPopEnterAnim("pe").setPopExitAnim("px").build();
-    EXPECT_EQ(o->getEnterAnim(), "enter");
-    EXPECT_EQ(o->getExitAnim(), "exit");
-    EXPECT_EQ(o->getPopEnterAnim(), "pe");
-    EXPECT_EQ(o->getPopExitAnim(), "px");
+        .setEnterAnim(101).setExitAnim(102)
+        .setPopEnterAnim(103).setPopExitAnim(104).build();
+    EXPECT_EQ(o->getEnterAnim(), 101);
+    EXPECT_EQ(o->getExitAnim(), 102);
+    EXPECT_EQ(o->getPopEnterAnim(), 103);
+    EXPECT_EQ(o->getPopExitAnim(), 104);
     delete o;
 }
 

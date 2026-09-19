@@ -15,17 +15,20 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/internal_R.h>
 #include <widget/fastscroller.h>
+#include <widget/framework_styleable.h>
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
 #include <utils/mathutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <float.h>
 #include <cdlog.h>
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
+FastScroller::FastScroller(AbsListView* listView, int styleResId){
     mList = listView;
     mDecorAnimation  = nullptr;
     mPreviewAnimation= nullptr;
@@ -49,19 +52,18 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
     mCurrentSection =-1;
     mScrollbarPosition=-1;
 
-    AttributeSet atts;
-    atts.setContext(listView->getContext(),"");
-    mTrackImage = new ImageView(context,atts);
+    // code construction: no AttributeSet (the old empty string-keyed set is gone)
+    mTrackImage = new ImageView(context,nullptr);
     mTrackImage->setScaleType(ScaleType::FIT_XY);
-    mThumbImage = new ImageView(context,atts);
+    mThumbImage = new ImageView(context,nullptr);
     mThumbImage->setScaleType(ScaleType::FIT_XY);
-    mPreviewImage = new View(context,atts);
+    mPreviewImage = new View(context,nullptr);
     mPreviewImage->setAlpha(.0f);
 
     mPrimaryText = createPreviewTextView(context);
     mSecondaryText = createPreviewTextView(context);
 
-    mMinimumTouchTarget = context->getDimension("cdroid:dimen/fast_scroller_minimum_touch_target");
+    mMinimumTouchTarget = context->getDimension(R::dimen::fast_scroller_minimum_touch_target);
 
     setStyle(styleResId);
 
@@ -73,11 +75,13 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
         mOverlay->add(mPrimaryText);
         mOverlay->add(mSecondaryText);
     }
-    ViewGroup::OnHierarchyChangeListener hls;
-    hls.onChildViewRemoved=[](View&container,View *view){
-        delete view;
-    };
-    mOverlay->getOverlayView()->setOnHierarchyChangeListener(hls);
+    // Ownership note: the five overlay views are ours (new'd above). They used
+    // to be freed through a hierarchy-change listener installed on the overlay
+    // view group ("onChildViewRemoved = delete view"), but ViewGroup::
+    // removeViewInternal touches the view AFTER dispatchViewRemoved — with a
+    // deleting listener that is a use-after-free on every teardown — and the
+    // listener had no uninstall path. ~FastScroller detaches and deletes them
+    // instead (it runs in ~AbsListView, before ~View tears the overlay down).
     getSectionsFromIndexer();
     updateLongList(mOldChildCount, mOldItemCount);
     setScrollbarPosition(listView->getVerticalScrollbarPosition());
@@ -87,8 +91,16 @@ FastScroller::FastScroller(AbsListView*listView,const std::string& styleResId){
 FastScroller::~FastScroller(){
     delete mDecorAnimation;
     delete mPreviewAnimation;
-    //do not delete mOverlay and its children
-    //they are created/freed by View/ViewGroup,
+    // Detach our overlay views first (remove ≠ delete), then free what we
+    // new'd in the ctor — see the ownership note above.
+    if (mOverlay != nullptr) {
+        remove();
+    }
+    delete mTrackImage;
+    delete mThumbImage;
+    delete mPreviewImage;
+    delete mPrimaryText;
+    delete mSecondaryText;
 }
 
 void FastScroller::updateAppearance() {
@@ -111,7 +123,7 @@ void FastScroller::updateAppearance() {
     // Account for minimum thumb width.
     mWidth = std::max(width, mThumbMinWidth);
 
-    if (!mTextAppearance.empty()) {
+    if (mTextAppearance != 0) {
         mPrimaryText->setTextAppearance(mTextAppearance);
         mSecondaryText->setTextAppearance(mTextAppearance);
     }
@@ -136,24 +148,28 @@ void FastScroller::updateAppearance() {
     mDeferHide=[this](){setState(STATE_NONE);};
 }
 
-void FastScroller::setStyle(const std::string&styleResId){
+void FastScroller::setStyle(int styleResId) {
+    // AOSP FastScroller.setStyle: obtainStyledAttributes(null, FastScroll,
+    // fastScrollStyle_defStyleAttr, resId) — one step, null AttributeSet,
+    // defStyleAttr + defStyleRes resolve the style chain.
     Context* context = mList->getContext();
-    AttributeSet ta = context->obtainStyledAttributes(styleResId);//R.styleable.FastScroll, R.attr.fastScrollStyle, resId);
-   
-    mOverlayPosition = ta.getInt("position", OVERLAY_FLOATING);
-    mPreviewResId[PREVIEW_LEFT] = ta.getString("backgroundLeft");
-    mPreviewResId[PREVIEW_RIGHT] = ta.getString("backgroundRight");
-    mThumbDrawable = ta.getDrawable("thumbDrawable");
-    mTrackDrawable = ta.getDrawable("trackDrawable");
-    mTextAppearance = ta.getString("textAppearance");//R.styleable.FastScroll_textAppearance
-    mTextColor = ta.getColorStateList("textColor");
-    mTextSize  = ta.getDimensionPixelSize("textSize", 0);
-    mPreviewMinWidth = ta.getDimensionPixelSize("minWidth", 0);
-    mPreviewMinHeight= ta.getDimensionPixelSize("minHeight", 0);
-    mThumbMinWidth  = ta.getDimensionPixelSize("thumbMinWidth", 0);
-    mThumbMinHeight = ta.getDimensionPixelSize("thumbMinHeight", 0);
-    mPreviewPadding = ta.getDimensionPixelSize("padding", 0);
-    mThumbPosition  = ta.getInt("thumbPosition", THUMB_POSITION_MIDPOINT);
+    const uint32_t fastScrollStyle_attr = 0x010103f7;  // android:fastScrollStyle
+    auto ta = context->obtainStyledAttributes(nullptr, R::styleable::FastScroll,
+                                                fastScrollStyle_attr, styleResId);
+    mOverlayPosition = ta->getInt(R::styleable::FastScroll_position, OVERLAY_FLOATING);
+    mPreviewResId[PREVIEW_LEFT] = ta->getResourceId(R::styleable::FastScroll_backgroundLeft, 0);
+    mPreviewResId[PREVIEW_RIGHT] = ta->getResourceId(R::styleable::FastScroll_backgroundRight, 0);
+    mThumbDrawable = ta->getDrawable(R::styleable::FastScroll_thumbDrawable);
+    mTrackDrawable = ta->getDrawable(R::styleable::FastScroll_trackDrawable);
+    mTextAppearance = ta->getResourceId(R::styleable::FastScroll_textAppearance, 0);
+    mTextColor = ta->getColorStateList(R::styleable::FastScroll_textColor);
+    mTextSize = ta->getDimensionPixelSize(R::styleable::FastScroll_textSize, 0);
+    mPreviewMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_minWidth, 0);
+    mPreviewMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_minHeight, 0);
+    mThumbMinWidth = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinWidth, 0);
+    mThumbMinHeight = ta->getDimensionPixelSize(R::styleable::FastScroll_thumbMinHeight, 0);
+    mPreviewPadding = ta->getDimensionPixelSize(R::styleable::FastScroll_padding, 0);
+    mThumbPosition = ta->getInt(R::styleable::FastScroll_thumbPosition, THUMB_POSITION_MIDPOINT);
     updateAppearance();
 }
 
@@ -223,7 +239,7 @@ void FastScroller::setScrollbarPosition(int position){
         mScrollbarPosition = position;
         mLayoutFromRight = position != View::SCROLLBAR_POSITION_LEFT;
 
-        const std::string previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
+        int previewResId = mPreviewResId[mLayoutFromRight ? PREVIEW_RIGHT : PREVIEW_LEFT];
         mPreviewImage->setBackgroundResource(previewResId);
 
         // Propagate padding to text min width/height.
@@ -276,8 +292,7 @@ void FastScroller::updateLongList(int childCount, int itemCount) {
 
 TextView* FastScroller::createPreviewTextView(Context* context) {
     LayoutParams* params = new LayoutParams( LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
-    AttributeSet atts(context,"");
-    TextView* textView = new TextView(context,atts);
+    TextView* textView = new TextView(context,nullptr);
     textView->setLayoutParams(params);
     textView->setSingleLine(true);
     textView->setEllipsize(TextUtils::TruncateAt::MIDDLE);
@@ -844,7 +859,6 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
         scaleAnim->setDuration(DURATION_RESIZE);
         builder->with(scaleAnim);
     }
-    delete builder;
     mPreviewAnimation->start();
     return TextUtils::isEmpty(text);
 }
@@ -1188,7 +1202,6 @@ Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float v
             builder->with(anim);
         }
     }
-    delete builder;
     return animSet;
 }
 

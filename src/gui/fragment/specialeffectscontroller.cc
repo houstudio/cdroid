@@ -21,12 +21,14 @@
 #include <fragment/fragmentstatemanager.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <transition/transition.h>
+#include <transition/transitionmanager.h>
 #include <algorithm>
+#include <set>
 #include <memory>
 #include <porting/cdlog.h>
 
 namespace cdroid{
-namespace fragment{
 
 static SpecialEffectsController::Operation::State visibilityToState(int vis){
     if(vis == (int)cdroid::View::GONE) return SpecialEffectsController::Operation::State::GONE;
@@ -112,12 +114,95 @@ void SpecialEffectsController::deferExitViewDelete(View* v){
     if(v) mLingeryExitViews.push_back(v);
 }
 
+// Rapidly switching fragment pages can reach the deferred exit-view delete
+// while a clone's ObjectAnimator (per-view Fade transitionAlpha) is still
+// ticking — the "the animator is done by then" assumption breaks when a newer
+// transition took over the timeline. End (synchronously, at final state) every
+// running transition animator whose target lies in `doomed`'s subtree, so
+// their end listeners run while the views are still alive.
+void endAnimatorsOver(View* doomed) {
+    auto& running = Transition::getRunningAnimators();
+    // Match by DESCENDING the doomed subtree, not by ascending parents: a
+    // Fade-exiting view is removed from mChildren into mDisappearingChildren
+    // with its mParent cleared (removeViewInternal), so the parent walk stops
+    // before ever reaching `doomed`. The descent must also cover each
+    // visited view's OVERLAY: transitions park their animating views in the
+    // host's ViewGroupOverlay (Transition/Visibility addDisappearingView
+    // path), and ~View frees the overlay with its children — those views are
+    // invisible to a plain mChildren walk (valgrind --auto-test: Fade
+    // transitionAlpha ObjectAnimator kept ticking on a ScrollView freed by
+    // ~ViewPager's overlay teardown; SIGSEGV in View::setTransitionAlpha).
+    // peekOverlay(): never creates one — this runs during teardown.
+    std::vector<Animator*> toEnd;
+    std::vector<View*> stack{doomed};
+    while (!stack.empty()) {
+        View* v = stack.back();
+        stack.pop_back();
+        for (size_t i = 0; i < running.size(); i++) {
+            Animator* anim = running.keyAt(i);
+            if (std::find(toEnd.begin(), toEnd.end(), anim) != toEnd.end()) continue;
+            // info.view is the CAPTURED view; a Visibility disappear animates a
+            // SPAWNED copy inflated into the overlay (onDisappear) — the
+            // animator's real target. Match either.
+            ObjectAnimator* oa = dynamic_cast<ObjectAnimator*>(anim);
+            if (running.valueAt(i).view == v || (oa && oa->getTarget() == (void*)v)) {
+                toEnd.push_back(anim);
+            }
+        }
+        if (ViewOverlay* overlay = v->peekOverlay()) {
+            stack.push_back(overlay->getOverlayView());
+        }
+        if (ViewGroup* g = dynamic_cast<ViewGroup*>(v)) {
+            for (int i = 0; i < g->getChildCount(); i++) stack.push_back(g->getChildAt(i));
+        }
+    }
+    for (Animator* a : toEnd) a->end();
+}
+
+// Companion to endAnimatorsOver for the transitions themselves: every
+// delayed transition whose sceneRoot lies in `doomed`'s subtree must end NOW,
+// while its views are still alive — its end listeners (Visibility's overlay
+// remove + spawned-copy delete, DisappearState's setTransitionVisibility)
+// capture raw View*s and fire when the LAST animator ends, which without this
+// can happen after the tree is freed (valgrind --auto-test: SIGSEGV inside
+// disappearHideWhenNotCanceled via Transition::end after window teardown).
+void endTransitionsOver(View* doomed) {
+    auto& running = TransitionManager::getRunningTransitions();
+    if (running.size() == 0) return;
+    // Match sceneRoots by POINTER against the live subtree set. Never walk a
+    // key's parent chain: a stale key (sceneRoot freed without endTransitions)
+    // would UAF right here — observed as exactly that in a valgrind sweep.
+    std::set<View*> subtree;
+    std::vector<View*> stack{doomed};
+    while (!stack.empty()) {
+        View* v = stack.back();
+        stack.pop_back();
+        if (!subtree.insert(v).second) continue;
+        if (ViewOverlay* overlay = v->peekOverlay()) {
+            stack.push_back(overlay->getOverlayView());
+        }
+        if (ViewGroup* g = dynamic_cast<ViewGroup*>(v)) {
+            for (int i = 0; i < g->getChildCount(); i++) stack.push_back(g->getChildAt(i));
+        }
+    }
+    std::vector<ViewGroup*> roots;
+    for (size_t i = 0; i < running.size(); i++) {
+        if (subtree.count(running.keyAt(i))) roots.push_back(running.keyAt(i));
+    }
+    for (ViewGroup* root : roots) TransitionManager::endTransitions(root);
+}
+
 void SpecialEffectsController::reclaimDeferredExitViews(){
     // Detach + free every parked exit view. Called from a Transition clone's true end (addListener
     // in TransitionEffect::onCommit, guarded by the controller's alive-handle) — by then no clone
     // ObjectAnimator derefs these views anymore, so freeing is safe.
     for(View* v : mLingeryExitViews){
+        endAnimatorsOver(v);
+        endTransitionsOver(v);
         if(v->getParent()) v->getParent()->removeView(v);
+        // Disappearing-children shape (mParent null, never dispatch-detached):
+        // cancel posted callbacks holding raw view pointers before the delete.
+        if(v->isAttachedToWindow()) v->dispatchDetachedFromWindow();
         delete v;
     }
     mLingeryExitViews.clear();
@@ -230,4 +315,4 @@ void FragmentStateManagerOperation::complete(){
     if(fsm) fsm->moveToExpectedState(); // re-enter the FSM; awaiting-effect clamp lifts
 }
 
-}}//namespace fragment::cdroid
+}//namespace cdroid

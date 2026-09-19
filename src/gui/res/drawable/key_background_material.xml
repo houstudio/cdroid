@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Theme-following keyboard key background: the system button state colors
+     (colorButtonNormal rest, colorControlHighlight pressed) on a rounded
+     plate. A state selector (not a ripple) — KeyboardView never sets a
+     hotspot, so the pressed state must not depend on ripple geometry. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <solid android:color="?attr/colorControlHighlight" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <solid android:color="?attr/colorButtonNormal" />
+        </shape>
+    </item>
+</selector>

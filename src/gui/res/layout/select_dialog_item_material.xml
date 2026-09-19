@@ -31,4 +31,3 @@
     android:paddingStart="?attr/listPreferredItemPaddingStart"
     android:paddingEnd="?attr/listPreferredItemPaddingEnd"
     android:ellipsize="marquee" />
-

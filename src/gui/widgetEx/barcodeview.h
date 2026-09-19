@@ -232,8 +232,9 @@ protected:
     bool getWidthHeightXdim(float x_dim, float &width_x_dim, float &height_x_dim) const;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    BarcodeView(int w,int h);
-    BarcodeView(Context*ctx,const AttributeSet&attrs);
+    BarcodeView(Context*ctx);   // AOSP BarcodeView(Context)
+    BarcodeView(Context*ctx,const AttributeSet*attrs);
+    BarcodeView(Context*ctx,const AttributeSet* attrs,int defStyleAttr);
     ~BarcodeView()override;
     void setText(const std::string&text);
     std::vector<ZintSeg> getSegs()const;

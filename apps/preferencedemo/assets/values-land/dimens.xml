@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Landscape overrides for the settings chrome: the side-column title is
+     visibly larger, proving values-land/ resolves through the app arsc. -->
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <dimen name="prefdemo_header_height">48dp</dimen>
+    <dimen name="prefdemo_title_size">26sp</dimen>
+</resources>

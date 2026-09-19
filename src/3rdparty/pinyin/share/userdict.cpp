@@ -1010,6 +1010,12 @@ bool UserDict::remove_lemma(LemmaIdType lemma_id) {
 
 void UserDict::flush_cache() {
   LemmaIdType start_id = start_id_;
+  // Guard dict_file_ itself: strdup(NULL) segfaults (the !file check below was
+  // meant for this but ran after the call). Fires when the decoder was opened
+  // without a user dictionary, e.g. any non-IME app tearing down the default
+  // GooglePinyin in ~App.
+  if (NULL == dict_file_)
+    return;
   const char * file = strdup(dict_file_);
   if (!file)
     return;
@@ -1261,7 +1267,7 @@ int ftruncate(int file_descriptor, int length) {
         return -1;
     }
 
-    // 设置文件当前位置为文件末尾
+    // Move the current file position to the new end-of-file offset.
     LONG high_order = 0;
     DWORD low_order = SetFilePointer(hFile, length, &high_order, FILE_BEGIN);
     if (low_order == INVALID_SET_FILE_POINTER) {
@@ -1271,7 +1277,7 @@ int ftruncate(int file_descriptor, int length) {
         }
     }
 
-    // 设置文件末尾
+    // Set the end of file at the current position (truncate).
     if (!SetEndOfFile(hFile)) {
         errno = EIO;
         return -1;

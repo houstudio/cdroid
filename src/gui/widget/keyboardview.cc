@@ -1,8 +1,12 @@
+#include <widget/internal_R.h>
+#include <core/context.h>
+#include <core/systemclock.h>
 #include <widget/keyboardview.h>
-#include <utils/textutils.h>
+#include <widget/editorinfo.h>
+#include <widget/framework_styleable.h>
+#include <text/textutils.h>
 #include <porting/cdlog.h>
 #include <widget/popupwindow.h>
-#include <widget/R.h>
 #include <view/layoutinflater.h>
 #include <view/gravity.h>
 #include <fstream>
@@ -15,27 +19,39 @@
 #endif
 
 namespace cdroid{
+using namespace cdroid::internal;
 
-DECLARE_WIDGET2(KeyboardView,"cdroid:attr/keyboardViewStyle")
+DECLARE_WIDGET2(KeyboardView, "android.inputmethodservice.KeyboardView");
 
-KeyboardView::KeyboardView(int w,int h):View(w,h){
+KeyboardView::KeyboardView(Context*ctx)
+    :KeyboardView(ctx,nullptr){}
+
+// AOSP ctor chain: the 2-arg form supplies keyboardViewStyle so the theme's
+// Widget.*.KeyboardView style (keyBackground/keyTextSize/background/...) applies;
+// the 3-arg form adds defStyleRes=0; only the 4-arg form does real work.
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* atts)
+    :KeyboardView(ctx,atts, R::attr::keyboardViewStyle){}
+
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    :KeyboardView(ctx,pAttrs,defStyleAttr,0){}
+
+KeyboardView::KeyboardView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr,int defStyleRes)
+  :View(ctx,pAttrs, defStyleAttr, defStyleRes){
     init();
-    mKeyBackground = new ColorDrawable(0xFF112211);
-    resetMultiTap();
-}
-
-KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
-  :View(ctx,atts){
-    init();
-    Drawable *dr = atts.getDrawable("keyBackground");
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::KeyboardView, defStyleAttr, defStyleRes);
+    Drawable *dr = ta->getDrawable(R::styleable::KeyboardView_keyBackground);
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
-    mVerticalCorrection= atts.getDimensionPixelOffset("verticalCorrection",0);
-    mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
-    mPreviewHeight     = atts.getDimensionPixelOffset("keyPreviewHeight",0);
-    mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",20);
-    mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
-    mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",20);
-    mPopupLayout       = atts.getString("popupLayout");
+    // AOSP KeyboardView ctor: mKeyBackground.getPadding(mPadding) — the 9-patch
+    // key background's padding insets labels/icons; the classic keyboard's
+    // visual key separation lives in the 9-patch's transparent border.
+    mKeyBackground->getPadding(mPadding);
+    mVerticalCorrection= ta->getDimensionPixelOffset(R::styleable::KeyboardView_verticalCorrection,0);
+    mPreviewOffset     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewOffset,0);
+    mPreviewHeight     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyPreviewHeight,0);
+    mKeyTextSize       = ta->getDimensionPixelOffset(R::styleable::KeyboardView_keyTextSize,20);
+    mKeyTextColor      = ta->getColor(R::styleable::KeyboardView_keyTextColor,0xFF000000);
+    mLabelTextSize     = ta->getDimensionPixelOffset(R::styleable::KeyboardView_labelTextSize,20);
+    mPopupLayout       = ta->getResourceId(R::styleable::KeyboardView_popupLayout, 0);
     mPaint.setTextSize(mLabelTextSize);
     mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();
@@ -47,6 +63,9 @@ void KeyboardView::init(){
     mKeyTextColor = 0xFFFFFFFF;
     mInMultiTap   = false;
     mShowPreview  = false;
+    // Expose the keys as virtual a11y views (AOSP KeyboardView TODOs this).
+    mTouchHelper = std::make_shared<KeyboardViewTouchHelper>(this);
+    setAccessibilityDelegate(mTouchHelper);
     // KeyboardView renders entirely in onDraw (no background drawable, children
     // are drawn manually). Make sure the draw path invokes onDraw instead of
     // taking the WILL_NOT_DRAW / PFLAG_SKIP_DRAW fast path that would skip it.
@@ -66,7 +85,7 @@ void KeyboardView::init(){
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
     std::memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
-    mPopupLayout.clear();
+    mPopupLayout = 0;
     /* AOSP schedules the long-press popup via a Handler; CDROID's Handler is
      * now usable, so wire it faithfully (replaces the early Runnable workaround
      * and the commented-out scheduling). */
@@ -108,11 +127,17 @@ Keyboard* KeyboardView::getKeyboard() {
 void KeyboardView::setKeyboard(Keyboard*keyboard){
     if ( mKeyboard ) {
         showPreview(NOT_A_KEY);
+        // The view owns the keyboard it was given (AOSP relies on GC here);
+        // a layout switch must free the old one or every switch leaks its
+        // whole key graph (~6.7K per switch under valgrind).
+        delete mKeyboard;
     }
     // Remove any pending messages
     //removeMessages();
     mKeyboard = keyboard;
     mKeys = mKeyboard->getKeys();
+    // The key set changed — the a11y virtual tree must be rebuilt.
+    if (mTouchHelper) mTouchHelper->invalidateRoot();
     requestLayout();
     // Hint to reallocate the buffer if the size changed
     mKeyboardChanged = true;
@@ -166,13 +191,40 @@ void KeyboardView::setPopupOffset(int x, int y) {
     }*/
 }
 
-void KeyboardView::setPopupLayout(const std::string& popupLayout) {
-    if(popupLayout.empty()) return;
-    if(mPopupLayout != popupLayout){
-        mPopupLayout = popupLayout;
+void KeyboardView::setPopupLayout(int popupLayoutResId) {
+    // Runtime product override (InputMethodManager passes a layout resource id;
+    // the inflater is id-keyed).
+    if(popupLayoutResId == 0) return;
+    if(mPopupLayout != popupLayoutResId){
+        mPopupLayout = popupLayoutResId;
         // Cached popups were inflated from the old layout; drop them so the next
         // long-press re-inflates with the new container.
         mMiniKeyboardCache.clear();
+    }
+}
+
+void KeyboardView::setImeAction(int actionId) {
+    // AOSP keyboards relabel the enter key with the editor's IME action; an
+    // empty label falls back to the key icon (the return arrow).
+    if (mKeyboard == nullptr) return;
+    int strId = 0;
+    switch (actionId) {
+    case EditorInfo::IME_ACTION_GO:       strId = R::string::ime_action_go; break;
+    case EditorInfo::IME_ACTION_SEARCH:   strId = R::string::ime_action_search; break;
+    case EditorInfo::IME_ACTION_SEND:     strId = R::string::ime_action_send; break;
+    case EditorInfo::IME_ACTION_NEXT:     strId = R::string::ime_action_next; break;
+    case EditorInfo::IME_ACTION_DONE:     strId = R::string::ime_action_done; break;
+    case EditorInfo::IME_ACTION_PREVIOUS: strId = R::string::ime_action_previous; break;
+    default: strId = 0; break;
+    }
+    for (size_t i = 0; i < mKeys.size(); i++) {
+        Keyboard::Key* key = mKeys[i];
+        if (key->codes.empty()) continue;
+        const bool isEnterKey = key->codes[0] == 10 /* KEYCODE_ENTER */
+                || key->codes[0] == Keyboard::KEYCODE_DONE;
+        if (!isEnterKey) continue;
+        key->label = strId != 0 ? getContext()->getString(strId) : std::string();
+        invalidateKey((int) i);
     }
 }
 
@@ -351,7 +403,7 @@ void KeyboardView::invalidateKey(int keyIndex) {
 }
 
 bool KeyboardView::openPopupIfRequired(){
-    if ((mPopupLayout.empty())||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
+    if ((mPopupLayout == 0)||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
         return false;
     }
     Keyboard::Key* popupKey = mKeys[mCurrentKey];
@@ -473,7 +525,7 @@ void KeyboardView::showKey(int keyIndex){
  * popupResId template), host it in mPopupKeyboard (a PopupWindow) above the
  * key, and forward the mini-keyboard's key events to our own listener. */
 bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
-    if(popupKey->popupResId.empty()) return false; // AOSP: popupResId != 0
+    if(popupKey->popupResId == 0) return false; // AOSP: popupResId != 0
 
     auto cached = mMiniKeyboardCache.find(popupKey);
     if(cached != mMiniKeyboardCache.end()){
@@ -642,6 +694,13 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
         mDownTime = me.getEventTime();
         mLastMoveTime = mDownTime;
         checkMultiTap(eventTime, keyIndex);
+        // Old AOSP behavior (dropped by the android-36 deprecated stub): press
+        // the key so getCurrentDrawableState() reports state_pressed and the
+        // key background shows its pressed state.
+        if (keyIndex != NOT_A_KEY) {
+            mKeys[keyIndex]->pressed = true;
+            invalidateKey(keyIndex);
+        }
         if(mKeyboardActionListener.onPress)
             mKeyboardActionListener.onPress(keyIndex != NOT_A_KEY ?  mKeys[keyIndex]->codes[0] : 0);
         if (mCurrentKey >= 0 && mKeys[mCurrentKey]->repeatable) {
@@ -668,12 +727,19 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             if (mCurrentKey == NOT_A_KEY) {
                 mCurrentKey = keyIndex;
                 mCurrentKeyTime = eventTime - mDownTime;
+                mKeys[keyIndex]->pressed = true;
+                invalidateKey(keyIndex);
             } else {
                 if (keyIndex == mCurrentKey) {
                     mCurrentKeyTime += eventTime - mLastMoveTime;
                     continueLongPress = true;
                 } else if (mRepeatKeyIndex == NOT_A_KEY) {
                     resetMultiTap();
+                    // Slide onto a different key: swap the pressed state.
+                    mKeys[mCurrentKey]->pressed = false;
+                    invalidateKey(mCurrentKey);
+                    mKeys[keyIndex]->pressed = true;
+                    invalidateKey(keyIndex);
                     mLastKey = mCurrentKey;
                     mLastCodeX = mLastX;
                     mLastCodeY = mLastY;
@@ -717,6 +783,10 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             touchY = mLastCodeY;
         }
         showPreview(NOT_A_KEY);
+        if (keyIndex != NOT_A_KEY) {
+            mKeys[keyIndex]->pressed = false;
+            invalidateKey(keyIndex);
+        }
         for(int i=0;i<mKeyIndices.size();i++)
             mKeyIndices[i]=NOT_A_KEY;//Arrays.fill(mKeyIndices, NOT_A_KEY);
         // If we're not on a repeating key (which sends on a DOWN event)
@@ -731,6 +801,9 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
         dismissPopupKeyboard();
         mAbortKey = true;
         showPreview(NOT_A_KEY);
+        if (mCurrentKey != NOT_A_KEY) {
+            mKeys[mCurrentKey]->pressed = false;
+        }
         invalidateKey(mCurrentKey);
         break;
     }
@@ -885,3 +958,78 @@ float KeyboardView::SwipeTracker::getYVelocity()const{
 }
 
 }//namespace
+
+// ---------------------------------------------------------------------------
+// KeyboardView::KeyboardViewTouchHelper — the keys as virtual a11y views.
+// AOSP KeyboardView TODOs this AccessibilityNodeProvider; implemented with the
+// same ExploreByTouchHelper pattern SimpleMonthView uses. The virtual view id
+// is the key index in the current keyboard (mKeys).
+// ---------------------------------------------------------------------------
+
+KeyboardView::KeyboardViewTouchHelper::KeyboardViewTouchHelper(KeyboardView* host)
+    :ExploreByTouchHelper(host){
+    mHost = host;
+}
+
+int KeyboardView::KeyboardViewTouchHelper::getVirtualViewAt(float x, float y) {
+    const int keyIndex = mHost->getKeyIndices((int)(x + 0.5f), (int)(y + 0.5f), nullptr);
+    if (keyIndex != KeyboardView::NOT_A_KEY) {
+        return keyIndex;
+    }
+    return ExploreByTouchHelper::INVALID_ID;
+}
+
+void KeyboardView::KeyboardViewTouchHelper::getVisibleVirtualViews(std::vector<int>& virtualViewIds) {
+    const int keyCount = (int)mHost->mKeys.size();
+    for (int i = 0; i < keyCount; i++) {
+        virtualViewIds.push_back(i);
+    }
+}
+
+std::string KeyboardView::KeyboardViewTouchHelper::getKeyDescription(int virtualViewId) {
+    Keyboard::Key* key = mHost->mKeys[virtualViewId];
+    if (key->label.size()) return key->label;
+    if (key->text.size()) return key->text;
+    // Label-less keys (enter, delete, shift...) — name the keycode.
+    return KeyEvent::keyCodeToString(key->codes[0]);
+}
+
+void KeyboardView::KeyboardViewTouchHelper::onPopulateEventForVirtualView(int virtualViewId, AccessibilityEvent& event) {
+    event.setContentDescription(getKeyDescription(virtualViewId));
+}
+
+void KeyboardView::KeyboardViewTouchHelper::onPopulateNodeForVirtualView(int virtualViewId, AccessibilityNodeInfo& node) {
+    if (virtualViewId < 0 || virtualViewId >= (int)mHost->mKeys.size()) {
+        // The key is gone (keyboard switched mid-walk) — kill the node.
+        mTempRect.setEmpty();
+        node.setContentDescription("");
+        node.setBoundsInParent(mTempRect);
+        node.setVisibleToUser(false);
+        return;
+    }
+    Keyboard::Key* key = mHost->mKeys[virtualViewId];
+    mTempRect.set(key->x, key->y, key->width, key->height);
+    const std::string description = getKeyDescription(virtualViewId);
+    node.setText(description);
+    node.setContentDescription(description);
+    node.setBoundsInParent(mTempRect);
+    node.addAction(&AccessibilityNodeInfo::AccessibilityAction::ACTION_CLICK);
+    node.setEnabled(true);
+    node.setClickable(true);
+}
+
+bool KeyboardView::KeyboardViewTouchHelper::onPerformActionForVirtualView(int virtualViewId, int action, Bundle* arguments) {
+    switch (action) {
+        case AccessibilityNodeInfo::ACTION_CLICK:
+            if (virtualViewId < 0 || virtualViewId >= (int)mHost->mKeys.size()) {
+                return false;
+            }
+            // Same path a real touch takes (press feedback, multi-tap, commit).
+            Keyboard::Key* key = mHost->mKeys[virtualViewId];
+            mHost->detectAndSendKey(virtualViewId, key->x + key->width / 2, key->y + key->height / 2,
+                    SystemClock::uptimeMillis());
+            sendEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_CLICKED);
+            return true;
+    }
+    return false;
+}

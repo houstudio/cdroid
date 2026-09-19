@@ -15,20 +15,26 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <menu/menuitemimpl.h>
 #include <menu/actionmenuitemview.h>
+#include <widget/internal_R.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ActionMenuItemView)
-ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet& attrs)
-    :TextView(context, attrs){//, defStyleAttr, defStyleRes){
+DECLARE_WIDGET2(ActionMenuItemView, "androidx.appcompat.view.menu.ActionMenuItemView")
+ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* attrs):ActionMenuItemView(context,attrs,0){}
+
+ActionMenuItemView::ActionMenuItemView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :TextView(context, pAttrs, defStyleAttr){
     mIcon = nullptr;
     mItemData = nullptr;
     mExpandedFormat = false;
     mForwardingListener = nullptr;
     mAllowTextWithIcon = shouldAllowTextWithIcon();
-    mMinWidth = attrs.getDimensionPixelSize("minWidth", 0);
+    // AOSP: obtainStyledAttributes(attrs, R.styleable.ActionMenuItemView).
+    static const uint32_t ACTION_MENU_ITEM_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::minWidth, 0 };
+    auto a = context->obtainStyledAttributes(pAttrs, ACTION_MENU_ITEM_ATTRS, defStyleAttr);
+    mMinWidth = a->getDimensionPixelSize(0, 0);
 
     const float density = context->getDisplayMetrics().density;
     mMaxIconSize = (int) (MAX_ICON_SIZE * density + 0.5f);
@@ -164,6 +170,11 @@ void ActionMenuItemView::updateTextButtonVisibility() {
 void ActionMenuItemView::setIcon(Drawable* icon) {
     mIcon = icon;
     if (icon != nullptr) {
+        // The icon belongs to the MenuItemImpl; the compound-drawable slot OWNS
+        // what it is handed, so derive a private copy from the constant state.
+        auto cs = icon->getConstantState();
+        if (cs != nullptr) icon = cs->newDrawable();
+        else LOGE("ActionMenuItemView: icon without constant state");
         int width = icon->getIntrinsicWidth();
         int height = icon->getIntrinsicHeight();
         if (width > mMaxIconSize) {

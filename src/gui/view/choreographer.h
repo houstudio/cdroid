@@ -59,6 +59,7 @@ private:
         Choreographer*mChoreographer;
         CallbackRecord*mHead;
     public:
+        ~CallbackQueue();
         CallbackQueue(Choreographer*choreographer);
         bool hasDueCallbacksLocked(int64_t now)const;
         CallbackRecord* extractDueCallbacksLocked(int64_t now);

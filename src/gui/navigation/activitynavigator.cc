@@ -1,4 +1,5 @@
 #include <navigation/activitynavigator.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <navigation/navoptions.h>
 #include <navigation/navbackstackentry.h>
 #include <navigation/navtype.h>
@@ -101,7 +102,7 @@ void ActivityNavigator::navigate(NavDestination* destination, Bundle* args, NavO
                 last = matchEnd;
             }
             data.append(dataPattern, last, std::string::npos);
-            intent.setData(new Uri(data)); // CDROID has no Uri::parse; Uri(string) ctor
+            intent.setData(Uri::parse(data));
         }
     }
     // navigatorExtras flags (androidx) would be added here; the legacy navigate signature carries no
@@ -151,17 +152,21 @@ int ActivityNavigator::Destination::hashCode() const {
 
 void ActivityNavigator::Destination::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    // androidx R.styleable.ActivityNavigator: targetPackage / android:name / action / data / dataPattern.
-    setTargetPackage(parseApplicationId(context, attrs.getString("targetPackage")));
-    std::string className = attrs.getString("name");
+    // androidx R.styleable.ActivityNavigator (binary-AXML typed reads; the old
+    // string-keyed getAttributeValue calls returned empty under arsc).
+    namespace ns = internal::R::styleable;
+    auto ta = context->obtainStyledAttributes(attrs, ns::ActivityNavigator);
+    setTargetPackage(parseApplicationId(context, ta->getString(ns::ActivityNavigator_targetPackage)));
+    const std::string className = ta->getString(ns::ActivityNavigator_name);
     if(!className.empty()){
-        if(className[0] == '.') className = context->getPackageName() + className;
-        setComponentName(ComponentName(context->getPackageName(), className));
+        std::string cn = className;
+        if(cn[0] == '.') cn = context->getPackageName() + cn;
+        setComponentName(ComponentName(context->getPackageName(), cn));
     }
-    setAction(attrs.getString("action"));
-    const std::string data = parseApplicationId(context, attrs.getString("data"));
-    if(!data.empty()) setData(new Uri(data));
-    setDataPattern(parseApplicationId(context, attrs.getString("dataPattern")));
+    setAction(ta->getString(ns::ActivityNavigator_action));
+    const std::string data = parseApplicationId(context, ta->getString(ns::ActivityNavigator_data));
+    if(!data.empty()) setData(Uri::parse(data));
+    setDataPattern(parseApplicationId(context, ta->getString(ns::ActivityNavigator_dataPattern)));
 }
 
 }//namespace

@@ -70,7 +70,7 @@ public:
      * @param graphResId
      * @return
      */
-    NavGraph* inflate(const std::string& graphResId);
+    NavGraph* inflate(int graphResId);
 };
 }/*endof namespace*/
 #endif

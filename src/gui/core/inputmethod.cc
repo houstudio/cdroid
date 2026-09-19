@@ -17,25 +17,29 @@
  *********************************************************************************/
 #include <core/inputmethod.h>
 #include <text/inputtype.h>
+#include <widget/internal_R.h>
 
 namespace cdroid{
 
 InputMethod::InputMethod(){
 }
 
-std::string InputMethod::getKeyboardLayout(int inputType)const{
+int InputMethod::getKeyboardLayout(int inputType)const{
     // System-default keyboard set. The bundled English/Pinyin methods inherit
     // this unchanged (they do not override), so they return the system layouts
     // explicitly rather than relying on the IME's magic fallback. A product
-    // subclass overrides to ship its own keyboards. POPUP -> empty so the
+    // subclass overrides to ship its own keyboards. POPUP -> 0 so the
     // KeyboardView's android:popupLayout (keyboard_popup_keyboard.xml) supplies
-    // the accent popup container.
-    if(inputType == POPUP) return {};
+    // the accent popup container. The number/phone/datetime classes ship no
+    // framework keyboard resource (0 keeps the empty keyboard, exactly like the
+    // old unresolvable "@cdroid:xml/keyboard_*.xml" string refs did).
+    if(inputType == POPUP) return 0;
     switch(inputType & InputType::TYPE_MASK_CLASS){
-    case InputType::TYPE_CLASS_NUMBER:  return "@cdroid:xml/keyboard_number.xml";
-    case InputType::TYPE_CLASS_PHONE:   return "@cdroid:xml/keyboard_phone.xml";
-    case InputType::TYPE_CLASS_DATETIME:return "@cdroid:xml/keyboard_datetime.xml";
-    default: return "@cdroid:xml/qwerty.xml"; // TYPE_CLASS_TEXT
+    case InputType::TYPE_CLASS_NUMBER:
+    case InputType::TYPE_CLASS_PHONE:
+    case InputType::TYPE_CLASS_DATETIME:
+        return 0;
+    default: return cdroid::internal::R::xml::qwerty; // TYPE_CLASS_TEXT
     }
 }
 

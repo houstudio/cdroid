@@ -19,14 +19,15 @@
 #include <core/build.h>
 namespace cdroid{
 
-DECLARE_WIDGET(SlidingPaneLayout)
+DECLARE_WIDGET2(SlidingPaneLayout, "android.widget.SlidingPaneLayout");
 
-SlidingPaneLayout::SlidingPaneLayout(int w,int h):ViewGroup(w,h){
-    initView();
-}
+SlidingPaneLayout::SlidingPaneLayout(Context*ctx)
+    :SlidingPaneLayout(ctx,nullptr){}
 
-SlidingPaneLayout::SlidingPaneLayout(Context* context, const AttributeSet& attrs)
-    :ViewGroup(context, attrs){
+SlidingPaneLayout::SlidingPaneLayout(Context* context,const AttributeSet* attrs):SlidingPaneLayout(context,attrs,0){}
+
+SlidingPaneLayout::SlidingPaneLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+    :ViewGroup(context, pAttrs, defStyleAttr){
     initView();
 }
 
@@ -48,7 +49,7 @@ void SlidingPaneLayout::initView(){
     mIsUnableToDrag = false;
     mPreservedOpenState = false;
     //setWillNotDraw(false);
-    //setAccessibilityDelegate(new AccessibilityDelegate());
+    setAccessibilityDelegate(std::make_shared<SlidingPaneLayout::AccessibilityDelegate>());
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     mDragHelper = ViewDragHelper::create(this, 0.5f, new DragHelperCallback(this));
     mDragHelper->setMinVelocity(MIN_FLING_VELOCITY * density);
@@ -882,11 +883,11 @@ void SlidingPaneLayout::setShadowDrawableRight(Drawable* d) {
     mShadowDrawableRight = d;
 }
 
-void SlidingPaneLayout::setShadowResourceLeft(const std::string& resId) {
+void SlidingPaneLayout::setShadowResourceLeft(int resId) {
     setShadowDrawableLeft(getContext()->getDrawable(resId));
 }
 
-void SlidingPaneLayout::setShadowResourceRight(const std::string& resId) {
+void SlidingPaneLayout::setShadowResourceRight(int resId) {
     setShadowDrawableRight(getContext()->getDrawable(resId));
 }
 
@@ -1185,10 +1186,9 @@ SlidingPaneLayout::LayoutParams::LayoutParams(const LayoutParams& source)
 SlidingPaneLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(c, attrs){
 
-    this->weight = attrs.getFloat("weight", 0);
+    this->weight = attrs.getAttributeFloatValue(std::string(), "weight", 0);
 }
 
-#if 0
 /////////////////////////////////////////////////////////////////////////////////////////////////
 //static class SavedState extends AbsSavedState
 
@@ -1209,23 +1209,26 @@ void SlidingPaneLayout::SavedState::writeToParcel(Parcel& out, int flags) {
 //class AccessibilityDelegate extends AccessibilityDelegate {
 void SlidingPaneLayout::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(View& host, AccessibilityNodeInfo& info) {
     AccessibilityNodeInfo* superNode = AccessibilityNodeInfo::obtain(info);
-    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, superNode);
-    copyNodeInfoNoChildren(info, superNode);
-    superNode.recycle();
+    View::AccessibilityDelegate::onInitializeAccessibilityNodeInfo(host, *superNode);
+    copyNodeInfoNoChildren(info, *superNode);
+    superNode->recycle();
 
     info.setClassName("SlidingPaneLayout");
-    info.setSource(host);
+    info.setSource(&host);
 
-    final ViewParent parent = ViewCompat.getParentForAccessibility(host);
-    if (parent instanceof View) {
-        info.setParent((View) parent);
+    // Java: ViewCompat.getParentForAccessibility(host) instanceof View — CDROID's
+    // parent-for-accessibility is already a View subclass (ViewGroup).
+    ViewGroup* parent = host.getParentForAccessibility();
+    if (parent != nullptr) {
+        info.setParent(parent);
     }
 
     // This is a best-approximation of addChildrenForAccessibility()
     // that accounts for filtering.
-    const int childCount = getChildCount();
+    SlidingPaneLayout* layout = (SlidingPaneLayout*)&host; // this delegate only attaches here
+    const int childCount = layout->getChildCount();
     for (int i = 0; i < childCount; i++) {
-        View* child = getChildAt(i);
+        View* child = layout->getChildAt(i);
         if (!filter(child) && (child->getVisibility() == View::VISIBLE)) {
             // Force importance to "yes" since we can't read the value.
             child->setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -1239,15 +1242,18 @@ void SlidingPaneLayout::AccessibilityDelegate::onInitializeAccessibilityEvent(Vi
     event.setClassName("SlidingPaneLayout");
 }
 
-bool SlidingPaneLayout::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& host, View* child, AccessibilityEvent& event) {
-    if (!filter(child)) {
+bool SlidingPaneLayout::AccessibilityDelegate::onRequestSendAccessibilityEvent(ViewGroup& host, View& child, AccessibilityEvent& event) {
+    if (!filter(&child)) {
         return View::AccessibilityDelegate::onRequestSendAccessibilityEvent(host, child, event);
     }
     return false;
 }
 
-bool SlidingPaneLayout::AccessibilityDelegate::filter(View child) {
-    return isDimmed(child);
+bool SlidingPaneLayout::AccessibilityDelegate::filter(View* child) {
+    // Java inner class calls the outer isDimmed implicitly; this delegate only
+    // ever sees direct children of its host SlidingPaneLayout.
+    SlidingPaneLayout* layout = (SlidingPaneLayout*)child->getParent();
+    return layout->isDimmed(child);
 }
 
 void SlidingPaneLayout::AccessibilityDelegate::copyNodeInfoNoChildren(AccessibilityNodeInfo& dest, AccessibilityNodeInfo& src) {
@@ -1272,11 +1278,13 @@ void SlidingPaneLayout::AccessibilityDelegate::copyNodeInfoNoChildren(Accessibil
     dest.setSelected(src.isSelected());
     dest.setLongClickable(src.isLongClickable());
 
-    dest.addAction(src.getActions());
+    // Copy the source's action OBJECTS: getActions() flattens them to an int
+    // bitmask, and modern (resource-id-valued) actions would trip addAction(int)'s
+    // standard-action mask check.
+    for (auto* action : src.getActionList()) dest.addAction(action);
 
     dest.setMovementGranularities(src.getMovementGranularities());
 }
-#endif
 
 SlidingPaneLayout::DisableLayerRunnable::DisableLayerRunnable(View*v,View* childView):ViewRunnable(v) {
     mChildView = childView;

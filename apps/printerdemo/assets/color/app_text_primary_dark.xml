@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Primary text state colors for the dark theme (AOSP primary_text_material_dark
+     shape): disabled 30% white, default 87% white. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="#4dffffff"/>
+    <item android:color="#deffffff"/>
+</selector>

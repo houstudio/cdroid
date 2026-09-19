@@ -17,30 +17,29 @@
  *********************************************************************************/
 #include <text/textutils.h>
 #include <widget/candidateview.h>
+#include <widget/internal_R.h>
+#include <widget/framework_styleable.h>
+using namespace cdroid::internal;
 namespace cdroid{
 
 DECLARE_WIDGET(CandidateView)
 
-CandidateView::CandidateView(int w,int h):View(w,h){
-    mSelectionHighlight = nullptr;
-    mColorNormal= 0xFFFFFFFF;
-    mColorRecommended =0xFFFF0000;
-    mColorOther =0xFF00FF00;
-    mVerticalPadding=0;
-    mBgPadding.set(5,5,5,5);
-    setMinimumHeight(28);
-    mPaint.setTextSize(20);
-    initView();
-}
+CandidateView::CandidateView(Context*ctx)
+    :CandidateView(ctx,nullptr){}
 
-CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
-     mSelectionHighlight = atts.getDrawable("list_selector_background");
-     setBackgroundColor(atts.getColor("candidate_background"));
-     mColorNormal = atts.getColor("candidate_normal");
-     mColorRecommended = atts.getColor("candidate_recommand");
-     mColorOther = atts.getColor("candidate_other");
-     mVerticalPadding = atts.getDimensionPixelSize("candidate_vertical_padding");
-     const int textSize = atts.getDimensionPixelSize("candidate_font_height",20);
+CandidateView::CandidateView(Context*ctx,const AttributeSet* atts):CandidateView(ctx,atts,0){}
+
+CandidateView::CandidateView(Context*ctx,const AttributeSet* pAttrs,int defStyleAttr):View(ctx,pAttrs, defStyleAttr){
+    auto ta = ctx->obtainStyledAttributes(pAttrs, R::styleable::CandidateView);
+     mSelectionHighlight = mContext->getDrawable(R::drawable::list_selector_background);
+     setBackgroundColor(ta->getColor(R::styleable::CandidateView_candidate_background, 0));
+     mColorNormal = ta->getColor(R::styleable::CandidateView_candidate_normal, 0);
+     mColorRecommended = ta->getColor(R::styleable::CandidateView_candidate_recommand, 0);
+     mColorOther = ta->getColor(R::styleable::CandidateView_candidate_other, 0);
+     // candidate_vertical_padding/candidate_font_height are not registered attr
+     // ids (the string reads always fell through) — keep the fallback values.
+     mVerticalPadding = 0;
+     const int textSize = 20;
      setHorizontalFadingEdgeEnabled(true);
      setWillNotDraw(false);
      setHorizontalScrollBarEnabled(false);
@@ -181,6 +180,7 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
 }
 
 void CandidateView::onDraw(Canvas&canvas){
+    View::onDraw(canvas);
     onDrawInternal(&canvas);
 }
 

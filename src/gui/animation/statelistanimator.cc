@@ -49,10 +49,16 @@ StateListAnimator::StateListAnimator(const StateListAnimator&other)
     for (size_t i = 0; i < tupleSize; i++) {
         Tuple* tuple = other.mTuples.at(i);
         Animator* animatorClone = tuple->mAnimator->clone();
-        //animatorClone->removeListener(other.mAnimatorListener);
+        // AOSP clone(): animatorClone.removeListener(mAnimatorListener) — the
+        // cloned child must not carry the SOURCE's state-change listener (it
+        // closes over `other`; with a cached source that is a stale capture).
+        // CDROID's value-copied listener lists can't be matched by
+        // removeListener, and SLA children only ever carry the source's
+        // listener (added in addState), so clearing all is equivalent.
+        animatorClone->removeAllListeners();
         this->addState(tuple->mSpecs, animatorClone);
     }
-    this->setChangingConfigurations(getChangingConfigurations());
+    this->setChangingConfigurations(other.getChangingConfigurations());
 }
 
 StateListAnimator::~StateListAnimator(){
@@ -137,9 +143,10 @@ void StateListAnimator::cancel() {
 }
 
 void StateListAnimator::jumpToCurrentState(){
+    // AOSP: only end() — mRunningAnimator is NOT cleared (getRunningAnimator
+    // keeps reporting the jumped-to-end animator until the next setState).
     if (mRunningAnimator != nullptr) {
         mRunningAnimator->end();
-        mRunningAnimator = nullptr;
     }
 }
 
@@ -156,13 +163,16 @@ void StateListAnimator::appendChangingConfigurations(int configs) {
 }
 
 std::shared_ptr<ConstantState<StateListAnimator*>> StateListAnimator::createConstantState(){
-    return std::make_shared<StateListAnimatorConstantState>(this);//mConstantState;
+    // Ownership transfer + post-construction back-ref — see Animator::
+    // createConstantState (shared_from_this() inside the ctor throws).
+    std::shared_ptr<StateListAnimatorConstantState> cs = std::make_shared<StateListAnimatorConstantState>(this);
+    mConstantState = cs;
+    return cs;
 }
 
 /////////////////////////////////////////////////////////////////
 StateListAnimator::StateListAnimatorConstantState::StateListAnimatorConstantState(StateListAnimator* animator) {
-    mAnimator = animator;
-    mAnimator->mConstantState = shared_from_this();
+    mAnimator.reset(animator);
     mChangingConf = mAnimator->getChangingConfigurations();
 }
 

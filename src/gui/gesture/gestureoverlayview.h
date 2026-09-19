@@ -122,7 +122,9 @@ private:
 protected:
     void onDetachedFromWindow()override;
 public:
-    GestureOverlayView(Context* context,const AttributeSet& attrs);
+    GestureOverlayView(Context* context);   // AOSP GestureOverlayView(Context)
+    GestureOverlayView(Context* context,const AttributeSet* attrs);
+    GestureOverlayView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~GestureOverlayView()override;
     const std::vector<GesturePoint>& getCurrentStroke() const;
 

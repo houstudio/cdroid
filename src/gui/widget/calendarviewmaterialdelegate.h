@@ -27,13 +27,16 @@ private:
     DayPickerView* mDayPickerView;
     CalendarView::OnDateChangeListener mOnDateChangeListener;
 public:
-    CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs);
+    CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet* attrs,
+        int defStyleAttr,int defStyleRes);
 
-    void setWeekDayTextAppearance(const std::string& resId) override;
-    std::string getWeekDayTextAppearance() const override;
+    void setWeekDayTextAppearance(int resId) override;
+    int getWeekDayTextAppearance() const override;
 
-    void setDateTextAppearance(const std::string&resId) override;
-    std::string getDateTextAppearance() const override;
+    void setWeekDayNameLength(int length) override;
+
+    void setDateTextAppearance(int resId) override;
+    int getDateTextAppearance() const override;
 
     void setMinDate(int64_t minDate) override;
     int64_t getMinDate() override;

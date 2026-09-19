@@ -19,7 +19,7 @@ class GameWindow :public Window {
     TextView*tfscore;
   public:
     GameWindow(int x,int y,int w,int h):Window(x,y,w,h) {
-        /*tfscore=new TextView("0",200,40);
+        /*tfscore=new TextView(&app); tfscore->setText("0" );
         tfscore->setTextSize(30);
         addView(tfscore).layout(800,50,200,40);*/
     }

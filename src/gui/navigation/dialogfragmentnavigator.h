@@ -33,7 +33,8 @@
 #include <core/attributeset.h>
 #include <porting/cdlog.h>
 namespace cdroid{
-namespace fragment{ class FragmentManager; class DialogFragment; }
+class FragmentManager;
+class DialogFragment;
 class Context;
 
 class DialogFragmentNavigator : public Navigator{
@@ -48,7 +49,7 @@ public:
         std::string mClassName;
     };
 
-    DialogFragmentNavigator(Context* context, fragment::FragmentManager* fm);
+    DialogFragmentNavigator(Context* context, FragmentManager* fm);
     NavDestination* createDestination() override;
     // androidx DialogFragmentNavigator.navigate(entries, navOptions, navigatorExtras).
     void navigate(std::vector<NavBackStackEntry*>& entries, NavOptions* navOptions, Extras* navigatorExtras) override;
@@ -57,7 +58,7 @@ public:
     void popBackStack(NavBackStackEntry* popUpTo, bool savedState) override;
 private:
     Context* mContext;
-    fragment::FragmentManager* mFragmentManager;
+    FragmentManager* mFragmentManager;
     // androidx DialogFragmentNavigator.navigate(entry) — per-entry core.
     void navigate(NavBackStackEntry* entry, NavOptions* navOptions);
 };

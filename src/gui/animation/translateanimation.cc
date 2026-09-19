@@ -1,7 +1,11 @@
 #include <animation/translateanimation.h>
 #include <cdtypes.h>
 #include <cdlog.h>
+#include <content/typedarray.h>
+#include <content/typedvalue.h>
+#include <widget/framework_styleable.h>
 namespace cdroid{
+using namespace cdroid::internal;
 
 TranslateAnimation::TranslateAnimation(const TranslateAnimation&o):Animation(o){
     mFromXValue= o.mFromXValue;
@@ -16,19 +20,32 @@ TranslateAnimation::TranslateAnimation(const TranslateAnimation&o):Animation(o){
 
 TranslateAnimation::TranslateAnimation(Context* context,const AttributeSet& attrs)
     :Animation(context,attrs){
-    Description d = Description::parseValue(attrs.getString("fromXDelta"));
+    auto a = context->obtainStyledAttributes(attrs, R::styleable::TranslateAnimation);
+
+    // AOSP: Description.parseValue(a.peekValue(idx), context); an absent
+    // attr (tv stays TYPE_NULL) resolves to ABSOLUTE/0 like AOSP's null.
+    TypedValue tv;
+    Description d;
+    a->peekValue(R::styleable::TranslateAnimation_fromXDelta, &tv);
+    d = Description::parseValue(&tv, context);
     mFromXType = d.type;
     mFromXValue= d.value;
 
-    d = Description::parseValue(attrs.getString("fromYDelta"));
+    tv = TypedValue();
+    a->peekValue(R::styleable::TranslateAnimation_fromYDelta, &tv);
+    d = Description::parseValue(&tv, context);
     mFromYType = d.type;
     mFromYValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toXDelta"));
+    tv = TypedValue();
+    a->peekValue(R::styleable::TranslateAnimation_toXDelta, &tv);
+    d = Description::parseValue(&tv, context);
     mToXType = d.type;
     mToXValue= d.value;
 
-    d = Description::parseValue(attrs.getString("toYDelta"));
+    tv = TypedValue();
+    a->peekValue(R::styleable::TranslateAnimation_toYDelta, &tv);
+    d = Description::parseValue(&tv, context);
     mToYType = d.type;
     mToYValue= d.value;
 }

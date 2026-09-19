@@ -25,9 +25,10 @@ private:
     public:
         bool mOneShot; 
         std::vector<int>mDurations;
-        AnimationState(const AnimationState*,AnimationDrawable*owner);
+        AnimationState(const AnimationState*,AnimationDrawable*owner,Resources*res);
         void mutate()override;
         AnimationDrawable*newDrawable()override;
+        Drawable*newDrawable(Resources* res)override;
         void addFrame(Drawable*,int dur);
         int64_t getTotalDuration()const;
     };
@@ -39,9 +40,9 @@ private:
     Runnable mRunnable;
 private:
     void setFrame(int frame,bool unschedule,bool animate);
-    AnimationDrawable(std::shared_ptr<AnimationState>);
-    void updateStateFromTypedArray(const AttributeSet&a);
-    void inflateChildElements(XmlPullParser& parser,const AttributeSet& atts);
+    AnimationDrawable(std::shared_ptr<AnimationState>, Resources* res);
+    void updateStateFromTypedArray(const TypedArray& a);
+    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts);
 protected:
     void setConstantState(std::shared_ptr<DrawableContainerState>state)override;
     void run();
@@ -64,7 +65,8 @@ public:
     void nextFrame(bool unschedule);
     AnimationDrawable*mutate()override;
     void clearMutated()override;
-    void inflate(XmlPullParser& parser,const AttributeSet& atts)override;
+    void inflate(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme)override;
+    void inflateChildElements(Resources& r,XmlPullParser& parser,const AttributeSet& atts,const Resources::Theme* theme);
 };
 
 }

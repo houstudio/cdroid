@@ -26,7 +26,9 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
 public:
-    DayPickerViewPager(Context* context,const AttributeSet& attrs);
+    DayPickerViewPager(Context*ctx);   // AOSP DayPickerViewPager(Context)
+    DayPickerViewPager(Context* context,const AttributeSet* attrs);
+    DayPickerViewPager(Context* context,const AttributeSet* attrs,int defStyleAttr);
     View*findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
 };
 }//endof namespace

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Primary text state colors (Material light spec, AOSP primary_text_material_light
+     shape): disabled 22% black, default 87% black. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_enabled="false" android:color="#39000000"/>
+    <item android:color="#de000000"/>
+</selector>

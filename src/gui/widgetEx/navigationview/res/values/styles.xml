@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Navigation module default styles (material-components port; source:
+     material/bottomnavigation + material/navigation res/values/styles.xml).
+     Widget.Design.BottomNavigationView is BottomNavigationView's
+     DEF_STYLE_RES, Widget.Design.NavigationView is NavigationView's.
+
+     Trimmed items (attrs not declared in the widgetEx navigation attrs.xml):
+       compatShadowEnabled, enforceTextAppearance, enforceMaterialTheme
+       (ThemeEnforcement layer), measureBottomPaddingFromLabelBaseline,
+       drawerLayoutCornerSize. NavigationView's parent
+       Widget.Design.ScrimInsetsFrameLayout is not ported (parent="").
+     The un-prefixed appcompat attr spellings (elevation, ?attr/colorAccent-style
+     theme refs) are re-spelled android: — the compat layer is collapsed into
+     the framework here, and un-prefixed names would resolve to this package. -->
+<resources>
+
+  <style name="Widget.Design.BottomNavigationView" parent="">
+    <item name="android:elevation">@dimen/design_bottom_navigation_elevation</item>
+    <item name="itemBackground">?android:attr/selectableItemBackgroundBorderless</item>
+    <item name="itemHorizontalTranslationEnabled">true</item>
+    <item name="itemIconSize">@dimen/design_bottom_navigation_icon_size</item>
+    <item name="labelVisibilityMode">auto</item>
+    <item name="itemPaddingTop">@dimen/design_bottom_navigation_margin</item>
+    <item name="itemPaddingBottom">0dp</item>
+    <item name="activeIndicatorLabelPadding">1dp</item>
+    <item name="itemActiveIndicatorStyle">@null</item>
+    <item name="android:minHeight">@dimen/design_bottom_navigation_height</item>
+    <item name="itemIconGravity">top</item>
+  </style>
+
+  <style name="Widget.Design.NavigationView" parent="">
+    <item name="android:elevation">@dimen/design_navigation_elevation</item>
+    <item name="itemIconPadding">@dimen/design_navigation_item_icon_padding</item>
+    <item name="itemHorizontalPadding">@dimen/design_navigation_item_horizontal_padding</item>
+    <item name="android:background">?android:attr/windowBackground</item>
+    <item name="android:fitsSystemWindows">true</item>
+    <item name="android:maxWidth">@dimen/design_navigation_max_width</item>
+    <item name="subheaderInsetStart">?android:attr/listPreferredItemPaddingStart</item>
+    <item name="subheaderInsetEnd">?android:attr/listPreferredItemPaddingEnd</item>
+  </style>
+
+</resources>

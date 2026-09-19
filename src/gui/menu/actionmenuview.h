@@ -60,13 +60,14 @@ protected:
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool hasDividerBeforeChildAt(int childIndex)override;
 public:
-    ActionMenuView(Context* context,const AttributeSet& attrs);
+    ActionMenuView(Context* context,const AttributeSet* attrs);
+    ActionMenuView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ActionMenuView()override;
     void setPopupTheme(int resId);
     int getPopupTheme();
     void setPresenter(ActionMenuPresenter* presenter);
 
-    //void onConfigurationChanged(Configuration newConfig) override;
+    void onConfigurationChanged(Configuration& newConfig) override;
 
     void setOnMenuItemClickListener(const OnMenuItemClickListener& listener);
 

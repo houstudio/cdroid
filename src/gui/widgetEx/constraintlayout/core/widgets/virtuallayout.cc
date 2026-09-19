@@ -24,7 +24,7 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
 
-namespace cdroid {
+namespace cdroid::clcore {
 
 VirtualLayout::VirtualLayout() {
     mMeasure = BasicMeasure::Measure();
@@ -194,4 +194,4 @@ std::string VirtualLayout::getType() const {
     return "VirtualLayout";
 }
 
-} // namespace cdroid
+} // namespace cdroid::clcore

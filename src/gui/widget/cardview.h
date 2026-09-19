@@ -38,8 +38,9 @@ private:
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 public:
-    CardView(int w,int h);
-    CardView(Context* context,const AttributeSet& attrs);
+    CardView(Context*ctx);   // AOSP CardView(Context)
+    CardView(Context* context,const AttributeSet* attrs);
+    CardView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~CardView()override;
     void setPadding(int left, int top, int right, int bottom)override;
     void setPaddingRelative(int start, int top, int end, int bottom)override;

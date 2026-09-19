@@ -28,7 +28,11 @@ class NestedScrollingChildHelper;
 class HapticScrollFeedbackProvider;
 
 class NestedScrollView:public FrameLayout{
-public:	
+public:
+    bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
+    void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
+    std::string getAccessibilityClassName() const override;
     DECLARE_UIEVENT(void,OnScrollChangeListener,NestedScrollView&v,int ,int,int,int);
 private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
@@ -136,8 +140,9 @@ protected:
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
 public:
-    NestedScrollView(int w,int h);
-    NestedScrollView(Context* context,const AttributeSet&attrs);
+    NestedScrollView(Context*ctx);   // AOSP NestedScrollView(Context)
+    NestedScrollView(Context* context,const AttributeSet*attrs);
+    NestedScrollView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~NestedScrollView()override;
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll(int type);

@@ -25,37 +25,44 @@
 #include <sstream>
 
 #include <core/displaymetrics.h>
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <text/textutils.h>
 
-DECLARE_WIDGET(CircularFlow)
+DECLARE_WIDGET2(CircularFlow, "androidx.constraintlayout.helper.widget.CircularFlow");
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-CircularFlow::CircularFlow(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+CircularFlow::CircularFlow(Context* ctx,const AttributeSet* attrs):CircularFlow(ctx,attrs,0){}
+
+CircularFlow::CircularFlow(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
-    // and every circularflow_* attribute stays at its default: mAngles/mRadius empty, mDefaultRadius
-    // 0. anchorReferences then assigns every referenced view angle=0 radius=0, so all of them collapse
-    // onto the center point (only the topmost is visible). Re-invoke init now that *this is fully
-    // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/Placeholder.
-    // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
-    init(attrs);
+    // and every circularflow_* attribute stays at its default. Re-invoke init now that *this is fully
+    // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/
+    // Placeholder. ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
+    init(pAttrs);
 }
 
-CircularFlow::CircularFlow(int width, int height)
-    : ConstraintHelper(width, height) {
-}
-
-void CircularFlow::init(const AttributeSet& attrs) {
+void CircularFlow::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
-    mViewCenter = attrs.getResourceId("circularflow_viewCenter", 0);
-    mReferenceAngles = attrs.getString("circularflow_angles", "");
-    mReferenceRadius = attrs.getString("circularflow_radiusInDP", "");
+    if (attrs == nullptr) return;
+    // TypedArray reads typed binary AXML values directly (AOSP pattern); circularflow_* live in the
+    // ConstraintLayout_Layout styleable. viewCenter is a reference (getResourceId); angles/radius are
+    // comma strings; defaultAngle/defaultRadius are float/dimension.
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    if (!ta) return;
+    namespace C = R::styleable;
+    mViewCenter = (int)ta->getResourceId(C::ConstraintLayoutLayout_circularflow_viewCenter, 0);
+    mReferenceAngles = ta->getString(C::ConstraintLayoutLayout_circularflow_angles);
+    mReferenceRadius = ta->getString(C::ConstraintLayoutLayout_circularflow_radiusInDP);
     if (!mReferenceAngles.empty()) setAngles(mReferenceAngles);
     if (!mReferenceRadius.empty()) setRadius(mReferenceRadius);
-    setDefaultAngle(attrs.getFloat("circularflow_defaultAngle", 0));
-    setDefaultRadius(attrs.getDimensionPixelSize("circularflow_defaultRadius", 0));
+    setDefaultAngle(ta->getFloat(C::ConstraintLayoutLayout_circularflow_defaultAngle, 0));
+    setDefaultRadius(ta->getDimensionPixelSize(C::ConstraintLayoutLayout_circularflow_defaultRadius, 0));
 }
 
 std::vector<float> CircularFlow::getAngles() const {
@@ -68,6 +75,13 @@ std::vector<int> CircularFlow::getRadius() const {
 
 void CircularFlow::setAngles(const std::vector<float>& angles) {
     mAngles = angles;
+    // Runtime angle changes must re-anchor the ring on the next layout pass. The
+    // ConstraintLayout hierarchy capture is dirty-gated (AndroidX mDirtyHierarchy,
+    // ConstraintLayout.java:1784-1803): a container-level requestLayout alone does not
+    // re-run it — the helper itself requests layout so the container's child scan
+    // (isLayoutRequested) flags the hierarchy dirty and updatePreLayout re-anchors.
+    // Without this the capture stays clean and the ring never moves.
+    requestLayout();
 }
 
 void CircularFlow::setAngles(const std::string& angleList) {
@@ -75,16 +89,16 @@ void CircularFlow::setAngles(const std::string& angleList) {
     std::stringstream ss(angleList);
     std::string token;
     while (std::getline(ss, token, ',')) {
-        // trim whitespace
-        size_t s = 0; while (s < token.size() && std::isspace((unsigned char) token[s])) s++;
-        size_t e = token.size(); while (e > s && std::isspace((unsigned char) token[e - 1])) e--;
-        if (s == e) continue;
-        mAngles.push_back((float) std::atof(token.substr(s, e - s).c_str()));
+        TextUtils::trim(token);   // shared helper (was a hand-rolled scan)
+        if (token.empty()) continue;
+        mAngles.push_back((float) std::atof(token.c_str()));
     }
+    requestLayout();   // string variant is public API too — same re-anchor contract as the vector form
 }
 
 void CircularFlow::setRadius(const std::vector<int>& radius) {
     mRadius = radius;
+    requestLayout();   // same re-anchor contract as setAngles (see there)
 }
 
 void CircularFlow::setRadius(const std::string& radiusList) {
@@ -97,12 +111,12 @@ void CircularFlow::setRadius(const std::string& radiusList) {
     std::stringstream ss(radiusList);
     std::string token;
     while (std::getline(ss, token, ',')) {
-        size_t s = 0; while (s < token.size() && std::isspace((unsigned char) token[s])) s++;
-        size_t e = token.size(); while (e > s && std::isspace((unsigned char) token[e - 1])) e--;
-        if (s == e) continue;
+        TextUtils::trim(token);   // shared helper (was a hand-rolled scan)
+        if (token.empty()) continue;
         // radiusInDP values are in dp → px (AndroidX applies display density).
-        mRadius.push_back((int) (std::atoi(token.substr(s, e - s).c_str()) * density));
+        mRadius.push_back((int) (std::atoi(token.c_str()) * density));
     }
+    requestLayout();   // string variant is public API too — same re-anchor contract as the vector form
 }
 
 void CircularFlow::setDefaultAngle(float angle) {
@@ -137,7 +151,7 @@ void CircularFlow::anchorReferences() {
         return;
     }
     for (size_t i = 0; i < mIds.size(); i++) {
-        View* view = mContainer->findViewById(mIds[i]);
+        View* view = mContainer->getViewById(mIds[i]);
         if (view == nullptr) {
             continue;
         }

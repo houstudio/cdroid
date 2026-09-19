@@ -4,9 +4,11 @@
 #include <menu/actionmenupresenter.h>
 namespace cdroid{
 
-DECLARE_WIDGET(ActionMenuView)
-ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
-  :LinearLayout(context, attrs){
+DECLARE_WIDGET2(ActionMenuView, "androidx.appcompat.widget.ActionMenuView");
+ActionMenuView::ActionMenuView(Context* context,const AttributeSet* attrs):ActionMenuView(context,attrs,0){}
+
+ActionMenuView::ActionMenuView(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
+  :LinearLayout(context, pAttrs, defStyleAttr){
     setBaselineAligned(false);
     const float density = context->getDisplayMetrics().density;
     mMinCellSize = int(MIN_CELL_SIZE * density);
@@ -19,6 +21,11 @@ ActionMenuView::ActionMenuView(Context* context,const AttributeSet& attrs)
 }
 
 ActionMenuView::~ActionMenuView(){
+    // The presenter (this view's ActionMenuPresenter, created in getMenu) is
+    // NOT owned by the MenuBuilder (~MenuBuilder frees only its items) - free
+    // it while mMenu is still alive, mirroring ~PopupMenu's chain-before-menu
+    // order. Leaked a presenter + its callback set per view before.
+    delete mPresenter;
     delete mMenu;
 }
 
@@ -518,7 +525,7 @@ Menu* ActionMenuView::getMenu() {
         mPresenter->setReserveOverflow(true);
         if((mActionMenuPresenterCallback.onOpenSubMenu==nullptr)&&(mActionMenuPresenterCallback.onCloseMenu==nullptr)){
             mActionMenuPresenterCallback.onCloseMenu=[](MenuBuilder& menu,bool){};
-            mActionMenuPresenterCallback.onOpenSubMenu=[](MenuBuilder&){return false;};
+            mActionMenuPresenterCallback.onOpenSubMenu=[](MenuBuilder*){return false;};
         }
         mPresenter->setCallback(mActionMenuPresenterCallback);
         mMenu->addMenuPresenter(mPresenter, mPopupContext);
@@ -535,6 +542,23 @@ void ActionMenuView::setMenuCallbacks(const MenuPresenter::Callback& pcb, const 
 
 MenuBuilder* ActionMenuView::peekMenu() {
     return mMenu;
+}
+
+// AOSP ActionMenuView.onConfigurationChanged: rebuild the action items and
+// re-show the overflow menu if it was open (max action count is
+// width-configuration dependent).
+void ActionMenuView::onConfigurationChanged(Configuration& newConfig){
+    LinearLayout::onConfigurationChanged(newConfig);
+
+    if (mPresenter != nullptr) {
+        mPresenter->onConfigurationChanged(newConfig);
+        mPresenter->updateMenuView(false);
+
+        if (isOverflowMenuShowing()) {
+            mPresenter->hideOverflowMenu();
+            mPresenter->showOverflowMenu();
+        }
+    }
 }
 
 bool ActionMenuView::showOverflowMenu() {

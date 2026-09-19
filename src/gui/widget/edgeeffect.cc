@@ -16,7 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/edgeeffect.h>
+#include <widget/internal_R.h>
 #include <core/systemclock.h>
+#include <content/typedarray.h>
 #include <utils/mathutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
@@ -46,14 +48,14 @@ EdgeEffect::EdgeEffect(Context* context,const AttributeSet* attrs){
     mGlowScaleY = 0;
     mGlowScaleYStart = mGlowScaleYFinish = 0.f;
     mStartTime= 0;
-    mColor = 0x4000FF00;
     mEdgeEffectType = TYPE_GLOW;
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
     mVelocity = 0.f;
-    if(attrs != nullptr){
-        mColor = attrs->getColor("colorEdgeEffect", 0xff666666);
-    }
+    static const uint32_t EDGE_EFFECT_ATTRS[] = { (uint32_t)cdroid::internal::R::attr::colorEdgeEffect, 0 };
+    auto ta = context->obtainStyledAttributes(attrs, EDGE_EFFECT_ATTRS);
+    const int themeColor = ta->getColor(0, 0xff666666);
+    mColor = (themeColor & 0xffffff) | 0x33000000;
 }
 
 EdgeEffect::~EdgeEffect(){

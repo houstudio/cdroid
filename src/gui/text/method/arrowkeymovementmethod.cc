@@ -93,14 +93,19 @@ bool ArrowKeyMovementMethod::leftWord(TextView& widget, Spannable& buffer) {
     // widget's cached WordIterator via getWordIterator(); CDROID has none, so
     // construct one for the default locale (Android's getWordIterator does the same
     // lazily).
-    const int selectionEnd = widget.getSelectionEnd();
+    // AOSP assumes an Editor-maintained buffer always carries a selection;
+    // without one getSelectionEnd() is -1, which WordIterator's range check
+    // rejects (Java throws; this port aborts). Clamp to 0 so word movement
+    // degrades to "from the start" instead of crashing.
+    const int selectionEnd = std::max(0, widget.getSelectionEnd());
     WordIterator wordIterator;
     wordIterator.setCharSequence(&buffer, selectionEnd, selectionEnd);
     return Selection::moveToPreceding(&buffer, wordIterator, isSelecting());
 }
 
 bool ArrowKeyMovementMethod::rightWord(TextView& widget, Spannable& buffer) {
-    const int selectionEnd = widget.getSelectionEnd();
+    // Same clamp as leftWord: -1 (no selection) must not reach the iterator.
+    const int selectionEnd = std::max(0, widget.getSelectionEnd());
     WordIterator wordIterator;
     wordIterator.setCharSequence(&buffer, selectionEnd, selectionEnd);
     return Selection::moveToFollowing(&buffer, wordIterator, isSelecting());

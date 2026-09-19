@@ -27,12 +27,12 @@ private:
     bool mForceShowIcon;
     bool mOverflowOnly;
     LayoutInflater* mInflater;
-    std::string mItemLayoutRes;
+    int mItemLayoutRes = 0;
 protected:
     friend MenuPopup;
     MenuBuilder* mAdapterMenu;
 public:
-    MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly,const std::string& itemLayoutRes);
+    MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly,int itemLayoutRes);
     bool getForceShowIcon()const;
     void setForceShowIcon(bool forceShow);
     int getCount()const override;

@@ -24,35 +24,46 @@
 #include <algorithm>
 #include <cmath>
 
+#include <widget/internal_R.h>
+#include <widgetEx/widgetex_styleable.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
-DECLARE_WIDGET(Layer)
+DECLARE_WIDGET2(Layer, "androidx.constraintlayout.widget.Layer");
 
 namespace cdroid {
+using namespace cdroid::internal;
 
-Layer::Layer(Context* ctx, const AttributeSet& attrs)
-    : ConstraintHelper(ctx, attrs) {
+Layer::Layer(Context* ctx,const AttributeSet* attrs):Layer(ctx,attrs,0){}
+
+Layer::Layer(Context* ctx,const AttributeSet* pAttrs,int defStyleAttr)
+    : ConstraintHelper(ctx, pAttrs, defStyleAttr) {
     // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
     // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
     // and the visibility/elevation XML attributes are never scanned. Re-invoke init now that *this
     // is fully constructed so it dispatches to Layer::init — same pattern as
     // Carousel/MotionEffect/Placeholder/CircularFlow/Grid. ConstraintHelper::init is idempotent.
-    init(attrs);
+    init(pAttrs);
 }
 
-Layer::Layer(int width, int height)
-    : ConstraintHelper(width, height) {
-}
-
-void Layer::init(const AttributeSet& attrs) {
+void Layer::init(const AttributeSet* attrs) {
     ConstraintHelper::init(attrs);
     mUseViewMeasure = false;
-    if (attrs.hasAttribute("visibility")) {
-        mApplyVisibilityOnAttach = true;
-    }
-    if (attrs.hasAttribute("elevation")) {
-        mApplyElevationOnAttach = true;
+    if (attrs == nullptr) return;
+    // Mirror AndroidX Layer.init: scan only the attrs actually present and flag visibility/
+    // elevation so onAttachedToWindow propagates them to the referenced views. Binary AXML stores
+    // framework attrs by resource id (not name), so name-based lookups can't see them —
+    // TypedArray's present-index iteration (getIndexCount/getIndex) is the faithful AOSP way.
+    auto ta = getContext()->obtainStyledAttributes(attrs, R::styleable::ConstraintLayoutLayout);
+    if (ta) {
+        const size_t n = ta->getIndexCount();
+        for (size_t i = 0; i < n; i++) {
+            const int idx = (int)ta->getIndex(i);
+            if (idx == R::styleable::ConstraintLayoutLayout_visibility)
+                mApplyVisibilityOnAttach = true;
+            else if (idx == R::styleable::ConstraintLayoutLayout_elevation)
+                mApplyElevationOnAttach = true;
+        }
     }
 }
 
@@ -62,7 +73,7 @@ void Layer::onAttachedToWindow() {
     if (mContainer != nullptr && (mApplyVisibilityOnAttach || mApplyElevationOnAttach)) {
         int visibility = getVisibility();
         for (int id : mIds) {
-            View* view = mContainer->findViewById(id);
+            View* view = mContainer->getViewById(id);
             if (view != nullptr) {
                 if (mApplyVisibilityOnAttach) {
                     view->setVisibility(visibility);
@@ -161,9 +172,15 @@ void Layer::reCacheViews() {
     if (mIds.empty()) {
         return;
     }
-    mViews.resize(mIds.size());
+    /* Cache only views that resolve: setReferencedIds admits ids that name
+     * an id resource but have no child in this layout (typo / removed), and
+     * calcCenters dereferences mViews[0] before its per-view null guard —
+     * a stale nullptr there was a SIGSEGV (Java survives via filtered ids). */
+    mViews.clear();
     for (size_t i = 0; i < mIds.size(); i++) {
-        mViews[i] = mContainer->findViewById(mIds[i]);
+        if (View* view = mContainer->getViewById(mIds[i])) {
+            mViews.push_back(view);
+        }
     }
 }
 

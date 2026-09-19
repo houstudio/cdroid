@@ -78,7 +78,7 @@ private:
     ArrowScrollFocusResult mArrowScrollFocusResult;
     FocusSelector* mFocusSelector;
 
-    void initListView(const AttributeSet&attrs);
+    void initListView(const AttributeSet*attrs,int defStyleAttr);
     void clearRecycledState(std::vector<FixedViewInfo*>& infos);
     bool showingTopFadingEdge();
     bool showingBottomFadingEdge();
@@ -171,8 +171,9 @@ protected:
     bool drawChild(Canvas&,View*,int64_t)override;
     void dispatchDraw(Canvas&)override;
 public:
-    ListView(int w,int h);
-    ListView(Context* context,const AttributeSet& attrs);
+    ListView(Context*ctx);   // AOSP ListView(Context)
+    ListView(Context* context,const AttributeSet* attrs);
+    ListView(Context* context,const AttributeSet* attrs,int defStyleAttr);
     ~ListView()override;
     void setAdapter(Adapter* adapter)override;
     void setSelection(int position)override;

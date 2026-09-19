@@ -11,7 +11,8 @@ private:
     MenuItemHoverListener mHoverListener;
 public:
     class MenuDropDownListView;
-    MenuPopupWindow(Context* context,const AttributeSet& attrs,const std::string&defStyleAttrs,const std::string&defStyleRes);
+    MenuPopupWindow(Context*ctx);   // AOSP MenuPopupWindow(Context)
+    MenuPopupWindow(Context* context,const AttributeSet* attrs,int defStyleAttr,int defStyleRes);
 
     DropDownListView* createDropDownListView(Context* context, bool hijackFocus);
 

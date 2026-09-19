@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- StateListAnimator: subtle press feedback (shrink + fade). Attach with
+     android:stateListAnimator on any clickable view. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <set>
+            <objectAnimator android:propertyName="scaleX" android:duration="90" android:valueTo="0.94" />
+            <objectAnimator android:propertyName="scaleY" android:duration="90" android:valueTo="0.94" />
+            <objectAnimator android:propertyName="alpha"  android:duration="90" android:valueTo="0.85" />
+        </set>
+    </item>
+    <item>
+        <set>
+            <objectAnimator android:propertyName="scaleX" android:duration="160" android:valueTo="1.0" />
+            <objectAnimator android:propertyName="scaleY" android:duration="160" android:valueTo="1.0" />
+            <objectAnimator android:propertyName="alpha"  android:duration="160" android:valueTo="1.0" />
+        </set>
+    </item>
+</selector>
