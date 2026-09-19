@@ -109,7 +109,7 @@ bool App::addAppOptions(const std::string& group,
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
-    std::string autoTest, autoTestRecord, testScript, orientation;
+    std::string autoTest, autoTestRecord, testScript, orientation, inputMode;
     std::string logo, datapath;
     LogParseModules(argc,argv);
     mInst = this;
@@ -135,7 +135,10 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
          "combined with --auto-test the sweep's steps join the same script",
          cxxopts::value<std::string>(autoTestRecord))
         ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
-         cxxopts::value<std::string>(testScript));
+         cxxopts::value<std::string>(testScript))
+        ("input-mode","input reader mode: thread (dedicated reader thread, default) | "
+         "choreographer (per-frame CALLBACK_INPUT polling, no reader thread)",
+         cxxopts::value<std::string>(inputMode)->default_value("thread"));
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
@@ -280,6 +283,15 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(alpha!=255) setOpacity(alpha);
     if(density) DisplayMetrics::DENSITY_DEVICE = density;
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
+    // --input-mode: fix the InputEventSource reader backend before its lazy
+    // init (the first checkEvents) — thread is the stock behavior;
+    // choreographer polls InputGetEvents(0ms) per frame on CALLBACK_INPUT
+    // with no reader thread (see InputEventSource::Mode).
+    if (inputMode == "choreographer") {
+        InputEventSource::setMode(InputEventSource::Mode::Choreographer);
+    } else if (inputMode != "thread") {
+        LOGW("unknown --input-mode=%s, using thread", inputMode.c_str());
+    }
     Typeface::loadPreinstalledSystemFontMap();
 
     InputEventSource*inputsource=&InputEventSource::getInstance();
