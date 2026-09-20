@@ -136,10 +136,15 @@ struct CRect{
     }
 
     bool contains(const CRect&a)const{
-        if(a.empty()||empty())return false;
-        if((a.right()<=this->left)||(this->right()<=a.left)||(a.bottom()<=this->top)||(this->bottom()<a.top))
-            return false;
-        return true;
+        /* android.graphics.Rect.contains(Rect): full containment, inclusive
+         * edges — NOT an intersection test. The previous body only rejected
+         * disjoint rects (any overlap returned true), which silently broke
+         * its AOSP-port callers (FocusFinder's !touchableBounds.contains(
+         * closestBounds), RippleDrawable's drawableBounds.contains(
+         * hotspotBounds), StackView's !parentRect.contains(invalidateRect)) —
+         * they all need "fully inside", and got "merely overlapping". */
+        return this->left<=a.left && this->top<=a.top
+             && this->right()>=a.right() && this->bottom()>=a.bottom();
     }
 
     bool operator==(const CRect&b)const{
