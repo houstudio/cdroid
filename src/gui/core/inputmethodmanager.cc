@@ -525,7 +525,14 @@ void InputMethodManager::applyKeyboard(int xmlLayoutResId){
     const int rot = dp.getRotation();
     dp.getRealSize(dspSize);
     const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
-    Keyboard*kbd = new Keyboard(imeWindow->getContext(), xmlLayoutResId, screenW, 240);
+    // AOSP Keyboard resolves height fractions (%p) against the ctor's height
+    // param (Keyboard.java fills it from the display metrics). The old magic
+    // 240 was hand-tuned so 21%p rows fit the old fixed-height window; the
+    // base is now the real display height and the stock layouts use absolute
+    // dimens (the AOSP convention), so a height-%p written against AOSP
+    // semantics behaves identically here.
+    const int screenH = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.x : dspSize.y;
+    Keyboard*kbd = new Keyboard(imeWindow->getContext(), xmlLayoutResId, screenW, screenH);
     if(imeWindow->kbdView == nullptr){ // degraded chrome (no @id/keyboardview)
         delete kbd;
         return;
