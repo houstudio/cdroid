@@ -236,15 +236,14 @@ void Dialog::setCanceledOnTouchOutside(bool cancel) {
     }
     if (mWindow == nullptr) return;
     mWindow->setCloseOnTouchOutside(cancel);
-    /* CDROID stage-1 substitution: AOSP dialog windows are touch-modal, so an
-       out-of-frame tap is delivered as the real gesture and consumed by
-       shouldCloseOnTouch's UP-out-of-bounds clause. CDROID dispatch is
-       topmost-hit only (non-modal), so the dialog window instead opts into
-       the OUTSIDE notification — WindowManager synthesizes ACTION_OUTSIDE for
-       a DOWN outside it, and shouldCloseOnTouch's ACTION_OUTSIDE clause fires.
-       Same consumption point, same Dialog.cancel() dismissal. */
-    mWindow->setFlags(cancel ? WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH : 0,
-                      WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH);
+    /* AOSP Dialog.setCanceledOnTouchOutside touches no window FLAGS (Dialog.java:
+       1273-1278 -> Window.setCloseOnTouchOutside only stores the field). The dialog
+       window is touch-modal by default, so an out-of-frame tap is delivered to it as
+       the REAL gesture (WindowManager's dispatcher honors modality like
+       InputDispatcher.findTouchedWindowAtLocked) and consumed by shouldCloseOnTouch's
+       UP-out-of-bounds clause. The stage-1 substitute that raised
+       FLAG_WATCH_OUTSIDE_TOUCH on dialogs — for the old topmost-hit-only dispatch —
+       is retired with it. */
 }
 
 bool Dialog::onTouchEvent(MotionEvent& event) {

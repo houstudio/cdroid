@@ -614,24 +614,36 @@ void WindowManager::onMotion(MotionEvent&event) {
                obv->dispatchOnTouchModeChanged(true);
            }
            LOGV_IF(action != MotionEvent::ACTION_MOVE, "%s at(%d,%d)", MotionEvent::actionToString(action).c_str(), x, y);
-           if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
+           /* AOSP InputDispatcher.findTouchedWindowAtLocked (InputDispatcher.cpp:1026-1047):
+              a NOT_TOUCHABLE window is skipped entirely, and a TOUCH-MODAL window
+              (focusable && !FLAG_NOT_TOUCH_MODAL) claims the gesture EVEN OUTSIDE its
+              frame — the traversal returns there and windows below receive nothing
+              (a dialog's outside-tap is consumed by the dialog itself: the real
+              out-of-frame gesture reaches Dialog.onTouchEvent, whose shouldCloseOnTouch
+              UP-out-of-bounds clause dismisses without click-through). Only a
+              non-modal window with the point outside its frame falls through, and
+              such a window that watches outside touch is then collected for an
+              ACTION_OUTSIDE notification (dispatched as FLAG_DISPATCH_AS_OUTSIDE —
+              the resolvedAction rewrite, :2966-2968) while the real gesture continues
+              to the windows behind. The visibility gate matters: a dismissed-but-
+              not-yet-removed dialog window (teardown is posted) must not be notified.
+              DOWN only — no UP/POINTER_DOWN notification (:2022 addOutsideTargets=
+              isDown). */
+           const int wflags = w->getAttributes().flags;
+           const bool touchable = !(wflags & WindowManager::LayoutParams::FLAG_NOT_TOUCHABLE);
+           const bool touchModal = !(wflags & WindowManager::LayoutParams::FLAG_NOT_FOCUSABLE)
+                                && !(wflags & WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL);
+           if ((w->getVisibility() == View::VISIBLE) && touchable
+                        && (touchModal || w->getBound().contains(x, y))) {
                hitTarget = w;
                event.offsetLocation(-w->getLeft(), -w->getTop());
                w->dispatchPointerEvent(event);
                event.offsetLocation(w->getLeft(), w->getTop());
                break;
            }
-           /* AOSP InputDispatcher.findTouchedWindowAtLocked (InputDispatcher.cpp:1030-1047):
-              on a gesture DOWN, VISIBLE windows above the target that watch outside
-              touch are collected for an ACTION_OUTSIDE notification (dispatched as
-              FLAG_DISPATCH_AS_OUTSIDE — the resolvedAction rewrite, :2966-2968). The
-              visibility gate matters: a dismissed-but-not-yet-removed dialog window
-              (teardown is posted) must not be notified. DOWN only — no UP/POINTER_DOWN
-              notification (:2022 addOutsideTargets=isDown). */
            if ((action == MotionEvent::ACTION_DOWN)
-                   && (w->getVisibility() == View::VISIBLE)
-                   && (w->getAttributes().flags
-                            & WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH)) {
+                   && (w->getVisibility() == View::VISIBLE) && touchable && !touchModal
+                   && (wflags & WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH)) {
                outsideWatchers.push_back(w);
            }
        }
