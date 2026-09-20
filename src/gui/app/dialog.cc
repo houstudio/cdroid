@@ -143,8 +143,24 @@ void Dialog::show(){
     // hosts may stamp window attributes before show (AOSP Dialog.show never
     // writes gravity either).
     WindowManager::LayoutParams& attrs = mWindow->getAttributes();
-    attrs.width  = frm->getMeasuredWidth()  + horzMargin;
-    attrs.height = frm->getMeasuredHeight() + vertMargin;
+    /* The themed windowBackground insets the decor content (the traversal
+     * lays the panel at its padding — a 16px themed dialog background on a
+     * 206px window leaves 174px for title+list+buttons, squeezing the list
+     * to ~1.x rows). AOSP ViewRootImpl sizes a wrap-content window INCLUDING
+     * the decor background padding; the manual measure here must do the
+     * same or the window is short by 2x the padding. */
+    int bgPadH = 0, bgPadV = 0;
+    Rect bgPad;
+    if (mWindow->getBackground() != nullptr && mWindow->getBackground()->getPadding(bgPad)) {
+        /* Drawable::getPadding's Rect convention: the right/bottom insets are
+         * stored in the .width/.height slots (View::resolvePadding reads
+         * padding.width as the AOSP padding.right) — .right() would be
+         * left+width and double-count the left inset. */
+        bgPadH = bgPad.left + bgPad.width;
+        bgPadV = bgPad.top + bgPad.height;
+    }
+    attrs.width  = frm->getMeasuredWidth()  + horzMargin + bgPadH;
+    attrs.height = frm->getMeasuredHeight() + vertMargin + bgPadV;
     WindowManager::getInstance().relayoutWindow(mWindow);
 
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
