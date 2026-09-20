@@ -139,6 +139,13 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     // while VISIBLE; hiding it via setVisibility(INVISIBLE) removes it from both
     // touch routing and key dispatch in WindowManager, so a dismissed keyboard
     // does not keep eating events.
+    // Touch-modality guard (the dispatcher honors FLAG_NOT_TOUCH_MODAL like
+    // InputDispatcher.findTouchedWindowAtLocked): the keyboard must only claim
+    // pointer events INSIDE its frame — a tap on the app above the keyboard
+    // reaches the app (the IME never blocks touches behind it on AOSP either),
+    // which is exactly NOT_TOUCH_MODAL's contract.
+    setFlags(WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL,
+             WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL);
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
     // The pinyin IME layout ships in the IME module's pak — resolve by name.
