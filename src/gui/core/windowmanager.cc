@@ -175,13 +175,27 @@ void WindowManager::addWindow(Window*win){
          * a window removed in the same tick is skipped by the membership
          * check (pointer-value compare only — a removed window is never
          * dereferenced). */
-        deactWin->post([this, deactWin, win](){
-            const bool stillListed = std::find(mWindows.begin(), mWindows.end(), win) != mWindows.end();
-            const bool occludes = stillListed
+        deactWin->post([this, deactWin, win,
+                        winAlive = win->mA11yListenerAlive,
+                        deactAlive = deactWin->mA11yListenerAlive](){
+            // A host closed in the same tick already took its full lifecycle
+            // in removeWindow — the token check keeps this post from pausing
+            // it a second time (AOSP never double-dispatches pause), and a
+            // satellite deleted before the drain (bulk remove, app delete —
+            // paths that skip close()'s queue purge) or whose ADDRESS was
+            // reused by a new window cannot feed the verdict: token +
+            // membership, pointer-value compare only.
+            if (!*deactAlive) return;
+            const bool winLive = *winAlive
+                    && std::find(mWindows.begin(), mWindows.end(), win) != mWindows.end();
+            const bool occludes = winLive
                     && win->getVisibility() == View::VISIBLE
                     && win->getBound().contains(deactWin->getBound());
             deactWin->onPause();
-            if (occludes) deactWin->onStop();
+            if (occludes && !deactWin->mStoppedByWm) {
+                deactWin->mStoppedByWm = true;
+                deactWin->onStop();
+            }
         });
         mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
@@ -220,7 +234,10 @@ void WindowManager::removeWindow(Window*w){
     if(w->hasFlag(View::FOCUSABLE)){
         w->dispatchWindowFocusChanged(false);
         w->onPause();
-        w->onStop();
+        if (!w->mStoppedByWm) {   // idempotent: never double-deliver onStop
+            w->mStoppedByWm = true;
+            w->onStop();
+        }
     }
     const Rect wrect = w->getBound();
     mWindows.erase(itw);
@@ -246,23 +263,29 @@ void WindowManager::removeWindow(Window*w){
         for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
             if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
                 if((*it)!=mActiveWindow){
-                     (*it)->dispatchWindowFocusChanged(true);
-                     /* Symmetric with the addWindow stop rule: a satellite
-                      * (non-covering) window left its host PAUSED-STARTED, so
-                      * its removal resumes the host — onStart would be an
-                      * out-of-order lifecycle event for a never-stopped
-                      * activity. A covering window had stopped it — full
-                      * onStart+onResume restart.
-                      * POSTED, like the deactivation: addWindow queues the
+                     /* POSTED, like the deactivation: addWindow queues the
                       * host's onPause, so a same-tick add+remove would run a
                       * synchronous resume BEFORE the queued pause and leave
-                      * the host PAUSED; posting keeps the pair FIFO. A
+                      * the host PAUSED; posting keeps the pair FIFO. The
+                      * focus return moves inside the post too — a synchronous
+                      * focus-while-paused window is a state no AOSP app ever
+                      * sees. fullRestart comes from mStoppedByWm (the
+                      * DELIVERED-stop bookkeeping), not a bounds re-derivation
+                      * at remove time: the add-side verdict ran at post time,
+                      * and geometry/visibility changes in between made
+                      * re-derivation produce onStart-without-onStop pairs. A
                       * quitting looper drops the post — strictly safer than
                       * re-entering a half-destroyed activity at exit. */
                      Window* restartWin = (*it);
-                     const bool fullRestart = wrect.contains(restartWin->getBound());
-                     restartWin->post([restartWin, fullRestart](){
-                         if (fullRestart) restartWin->onStart();
+                     auto alive = restartWin->mA11yListenerAlive;
+                     const bool fullRestart = restartWin->mStoppedByWm;
+                     restartWin->post([restartWin, alive, fullRestart](){
+                         if (!*alive) return;   // deleted before the drain — skip
+                         restartWin->dispatchWindowFocusChanged(true);
+                         if (fullRestart) {
+                             restartWin->mStoppedByWm = false;
+                             restartWin->onStart();
+                         }
                          restartWin->onResume();
                      });
                 }
@@ -288,7 +311,10 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
         if(w->hasFlag(View::FOCUSABLE)){
             w->dispatchWindowFocusChanged(false);
             w->onPause();
-            w->onStop();
+            if (!w->mStoppedByWm) {   // idempotent: never double-deliver onStop
+                w->mStoppedByWm = true;
+                w->onStop();
+            }
         }
         auto itw = std::find(mWindows.begin(),mWindows.end(),w);
         const Rect rw = w->getBound();
@@ -483,8 +509,15 @@ void WindowManager::sendToBack(Window*win){
     }
     mActiveWindow = mWindows.back();
     mActiveWindow->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
-    win->post([win](){win->onPause();win->onStop();});
+    win->post([win](){
+        win->onPause();
+        if (!win->mStoppedByWm) {
+            win->mStoppedByWm = true;
+            win->onStop();
+        }
+    });
     Window*newActWin = mActiveWindow;
+    newActWin->mStoppedByWm = false;
     mActiveWindow->post([newActWin](){
         newActWin->onStart();
         newActWin->onResume();
@@ -503,12 +536,16 @@ void WindowManager::bringToFront(Window*win){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
+    win->mStoppedByWm = false;
     win->post([win](){win->onStart();win->onResume();});
 
     Window*deactWin= mActiveWindow;
     mActiveWindow->post([deactWin](){
         deactWin->onPause();
-        deactWin->onStop();
+        if (!deactWin->mStoppedByWm) {
+            deactWin->mStoppedByWm = true;
+            deactWin->onStop();
+        }
     });
     mActiveWindow = win;
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});

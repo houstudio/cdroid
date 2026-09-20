@@ -128,6 +128,10 @@ struct AnimSpec {
     // motion (popup_enter_material rises 20dp), never a full-offscreen edge
     // fly-in. Empty (authored=false) when the resource names no translate.
     ActivityTransition::SlideDelta fromX, fromY, toX, toY;
+    // The resource paired translate with alpha (popup_enter/exit_material):
+    // AOSP plays both — the slide drives translation, this drives a parallel
+    // surface alpha so the motion fades in/out instead of popping opaque.
+    bool fadeAlong = false;
     int64_t duration = 0;
     // The authored curve/timing. The interpolator instance is OWNED BY THE
     // PROCESS-WIDE STYLE CACHE (AnimSpec lives in sAnimStyleCache, which
@@ -217,6 +221,7 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
         else if (dx == 0 && dy > 0) edge = Gravity::BOTTOM;
         spec.type = ActivityTransition::Type::SLIDE;
         spec.slideEdge = edge;
+        spec.fadeAlong = fade != nullptr;
         spec.fromX = {slide->fromXType(), slide->fromXValue(), true};
         spec.fromY = {slide->fromYType(), slide->fromYValue(), true};
         spec.toX = {slide->toXType(), slide->toXValue(), true};
@@ -240,9 +245,12 @@ static AnimSpec extractAnimSpec(Animation* anim, bool enter) {
 static ActivityTransition* transitionFromSpec(const AnimSpec& spec) {
     if (spec.type == ActivityTransition::Type::FADE)
         return ActivityTransition::fade(spec.duration, spec.interpolator, spec.startOffset);
-    if (spec.type == ActivityTransition::Type::SLIDE)
-        return ActivityTransition::slide(spec.slideEdge, spec.duration, spec.interpolator,
-                spec.startOffset, spec.fromX, spec.fromY, spec.toX, spec.toY);
+    if (spec.type == ActivityTransition::Type::SLIDE) {
+        ActivityTransition* t = ActivityTransition::slide(spec.slideEdge, spec.duration,
+                spec.interpolator, spec.startOffset, spec.fromX, spec.fromY, spec.toX, spec.toY);
+        t->setFadeAlong(spec.fadeAlong);
+        return t;
+    }
     return nullptr;
 }
 
@@ -408,18 +416,23 @@ void Window::startGhostExit(ActivityTransition* t) {
         ghost->animator = anim;
         anim->start();
     } else {  // SLIDE — translate the snapshot out toward the exit edge.
-        int sX, sY, endX, endY;
-        slideOffsets(t, false, ghost->bounds.left, ghost->bounds.top,
-                ghost->bounds.width, ghost->bounds.height, sX, sY, endX, endY);
+        int endX, endY;
+        slideToOffset(t, ghost->bounds.width, ghost->bounds.height, endX, endY);
         const int startX = ghost->dx, startY = ghost->dy;
+        // Mid-fade continuity for the resource's paired alpha (popup_exit_
+        // material fades out while it sinks): the ghost starts from whatever
+        // alpha an interrupted fade left and eases to 0 with the slide.
+        const float startAlpha = ghost->alpha;
+        const bool fades = t->fadesAlong();
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
         anim->setDuration(duration);
         anim->setStartDelay(startDelay);
         anim->setInterpolator(interpolator);
-        anim->addUpdateListener([ghost, startX, startY, endX, endY](ValueAnimator& a) {
+        anim->addUpdateListener([ghost, startX, startY, endX, endY, startAlpha, fades](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
             ghost->dx = (int)(startX + (endX - startX) * f);
             ghost->dy = (int)(startY + (endY - startY) * f);
+            if (fades) ghost->alpha = startAlpha * (1.f - f);
             GraphDevice::getInstance().composeGhosts();
         });
         anim->addListener(endListener);
@@ -439,25 +452,29 @@ void Window::computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscr
     else                              y = oy + h;  // BOTTOM
 }
 
-void Window::slideOffsets(const ActivityTransition* t, bool enter, int left, int top, int w, int h,
-        int& startX, int& startY, int& endX, int& endY) {
+void Window::slideFromOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy) {
     if (t->hasAuthoredDeltas()) {
-        // AOSP plays the resource's own motion: the from-deltas are the enter
-        // start, the to-deltas the exit end, the resting side 0. RELATIVE_TO_
-        // SELF resolves against the live window size, PARENT against the
-        // display (a window's parent).
-        startX = t->fromX().resolve(w, GraphDevice::getInstance().getScreenWidth());
-        startY = t->fromY().resolve(h, GraphDevice::getInstance().getScreenHeight());
-        endX = t->toX().resolve(w, GraphDevice::getInstance().getScreenWidth());
-        endY = t->toY().resolve(h, GraphDevice::getInstance().getScreenHeight());
+        // AOSP plays the resource's own motion. RELATIVE_TO_SELF resolves
+        // against the live window size, PARENT against the display (a
+        // window's parent).
+        dx = t->fromX().resolve(w, GraphDevice::getInstance().getScreenWidth());
+        dy = t->fromY().resolve(h, GraphDevice::getInstance().getScreenHeight());
         return;
     }
     int x, y;
-    computeSlidePos(t->getSlideEdge(), left, top, w, h, true, x, y);
-    startX = enter ? x - left : 0;
-    startY = enter ? y - top : 0;
-    endX = enter ? 0 : x - left;
-    endY = enter ? 0 : y - top;
+    computeSlidePos(t->getSlideEdge(), 0, 0, w, h, true, x, y);
+    dx = x; dy = y;
+}
+
+void Window::slideToOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy) {
+    if (t->hasAuthoredDeltas()) {
+        dx = t->toX().resolve(w, GraphDevice::getInstance().getScreenWidth());
+        dy = t->toY().resolve(h, GraphDevice::getInstance().getScreenHeight());
+        return;
+    }
+    int x, y;
+    computeSlidePos(t->getSlideEdge(), 0, 0, w, h, true, x, y);
+    dx = x; dy = y;
 }
 
 void Window::snapEnterStart(ActivityTransition* t) {
@@ -465,10 +482,12 @@ void Window::snapEnterStart(ActivityTransition* t) {
     if (t->getType() == ActivityTransition::Type::FADE) {
         setAlpha(0.f);
     } else if (t->getType() == ActivityTransition::Type::SLIDE) {
-        int startX, startY, endX, endY;
-        slideOffsets(t, true, getLeft(), getTop(), getWidth(), getHeight(),
-                startX, startY, endX, endY);
-        setSurfaceTranslation(startX, startY);
+        int dx, dy;
+        slideFromOffset(t, getWidth(), getHeight(), dx, dy);
+        setSurfaceTranslation(dx, dy);
+        // The resource's alpha pairs with the slide (popup_enter_material):
+        // start invisible, fade in WITH the rise — AOSP plays both children.
+        if (t->fadesAlong()) setAlpha(0.f);
     }
 }
 
@@ -491,13 +510,16 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
     const TimeInterpolator* interpolator = t->getInterpolator();  // borrowed (style cache)
     const int64_t startDelay = t->getStartOffset();
     Animator::AnimatorListener endListener;
-    endListener.onAnimationEnd = [this, onEnd, enter](Animator&, bool) {
+    endListener.onAnimationEnd = [this, onEnd, enter, t](Animator&, bool) {
         if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
         mInTransition = false;
         // Identity landing (AOSP onAnimationFinished commits the final surface transaction):
         // the surface must end exactly on the frame. Exit animations skip this — the window
         // is removed/hidden right after, and an interrupted exit's re-enter lands here anyway.
-        if (enter) setSurfaceTranslation(0, 0);
+        if (enter) {
+            setSurfaceTranslation(0, 0);
+            if (t->fadesAlong()) setAlpha(1.f);
+        }
         if (onEnd) onEnd();
         // The animator is NOT deleted here (delete-in-end-callback). It stays in
         // mCurrentTransitionAnimator and is freed by ~Window or the next runActivityTransition.
@@ -519,16 +541,27 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
              // at the resting position (getLeft()/getTop() are ALWAYS the rest — no capture),
              // so a11y bounds, input routing and WMS placement are stable mid-animation.
         int startX, startY, endX, endY;
-        slideOffsets(t, enter, getLeft(), getTop(), getWidth(), getHeight(),
-                startX, startY, endX, endY);
+        if (enter) {
+            slideFromOffset(t, getWidth(), getHeight(), startX, startY);
+            if (t->hasAuthoredDeltas()) {
+                slideToOffset(t, getWidth(), getHeight(), endX, endY);
+            } else {
+                endX = 0; endY = 0;   // edge fallback: offscreen -> rest
+            }
+        } else {
+            startX = 0; startY = 0;   // rest -> offscreen (authored: rest -> to-delta)
+            slideToOffset(t, getWidth(), getHeight(), endX, endY);
+        }
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
         anim->setDuration(duration);
         anim->setStartDelay(startDelay);
         anim->setInterpolator(interpolator);
-        anim->addUpdateListener([this, startX, startY, endX, endY](ValueAnimator& a) {
+        const bool fades = t->fadesAlong();
+        anim->addUpdateListener([this, startX, startY, endX, endY, fades, enter](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
             setSurfaceTranslation((int)(startX + (endX - startX) * f),
                                   (int)(startY + (endY - startY) * f));
+            if (fades) setAlpha(enter ? f : 1.f - f);   // the resource's alpha child, in parallel
         });
         anim->addListener(endListener);
         mCurrentTransitionAnimator = anim;

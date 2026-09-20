@@ -95,12 +95,14 @@ protected:
     float getScaleFactor()const;
     void ensureInterpolator();
     virtual void applyTransformation(float interpolatedTime, Transformation& t);
-    float resolveSize(int type, float value, int size, int parentSize);
     void finalize() ;
 public:
     Animation();
     Animation(Context* context,const AttributeSet& attrs);
     virtual ~Animation();
+    // State-less pure utility (TranslateAnimation wraps it publicly anyway) —
+    // also reachable statically for the window-transition SlideDelta path.
+    static float resolveSize(int type, float value, int size, int parentSize);
     virtual void reset();
     void cancel();
     void detach();

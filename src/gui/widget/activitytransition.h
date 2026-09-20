@@ -28,12 +28,8 @@ public:
         int type = Animation::ABSOLUTE;   // ABSOLUTE px / RELATIVE_TO_SELF x size / RELATIVE_TO_PARENT x parent
         float value = 0.f;
         bool authored = false;            // extracted from a resource's translate child
-        int resolve(int size, int parentSize) const {   // Animation::resolveSize's formula
-            switch (type) {
-            case Animation::RELATIVE_TO_SELF:   return (int)(size * value);
-            case Animation::RELATIVE_TO_PARENT: return (int)(parentSize * value);
-            default:                            return (int)value;
-            }
+        int resolve(int size, int parentSize) const {
+            return (int)Animation::resolveSize(type, value, size, parentSize);
         }
     };
 
@@ -52,6 +48,12 @@ public:
     const SlideDelta& fromY() const { return mFromY; }
     const SlideDelta& toX() const { return mToX; }
     const SlideDelta& toY() const { return mToY; }
+    /* The resource paired its translate with an alpha (popup_enter/exit_
+     * material) — AOSP plays BOTH; the slide drives the translation and this
+     * flag drives a parallel 0<->1 surface alpha so the motion fades in/out
+     * instead of popping fully opaque and cutting at the end. */
+    bool fadesAlong() const { return mFadeAlong; }
+    void setFadeAlong(bool fade) { mFadeAlong = fade; }
 
     // Factories return heap instances whose ownership transfers to Window::setEnterTransition etc.
     static ActivityTransition* fade(int64_t durationMs = 300,
@@ -94,6 +96,7 @@ private:
     int64_t mStartOffset = 0;
     SlideDelta mFromX, mFromY, mToX, mToY;
     bool mAuthoredDeltas = false;
+    bool mFadeAlong = false;
 };
 
 } // namespace cdroid

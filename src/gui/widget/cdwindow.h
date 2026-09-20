@@ -118,6 +118,15 @@ private:
     // AOSP ActivityInfo.configChanges bits (android:configChanges).
     int mConfigChanges = 0;
 private:
+    /* WM lifecycle bookkeeping: TRUE once WindowManager has DELIVERED onStop
+     * to this window (addWindow's covering-deactivation, sendToBack,
+     * bringToFront, removeWindow's dying block), FALSE again when WM delivers
+     * onStart. Single source of truth for the restart side — removeWindow
+     * reads THIS instead of re-deriving "was the host stopped" from bounds at
+     * remove time (the add-side verdict ran at post time; geometry and
+     * visibility in between made the two derivations disagree, producing
+     * out-of-order onStart-without-onStop and resume-without-start pairs). */
+    bool mStoppedByWm = false;
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
     // Moves draw from the doEventHandlers phase (UIEventSource poll) into drainMessageQueue (the
@@ -156,12 +165,13 @@ private:
     void startGhostExit(ActivityTransition* t);
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
-    /* The slide's start/end visual offsets (translations, not positions):
-     * authored resource deltas when the style carried them (AOSP plays the
-     * resource's own motion — popup_enter_material's 20dp rise), else the
-     * edge-based full-offscreen formula (computeSlidePos). */
-    void slideOffsets(const ActivityTransition* t, bool enter, int left, int top, int w, int h,
-            int& startX, int& startY, int& endX, int& endY);
+    /* The slide's start/end visual offsets as TRANSLATIONS: authored resource
+     * deltas when the style carried them (AOSP plays the resource's own
+     * motion — popup_enter_material's 20dp rise), else the edge-based
+     * full-offscreen formula (computeSlidePos at origin 0,0). From = the
+     * enter start; To = the exit end. */
+    void slideFromOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy);
+    void slideToOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
 protected:
     // The teardown callback handed to close(cb): invoked at finishClose time
