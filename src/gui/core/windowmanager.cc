@@ -151,7 +151,38 @@ void WindowManager::addWindow(Window*win){
     }
     if(mActiveWindow){
         Window*deactWin = mActiveWindow;
-        mActiveWindow->post([deactWin](){deactWin->onPause();deactWin->onStop();});
+        /* AOSP stop rule: an activity is STOPPED only when no longer visible
+         * (occluded — ActivityStack stops an activity whose window is covered;
+         * a dialog/popup band over a fullscreen host keeps the host visible).
+         * Satellite windows (dialogs, spinner dropdowns, toasts) do not cover
+         * the host, so the host keeps running — CRITICAL because the host's
+         * FragmentManager also owns DialogFragments: stopping the host on a
+         * mere dialog-show fired DialogFragment.onStop -> Dialog::hide() five
+         * milliseconds after show (the dialog vanished before the user could
+         * pick), and PreferenceFragment.onStop had already cleared the
+         * tree-click listeners. Focus still moves to the new window, so the
+         * deactivating window always takes onPause; onStop only when covered.
+         *
+         * The verdict is DEFERRED to post-run time: AOSP judges visibility
+         * from laid-out, surfaced frames (WMS visibility processing), never
+         * pre-layout placeholders — and addWindow runs inside the Window
+         * ctor, where satellite frames are still seeds (Dialog: a hardcoded
+         * 640x320; wrap-content popups: the ctor resolves negative dims to
+         * the full display). Judging at ctor time wrongly stopped hosts on
+         * small panels (<=640x320) and for wrap-content popups on any
+         * display. By the time the post runs, Dialog::show's relayoutWindow
+         * has installed the real wrap frame (same stack, earlier drain), and
+         * a window removed in the same tick is skipped by the membership
+         * check (pointer-value compare only — a removed window is never
+         * dereferenced). */
+        deactWin->post([this, deactWin, win](){
+            const bool stillListed = std::find(mWindows.begin(), mWindows.end(), win) != mWindows.end();
+            const bool occludes = stillListed
+                    && win->getVisibility() == View::VISIBLE
+                    && win->getBound().contains(deactWin->getBound());
+            deactWin->onPause();
+            if (occludes) deactWin->onStop();
+        });
         mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
 
@@ -216,8 +247,24 @@ void WindowManager::removeWindow(Window*w){
             if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
                 if((*it)!=mActiveWindow){
                      (*it)->dispatchWindowFocusChanged(true);
-                     (*it)->onStart();
-                     (*it)->onResume();
+                     /* Symmetric with the addWindow stop rule: a satellite
+                      * (non-covering) window left its host PAUSED-STARTED, so
+                      * its removal resumes the host — onStart would be an
+                      * out-of-order lifecycle event for a never-stopped
+                      * activity. A covering window had stopped it — full
+                      * onStart+onResume restart.
+                      * POSTED, like the deactivation: addWindow queues the
+                      * host's onPause, so a same-tick add+remove would run a
+                      * synchronous resume BEFORE the queued pause and leave
+                      * the host PAUSED; posting keeps the pair FIFO. A
+                      * quitting looper drops the post — strictly safer than
+                      * re-entering a half-destroyed activity at exit. */
+                     Window* restartWin = (*it);
+                     const bool fullRestart = wrect.contains(restartWin->getBound());
+                     restartWin->post([restartWin, fullRestart](){
+                         if (fullRestart) restartWin->onStart();
+                         restartWin->onResume();
+                     });
                 }
                 mActiveWindow = (*it);
                 break;
