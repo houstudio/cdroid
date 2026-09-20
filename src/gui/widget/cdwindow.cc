@@ -177,7 +177,6 @@ void Window::initWindow(){
                 LOGD("focusedView=%d",focusedView);
             }
         } else {
-            //mHandler.obtainMessage(MSG_CLEAR_ACCESSIBILITY_FOCUS_HOST).sendToTarget();
         }
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(mA11yStateListener);
@@ -454,14 +453,11 @@ void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
         // state consistent by clearing focus.
         provider->performAction(focusedChildId,
                 AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS,nullptr);
-                //AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId(), nullptr);
-        //invalidateRectOnScreen(oldBounds);
     } else {
         // The node was refreshed, invalidate bounds if necessary.
         Rect newBounds = mAccessibilityFocusedVirtualView->getBoundsInScreen();
         if (oldBounds!=newBounds) {
             oldBounds.Union(newBounds);
-            //invalidateRectOnScreen(oldBounds);
         }
     }
 }
@@ -687,8 +683,6 @@ void Window::draw(){
         const int duration = int(SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
         LOGD_IF(duration>10,"%p:%d used %dms",this,mID,duration);
     }
-    //mPendingRgn->do_union(mInvalidRgn);
-    //mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }
 
@@ -900,7 +894,7 @@ View& Window::setAlpha(float alpha){
 }
 
 void Window::onSizeChanged(int w,int h,int oldw,int oldh){
-    //WindowManager::getInstance().resetVisibleRegion();
+    /* empty by design: the window IS the root — no visible-region reset here. */
 }
 
 void Window::onVisibilityChanged(View& changedView,int visibility){
@@ -971,7 +965,6 @@ RefPtr<Canvas>Window::getCanvas(){
     }
 #if 1
     Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create();//{0,0,getWidth(),getHeight()});
-    //setWillNotDraw(true);
     int num = gatherTransparentRegion(transRgn);
     Cairo::RectangleInt rec = transRgn->get_extents();
     LOGV_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
@@ -1202,7 +1195,6 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
         LOGD("recv %d %s flags=%x",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),evt.getFlags());
         return true;
     default:
-        //return performFocusNavigation(evt);
         LOGV("recv %d %s",keyCode,KeyEvent::keyCodeToString(keyCode).c_str());
         return FrameLayout::onKeyDown(keyCode,evt);
     }

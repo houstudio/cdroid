@@ -102,6 +102,23 @@ public:
 public:
     virtual ~WindowManager();
     static WindowManager& getInstance();
+private:
+    /* Removal core shared by removeWindow/removeWindows: focus drop,
+     * lifecycle, membership erase, damage. Restart/flip stay with the
+     * callers (posted vs synchronous policies differ). invalidateBelow: the
+     * bulk path also pushes the band through each window's View invalidate. */
+    bool removeWindowCore(Window*w,bool invalidateBelow);
+    /* Topmost visible focusable window (mWindows is bottom-up). */
+    Window* topFocusableWindow();
+    /* Re-derive the per-window layer bits after an order change: sort by
+     * (type<<16)|z, then restamp the index bits. */
+    void resortLayers();
+    /* GLOBAL rect -> the window's LOCAL pending region (clipped, translated).
+     * Static members so Window's friendship covers them. */
+    static void damageWindow(Window*w,const Rect&grc);
+    /* onPause + first-stop: the idempotent AOSP pair. */
+    static void pauseAndStop(Window*w);
+public:
     void setDisplayRotation(int display,int rotation);
     int  getDisplayRotation(int display=0)const;
     Display&getDefaultDisplay();

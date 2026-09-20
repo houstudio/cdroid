@@ -29,6 +29,23 @@
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
 
+/* GLOBAL rect -> the window's LOCAL pending region (clipped, translated). */
+void WindowManager::damageWindow(Window*w,const Rect&grc){
+    Rect rc = grc;
+    rc.intersect(w->getBound());
+    rc.offset(-w->getLeft(),-w->getTop());
+    w->mPendingRgn->do_union((const Cairo::RectangleInt&)rc);
+}
+
+/* onPause + first-stop: the idempotent AOSP pair. */
+void WindowManager::pauseAndStop(Window*w){
+    w->onPause();
+    if (!w->mStoppedByWm) {
+        w->mStoppedByWm = true;
+        w->onStop();
+    }
+}
+
 WindowManager::WindowManager(){
     mActiveWindow = nullptr;
     mDisplayRotation =0;
@@ -138,17 +155,20 @@ Display*WindowManager::getDisplay(int display){
     return nullptr;
 }
 
-void WindowManager::addWindow(Window*win){
-    mWindows.push_back(win);
-    win->mLayer = (win->window_type<<16)|0x7FFF;
+void WindowManager::resortLayers(){
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });
-
     for(int idx = 0 ;idx < mWindows.size();idx++){
-        Window *w = mWindows.at(idx);
+        Window*w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
+}
+
+void WindowManager::addWindow(Window*win){
+    mWindows.push_back(win);
+    win->mLayer = (win->window_type<<16)|0x7FFF;
+    resortLayers();
     if(mActiveWindow){
         Window*deactWin = mActiveWindow;
         /* AOSP stop rule: an activity is STOPPED only when no longer visible
@@ -216,15 +236,15 @@ void WindowManager::addWindow(Window*win){
     LOGV("win=%p AttachInfo=%p windows.size=%d",win,info,mWindows.size());
 }
 
-void WindowManager::removeWindow(Window*w){
+bool WindowManager::removeWindowCore(Window*w,bool invalidateBelow){
     // Membership check first (AOSP WMS removes by token lookup): a window can
     // reach here twice — e.g. close()'s finishClose() removes it, then the
-    // posted delete self -> ~Window removes it again — and erasing end() is
-    // UB (memmove past the vector block corrupts the heap; a later string
-    // allocation then throws std::length_error, see the DIALOG suite).
+    // posted delete self -> ~Window removes it again — and the early return
+    // must also guard the lifecycle above the erase (a double remove must not
+    // re-deliver pause/stop or re-detach; erasing end() is additionally UB —
+    // memmove past the vector block corrupts the heap, see the DIALOG suite).
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
-    if(itw == mWindows.end()) return;
-
+    if(itw == mWindows.end()) return false;
     if(w == mActiveWindow){
         mActiveWindow = nullptr;
         if (w->mAttachInfo) {   // guard: a detached-but-still-active edge
@@ -233,21 +253,32 @@ void WindowManager::removeWindow(Window*w){
     }
     if(w->hasFlag(View::FOCUSABLE)){
         w->dispatchWindowFocusChanged(false);
-        w->onPause();
-        if (!w->mStoppedByWm) {   // idempotent: never double-deliver onStop
-            w->mStoppedByWm = true;
-            w->onStop();
-        }
+        pauseAndStop(w);
     }
     const Rect wrect = w->getBound();
     mWindows.erase(itw);
-    for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
-        Window*w1 = (*itr);
-        Rect rc = w1->getBound();
-        rc.intersect(wrect);
-        rc.offset(-w1->getLeft(),-w1->getTop());
-        w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
+    for(auto w1:mWindows){
+        if(invalidateBelow){
+            Rect rc = wrect;
+            rc.intersect(w1->getBound());
+            rc.offset(-w1->getLeft(),-w1->getTop());
+            w1->invalidate((const Rect*)&rc);
+        }
+        damageWindow(w1,wrect);
     }
+    return true;
+}
+
+Window*WindowManager::topFocusableWindow(){
+    for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
+        if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE)
+            return *it;
+    }
+    return nullptr;
+}
+
+void WindowManager::removeWindow(Window*w){
+    if(!removeWindowCore(w,false)) return;
     // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
     // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
     // ~Window -- Window::close() stashes it (before calling removeWindow) and hands it to the
@@ -260,9 +291,9 @@ void WindowManager::removeWindow(Window*w){
         // sweep: mActiveWindow may point at a window the sweep already deleted,
         // and focusing a half-destroyed activity re-enters its dead
         // FragmentManager.
-        for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
-            if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
-                if((*it)!=mActiveWindow){
+        Window*const restartWin = topFocusableWindow();
+        if(restartWin){
+            if(restartWin!=mActiveWindow){
                      /* POSTED, like the deactivation: addWindow queues the
                       * host's onPause, so a same-tick add+remove would run a
                       * synchronous resume BEFORE the queued pause and leave
@@ -276,7 +307,6 @@ void WindowManager::removeWindow(Window*w){
                       * re-derivation produce onStart-without-onStop pairs. A
                       * quitting looper drops the post — strictly safer than
                       * re-entering a half-destroyed activity at exit. */
-                     Window* restartWin = (*it);
                      auto alive = restartWin->mA11yListenerAlive;
                      const bool fullRestart = restartWin->mStoppedByWm;
                      restartWin->post([restartWin, alive, fullRestart](){
@@ -288,10 +318,8 @@ void WindowManager::removeWindow(Window*w){
                          }
                          restartWin->onResume();
                      });
-                }
-                mActiveWindow = (*it);
-                break;
             }
+            mActiveWindow = restartWin;
         }
         // The removed window may have been the last one (single-window apps,
         // Window::recreate before the replacement is added): no window to focus.
@@ -302,48 +330,26 @@ void WindowManager::removeWindow(Window*w){
 }
 
 void WindowManager::removeWindows(const std::vector<Window*>&ws){
-    Cairo::RefPtr<Cairo::Region>rgn=Cairo::Region::create();
+    // Bulk teardown (app delete): the shared removal core with the extra
+    // View-level invalidate, then a SYNCHRONOUS restart pass — unlike
+    // removeWindow's posted restart, this caller frees the windows before
+    // returning, so the stack must be consistent at exit.
     for(auto w:ws){
-        if(w == mActiveWindow){
-            mActiveWindow = nullptr;
-            w->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
-        }
-        if(w->hasFlag(View::FOCUSABLE)){
-            w->dispatchWindowFocusChanged(false);
-            w->onPause();
-            if (!w->mStoppedByWm) {   // idempotent: never double-deliver onStop
-                w->mStoppedByWm = true;
-                w->onStop();
-            }
-        }
-        auto itw = std::find(mWindows.begin(),mWindows.end(),w);
-        const Rect rw = w->getBound();
-        mWindows.erase(itw);
-        rgn->do_union({rw.left,rw.top,rw.width,rw.height});
-        for(auto itr=mWindows.begin();itr!=mWindows.end();itr++){
-            Window*w1 = (*itr);
-            Rect rc = w1->getBound();
-            rc.intersect(rw);
-            rc.offset(-w1->getLeft(),-w1->getTop());
-            w1->invalidate((const Rect*)&rc);
-            w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
-        }
         View::AttachInfo*info = w->mAttachInfo;
+        if(!removeWindowCore(w,true)) continue;
         w->onDestroy();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
     }
-    for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
-        if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
-            if((*it)!=mActiveWindow){
-                (*it)->dispatchWindowFocusChanged(true);
-                (*it)->onStart();
-                (*it)->onResume();
-            }
-            mActiveWindow = (*it);
-            break;
+    Window*const next = topFocusableWindow();
+    if(next){
+        if(next!=mActiveWindow){
+            next->dispatchWindowFocusChanged(true);
+            next->onStart();
+            next->onResume();
         }
+        mActiveWindow = next;
     }
     GraphDevice::getInstance().flip();
 }
@@ -375,13 +381,10 @@ void WindowManager::relayoutWindow(Window*w){
 
 void WindowManager::exposeRegionBelow(Window*w,const Rect&grc){
     // Repaint a global rect from the windows BELOW w (they are the ones the moving
-    // surface uncovers): translate the rect into each window's local space and union
-    // it into its pending region — the same damage pattern moveWindow/hideWindow use.
+    // surface uncovers) — the same damage pattern moveWindow/hideWindow use.
     const auto itw = std::find(mWindows.begin(), mWindows.end(), w);
     for(auto it = mWindows.begin(); it < itw; it++){
-        Rect local = grc;
-        local.offset(-(*it)->getLeft(), -(*it)->getTop());
-        (*it)->mPendingRgn->do_union((Cairo::RectangleInt&)local);
+        damageWindow((*it),grc);
     }
 }
 
@@ -392,9 +395,7 @@ void WindowManager::damageRegion(const Rect&grc){
     // intersects each union with the window's visible region, so over-covering
     // is clipped away.
     for(auto w : mWindows){
-        Rect local = grc;
-        local.offset(-w->getLeft(), -w->getTop());
-        w->mPendingRgn->do_union((Cairo::RectangleInt&)local);
+        damageWindow(w,grc);
     }
 }
 
@@ -410,15 +411,15 @@ void WindowManager::moveWindow(Window*w,int x,int y,int width,int height){
     const auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
         for(auto it = mWindows.begin();it<itw;it++){
-           Rect rc = w->getBound();
-           Cairo::RefPtr<Cairo::Region>newrgn = Cairo::Region::create((Cairo::RectangleInt&)rc);
-           for( auto it2 = it+1 ; it2 < itw ; it2++){
-               Rect r = (*it)->getBound();
-               newrgn->subtract((const Cairo::RectangleInt&)r);
-           }
-           newrgn->translate(-rcw.left,-rcw.top);
-           (*it)->mPendingRgn->do_union((Cairo::RectangleInt&)rcw);
-           (*it)->mPendingRgn->subtract((Cairo::RectangleInt&)rcw2);
+           // Vacated band = old frame minus the new one, translated into the
+           // below window's LOCAL space. The old form unioned/subtracted the
+           // GLOBAL rects untranslated, which only matched windows at the
+           // origin (fullscreen apps) — a dialog below a mover was damaged in
+           // the wrong place.
+           Cairo::RefPtr<Cairo::Region>band = Cairo::Region::create((Cairo::RectangleInt&)rcw);
+           band->subtract((Cairo::RectangleInt&)rcw2);
+           band->translate(-(*it)->getLeft(),-(*it)->getTop());
+           (*it)->mPendingRgn->do_union(band);
         }
         GraphDevice::getInstance().flip();
     }
@@ -470,12 +471,8 @@ void WindowManager::hideWindow(Window*w){
     // We do NOT set visibility here (the caller already did) — same damage-
     // propagation pattern as removeWindow/moveWindow.
     for(auto itr=mWindows.begin(); itr!=mWindows.end(); itr++){
-        Window* w1 = (*itr);
-        if(w1==w) continue;
-        Rect rc = w1->getBound();
-        if(!rc.intersect(wrect)) continue;
-        rc.offset(-w1->getLeft(),-w1->getTop());
-        w1->mPendingRgn->do_union((const Cairo::RectangleInt&)rc);
+        if((*itr)==w) continue;
+        damageWindow((*itr),wrect);
     }
     GraphDevice::getInstance().flip();
 }
@@ -504,23 +501,10 @@ Window*WindowManager::getActiveApplicationWindow(){
 
 void WindowManager::sendToBack(Window*win){
     win->mLayer = (win->window_type<<16);/*make win's layer to lowerest*/
-    std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w2->mLayer - w1->mLayer)>0;
-    });
-
-    for(int idx = 0 ; idx < mWindows.size();idx++){
-        Window *w = mWindows.at(idx);
-        w->mLayer = (w->window_type<<16)|(idx+1);
-    }
+    resortLayers();
     mActiveWindow = mWindows.back();
     mActiveWindow->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
-    win->post([win](){
-        win->onPause();
-        if (!win->mStoppedByWm) {
-            win->mStoppedByWm = true;
-            win->onStop();
-        }
-    });
+    win->post([win](){ pauseAndStop(win); });
     Window*newActWin = mActiveWindow;
     newActWin->mStoppedByWm = false;
     mActiveWindow->post([newActWin](){
@@ -533,25 +517,12 @@ void WindowManager::sendToBack(Window*win){
 void WindowManager::bringToFront(Window*win){
     if(mActiveWindow==win) return;
     win->mLayer = (win->window_type<<16)|0x7FFF;
-    std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
-        return (w2->mLayer - w1->mLayer)>0;
-    });
-
-    for(int idx = 0 ; idx < mWindows.size();idx++){
-        Window *w = mWindows.at(idx);
-        w->mLayer = (w->window_type<<16)|(idx+1);
-    }
+    resortLayers();
     win->mStoppedByWm = false;
     win->post([win](){win->onStart();win->onResume();});
 
     Window*deactWin= mActiveWindow;
-    mActiveWindow->post([deactWin](){
-        deactWin->onPause();
-        if (!deactWin->mStoppedByWm) {
-            deactWin->mStoppedByWm = true;
-            deactWin->onStop();
-        }
-    });
+    mActiveWindow->post([deactWin](){ pauseAndStop(deactWin); });
     mActiveWindow = win;
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
     GraphDevice::getInstance().flip();
