@@ -436,7 +436,12 @@ void WindowManager::onSoftInputShown(Window* ime){
         const int adjust = w->getAttributes().softInputMode & LayoutParams::SOFT_INPUT_MASK_ADJUST;
         if(adjust == LayoutParams::SOFT_INPUT_ADJUST_NOTHING) continue;
         if(w->getBottom() <= imeTop) continue; // already clear of the IME
-        mSoftInputBackup[w] = w->getBound();
+        // Record the backup only on the FIRST shrink: a re-run (the IME resized
+        // itself while visible) would otherwise snapshot the already-shrunk frame
+        // and the later restore would un-shrink to the previous IME top instead
+        // of the full window.
+        if(mSoftInputBackup.find(w)==mSoftInputBackup.end())
+            mSoftInputBackup[w] = w->getBound();
         // View::layout takes (x, y, width, height): shrink the height to end at
         // the IME's top edge.
         w->layout(w->getLeft(), w->getTop(), w->getWidth(), imeTop - w->getTop());

@@ -43,6 +43,14 @@ int InputMethod::getKeyboardLayout(int inputType)const{
     }
 }
 
+int InputMethod::getIMEWindowLayout()const{
+    // 0 = the built-in ime_pinyin_keyboard container (candidate strip on top,
+    // full-width KeyboardView below). Bundled methods keep it; see the header
+    // for the product-override contract (keyboardview id required, the rest
+    // optional).
+    return 0;
+}
+
 InputMethod::~InputMethod(){
 }
 

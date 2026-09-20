@@ -707,6 +707,40 @@ void Window::setPos(int x,int y){
     GraphDevice::getInstance().flip();
 }
 
+void Window::resize(int width,int height){
+    if(width<=0||height<=0) return;
+    if(width==getWidth()&&height==getHeight()) return;
+    LOGD("Window::resize %dx%d -> %dx%d pos=(%d,%d)",getWidth(),getHeight(),width,height,mLeft,mTop);
+    // Keep LayoutParams in sync (see setPos: the frame lives in the attributes;
+    // AOSP relayout writes the new size back into WindowManager.LayoutParams).
+    mWindowAttributes.width = width;
+    mWindowAttributes.height = height;
+    if(isAttachedToWindow()){
+        // moveWindow applies the new frame (setFrame invalidates this window
+        // and damages the vacated band into the windows below), exactly like a move.
+        WindowManager::getInstance().moveWindow(this,mLeft,mTop,width,height);
+        if(mAttachInfo && getVisibility()==View::VISIBLE){
+            // Realloc the content canvas and repaint into it SYNCHRONOUSLY, before
+            // any compose can run: compose reads mAttachInfo->mCanvas per pass and
+            // computes the other windows' visible regions from the pass's window
+            // list, so a null (or stale-sized) canvas here would drop this window
+            // out of an interleaved compose while the windows below still carry
+            // damage against its old coverage — a one-pass hole in the screen.
+            // Atomic frame+canvas+content, the way setPos moves atomically.
+            // (The canvas is allocated once in getCanvas() at the then-current
+            // size, so a window that GROWS must swap it or draw clipped.)
+            mAttachInfo->mCanvas = nullptr;
+            invalidate();      // full new bounds queued (setFrame already did too)
+            draw();            // getCanvas() reallocates at the new size and paints NOW
+        }
+        requestLayout();       // re-measure the subtree at the new size (next
+                               // traversal refines the layout the draw above used)
+        GraphDevice::getInstance().flip();
+    } else {
+        FrameLayout::layout(mLeft,mTop,width,height);
+    }
+}
+
 void Window::setSurfaceTranslation(int dx,int dy){
     if (dx == mSurfaceDx && dy == mSurfaceDy) return;
     // Damage model for a moving surface (AOSP's SurfaceFlinger recomposites everything; CDROID's

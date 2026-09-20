@@ -70,6 +70,16 @@ public:
     * unchanged by the bundled English/Pinyin methods). Override in a product
     * subclass to customize. */
    virtual int getKeyboardLayout(int inputType)const;
+   /* The IME window's own container layout (candidate strip + KeyboardView;
+    * the ime_pinyin_keyboard.xml shape). 0 = the built-in default.
+    *
+    * The product layout must contain a KeyboardView under @+id/keyboardview;
+    * the candidate strip (@+id/predict2) and the close button
+    * (@+id/closekeyboard) are OPTIONAL — a missing one degrades (no candidate
+    * strip / no close affordance) instead of crashing. Override in a product
+    * subclass to ship a custom IME chrome from the app pak, exactly like
+    * getKeyboardLayout ships custom keyboards. */
+   virtual int getIMEWindowLayout()const;
 };
 
 };

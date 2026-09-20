@@ -19,6 +19,7 @@
 #include <text/inputtype.h>
 #include <windowmanager.h>
 #include <cdlog.h>
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <keycharactermap.h>
@@ -57,11 +58,20 @@ protected:
     * is still text). Reset whenever setInputType loads a fresh layout. */
    bool mSymbolMode = false;
 public:
-   IMEWindow(int w,int h);
+   /* layoutResId: the IME container layout (0 = the built-in
+    * ime_pinyin_keyboard). See InputMethod::getIMEWindowLayout. */
+   IMEWindow(int w,int h,int layoutResId=0);
    ~IMEWindow(){
        LOGD("delete IMEWindow %p",this);
        delete mController;
-       InputMethodManager::getInstance().imeWindow=nullptr;
+       // Null the IMM's pointer only if it still points at US: a replacement
+       // window may already be assigned (method switch rebuilding the chrome —
+       // close() deletes asynchronously) and must not be orphaned by our dtor.
+       // peekInstance, NOT getInstance: during shutdown the singleton is
+       // already destroyed, and a pending async window deletion must not
+       // resurrect it.
+       if(InputMethodManager*const imm = InputMethodManager::peekInstance())
+           if(imm->imeWindow == this) imm->imeWindow = nullptr;
    }
    /* The active engine changed (method switch); hand it to the controller. */
    void setActiveMethod(InputMethod* im){ if(mController) mController->setInputMethod(im); }
@@ -73,7 +83,9 @@ public:
        mDirectCommit = d;
    }
    void onSizeChanged(int w,int h,int ow,int oh)override{
-       kbdView->onSizeChanged(w,h,ow,oh);
+       // kbdView may be absent (a product chrome without @id/keyboardview —
+       // the ctor degrades instead of crashing).
+       if(kbdView) kbdView->onSizeChanged(w,h,ow,oh);
        Window::onSizeChanged(w,h,ow,oh);
    }
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
@@ -105,6 +117,7 @@ public:
        return true;
    }
    void changeCapital(){
+       if(kbdView == nullptr) return;
        Keyboard*keyboard = kbdView->getKeyboard();
        std::vector<Keyboard::Key*>&keys = keyboard->getKeys();
        for(int i=0;i<keys.size();i++){
@@ -134,7 +147,7 @@ public:
    }
 };
 
-IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
+IMEWindow::IMEWindow(int w,int h,int layoutResId):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     // The IME window stays focusable (default). It only consumes input events
     // while VISIBLE; hiding it via setVisibility(INVISIBLE) removes it from both
     // touch routing and key dispatch in WindowManager, so a dismissed keyboard
@@ -148,29 +161,49 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              WindowManager::LayoutParams::FLAG_NOT_TOUCH_MODAL);
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
-    // The pinyin IME layout ships in the IME module's pak — resolve by name.
-    // A broken IME layout must not abort the whole process (inflate throws);
-    // degrade to a text-less window instead.
+    // The container layout: the built-in pinyin chrome by default, or the
+    // active method's custom one (InputMethod::getIMEWindowLayout — the
+    // window-chrome twin of getKeyboardLayout: a product subclass ships its
+    // own IME chrome from the app pak). A broken layout must not abort the
+    // whole process (inflate throws); degrade to a text-less window instead.
+    const int layout = layoutResId ? layoutResId : cdroid::R::layout::ime_pinyin_keyboard;
     kbdView = nullptr;
     candidateView = nullptr;
+    mController = nullptr;
     View*vg = nullptr;
     try {
-        vg = LayoutInflater::from(mContext)->inflate(cdroid::R::layout::ime_pinyin_keyboard,this,false);
+        vg = LayoutInflater::from(mContext)->inflate(layout,this,false);
     } catch (std::exception&e) {
         LOGE("IME layout inflate failed: %s", e.what());
         return;
     }
-    kbdView = (KeyboardView*)vg->findViewById(R::id::keyboardview);
+    // The layout contract: the KeyboardView under @id/keyboardview is REQUIRED
+    // (it is the keyboard); the candidate strip (@id/predict2) and the close
+    // button (@id/closekeyboard) are OPTIONAL — a missing one degrades (no
+    // candidates / no close affordance) instead of crashing, so a product may
+    // ship a keyboard-only chrome. The members are committed only AFTER the
+    // required-id check, so the delete-vg degrade path leaves no dangling
+    // pointers into the freed tree.
+    KeyboardView*const kv = (KeyboardView*)vg->findViewById(R::id::keyboardview);
+    if(kv == nullptr){
+        LOGE("IME layout 0x%08x has no @id/keyboardview KeyboardView - keyboard disabled",layout);
+        delete vg;
+        return;
+    }
+    kbdView = kv;
     candidateView = (CandidateView*)vg->findViewById(R::id::predict2);
-    // The controller owns the 1/2-level selection logic; the committer delivers
-    // each committed phrase/word to the focused editor via this->commitText.
-    mController = new ImeSelectionController(candidateView,
-        [this](const std::string& s){ commitText(s); });
-    candidateView->setPredictListener([this](CandidateView&,const std::string&s,int id){
-        mController->onCandidateSelected(s,id);
-    });
+    if(candidateView){
+        // The controller owns the 1/2-level selection logic; the committer delivers
+        // each committed phrase/word to the focused editor via this->commitText.
+        mController = new ImeSelectionController(candidateView,
+            [this](const std::string& s){ commitText(s); });
+        candidateView->setPredictListener([this](CandidateView&,const std::string&s,int id){
+            mController->onCandidateSelected(s,id);
+        });
+    }
     View* closeKbd = vg->findViewById(R::id::closekeyboard);
-    closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
+    if(closeKbd)
+        closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     addView(vg);//layout(0,0,getWidth(),h);
     vg->requestLayout();
     setId(123);
@@ -205,8 +238,9 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              // Composing-aware: while a pinyin is in progress the backspace edits
              // the composing buffer (undo last fixed word, or drop the last typed
              // char); only when nothing is composing do we forward a real
-             // KEYCODE_DEL to delete in the editor.
-             if(!mController->onBackspace()){
+             // KEYCODE_DEL to delete in the editor. No controller (a product
+             // chrome without a candidate strip) -> always a real DEL.
+             if(mController==nullptr || !mController->onBackspace()){
                  keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_DOWN/*action*/,0,KeyEvent::KEYCODE_DEL,
                             0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
                  imm.sendKeyEvent(keyEvent);
@@ -233,10 +267,13 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
                      // no composition / candidate strip (a digit through onChar
                      // would be held as composing and never committed).
                      commitText(std::string(1,(char)primaryCode));
-                 else if(kbdView && kbdView->isMiniKeyboardOnScreen())
+                 else if(mController && kbdView->isMiniKeyboardOnScreen())
                      mController->pickChar(primaryCode);
-                 else
+                 else if(mController)
                      mController->onChar(primaryCode);
+                 else
+                     // No candidate strip in this chrome: letters are literal.
+                     commitText(std::string(1,(char)primaryCode));
              }break;
         }
     };
@@ -357,7 +394,13 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 
 void InputMethodManager::ensureIMEWindow(){
     if(mInst->imeWindow != nullptr) return;
-    mInst->imeWindow = new IMEWindow(-1,300);
+    // The 300 is a PROVISIONAL height only: the window is created INVISIBLE and
+    // the first applyKeyboard's fitIMEWindow() resizes it to the measured
+    // content before it can ever be shown. The container layout comes from the
+    // active method (getIMEWindowLayout: 0 = the built-in pinyin chrome).
+    const int layout = mInst->im ? mInst->im->getIMEWindowLayout() : 0;
+    mInst->imeWindow = new IMEWindow(-1,300,layout);
+    mInst->mIMEWindowLayout = layout ? layout : cdroid::R::layout::ime_pinyin_keyboard;
     positionIMEWindow();
     LOGD("IMEWindow created: height=%d",mInst->imeWindow->getHeight());
 }
@@ -373,6 +416,41 @@ void InputMethodManager::positionIMEWindow(){
     dp.getRealSize(dspSize);
     const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
     imeWindow->setPos(0,screenHeight-imeWindow->getHeight());
+}
+
+void InputMethodManager::fitIMEWindow(){
+    if(imeWindow==nullptr) return;
+    // Content root = the inflated IME layout (the IMEWindow ctor's addView(vg)).
+    View* content = imeWindow->getChildAt(0);
+    if(content==nullptr) return;
+    Point dspSize;
+    Display& dp = WindowManager::getInstance().getDefaultDisplay();
+    const int rot = dp.getRotation();
+    dp.getRealSize(dspSize);
+    const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
+    const int screenH = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.x : dspSize.y;
+    // Wrap-measure the content: the candidate strip is wrap_content and the
+    // KeyboardView reports the installed keyboard's natural height, so this is
+    // the exact height the IME needs (the keyboard layout itself is the height
+    // declaration). Clamped to the screen.
+    content->measure(MeasureSpec::makeMeasureSpec(screenW,MeasureSpec::EXACTLY),
+                     MeasureSpec::makeMeasureSpec(0,MeasureSpec::UNSPECIFIED));
+    const int contentH = std::min(content->getMeasuredHeight(),screenH);
+    LOGD("fitIMEWindow: measured=%d screenW=%d win=%dx%d content=%dx%d",
+         content->getMeasuredHeight(),screenW,imeWindow->getWidth(),imeWindow->getHeight(),
+         content->getWidth(),content->getHeight());
+    const bool sizeChanged = (screenW!=imeWindow->getWidth())||(contentH!=imeWindow->getHeight());
+    const bool wasVisible = imeWindow->getVisibility()==View::VISIBLE;
+    imeWindow->resize(screenW,contentH);
+    positionIMEWindow();
+    if(wasVisible && sizeChanged){
+        // The IME's top edge moved under a live keyboard: re-run the ADJUST_RESIZE
+        // pair so app windows shrink to the NEW ime top (hidden restores the full
+        // frames and clears the backups, shown re-shrinks — see onSoftInputShown).
+        WindowManager& wms = WindowManager::getInstance();
+        wms.onSoftInputHidden(imeWindow);
+        wms.onSoftInputShown(imeWindow);
+    }
 }
 
 void InputMethodManager::setInputType(int inputType){
@@ -448,6 +526,10 @@ void InputMethodManager::applyKeyboard(int xmlLayoutResId){
     dp.getRealSize(dspSize);
     const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
     Keyboard*kbd = new Keyboard(imeWindow->getContext(), xmlLayoutResId, screenW, 240);
+    if(imeWindow->kbdView == nullptr){ // degraded chrome (no @id/keyboardview)
+        delete kbd;
+        return;
+    }
     imeWindow->kbdView->setKeyboard(kbd);
     // A product's InputMethod may supply a custom long-press popup container
     // (getKeyboardLayout(POPUP)); apply it as the KeyboardView's popup layout so
@@ -459,6 +541,9 @@ void InputMethodManager::applyKeyboard(int xmlLayoutResId){
     }
     // AOSP keyboards relabel the enter key after the focused editor's ime action.
     refreshImeAction();
+    // Adaptive sizing: the window follows the installed keyboard's natural
+    // height (the old fixed 300 needed the keyboard tuned to fit INSIDE it).
+    fitIMEWindow();
     LOGD("applyKeyboard layout=0x%08x w=%d %p %d keys",xmlLayoutResId,screenW,kbd,kbd->getKeys().size());
 }
 
@@ -523,7 +608,17 @@ void InputMethodManager::onViewDetachedFromWindow(View*view){
 
 
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
+    // The chrome is fixed at window creation: switching to a method with a
+    // DIFFERENT container layout rebuilds the IME window (close is an async
+    // delete; ~IMEWindow keeps the IMM pointer pointing at the replacement).
+    const int chrome = method ? method->getIMEWindowLayout() : 0;
+    const int resolvedChrome = chrome ? chrome : cdroid::R::layout::ime_pinyin_keyboard;
+    if(imeWindow && resolvedChrome != mIMEWindowLayout){
+        imeWindow->close();
+        imeWindow = nullptr;
+    }
     im = method;
+    if(imeWindow == nullptr) ensureIMEWindow(); // rebuilt with the new chrome
     // The controller keeps its own pointer to the active engine; update it on
     // every method switch (and reset any half-composed pinyin).
     if(imeWindow) imeWindow->setActiveMethod(method);
@@ -554,6 +649,7 @@ void InputMethodManager::showSoftInput(View*v,int /*flags*/){
     // would leave it null and the keyboard would never appear).
     ensureIMEWindow();
     if(imeWindow == nullptr) return; // only if creation failed
+    if(imeWindow->kbdView == nullptr) return; // degraded chrome: nothing to show
     imeWindow->mBuddy = v;
     positionIMEWindow();             // undo any off-screen hide from the close button
     imeWindow->setVisibility(View::VISIBLE);

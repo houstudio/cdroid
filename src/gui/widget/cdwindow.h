@@ -281,6 +281,11 @@ public:
     virtual void setText(const std::string&);
     const std::string getText()const;
     void setPos(int x,int y);
+    /* Resize keeping the current position (AOSP ViewRootImpl's relayout with a
+     * changed frame: WMS applies the new size, the old surface is replaced, the
+     * vacated band repaints from the windows below). The size-driven counterpart
+     * of setPos — the IME window resizes itself to its keyboard content. */
+    void resize(int width,int height);
     /* Visual-only surface translation (see mSurfaceDx). Real moves go through setPos. */
     void setSurfaceTranslation(int dx,int dy);
     // AOSP Window.getAttributes/setAttributes. getAttributes returns the LIVE
