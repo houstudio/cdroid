@@ -818,7 +818,13 @@ protected:
     virtual bool verifyDrawable(Drawable*)const;
     virtual void drawableStateChanged();
     virtual std::vector<int> onCreateDrawableState(int);
-    virtual void setFlags(int flag,int mask);
+    /* AOSP View.setFlags is package-private and non-virtual; keeping it virtual
+     * here made Window::setFlags (the AOSP Window.setFlags window-flag API,
+     * Window.java:1089) an accidental OVERRIDE — every View flag write on a
+     * Window (setFocusable/setEnabled/setClickable from View code) silently
+     * rewrote mWindowAttributes.flags instead of mViewFlags, so windows never
+     * became View-focusable and the WindowManager restart scan skipped them. */
+    void setFlags(int flag,int mask);
     virtual bool hasFlag(int flag) const;
     bool fitSystemWindows(Rect& insets);
     void applyInsets(const Rect& insets);
