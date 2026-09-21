@@ -49,6 +49,14 @@ Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
     mShowing = false;
     mCancelable = true;
     mWindow = new Window(mContext, 0, 0, 640, 320);
+    // AOSP: the dialog's PhoneWindow is NOT attached to WMS until show()
+    // (WindowManager.addView in Dialog.show). CDROID windows self-register in
+    // the ctor, so park this one INVISIBLE until show(): compose, input
+    // hit-testing and visible-region occlusion all skip non-VISIBLE windows.
+    // Otherwise a created-but-unshown dialog (Builder.create() held for later)
+    // sits in the stack as a live occluder swallowing input and compositing
+    // its blank frame over the host.
+    mWindow->setVisibility(View::INVISIBLE);
     // AOSP Dialog ctor: mWindow.setCallback(this) — the Dialog receives the
     // window's input dispatch + lifecycle through the Window.Callback seam
     // (cleared in dismissDialog: the window teardown is posted and may outlive
@@ -165,6 +173,10 @@ void Dialog::show(){
 
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
     frm->layout(lp->leftMargin,lp->topMargin,mWindow->getWidth()-horzMargin, mWindow->getHeight()-vertMargin);
+    // AOSP Dialog.show's WindowManager.addView attaches the window VISIBLE.
+    // The ctor parked it INVISIBLE (see there); the re-show branch above
+    // restores visibility too — this is the first-show counterpart.
+    mWindow->setVisibility(View::VISIBLE);
     mShowing = true;
 }
 
