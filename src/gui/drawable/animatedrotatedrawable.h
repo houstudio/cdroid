@@ -36,7 +36,6 @@ private:
         AnimatedRotateState(const AnimatedRotateState& orig);
         AnimatedRotateDrawable* newDrawable()override;
         Drawable* newDrawable(Resources* res)override;
-        int getChangingConfigurations()const override;
     };
     Runnable mNextFrame;
     float mCurrentDegrees;
@@ -63,6 +62,7 @@ public:
 
     void setFramesCount(int framesCount);
     void setFramesDuration(int framesDuration);
+    void applyTheme(const Resources::Theme& t)override;
     bool setVisible(bool visible, bool restart)override;
     void start()override;
     void stop()override;
