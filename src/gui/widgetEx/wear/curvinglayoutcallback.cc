@@ -17,6 +17,7 @@
 */
 #include <core/pathmeasure.h>
 #include <widgetEx/wear/curvinglayoutcallback.h>
+#include <widgetEx/widgetex_styleable.h>
 namespace cdroid{
 
 CurvingLayoutCallback::CurvingLayoutCallback(Context* context) {
@@ -24,8 +25,8 @@ CurvingLayoutCallback::CurvingLayoutCallback(Context* context) {
     mPathMeasure = new PathMeasure();
     mParentView= nullptr;
     mIsScreenRound = true;//context.getResources().getConfiguration().isScreenRound();
-    mXCurveOffset = context->getDimensionPixelSize(context->getResources().getIdentifier(
-            "ws_wrv_curve_default_x_offset", "dimen", "cdroid.widgetex"));
+    mXCurveOffset = context->getDimensionPixelSize(
+            (int)internal::R::dimen::ws_wrv_curve_default_x_offset);
 }
 
 CurvingLayoutCallback::~CurvingLayoutCallback(){

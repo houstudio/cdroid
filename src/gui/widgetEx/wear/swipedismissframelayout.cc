@@ -27,19 +27,10 @@ SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const Attribut
 }
 
 void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callback& callback) {
-    /*if (callback == null) {
-        throw new NullPointerException("addCallback called with null callback");
-    }*/
     mCallbacksCompat.push_back(callback);
 }
 
 void SwipeDismissFrameLayout::removeCallback(const SwipeDismissFrameLayout::Callback& callback) {
-    /*if (callback == null) {
-        throw new NullPointerException("removeCallback called with null callback");
-    }
-    if (!mCallbacksCompat.remove(callback)) {
-        throw new IllegalStateException("removeCallback called with nonexistent callback");
-    }*/
     auto it =std::find(mCallbacksCompat.begin(),mCallbacksCompat.end(),callback);
     if(it!=mCallbacksCompat.end()){
         mCallbacksCompat.erase(it);

@@ -37,8 +37,8 @@ private:
 
     RectF mInnerCircleBounds;
     ObjectAnimator* mAnimator;
-    float mCircleBorderWidth;
-    int mCircleBorderColor;
+    float mCircleBorderWidth = 0.f;
+    int mCircleBorderColor = 0xFF000000;
 private:    
     static float lerpInv(float a, float b, float value);
 protected:

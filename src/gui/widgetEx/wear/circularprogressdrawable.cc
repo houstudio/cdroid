@@ -354,14 +354,6 @@ CircularProgressDrawable::Ring::Ring() {
     mArrowHeight=0;
     mRingCap=static_cast<int>(Cairo::Context::LineCap::SQUARE);
     mRingCenterRadius =0.f;
-    /*mPaint.setStrokeCap(Paint.Cap.SQUARE);
-    mPaint.setAntiAlias(true);
-    mPaint.setStyle(Style.STROKE);
-
-    mArrowPaint.setStyle(Paint.Style.FILL);
-    mArrowPaint.setAntiAlias(true);*/
-
-    //mCirclePaint.setColor(Color::TRANSPARENT);
     mCircleColor = Color::TRANSPARENT;
 }
 
@@ -403,7 +395,6 @@ void CircularProgressDrawable::Ring::draw(Canvas& c,const Rect& bounds) {
     const float endAngle = (mEndTrim + mRotation) * 360.f;
     float sweepAngle = endAngle - startAngle;
 
-    //mPaint.setColor(mCurrentColor);mPaint.setAlpha(mAlpha);
     c.set_color(mCircleColor);
 
     // Draw the background first

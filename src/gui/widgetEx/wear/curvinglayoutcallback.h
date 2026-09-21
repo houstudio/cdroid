@@ -27,7 +27,7 @@ private:
 
     Cairo::RefPtr<cdroid::Path> mCurvePath;
     PathMeasure* mPathMeasure;
-    int mCurvePathHeight;
+    int mCurvePathHeight = -1;
     int mXCurveOffset;
     float mPathLength;
     float mCurveBottom;

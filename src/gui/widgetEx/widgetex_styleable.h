@@ -198,6 +198,16 @@ namespace internal { namespace R { namespace id {
     constexpr uint32_t wearable_support_confirmation_overlay_image = 0x020600b5;
     constexpr uint32_t wearable_support_confirmation_overlay_message = 0x020600b6;
 } } } // namespace internal::R::id
+namespace internal { namespace R { namespace array {
+    constexpr uint32_t circular_progress_layout_color_scheme_colors = 0x02020000;
+} } } // namespace internal::R::array
+namespace internal { namespace R { namespace color {
+    constexpr uint32_t circular_progress_layout_background_color = 0x02030000;
+} } } // namespace internal::R::color
+namespace internal { namespace R { namespace dimen {
+    constexpr uint32_t circular_progress_layout_stroke_width = 0x02050000;
+    constexpr uint32_t ws_wrv_curve_default_x_offset = 0x02050013;
+} } } // namespace internal::R::dimen
 namespace internal { namespace R { namespace layout {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.

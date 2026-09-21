@@ -18,6 +18,12 @@
     <public type="layout" name="ws_overlay_confirmation" id="0x02080000"/>
     <public type="id" name="wearable_support_confirmation_overlay_image" id="0x020600b5"/>
     <public type="id" name="wearable_support_confirmation_overlay_message" id="0x020600b6"/>
+    <!-- CircularProgressLayout / CurvingLayoutCallback defaults (androidx wear
+         R constants; ids pinned at the values aapt2 already assigns) -->
+    <public type="array" name="circular_progress_layout_color_scheme_colors" id="0x02020000"/>
+    <public type="color" name="circular_progress_layout_background_color" id="0x02030000"/>
+    <public type="dimen" name="circular_progress_layout_stroke_width" id="0x02050000"/>
+    <public type="dimen" name="ws_wrv_curve_default_x_offset" id="0x02050013"/>
     <public type="drawable" name="confirmation_animation" id="0x0204003a"/>
     <public type="drawable" name="failure_animation" id="0x0204003b"/>
     <public type="drawable" name="open_on_phone_animation" id="0x0204003d"/>

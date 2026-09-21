@@ -83,7 +83,7 @@ private:
     float mAnchorAngleDegrees;
     float mMaxAngleDegrees = 360.0f;
     bool mClockwise;
-    ChildArcAngles* mChildArcAngles;
+    ChildArcAngles* mChildArcAngles = nullptr;
     View* mTouchedView = nullptr;
 private:
     static bool insideChildClickArea(View* child, float x, float y);
@@ -103,6 +103,7 @@ protected:
 public:
     ArcLayout(Context* context, const AttributeSet* attrs);
     ArcLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    ~ArcLayout() override;
     void requestLayout() override;
 
     bool onInterceptTouchEvent(MotionEvent& event) override;

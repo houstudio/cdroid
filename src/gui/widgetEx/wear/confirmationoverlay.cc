@@ -23,6 +23,11 @@ ConfirmationOverlay::ConfirmationOverlay(const std::string &message)
 }
 
 ConfirmationOverlay::~ConfirmationOverlay(){
+    // Java GC reclaims a still-attached overlay; C++ must detach it from its
+    // host ViewGroup first or the host is left with a dangling child.
+    if (mOverlayView != nullptr && mOverlayView->getParent() != nullptr) {
+        ((ViewGroup*)mOverlayView->getParent())->removeView(mOverlayView);
+    }
     delete mOverlayView;
     delete mMainThreadHandler;
 }
@@ -65,7 +70,6 @@ void ConfirmationOverlay::showOn(Window* activity) {
     mIsShowing = true;
 
     updateOverlayView(activity->getContext());
-    //activity.getWindow().addContentView(mOverlayView, mOverlayView->getLayoutParams());
     activity->addView(mOverlayView,mOverlayView->getLayoutParams());
     animateAndHideAfterDelay();
 }
@@ -74,7 +78,6 @@ void ConfirmationOverlay::animateAndHideAfterDelay() {
     auto animatable = dynamic_cast<Animatable*>(mOverlayDrawable);
     if (animatable!=nullptr) {
         animatable->start();
-        LOGD("animatable=%p",animatable);
     }
     mMainThreadHandler->postDelayed(mHideRunnable, mDurationMillis);
 }

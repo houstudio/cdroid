@@ -36,9 +36,18 @@ WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* 
     // allows the items to draw in that space.
     setClipToPadding(false);
 
+    // androidx WearableRecyclerView.java:53-63
+    mPaddingPreDrawListener = [this]() -> bool {
+        if (mCenterEdgeItemsWhenThereAreChildren && getChildCount() > 0) {
+            setupCenteredPadding();
+            mCenterEdgeItemsWhenThereAreChildren = false;
+        }
+        return true;
+    };
+
     // androidx R.styleable.WearableRecyclerView (TypedArray; binary AXML ids)
     if (pAttrs) {
-        auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::WearableRecyclerView);
+        auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::WearableRecyclerView, defStyleAttr);
         if (ta) {
             setCircularScrollingGestureEnabled(ta->getBoolean(internal::R::styleable::WearableRecyclerView_circularScrollingGestureEnabled, mCircularScrollingEnabled));
             setBezelFraction(ta->getFraction(internal::R::styleable::WearableRecyclerView_bezelWidth, 1, 1, mScrollManager->getBezelWidth()));
@@ -48,6 +57,7 @@ WearableRecyclerView::WearableRecyclerView(Context* context,const AttributeSet* 
 }
 
 WearableRecyclerView::~WearableRecyclerView(){
+    delete mScrollManager;
 }
 
 void WearableRecyclerView::setupCenteredPadding() {

@@ -12,7 +12,6 @@ SET(WEAR_SOURCES
     widgetEx/wear/wearablerecyclerview.cc
     widgetEx/wear/dismissibleframelayout.cc
     widgetEx/wear/swipedismisscontroller.cc
-    widgetEx/wear/swipedismisscontroller.cc
     widgetEx/wear/curvinglayoutcallback.cc
     widgetEx/wear/swipedismissframelayout.cc
     widgetEx/wear/swipedismisstransitionhelper.cc

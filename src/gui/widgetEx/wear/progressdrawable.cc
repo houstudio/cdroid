@@ -17,6 +17,7 @@
 */
 #include <animation/interpolators.h>
 #include <animation/objectanimator.h>
+#include <utils/mathutils.h>
 #include <widgetEx/wear/progressdrawable.h>
 
 namespace cdroid{
@@ -98,9 +99,17 @@ void ProgressDrawable::draw(Canvas& canvas) {
 
     sweepAngle = std::max(1.0f, sweepAngle);
 
-    //canvas.rotate( level * (1.0f / MAX_LEVEL) * 2 * FULL_CIRCLE + STARTING_ANGLE + correctionAngle,
-    //        mInnerCircleBounds.centerX(), mInnerCircleBounds.centerY());
-    //canvas.drawArc(mInnerCircleBounds, growing ? 0 : MAX_SWEEP - sweepAngle, sweepAngle, false,mPaint);
+    // androidx ProgressDrawable.java:153-160
+    const float cx = mInnerCircleBounds.centerX();
+    const float cy = mInnerCircleBounds.centerY();
+    canvas.translate(cx, cy);
+    canvas.rotate_degrees(level * (1.0f / MAX_LEVEL) * 2 * FULL_CIRCLE + STARTING_ANGLE + correctionAngle);
+    canvas.translate(-cx, -cy);
+    const float startDeg = growing ? 0.f : (MAX_SWEEP - sweepAngle);
+    canvas.begin_new_path();
+    canvas.arc(cx, cy, mInnerCircleBounds.width / 2.f,
+            MathUtils::toRadians(startDeg), MathUtils::toRadians(startDeg + sweepAngle));
+    canvas.stroke();
     canvas.restore();
 }
 
