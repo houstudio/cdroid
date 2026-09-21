@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upstream: SupportWearDemos res/layout/rv_demo.xml. app:boxedEdges resolves
+     through the -I-linked widgetex.apk shared lib (0x02 attr block), exactly
+     like widgetsDemo's constraint attrs. -->
+<androidx.wear.widget.BoxInsetLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:boxedEdges="all">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="vertical">
+            <requestFocus />
+        </androidx.recyclerview.widget.RecyclerView>
+    </LinearLayout>
+</androidx.wear.widget.BoxInsetLayout>

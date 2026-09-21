@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cpl_click_me">Click me!</string>
+    <string name="cpl_clicked">Clicked!</string>
+    <string name="cpl_finished">Finished!</string>
+</resources>
