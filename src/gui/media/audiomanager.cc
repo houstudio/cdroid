@@ -40,6 +40,10 @@ AudioManager::AudioManager(Context*ctx):mContext(ctx){
 
 void AudioManager::loadSoundEffects(){
     mSoundPool = std::make_unique<SoundPool>((int)NUM_SOUND_EFFECTS,0,0);
+    // Per-fx file table (indexed by effectType, like SOUND_EFFECT_FILES_MAP):
+    // several FX share one file, so a push_back-per-new-file list left
+    // playSoundEffect's SOUND_EFFECT_FILES[effectType] log read out of range.
+    SOUND_EFFECT_FILES.resize((int)NUM_SOUND_EFFECTS);
     SOUND_EFFECT_FILES_MAP.resize((int)NUM_SOUND_EFFECTS);
     // AOSP AudioService reads android.R.xml.audio_assets from the framework
     // package; an app may ship its own override (checked first, matching the
@@ -78,26 +82,39 @@ void AudioManager::loadSoundEffects(){
     };
     std::unordered_map<std::string,int>file2sid;
     for(auto m:mm){
-        int sid = -1;
         const int fx = m.first;
         const auto its = sounds.find(m.second);
         const std::string sf = its!=sounds.end()?its->second:"";
-        auto it = std::find(SOUND_EFFECT_FILES.begin(),SOUND_EFFECT_FILES.end(),sf);
-        if(it==SOUND_EFFECT_FILES.end()){
-            sid = mSoundPool->load(mContext,sf,0);//SOUND_EFFECT_FILES.size();
-            SOUND_EFFECT_FILES.push_back(sf);
-            file2sid.insert({sf,sid});
-        }else {
-            auto its = file2sid.find(sf);
-            sid = its->second;
+        /*AOSP AudioService loads each file once (keyed by filename). Resolve
+          the int-id way (post binary-AXML): the app's own res/raw override
+          first, then the framework pak's raw; anything else falls through as
+          a plain path — AOSP's UI sounds live in /system/media/audio/ui, not
+          in framework res, and SoundPool.load(path) probes it verbatim.
+          load() returns 0 on failure (AOSP semantics): unmapped effects stay
+          0 and playSoundEffect() is a logged no-op, exactly like a device
+          that ships no UI sound files.*/
+        int sid = 0;
+        auto cached = file2sid.find(sf);
+        if(cached!=file2sid.end()){
+            sid = cached->second;
+        }else{
+            const size_t dot = sf.rfind('.');
+            const std::string base = (dot==std::string::npos)?sf:sf.substr(0,dot);
+            Resources& res = mContext->getResources();
+            int resId = res.getIdentifier(base,"raw",mContext->getPackageName());
+            if(resId==0) resId = res.getIdentifier(base,"raw","cdroid");
+            sid = resId ? mSoundPool->load(mContext,resId,0)
+                        : mSoundPool->load(sf,0);
+            file2sid.emplace(sf,sid);
         }
+        SOUND_EFFECT_FILES[fx] = sf;
         SOUND_EFFECT_FILES_MAP[fx] = sid;
         LOGD("%d %s->%s soundid=%d",fx,m.second.c_str(),sf.c_str(),sid);
     }
 }
 
 void AudioManager::loadTouchSoundAssetDefaults(){
-    SOUND_EFFECT_FILES.push_back("Effect_Tick.wav");
+    SOUND_EFFECT_FILES.resize((int)NUM_SOUND_EFFECTS,"Effect_Tick.wav");
     for (int i = 0; i < (int)NUM_SOUND_EFFECTS; i++) {
         SOUND_EFFECT_FILES_MAP[i] = 0;
     }

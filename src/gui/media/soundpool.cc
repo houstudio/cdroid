@@ -24,6 +24,7 @@
 #include <cstring>
 #include <sstream>
 #include <rtaudio/RtAudio.h>
+#include <unistd.h>
 
 namespace cdroid{
 
@@ -126,29 +127,17 @@ int32_t SoundPool::readChunk(std::istream&is,SoundPool::Sound&sound){
     return ret;
 }
 
-int32_t SoundPool::load(Context* context, const std::string& resId, int priority){
+int SoundPool::_load(std::istream& is,int priority){
+    (void)priority;/*AOSP: priority currently has no effect*/
     auto sound = std::make_shared<Sound>();
-    std::unique_ptr<std::istream> is;
 #if ENABLE(AUDIO)
-    if(context){
-        if(Asset*asset = context->openAsset(resId))
-            is = std::unique_ptr<std::istream>(new AssetInputStream(asset));
-    }
-    if((is==nullptr)||!(*is)){
-        is = std::make_unique<std::ifstream>(resId, std::ios::in|std::ios::binary);
-        if((is==nullptr)||(!*is)){
-            LOGW("failed to load %s",resId.c_str());
-            return -1;
-        }
-    }
-    readChunk(*is,*sound);
+    readChunk(is,*sound);
     if(sound->format==0){
-        LOGW("invalid ot unsupport audio format %s",resId.c_str());
-        return -1;
+        LOGW("invalid or unsupported audio format");
+        return 0;/*AOSP: 0 = failure*/
     }
     LOGD("\tAudioFormat:%d Channels=%d sampleRate=%d",sound->format,sound->channels,sound->sampleRate);
     LOGD("\tByteRate:%d blockAlign=%d bitsPerSample=%d",sound->byteRate,sound->blockAlign,sound->bitsPerSample);
-    // For simplicity, assume the file is a raw PCM file with known parameters
     std::lock_guard<std::recursive_mutex>_l(mLock);
     const int soundId = mSounds.size()+1;
     sound->playingSounds=0;
@@ -167,11 +156,52 @@ int32_t SoundPool::load(Context* context, const std::string& resId, int priority
         return soundId;
     }
 #endif
-    return -1;
+    return 0;
 }
 
-int32_t SoundPool::load(const std::string& filePath,int priority) {
-    return load(nullptr,filePath,priority);
+int SoundPool::load(const std::string& path,int priority){
+    /*AOSP load(String path, priority): open the file and hand its bytes to
+      _load. AOSP goes through ParcelFileDescriptor; the ifstream is the same
+      read-only whole-file view on this side of the seam.*/
+    std::ifstream is(path, std::ios::in|std::ios::binary);
+    if(!is){
+        LOGE("error loading %s",path.c_str());
+        return 0;
+    }
+    return _load(is,priority);
+}
+
+int SoundPool::load(Context* context,int resId,int priority){
+    /*AOSP load(Context, resId, priority): Resources.openRawResourceFd ->
+      afd -> _load(fd, startOffset, length). CDROID pak entries are
+      stream-backed (no fd view), so resolve through Resources.openRawResource
+      — the seam ImageDecoder uses; a null Asset mirrors afd == null (return
+      0, per AOSP).*/
+    if(context==nullptr) return 0;
+    Asset* asset = context->getResources().openRawResource(resId);
+    if(asset==nullptr) return 0;
+    AssetInputStream is(asset);
+    return _load(is,priority);
+}
+
+int SoundPool::load(int fd,int64_t offset,int64_t length,int priority){
+    /*AOSP load(FileDescriptor fd, offset, length, priority): multiple sounds
+      may share one binary — decode only the [offset, offset+length) window
+      (pread; the stream decoder keeps the rest of the fd untouched).*/
+    if((fd<0)||(length<=0)) return 0;
+    std::string buf((size_t)length,'\0');
+    size_t done = 0;
+    while(done<buf.size()){
+        const ssize_t n = pread(fd,&buf[done],buf.size()-done,(off_t)offset+(off_t)done);
+        if(n<=0) break;
+        done += (size_t)n;
+    }
+    if(done!=buf.size()){
+        LOGW("short read on fd=%d: %zu/%lld",fd,done,(long long)length);
+        return 0;
+    }
+    std::istringstream is(buf,std::ios::in|std::ios::binary);
+    return _load(is,priority);
 }
 
 #define SOUNDKEY(s) ((s)->sampleRate*100+(s)->channels*10+(s)->format)
@@ -205,7 +235,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
     auto sound = mSounds.get(soundId);
     if (sound==nullptr) {
         LOGE("Sound ID %d not found!",soundId);
-        return -1;
+        return 0;/*AOSP _play: 0 = soundID not loaded*/
     }
     const int channelKey = SOUNDKEY(sound);
     auto channel = mAudioChannels.get(channelKey);
