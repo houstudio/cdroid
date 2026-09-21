@@ -37,13 +37,24 @@ void WindowManager::damageWindow(Window*w,const Rect&grc){
     w->mPendingRgn->do_union((const Cairo::RectangleInt&)rc);
 }
 
-/* onPause + first-stop: the idempotent AOSP pair. */
-void WindowManager::pauseAndStop(Window*w){
+/* onPause + first-stop: the idempotent AOSP pair; stop=false leaves the
+ * stop half gated off (addWindow's deferred occlusion verdict). */
+void WindowManager::pauseAndStop(Window*w,bool stop){
     w->onPause();
-    if (!w->mStoppedByWm) {
+    if (stop && !w->mStoppedByWm) {
         w->mStoppedByWm = true;
         w->onStop();
     }
+}
+
+/* Clone ev into a synthetic action and dispatch it to w in its LOCAL
+ * coords (the shared ACTION_OUTSIDE / hover-synthesis pattern). */
+static void dispatchSyntheticMotion(MotionEvent&ev,int action,Window*w){
+    MotionEvent*copy = MotionEvent::obtain(ev);
+    copy->setAction(action);
+    copy->offsetLocation(-w->getLeft(),-w->getTop());
+    w->dispatchPointerEvent(*copy);
+    copy->recycle();
 }
 
 WindowManager::WindowManager(){
@@ -146,13 +157,7 @@ Display& WindowManager::getDefaultDisplay(){
 	        mDisplays.push_back(d);
         }
     }
-    return mDisplays.at(Display::DEFAULT_DISPLAY); 
-}
-
-Display*WindowManager::getDisplay(int display){
-    if((display>=0) && (display<mDisplays.size()))
-        return &mDisplays.at(display);
-    return nullptr;
+    return mDisplays.at(Display::DEFAULT_DISPLAY);
 }
 
 void WindowManager::resortLayers(){
@@ -211,11 +216,7 @@ void WindowManager::addWindow(Window*win){
             const bool occludes = winLive
                     && win->getVisibility() == View::VISIBLE
                     && win->getBound().contains(deactWin->getBound());
-            deactWin->onPause();
-            if (occludes && !deactWin->mStoppedByWm) {
-                deactWin->mStoppedByWm = true;
-                deactWin->onStop();
-            }
+            pauseAndStop(deactWin, occludes);
         });
         mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
@@ -236,7 +237,7 @@ void WindowManager::addWindow(Window*win){
     LOGV("win=%p AttachInfo=%p windows.size=%d",win,info,mWindows.size());
 }
 
-bool WindowManager::removeWindowCore(Window*w,bool invalidateBelow){
+bool WindowManager::removeWindowCore(Window*w){
     // Membership check first (AOSP WMS removes by token lookup): a window can
     // reach here twice — e.g. close()'s finishClose() removes it, then the
     // posted delete self -> ~Window removes it again — and the early return
@@ -258,12 +259,6 @@ bool WindowManager::removeWindowCore(Window*w,bool invalidateBelow){
     const Rect wrect = w->getBound();
     mWindows.erase(itw);
     for(auto w1:mWindows){
-        if(invalidateBelow){
-            Rect rc = wrect;
-            rc.intersect(w1->getBound());
-            rc.offset(-w1->getLeft(),-w1->getTop());
-            w1->invalidate((const Rect*)&rc);
-        }
         damageWindow(w1,wrect);
     }
     return true;
@@ -278,7 +273,7 @@ Window*WindowManager::topFocusableWindow(){
 }
 
 void WindowManager::removeWindow(Window*w){
-    if(!removeWindowCore(w,false)) return;
+    if(!removeWindowCore(w)) return;
     // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
     // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
     // ~Window -- Window::close() stashes it (before calling removeWindow) and hands it to the
@@ -327,31 +322,6 @@ void WindowManager::removeWindow(Window*w){
     }
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
-}
-
-void WindowManager::removeWindows(const std::vector<Window*>&ws){
-    // Bulk teardown (app delete): the shared removal core with the extra
-    // View-level invalidate, then a SYNCHRONOUS restart pass — unlike
-    // removeWindow's posted restart, this caller frees the windows before
-    // returning, so the stack must be consistent at exit.
-    for(auto w:ws){
-        View::AttachInfo*info = w->mAttachInfo;
-        if(!removeWindowCore(w,true)) continue;
-        w->onDestroy();
-        w->dispatchDetachedFromWindow();
-        delete info;
-        delete w;
-    }
-    Window*const next = topFocusableWindow();
-    if(next){
-        if(next!=mActiveWindow){
-            next->dispatchWindowFocusChanged(true);
-            next->onStart();
-            next->onResume();
-        }
-        mActiveWindow = next;
-    }
-    GraphDevice::getInstance().flip();
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
@@ -499,21 +469,6 @@ Window*WindowManager::getActiveApplicationWindow(){
     return nullptr;
 }
 
-void WindowManager::sendToBack(Window*win){
-    win->mLayer = (win->window_type<<16);/*make win's layer to lowerest*/
-    resortLayers();
-    mActiveWindow = mWindows.back();
-    mActiveWindow->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
-    win->post([win](){ pauseAndStop(win); });
-    Window*newActWin = mActiveWindow;
-    newActWin->mStoppedByWm = false;
-    mActiveWindow->post([newActWin](){
-        newActWin->onStart();
-        newActWin->onResume();
-    });
-    GraphDevice::getInstance().flip();
-}
-
 void WindowManager::bringToFront(Window*win){
     if(mActiveWindow==win) return;
     win->mLayer = (win->window_type<<16)|0x7FFF;
@@ -632,11 +587,7 @@ void WindowManager::onMotion(MotionEvent&event) {
           mWindows mid-iteration, so the copy is iterated after the fact. */
        if (hitTarget != nullptr) {
            for (Window* w : outsideWatchers) {
-               MotionEvent*outside = MotionEvent::obtain(event);   // owned copy (hover-synthesis pattern)
-               outside->setAction(MotionEvent::ACTION_OUTSIDE);
-               outside->offsetLocation(-w->getLeft(), -w->getTop());
-               w->dispatchPointerEvent(*outside);
-               outside->recycle();
+               dispatchSyntheticMotion(event, MotionEvent::ACTION_OUTSIDE, w);
            }
        }
        return;
@@ -654,22 +605,14 @@ void WindowManager::onMotion(MotionEvent&event) {
 
    // Hover exit for previously hovered window when pointer moved out
    if (mHoveredWindow && mHoveredWindow != target) {
-       MotionEvent* exitEvent = MotionEvent::obtain(event);
-       exitEvent->setAction(MotionEvent::ACTION_HOVER_EXIT);
-       exitEvent->offsetLocation(-mHoveredWindow->getLeft(), -mHoveredWindow->getTop());
-       mHoveredWindow->dispatchPointerEvent(*exitEvent);
-       exitEvent->recycle();
+       dispatchSyntheticMotion(event, MotionEvent::ACTION_HOVER_EXIT, mHoveredWindow);
        mHoveredWindow = nullptr;
    }
 
    if (target) {
        // If entering a new window, send hover enter
        if (mHoveredWindow != target) {
-           MotionEvent* enterEvent = MotionEvent::obtain(event);
-           enterEvent->setAction(MotionEvent::ACTION_HOVER_ENTER);
-           enterEvent->offsetLocation(-target->getLeft(), -target->getTop());
-           target->dispatchPointerEvent(*enterEvent);
-           enterEvent->recycle();
+           dispatchSyntheticMotion(event, MotionEvent::ACTION_HOVER_ENTER, target);
            mHoveredWindow = target;
        }
 
@@ -685,7 +628,6 @@ void WindowManager::onMotion(MotionEvent&event) {
                    target->onStart();
                    target->onResume();
                }
-               mActiveWindow = target;
            }
        }
 
@@ -742,34 +684,17 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
         keyTarget->processKeyEvent(event);
         return ;
     }
-    for (auto itr = mWindows.rbegin() ;itr != mWindows.rend();itr++) {
-        Window*win = (*itr);
-        if ( win->hasFlag(View::FOCUSABLE) && (win->getVisibility()==View::VISIBLE) ) {
-            const int keyCode = event.getKeyCode();
-            LOGV("Window:%p Key:%s[%x] action=%d",win,KeyEvent::keyCodeToString(keyCode).c_str(),keyCode,event.getAction());
-            if(win->mAttachInfo->mInTouchMode){
-                ViewTreeObserver*obv = win->getViewTreeObserver();
-                win->mAttachInfo->mInTouchMode = false;
-                obv->dispatchOnTouchModeChanged(false);
-            }
-            win->processKeyEvent(event);
-            //dispatchKeyEvent(event);
-            return;
+    Window*win = topFocusableWindow();
+    if (win) {
+        const int keyCode = event.getKeyCode();
+        LOGV("Window:%p Key:%s[%x] action=%d",win,KeyEvent::keyCodeToString(keyCode).c_str(),keyCode,event.getAction());
+        if(win->mAttachInfo->mInTouchMode){
+            ViewTreeObserver*obv = win->getViewTreeObserver();
+            win->mAttachInfo->mInTouchMode = false;
+            obv->dispatchOnTouchModeChanged(false);
         }
+        win->processKeyEvent(event);
     }
 }
 
-void WindowManager::clip(Window*win){
-    Rect rcw = win->getBound();
-    for (auto wind = mWindows.rbegin() ;wind != mWindows.rend();wind++){
-        if( (*wind)==win )break;
-        if( (*wind)->getVisibility()!=View::VISIBLE)continue;
-        Rect rc = rcw;
-        rc.intersect((*wind)->getBound());
-        if(rc.empty())continue;
-        rc.offset(-win->getX(),-win->getY());
-        win->mInvalidRgn->subtract((const Cairo::RectangleInt&)rc); 
-    }
-}
-
-}  // namespace ui
+}  // namespace cdroid

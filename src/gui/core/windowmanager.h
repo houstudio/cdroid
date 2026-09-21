@@ -103,11 +103,9 @@ public:
     virtual ~WindowManager();
     static WindowManager& getInstance();
 private:
-    /* Removal core shared by removeWindow/removeWindows: focus drop,
-     * lifecycle, membership erase, damage. Restart/flip stay with the
-     * callers (posted vs synchronous policies differ). invalidateBelow: the
-     * bulk path also pushes the band through each window's View invalidate. */
-    bool removeWindowCore(Window*w,bool invalidateBelow);
+    /* Removal core shared by the removal paths: focus drop, lifecycle,
+     * membership erase, damage. Restart/flip stay with the caller. */
+    bool removeWindowCore(Window*w);
     /* Topmost visible focusable window (mWindows is bottom-up). */
     Window* topFocusableWindow();
     /* Re-derive the per-window layer bits after an order change: sort by
@@ -116,16 +114,15 @@ private:
     /* GLOBAL rect -> the window's LOCAL pending region (clipped, translated).
      * Static members so Window's friendship covers them. */
     static void damageWindow(Window*w,const Rect&grc);
-    /* onPause + first-stop: the idempotent AOSP pair. */
-    static void pauseAndStop(Window*w);
+    /* onPause + first-stop: the idempotent AOSP pair; stop=false leaves
+     * the stop half gated off (addWindow's deferred occlusion verdict). */
+    static void pauseAndStop(Window*w,bool stop=true);
 public:
     void setDisplayRotation(int display,int rotation);
     int  getDisplayRotation(int display=0)const;
     Display&getDefaultDisplay();
-    Display*getDisplay(int display);
     void addWindow(Window*w);
     void removeWindow(Window*w);
-    void removeWindows(const std::vector<Window*>&);
     void moveWindow(Window*w,int x,int y);
     void moveWindow(Window*w,int x,int y,int width,int height);
     /* Dirty a global rect on the windows below w — surface-animation vacate damage. */
@@ -158,7 +155,6 @@ public:
      * backed-up frames. ADJUST_PAN arrives with the insets pass. */
     void onSoftInputShown(Window* ime);
     void onSoftInputHidden(Window* ime);
-    void sendToBack(Window*w);
     void bringToFront(Window*w);
     void processEvent(InputEvent&e);
     /* Install/clear the pre-dispatch input observer (recording seam, see
@@ -170,7 +166,6 @@ private:
      *  by policy before any window sees them. True = consumed (drop). */
     bool interceptKeyBeforeQueueing(KeyEvent& event);
 public:
-    void clip(Window*win);
     int enumWindows(WNDENUMPROC cbk);
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);
@@ -203,4 +198,4 @@ protected:
 
 }  // namespace cdroid
 
-#endif  // __CDROID WINDOWMANAGER_H__
+#endif  // __CDROID_WINDOWMANAGER_H__

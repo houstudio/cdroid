@@ -76,12 +76,10 @@ void Window::setExitTransition(ActivityTransition* t){
 }
 
 // Undo setEnterTransition/snapEnterStart's install — see cdwindow.h.
+// Statement-for-statement setEnterTransition(nullptr): the null install takes
+// the else branch there, which runs exactly this undo sequence.
 void Window::clearEnterTransition() {
-    delete mEnterTransition;
-    mEnterTransition = nullptr;
-    mPendingEnterAnim = false;
-    setSurfaceTranslation(0, 0);
-    setAlpha(1.f);
+    setEnterTransition(nullptr);
 }
 void Window::setReturnTransition(ActivityTransition* t)  {
     delete mReturnTransition;
@@ -386,6 +384,17 @@ GraphDevice::GhostLayer* Window::captureGhost() {
     return g;
 }
 
+/* The shared animator dressing: the ActivityTransition's timing plus the end
+ * listener. All four setters live on the Animator base, so one helper serves
+ * the ObjectAnimator and ValueAnimator branches alike. */
+static void wireTransitionAnimator(Animator* anim, const ActivityTransition* t,
+        const Animator::AnimatorListener& endListener) {
+    anim->setDuration(t->getDuration());
+    anim->setStartDelay(t->getStartOffset());
+    anim->setInterpolator(t->getInterpolator());  // borrowed (style cache)
+    anim->addListener(endListener);
+}
+
 void Window::startGhostExit(ActivityTransition* t) {
     // AOSP WMS: the exit animation plays on the REMOVED window's surface
     // (WindowStateAnimator) while the view tree is already gone — the ghost IS
@@ -394,9 +403,6 @@ void Window::startGhostExit(ActivityTransition* t) {
     // death mid-flight is a non-event).
     GraphDevice::GhostLayer* ghost = captureGhost();
     if (ghost == nullptr) return;
-    const int64_t duration = t->getDuration();
-    const TimeInterpolator* interpolator = t->getInterpolator();  // borrowed (style cache)
-    const int64_t startDelay = t->getStartOffset();
     Animator::AnimatorListener endListener;
     endListener.onAnimationEnd = [ghost](Animator&, bool) {
         GraphDevice::getInstance().removeGhost(ghost);  // frees the animator too
@@ -405,19 +411,16 @@ void Window::startGhostExit(ActivityTransition* t) {
         // Start from the ghost's inherited alpha (mid-fade dismiss continuity).
         ValueAnimator* anim = ValueAnimator::ofFloat(
                 std::vector<float>{ghost->alpha, 0.f});
-        anim->setDuration(duration);
-        anim->setStartDelay(startDelay);
-        anim->setInterpolator(interpolator);
+        wireTransitionAnimator(anim, t, endListener);
         anim->addUpdateListener([ghost](ValueAnimator& a) {
             ghost->alpha = 1.f - a.getAnimatedFraction();
             GraphDevice::getInstance().composeGhosts();
         });
-        anim->addListener(endListener);
         ghost->animator = anim;
         anim->start();
     } else {  // SLIDE — translate the snapshot out toward the exit edge.
         int endX, endY;
-        slideToOffset(t, ghost->bounds.width, ghost->bounds.height, endX, endY);
+        slideOffset(t, false, ghost->bounds.width, ghost->bounds.height, endX, endY);
         const int startX = ghost->dx, startY = ghost->dy;
         // Mid-fade continuity for the resource's paired alpha (popup_exit_
         // material fades out while it sinks): the ghost starts from whatever
@@ -425,9 +428,7 @@ void Window::startGhostExit(ActivityTransition* t) {
         const float startAlpha = ghost->alpha;
         const bool fades = t->fadesAlong();
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
-        anim->setDuration(duration);
-        anim->setStartDelay(startDelay);
-        anim->setInterpolator(interpolator);
+        wireTransitionAnimator(anim, t, endListener);
         anim->addUpdateListener([ghost, startX, startY, endX, endY, startAlpha, fades](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
             ghost->dx = (int)(startX + (endX - startX) * f);
@@ -435,7 +436,6 @@ void Window::startGhostExit(ActivityTransition* t) {
             if (fades) ghost->alpha = startAlpha * (1.f - f);
             GraphDevice::getInstance().composeGhosts();
         });
-        anim->addListener(endListener);
         ghost->animator = anim;
         anim->start();
     }
@@ -452,24 +452,14 @@ void Window::computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscr
     else                              y = oy + h;  // BOTTOM
 }
 
-void Window::slideFromOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy) {
+void Window::slideOffset(const ActivityTransition* t, bool from, int w, int h, int& dx, int& dy) {
     if (t->hasAuthoredDeltas()) {
         // AOSP plays the resource's own motion. RELATIVE_TO_SELF resolves
         // against the live window size, PARENT against the display (a
-        // window's parent).
-        dx = t->fromX().resolve(w, GraphDevice::getInstance().getScreenWidth());
-        dy = t->fromY().resolve(h, GraphDevice::getInstance().getScreenHeight());
-        return;
-    }
-    int x, y;
-    computeSlidePos(t->getSlideEdge(), 0, 0, w, h, true, x, y);
-    dx = x; dy = y;
-}
-
-void Window::slideToOffset(const ActivityTransition* t, int w, int h, int& dx, int& dy) {
-    if (t->hasAuthoredDeltas()) {
-        dx = t->toX().resolve(w, GraphDevice::getInstance().getScreenWidth());
-        dy = t->toY().resolve(h, GraphDevice::getInstance().getScreenHeight());
+        // window's parent). from=true reads the enter start (From), false
+        // the exit end (To) — the two halves were byte-identical twins.
+        dx = (from ? t->fromX() : t->toX()).resolve(w, GraphDevice::getInstance().getScreenWidth());
+        dy = (from ? t->fromY() : t->toY()).resolve(h, GraphDevice::getInstance().getScreenHeight());
         return;
     }
     int x, y;
@@ -483,12 +473,21 @@ void Window::snapEnterStart(ActivityTransition* t) {
         setAlpha(0.f);
     } else if (t->getType() == ActivityTransition::Type::SLIDE) {
         int dx, dy;
-        slideFromOffset(t, getWidth(), getHeight(), dx, dy);
+        slideOffset(t, true, getWidth(), getHeight(), dx, dy);
         setSurfaceTranslation(dx, dy);
         // The resource's alpha pairs with the slide (popup_enter_material):
         // start invisible, fade in WITH the rise — AOSP plays both children.
         if (t->fadesAlong()) setAlpha(0.f);
     }
+}
+
+/* Cancel + free the in-flight transition animator (see cdwindow.h). */
+void Window::cancelTransitionAnimator() {
+    if (mCurrentTransitionAnimator == nullptr) return;
+    Animator* prev = mCurrentTransitionAnimator;
+    mCurrentTransitionAnimator = nullptr;  // the onAnimationEnd cancel() fires sees null and skips
+    prev->cancel();
+    delete prev;
 }
 
 void Window::runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd) {
@@ -499,16 +498,8 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
     }
     // Replace any in-flight transition animator. cancel() fires onAnimationEnd (animator.cc) — the
     // replaced animator is always an enter (onEnd empty), and ~Window's path is guarded by mDestroyed.
-    if (mCurrentTransitionAnimator) {
-        Animator* prev = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;
-        prev->cancel();
-        delete prev;
-    }
+    cancelTransitionAnimator();
     mInTransition = true;
-    const int64_t duration = t->getDuration();
-    const TimeInterpolator* interpolator = t->getInterpolator();  // borrowed (style cache)
-    const int64_t startDelay = t->getStartOffset();
     Animator::AnimatorListener endListener;
     endListener.onAnimationEnd = [this, onEnd, enter, t](Animator&, bool) {
         if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
@@ -531,10 +522,7 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
         // touching the view tree; no traversal is scheduled here.
         ObjectAnimator* anim = ObjectAnimator::ofFloat(this, "alpha",
             std::vector<float>{enter ? 0.f : 1.f, enter ? 1.f : 0.f});
-        anim->setDuration(duration);
-        anim->setStartDelay(startDelay);
-        anim->setInterpolator(interpolator);
-        anim->addListener(endListener);
+        wireTransitionAnimator(anim, t, endListener);
         mCurrentTransitionAnimator = anim;
         anim->start();
     } else { // SLIDE — animate the compose-time visual translation only. The real frame stays
@@ -542,20 +530,18 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
              // so a11y bounds, input routing and WMS placement are stable mid-animation.
         int startX, startY, endX, endY;
         if (enter) {
-            slideFromOffset(t, getWidth(), getHeight(), startX, startY);
+            slideOffset(t, true, getWidth(), getHeight(), startX, startY);
             if (t->hasAuthoredDeltas()) {
-                slideToOffset(t, getWidth(), getHeight(), endX, endY);
+                slideOffset(t, false, getWidth(), getHeight(), endX, endY);
             } else {
                 endX = 0; endY = 0;   // edge fallback: offscreen -> rest
             }
         } else {
             startX = 0; startY = 0;   // rest -> offscreen (authored: rest -> to-delta)
-            slideToOffset(t, getWidth(), getHeight(), endX, endY);
+            slideOffset(t, false, getWidth(), getHeight(), endX, endY);
         }
         ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
-        anim->setDuration(duration);
-        anim->setStartDelay(startDelay);
-        anim->setInterpolator(interpolator);
+        wireTransitionAnimator(anim, t, endListener);
         const bool fades = t->fadesAlong();
         anim->addUpdateListener([this, startX, startY, endX, endY, fades, enter](ValueAnimator& a) {
             const float f = a.getAnimatedFraction();
@@ -563,7 +549,6 @@ void Window::runActivityTransition(ActivityTransition* t, bool enter, const std:
                                   (int)(startY + (endY - startY) * f));
             if (fades) setAlpha(enter ? f : 1.f - f);   // the resource's alpha child, in parallel
         });
-        anim->addListener(endListener);
         mCurrentTransitionAnimator = anim;
         if (enter) setSurfaceTranslation(startX, startY);  // offscreen visual before the first frame
         anim->start();

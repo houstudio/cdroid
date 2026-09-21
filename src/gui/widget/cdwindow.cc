@@ -148,12 +148,6 @@ void Window::initWindow(){
     setBackground(nullptr);
     setLayoutDirection(View::LAYOUT_DIRECTION_LTR);
     setTextDirection(View::TEXT_DIRECTION_LTR);
-    /*mLayoutRequested = false;
-    mTraversalScheduled = false;
-    mTraversalRunnable = [this](){
-        LOGD("mTraversalRunnable.run");
-        doTraversal();
-    };*/
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
@@ -167,17 +161,15 @@ void Window::initWindow(){
             [this, alive = mA11yListenerAlive](bool enabled) {
         if (!*alive) return;  // the window is gone (exit-time unbind order)
         LOGD("%d",enabled);
-        if (enabled||1) {
-            if (mAttachInfo->mHasWindowFocus||1) {
-                sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
-                View* focusedView = findFocus();
-                if ((focusedView != nullptr) && (focusedView != this)) {
-                    focusedView->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
-                }
-                LOGD("focusedView=%d",focusedView);
-            }
-        } else {
+        // both gates below were constant-true (||1) in the original port —
+        // flattened; the mAttachInfo dereference they forced is also gone
+        // (the listener can fire between initWindow and addWindow).
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+        View* focusedView = findFocus();
+        if ((focusedView != nullptr) && (focusedView != this)) {
+            focusedView->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
         }
+        LOGD("focusedView=%d",focusedView);
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(mA11yStateListener);
 }
@@ -208,12 +200,7 @@ Window::~Window(){
         mAccessibilityFocusedVirtualView->recycle();
     }
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
-    if (mCurrentTransitionAnimator) {
-        Animator* a = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;  // end-callback sees null + mDestroyed and skips
-        a->cancel();   // cancel() fires onAnimationEnd (animator.cc)
-        delete a;
-    }
+    cancelTransitionAnimator();
     // Shared-element coordinator: its dtor cancels its animator safely (own mTornDown guard)
     // and returns any ghosts still parked in the caller's overlay. Runs while this window's
     // view tree is still intact — before the base ~ViewGroup frees the overlay.
@@ -295,24 +282,14 @@ void Window::recreate(){
 // cdwindowmenus.cc (AOSP: Activity delegation + Window.Callback panels).
 
 View* Window::getCommonPredecessor(View* first, View* second){
-     std::set<View*> seen;
-     View* firstCurrent = first;
-     while (firstCurrent != nullptr) {
-         seen.insert(firstCurrent);
-         ViewGroup* firstCurrentParent = firstCurrent->mParent;
-         firstCurrent = firstCurrentParent;
-     }
-     View* secondCurrent = second;
-     while (secondCurrent != nullptr) {
-         if (seen.find(secondCurrent)!=seen.end()) {
-             seen.clear();
-             return secondCurrent;
-         }
-         ViewGroup* secondCurrentParent = secondCurrent->mParent;
-         secondCurrent = secondCurrentParent;
-     }
-     seen.clear();
-     return nullptr;
+    // AOSP ViewRootImpl.getCommonPredecessor: mark first's ancestor chain,
+    // then walk second's until the first marked view.
+    std::set<View*> seen;
+    for (View* v = first; v != nullptr; v = v->mParent)
+        seen.insert(v);
+    for (View* v = second; v != nullptr; v = v->mParent)
+        if (seen.count(v)) return v;
+    return nullptr;
 }
 
 void Window::postSendWindowContentChangedCallback(View*source,int changeType){
@@ -365,10 +342,10 @@ void Window::dispatchDetachedFromWindow(){
     mTraversalScheduled = false;
 }
 
-void Window::requestTransitionStart(LayoutTransition* transition){
-    auto it = std::find(mPendingTransitions.begin(),mPendingTransitions.end(),transition);
-    if(it==mPendingTransitions.end())
-        mPendingTransitions.push_back(transition);
+void Window::requestTransitionStart(LayoutTransition* /*transition*/){
+    // ViewGroup::requestTransitionStart climbs to the root; the Window IS the
+    // root, so the walk ends here (viewgroup.cc drives the transitions itself
+    // — the old pending-vector accumulator this override fed was write-only).
 }
 
 void Window::setText(const std::string&txt){
@@ -377,10 +354,6 @@ void Window::setText(const std::string&txt){
 
 const std::string Window::getText()const{
     return mText;
-}
-
-void Window::sendToBack(){
-    WindowManager::getInstance().sendToBack(this);
 }
 
 void Window::bringToFront(){
@@ -467,13 +440,6 @@ bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& even
         return false;
     }
 
-    // Immediately flush pending content changed event (if any) to preserve event order
-    /*if (event.getEventType() != AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED
-            && mSendWindowContentChangedAccessibilityEvent != null
-            && mSendWindowContentChangedAccessibilityEvent.mSource != null) {
-        mSendWindowContentChangedAccessibilityEvent.removeCallbacksAndRun();
-    }*/
-
     // Intercept accessibility focus events fired by virtual nodes to keep
     // track of accessibility focus position in such nodes.
     const int eventType = event.getEventType();
@@ -482,29 +448,23 @@ bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& even
     View*source = nullptr;
     switch (eventType) {
     case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+    case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED: {
         sourceNodeId = event.getSourceNodeId();
         accessibilityViewId = AccessibilityNodeInfo::getAccessibilityViewId(sourceNodeId);
         source = findViewByAccessibilityId(accessibilityViewId);
-        if (source != nullptr) {
-            AccessibilityNodeProvider* provider = source->getAccessibilityNodeProvider();
-            if (provider != nullptr) {
-                const int virtualNodeId = AccessibilityNodeInfo::getVirtualDescendantId(sourceNodeId);
-                AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(virtualNodeId);
+        AccessibilityNodeProvider* provider =
+                (source != nullptr) ? source->getAccessibilityNodeProvider() : nullptr;
+        if (provider != nullptr) {
+            if (eventType == AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
+                AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(
+                        AccessibilityNodeInfo::getVirtualDescendantId(sourceNodeId));
                 setAccessibilityFocus(source, node);
-            }
-        }
-        break;
-    case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED:
-        sourceNodeId = event.getSourceNodeId();
-        accessibilityViewId = AccessibilityNodeInfo::getAccessibilityViewId(sourceNodeId);
-        source = findViewByAccessibilityId(accessibilityViewId);
-        if (source != nullptr) {
-            AccessibilityNodeProvider* provider = source->getAccessibilityNodeProvider();
-            if (provider != nullptr) {
+            } else {
                 setAccessibilityFocus(nullptr, nullptr);
             }
         }
         break;
+    }
 
     case AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED:
         handleWindowContentChangedEvent(event);
@@ -963,13 +923,11 @@ RefPtr<Canvas>Window::getCanvas(){
             break;
         }
     }
-#if 1
     Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create();//{0,0,getWidth(),getHeight()});
     int num = gatherTransparentRegion(transRgn);
     Cairo::RectangleInt rec = transRgn->get_extents();
     LOGV_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
     mInvalidRgn->subtract(transRgn);
-#endif
     num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
     for(int i = 0;i < num; i ++){
@@ -1021,32 +979,28 @@ void Window::onDeactive(){
     LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
-int Window::processInputEvent(InputEvent&event){
-    if(dynamic_cast<KeyEvent*>(&event))
-        return processKeyEvent((KeyEvent&)event);
-    else return processPointerEvent((MotionEvent&)event);
-}
-
-int Window::processPointerEvent(MotionEvent&event){
+/* AOSP ViewRootImpl.processKeyEvent's keyboard-group-navigation probe
+ * (ViewRootImpl.java:7729-7741 — single copy there; CDROID also probes it in
+ * dispatchKeyEvent). NOTE: AOSP gates on META_CTRL_ON; CDROID uses META_META_ON
+ * — an intentional divergence, kept verbatim so a future re-sync notices it. */
+static int keyboardGroupNavigationDirection(const KeyEvent& event){
+    if (event.getAction() == KeyEvent::ACTION_DOWN && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
+        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON))
+            return View::FOCUS_FORWARD;
+        if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
+                KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON))
+            return View::FOCUS_BACKWARD;
+    }
     return 0;
 }
 
 int Window::processKeyEvent(KeyEvent&event){
-    int handled = FINISH_NOT_HANDLED;
-    int groupNavigationDirection = 0;
     const int action = event.getAction();
     LOGV_IF(action==KeyEvent::ACTION_DOWN,"%s:0x%x %s %x",event.actionToString(action).c_str(),
             event.getKeyCode(),KeyEvent::keyCodeToString(event.getKeyCode()).c_str(),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
-        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
-            groupNavigationDirection = View::FOCUS_FORWARD;
-        } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
-              KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON)) {
-            groupNavigationDirection = View::FOCUS_BACKWARD;
-        }
-    }
+    const int groupNavigationDirection = keyboardGroupNavigationDirection(event);
     if (event.getAction() == KeyEvent::ACTION_DOWN
             && !KeyEvent::metaStateHasNoModifiers(event.getMetaState())
             && event.getRepeatCount() == 0
@@ -1055,9 +1009,6 @@ int Window::processKeyEvent(KeyEvent&event){
         if (dispatchKeyShortcutEvent(event)) {
             return FINISH_HANDLED;
         }
-        /*if (shouldDropInputEvent(q)) {
-            return FINISH_NOT_HANDLED;
-        }*/
     }
     if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection != 0){
@@ -1086,15 +1037,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     const int action = event.getAction();
     if(focused && focused->dispatchKeyEvent(event))
         return true;
-    int groupNavigationDirection = 0;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
-        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
-            groupNavigationDirection = View::FOCUS_FORWARD;
-        } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
-              KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON)) {
-            groupNavigationDirection = View::FOCUS_BACKWARD;
-        }
-    }
+    const int groupNavigationDirection = keyboardGroupNavigationDirection(event);
     if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection!=0)
             return performKeyboardGroupNavigation(groupNavigationDirection);
@@ -1386,12 +1329,7 @@ void Window::close(const std::function<void()>& onTeardown){
     // listener re-touch this window) while the teardown below proceeds. Cancel
     // it now — its end listener lands the surface at rest (identity), which is
     // also what the ghost snapshot wants to capture.
-    if (mCurrentTransitionAnimator != nullptr) {
-        Animator* prev = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;
-        prev->cancel();   // cancel-then-delete, off the dispatch stack (~Window's discipline)
-        delete prev;
-    }
+    cancelTransitionAnimator();
     // Shared-element return flight (B route): ghosts fly in the caller's overlay
     // while this window hides at once; finishClose runs on landing. No valid pair
     // (caller gone / no view matches) falls through to the window-level path below.
@@ -1543,14 +1481,7 @@ Window::InvalidateOnAnimationRunnable::InvalidateOnAnimationRunnable(){
 }
 
 Window::InvalidateOnAnimationRunnable::~InvalidateOnAnimationRunnable(){
-    for (auto i:mInvalidateViews){
-        Rect&r = i->rect;
-        View*v = i->target;
-        if(r.width<=0||r.height<=0) v->invalidate();
-        else  v->invalidate(r);
-        i->recycle();
-    }
-    mInvalidateViews.clear();
+    drain();
 }
 
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
@@ -1566,29 +1497,24 @@ std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAni
 }
 
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    auto it = find(view);
-    if(it == mInvalidateViews.end()){
-        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
-        info->target = view;
-        info->rect.set(0,0,0,0);
-        mInvalidateViews.push_back(info);
-    }else{
-        AttachInfo::InvalidateInfo* info = (*it);
-        info->rect.set(0,0,0,0);
-    }
-    postIfNeededLocked();
+    // Full invalidate: a pending rect for the same view collapses back to
+    // "invalidate everything" (AOSP ViewRootImpl's InvalidateInfo null-rect).
+    addViewRect(view, Rect::Make(0,0,0,0), true);
 }
 
-void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
+void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect,bool full){
     auto it = find(view);
+    AttachInfo::InvalidateInfo* info;
     if(it == mInvalidateViews.end()){
-        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
-        info->target =view;
-        info->rect = rect;
+        info = AttachInfo::InvalidateInfo::obtain();
+        info->target = view;
+        info->rect = full ? Rect::Make(0,0,0,0) : rect;
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info = (*it);
-        if(!info->rect.empty())
+        info = (*it);
+        if (full)
+            info->rect.set(0,0,0,0);
+        else if(!info->rect.empty())
             info->rect.Union(rect);
     }
     postIfNeededLocked();
@@ -1607,6 +1533,10 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
 
 void Window::InvalidateOnAnimationRunnable::run(){
     mPosted = false;
+    drain();
+}
+
+void Window::InvalidateOnAnimationRunnable::drain(){
     std::vector<View::AttachInfo::InvalidateInfo*>& temp = mInvalidateViews;
     for (auto i:temp){
         Rect&r = i->rect;
