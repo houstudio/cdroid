@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- [window-bg-experiment] root android:background="@color/demo_bg" removed:
-     Window now paints the themed windowBackground itself; see how the bare
-     theme backdrop looks before restoring this if a specific look is wanted. -->
+<!-- ApiDemos-style shell: a fixed header (title + locale switch) above the
+     fragment container the category browser and every demo are transacted
+     into (FragmentManager replace + back stack). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -16,22 +15,16 @@
         android:background="@color/card_bg"
         android:gravity="center_vertical">
 
-        <TabLayout
-            android:id="@+id/tabs"
+        <TextView
+            android:id="@+id/demo_header_title"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:background="@color/card_bg"
-            app:tabIndicatorAnimationMode="elastic"
-            app:tabIndicatorColor="@color/accent"
-            app:tabIndicatorHeight="3dp"
-            app:tabIndicatorFullWidth="true"
-            app:tabMode="scrollable"
-            app:tabRippleColor="@null"
-            app:tabPaddingStart="16dp"
-            app:tabPaddingEnd="16dp"
-            app:tabSelectedTextColor="@color/text_primary"
-            app:tabTextColor="@color/text_secondary" />
+            android:paddingStart="16dp"
+            android:paddingEnd="8dp"
+            android:textSize="20sp"
+            android:textColor="@color/text_primary"
+            android:text="@string/app_title" />
 
         <Button
             android:id="@+id/btn_locale"
@@ -45,10 +38,9 @@
             android:text="EN" />
     </LinearLayout>
 
-    <!-- The ViewPager is attached here in code (the legacy androidx ViewPager
-         is not registered for XML inflation; see WidgetsDemoActivity). -->
+    <!-- DemoListFragment and every demo Fragment live here. -->
     <FrameLayout
-        android:id="@+id/pager_container"
+        android:id="@+id/demo_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
