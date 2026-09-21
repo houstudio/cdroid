@@ -54,9 +54,8 @@ AnimatedRotateDrawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable
 Drawable* AnimatedRotateDrawable::AnimatedRotateState::newDrawable(Resources* res){
     return new AnimatedRotateDrawable(std::dynamic_pointer_cast<AnimatedRotateState>(shared_from_this()), res);
 }
-int  AnimatedRotateDrawable::AnimatedRotateState::getChangingConfigurations()const{
-    return 0;
-}
+// (AOSP's state has no getChangingConfigurations override — the
+//  DrawableWrapperState base answers; same here.)
 ////////////////////////////////////////////////////////////////////////////////////////////////
 AnimatedRotateDrawable::AnimatedRotateDrawable()
     :AnimatedRotateDrawable(std::make_shared<AnimatedRotateState>(), nullptr){
@@ -142,13 +141,10 @@ bool AnimatedRotateDrawable::isRunning() {
 }
 
 void AnimatedRotateDrawable::nextFrame() {
-    // AOSP nextFrame() only (un)schedules; the degree advance lives solely in
-    // the mNextFrame runnable — doing it here as well advanced the rotation
-    // twice per tick.
+    // AOSP nextFrame(): just (un)schedule — the degree advance lives solely in
+    // the mNextFrame runnable, and there is no mRunning gate here.
     unscheduleSelf(mNextFrame);
-    if(mRunning){
-        scheduleSelf(mNextFrame,SystemClock::uptimeMillis()+mState->mFrameDuration);
-    }
+    scheduleSelf(mNextFrame, SystemClock::uptimeMillis() + mState->mFrameDuration);
 }
 
 bool AnimatedRotateDrawable::setVisible(bool visible, bool restart){
@@ -193,15 +189,17 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const int w = bounds.width;
     const int h = bounds.height;
 
-    const float px = bounds.left + (mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX);
-    const float py = bounds.top  + (mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY);
+    // AOSP draw (android-12 & android-35 alike): relative pivots against the
+    // bounds SIZE, then rotated about px + bounds.left / py + bounds.top.
+    const float px = mState->mPivotXRel ? (w * mState->mPivotX) : mState->mPivotX;
+    const float py = mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY;
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mCurrentDegrees);
 
     Matrix mtx=identity_matrix();
-    mtx.translate(px,py);
+    mtx.translate(px + bounds.left, py + bounds.top);
     mtx.rotate(MathUtils::toRadians(mCurrentDegrees));
-    mtx.translate(-px,-py);
+    mtx.translate(-(px + bounds.left), -(py + bounds.top));
 
     if(drawable){
         canvas.save();
@@ -212,36 +210,59 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
 }
 
 void AnimatedRotateDrawable::inflate(Resources& r,XmlPullParser&parser,const AttributeSet&atts, const Resources::Theme* theme){
+    // AOSP inflate: obtainAttributes, THEN super.inflate (advances the parser
+    // and sets the wrapped drawable), THEN state update + local refresh.
     auto ta = obtainAttributes(r, theme, atts, R::styleable::AnimatedRotateDrawable);
+    DrawableWrapper::inflate(r,parser,atts, theme);
     if (ta) {
         updateStateFromTypedArray(*ta);
-        // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
-        // the string bridge (text-XML works; binary returns the default — harmless).
-        mState->mFramesCount = ta->getInt(R::styleable::AnimatedRotateDrawable_framesCount, mState->mFramesCount);
-        mState->mFrameDuration = ta->getInt(R::styleable::AnimatedRotateDrawable_frameDuration, mState->mFrameDuration);
     }
-    DrawableWrapper::inflate(r,parser,atts, theme);
+    updateLocalState();
+}
+
+void AnimatedRotateDrawable::applyTheme(const Resources::Theme& t){
+    // AOSP applyTheme: super first (re-themes the wrapped drawable), then
+    // re-resolve this level's ?attr set into the state and refresh — the
+    // RotateDrawable house pattern from the themed-inflation pass.
+    DrawableWrapper::applyTheme(t);
+    auto state = mState;
+    if (state == nullptr) {
+        return;
+    }
+    if (!state->mThemeAttrs.empty()) {
+        auto a = t.resolveAttributes(state->mThemeAttrs, R::styleable::AnimatedRotateDrawable);
+        if (a) updateStateFromTypedArray(*a);
+        state->mThemeAttrs.clear();
+    }
     updateLocalState();
 }
 
 void AnimatedRotateDrawable::updateStateFromTypedArray(const TypedArray& a){
-    // AOSP AnimatedRotateState: rel-ness follows the value TYPE; a FRACTION
-    // pivot ("50%") is read with getFraction (a plain getFloat cannot decode a
-    // complex fraction value and fell back to 0, moving the rotation center to
-    // the top-left corner), an absolute one with getDimension.
+    if (mState == nullptr) {
+        return;
+    }
+    // AOSP updateStateFromTypedArray: account for any configuration changes,
+    // stash the ?attr ids for applyTheme; a pivot is relative when the raw
+    // value is TYPE_FRACTION ("50%" -> getFraction), an absolute float
+    // otherwise (tv.getFloat — NOT a dimension-pixel read).
+    mState->mChangingConfigurations |= a.getChangingConfigurations();
+    mState->mThemeAttrs = a.extractThemeAttrs();
+
     TypedValue tv;
-    if (a.getValue(R::styleable::AnimatedRotateDrawable_pivotX, &tv)) {
+    if (a.hasValue(R::styleable::AnimatedRotateDrawable_pivotX)) {
+        a.peekValue(R::styleable::AnimatedRotateDrawable_pivotX, &tv);
         mState->mPivotXRel = (tv.type == TypedValue::TYPE_FRACTION);
-        mState->mPivotX = mState->mPivotXRel
-            ? a.getFraction(R::styleable::AnimatedRotateDrawable_pivotX, 1, 1, mState->mPivotX)
-            : (float)a.getDimensionPixelOffset(R::styleable::AnimatedRotateDrawable_pivotX, (int)mState->mPivotX);
+        mState->mPivotX = mState->mPivotXRel ? tv.getFraction(1.f, 1.f) : tv.getFloat();
     }
-    if (a.getValue(R::styleable::AnimatedRotateDrawable_pivotY, &tv)) {
+    if (a.hasValue(R::styleable::AnimatedRotateDrawable_pivotY)) {
+        a.peekValue(R::styleable::AnimatedRotateDrawable_pivotY, &tv);
         mState->mPivotYRel = (tv.type == TypedValue::TYPE_FRACTION);
-        mState->mPivotY = mState->mPivotYRel
-            ? a.getFraction(R::styleable::AnimatedRotateDrawable_pivotY, 1, 1, mState->mPivotY)
-            : (float)a.getDimensionPixelOffset(R::styleable::AnimatedRotateDrawable_pivotY, (int)mState->mPivotY);
+        mState->mPivotY = mState->mPivotYRel ? tv.getFraction(1.f, 1.f) : tv.getFloat();
     }
-}
+    // frameDuration/framesCount lack a framework arsc id (CDROID-private): read via
+    // the string bridge (text-XML works; binary returns the default — harmless).
+    setFramesCount(a.getInt(R::styleable::AnimatedRotateDrawable_framesCount, mState->mFramesCount));
+    setFramesDuration(a.getInt(R::styleable::AnimatedRotateDrawable_frameDuration, mState->mFrameDuration));
 }
 
+}

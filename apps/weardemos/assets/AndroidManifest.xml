@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of androidx samples/SupportWearDemos (see main.cc for the source
+     path). AmbientModeDemo is NOT ported: it needs AmbientModeSupport, which
+     the CDROID wear module does not carry. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="cdroid.weardemos">
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>
+    <application android:label="Wear Demos" android:theme="@style/WearTheme">
+        <activity android:name="MainDemoActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name="SimpleWearableRecyclerViewDemo"/>
+        <activity android:name="SimpleRecyclerViewDemo"/>
+        <activity android:name="SimpleNestedScrollViewDemo"/>
+        <activity android:name="WearableSwitchDemo"/>
+        <activity android:name="CircularProgressLayoutDemo"/>
+        <activity android:name="RoundedDrawableDemo"/>
+        <activity android:name="AlertDialogDemo"/>
+        <activity android:name="ConfirmationOverlayDemo"/>
+        <activity android:name="WearableDrawersDemo"/>
+    </application>
+</manifest>

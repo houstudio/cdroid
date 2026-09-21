@@ -4,6 +4,7 @@
 #include <core/looper.h>
 
 #include "cachedbluetoothdevicemanager.h"
+#include "localbluetoothprofilemanager.h"
 
 namespace preferencedemo {
 
@@ -16,7 +17,9 @@ LocalBluetoothManager* LocalBluetoothManager::getInstance() {
 
 LocalBluetoothManager::LocalBluetoothManager()
     : mLocalAdapter(cdroid::BluetoothAdapter::getDefaultAdapter()),
-      mDeviceManager(std::make_unique<CachedBluetoothDeviceManager>(&mLocalAdapter)),
+      mProfileManager(std::make_unique<LocalBluetoothProfileManager>(&mLocalAdapter)),
+      mDeviceManager(std::make_unique<CachedBluetoothDeviceManager>(
+              &mLocalAdapter, mProfileManager.get())),
       mEventManager(mDeviceManager.get()) {
     // Listener slots (value semantics): lambdas forwarding into the
     // event manager, registered as copies.
@@ -39,9 +42,16 @@ LocalBluetoothManager::LocalBluetoothManager()
                    int bondState, int prevState) {
                 mEventManager.onBondStateChanged(device, bondState, prevState);
             };
+    mEventManager.mConnectionListener =
+            [this](const cdroid::BluetoothDevice& device,
+                   int state, int prevState) {
+                mEventManager.onDeviceConnectionStateChanged(device,
+                                                             state, prevState);
+            };
     mLocalAdapter.raw().addAdapterStateListener(mEventManager.mStateListener);
     mLocalAdapter.raw().addDiscoveryListener(mEventManager.mDiscoveryListener);
     mLocalAdapter.raw().addBondStateListener(mEventManager.mBondListener);
+    mLocalAdapter.raw().addConnectionStateListener(mEventManager.mConnectionListener);
     // AOSP seeds the bonded cache at manager creation.
     mEventManager.readPairedDevices();
 }
@@ -54,6 +64,7 @@ LocalBluetoothManager::~LocalBluetoothManager() {
     mLocalAdapter.raw().removeAdapterStateListener(mEventManager.mStateListener);
     mLocalAdapter.raw().removeDiscoveryListener(mEventManager.mDiscoveryListener);
     mLocalAdapter.raw().removeBondStateListener(mEventManager.mBondListener);
+    mLocalAdapter.raw().removeConnectionStateListener(mEventManager.mConnectionListener);
 }
 
 // --- BluetoothEventManager ----------------------------------------------------
@@ -145,6 +156,17 @@ void BluetoothEventManager::onBondStateChanged(const cdroid::BluetoothDevice& de
         // AOSP keeps the (now unbonded) entry cached — deletion is reserved
         // for the explicit forget/unpair cascade — so a failed pairing can
         // be retried from the picker without a fresh discovery sweep.
+        cached->dispatchAttributesChanged();
+    });
+}
+
+void BluetoothEventManager::onDeviceConnectionStateChanged(
+        const cdroid::BluetoothDevice& device, int, int) {
+    const std::string address = device.getAddress();
+    post([this, address]{
+        CachedBluetoothDevice* cached = mDeviceManager->findDevice(address);
+        if (cached == nullptr) return;   /* not ours — profile of another app */
+        for (auto* cb : mCallbacks) cb->onDeviceAttributesChanged(cached);
         cached->dispatchAttributesChanged();
     });
 }

@@ -37,13 +37,15 @@
             android:contentDescription="Close"/>
     </RelativeLayout>
 
-    <!-- Bottom: full-width keyboard (letters + function keys) -->
+    <!-- Bottom: full-width keyboard (letters + function keys). wrap_content, not
+         0dp+weight: the KeyboardView reports the installed keyboard's natural
+         height and the IME window wraps the content (adaptive sizing); the weight
+         pattern belonged to the old fixed-height window. No inline key* attrs:
+         the look comes from the theme's keyboardViewStyle (Widget.KeyboardView
+         and its Holo/Material variants), so App::setTheme reskins the keyboard
+         and an overlay can still retune the style. -->
     <android.inputmethodservice.KeyboardView
         android:id="@+id/keyboardview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:keyBackground="@drawable/btn_keyboard_key"
-        android:keyTextColor="#ffffff"
-        android:popupLayout="@android:layout/keyboard_popup_keyboard"/>
+        android:layout_height="wrap_content"/>
 </LinearLayout>

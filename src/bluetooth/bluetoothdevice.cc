@@ -50,6 +50,9 @@ BluetoothClass BluetoothDevice::getBluetoothClass() const {
 int BluetoothDevice::getType() const {
     return BluetoothAdapter::getDefaultAdapter().resolveDeviceType(mAddress);
 }
+std::vector<BluetoothUuid> BluetoothDevice::getUuids() const {
+    return BluetoothAdapter::getDefaultAdapter().resolveDeviceUuids(mAddress);
+}
 
 bool BluetoothDevice::createBond() {
     return BluetoothAdapter::getDefaultAdapter().bondDevice(mAddress);

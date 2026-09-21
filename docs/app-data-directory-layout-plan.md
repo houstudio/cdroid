@@ -1,3 +1,8 @@
+> **状态更新(2026-09-18)**:本文的 Context 数据面(getDataDir/files/cache/
+> shared_prefs 等)与 AOSP 目录形状**已实施**(src/gui/core/context.cc),prefs 已按
+> `<数据根>/data/<包名>/shared_prefs/` 落盘。现状说明请读
+> [app-directories.md](app-directories.md);本文保留作为规划过程记录。
+
 # App 包与数据目录布局规划(2026-09-04)
 
 > 把 CDROID 的应用包位置、应用数据位置对齐 AOSP 目录模型的规划。**只规划,未实施。**

@@ -32,6 +32,20 @@ namespace cdroid{
 class InputEventSource:public EventHandler{
 public:
     typedef std::function<void(bool)>ScreenSaver;
+    /*Reader backend. Thread (default) = the dedicated evdev reader thread
+      blocking in InputGetEvents(20ms) and waking the main looper; the stock
+      behavior. Choreographer = no reader thread: a self-reposting
+      Choreographer CALLBACK_INPUT poll calls InputGetEvents with a 0ms
+      timeout (non-blocking probe) at frame cadence and dispatches on the
+      spot, so input precedes the frame's ANIMATION/TRAVERSAL phases
+      (Android frame order). Trade-offs: input latency is bounded by the
+      frame delay (default 33ms), and the main loop keeps waking at frame
+      cadence even when idle. Fixed before exec(); no runtime switch.*/
+    enum Mode{ Thread, Choreographer };
+    /*Select the reader mode BEFORE the main loop starts (App parses
+      --input-mode ahead of getInstance()); a later call is ignored once
+      the reader is up (checkEvents' lazy init reads it exactly once).*/
+    static void setMode(Mode mode);
 private:
     mutable std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
@@ -45,6 +59,10 @@ private:
       locking mtxEvents / reading mRunning on freed memory (valgrind: invalid
       read/write in pthread_mutex_lock from InputThread at every app exit).*/
     std::thread mInputThread;
+    /*Choreographer mode: the self-reposting CALLBACK_INPUT runner. Held as a
+      member so removeCallbacks gets a stable action pointer to match on
+      (records match by action address + token, see CallbackRecord::compare).*/
+    Runnable mFramePoll;
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
     /*Injected events (injectInputEvent) waiting for the main-looper drain —
@@ -53,6 +71,17 @@ private:
 private:
     std::shared_ptr<InputDevice>getDevice(int fd);
     void doEventsConsume();
+    /*Queue-fill shared by both reader backends: stash a raw InputGetEvents
+      batch into the per-device queues (device add/remove included). Returns
+      count, exactly what the reader consumed. The caller holds no lock:
+      this takes mtxEvents itself, like the old inline loop body did.*/
+    int consumeRawEvents(const INPUTEVENT*es,int count);
+    /*Choreographer-mode reader: post the first CALLBACK_INPUT poll (called
+      from checkEvents' lazy init instead of spawning the thread) / drop any
+      pending poll record (shutdown; no-op in Thread mode).*/
+    void startFramePolling();
+    void stopFramePolling();
+    void onFramePoll();
     bool needCancel(InputDevice*dev);
 protected:
     InputEventSource();

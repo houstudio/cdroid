@@ -133,5 +133,15 @@ namespace internal { namespace R { namespace styleable {
     const uint32_t CircularProgressLayout[] = { 0x0201016f, 0x02010170, 0x02010171, 0x02010172, 0 };
     const uint32_t RoundedDrawable[] = { 0x01010119, 0x02010173, 0x0201016f, 0x02010174, 0 };
     const uint32_t BoxInsetLayoutLayout[] = { 0x02010175, 0x02010176, 0 };
+    const uint32_t WearableDrawerView[] = { 0x02010185, 0x02010186, 0x02010187, 0x010100d4, 0x01010440, 0 };
+    const uint32_t WearableActionDrawerView[] = { 0x02010188, 0x02010189, 0x0201018a, 0 };
+    const uint32_t WearableNavigationDrawerView[] = { 0x0201018b, 0 };
+    const uint32_t PageIndicatorView[] = {
+        0x0201018c, 0x0201018d, 0x0201018e, 0x0201018f, 0x02010190, 0x02010191, 0x02010192,
+        0x02010193, 0x02010194, 0x02010195, 0x02010196, 0x02010197, 0x02010198, 0 };
+    const uint32_t CircledImageView[] = {
+        0x01010119, 0x02010199, 0x0201019a, 0x0201019b, 0x0201019c, 0x0201019d, 0x0201019e,
+        0x0201019f, 0x020101a0, 0x020101a1, 0x020101a2, 0x020101a3, 0x020101a4, 0x020101a5,
+        0x020101a6, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upstream: SupportWearDemos res/layout/cpl_demo.xml. The CircularProgress
+     attrs keep upstream's app: res-auto prefix — they resolve via the
+     -I-linked widgetex.apk shared lib (see rv_demo.xml). -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <androidx.wear.widget.CircularProgressLayout
+        android:id="@+id/circularProgressLayout_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:padding="10dp"
+        app:backgroundColor="@color/cpl_light_yellow"
+        app:colorSchemeColors="@color/cpl_light_blue"
+        app:strokeWidth="10dp">
+        <TextView
+            android:id="@+id/circularProgressLayout_child"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textColor="@color/cpl_black"
+            android:text="@string/cpl_click_me"/>
+    </androidx.wear.widget.CircularProgressLayout>
+</FrameLayout>

@@ -5,7 +5,6 @@
 #include <core/bundle.h>
 #include <core/process.h>
 #include <view/asyncinflater.h>
-#include <widgetEx/wear/confirmationoverlay.h>
 //#include <mgl2/mgl.h>
 int main(int argc,const char*argv[]){
 #if defined(__linux__)||defined(__unix__)
@@ -15,10 +14,6 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(12,23,640,480);
     w->setId(10000);
     w->setBackgroundColor(0xFF4488cc);
-#if ENABLE(WEARABLE_WIDGETS)
-    ConfirmationOverlay* cfo=new ConfirmationOverlay();
-    cfo->setMessage("Hello world from ConfirmationOverlay").showAbove(w);
-#endif
     AsyncLayoutInflater al(&app);
     auto cbk = [](View*view,int res, ViewGroup*parent){
         LOGD("view=%p,res=%d parent=%p",view,res,parent);

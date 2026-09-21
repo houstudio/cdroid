@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upstream: SupportWearDemos res/layout/confirmation_overlay_demo.xml. -->
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+    <Button
+        android:id="@+id/activity_overlay_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Overlay Activity"/>
+    <Button
+        android:id="@+id/view_overlay_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Overlay View"/>
+</LinearLayout>

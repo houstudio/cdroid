@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AOSP Wear themes set android:windowSwipeToDismiss=true by default
+     (gated by FEATURE_WATCH); CDROID windows opt in from the theme.
+     Parented to the dark Material theme the app ran on before it gained a
+     manifest theme. -->
+<resources>
+    <style name="WearTheme" parent="@android:style/Theme.Material">
+        <item name="android:windowSwipeToDismiss">true</item>
+    </style>
+</resources>

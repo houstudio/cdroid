@@ -43,16 +43,16 @@ private:
     //Paint mCompositingPaint = new Paint();
 
     VelocityTracker* mVelocityTracker;
-    bool mIsScreenRound;
-    bool mStarted;
-    int mScreenWidth;
-    int mOriginalViewWidth;
-    float mTranslationX;
-    float mScale;
-    float mProgress;
-    float mDimming;
-    SpringAnimation* mDismissalSpring;
-    SpringAnimation* mRecoverySpring;
+    bool mIsScreenRound = true;
+    bool mStarted = false;
+    int mScreenWidth = 0;
+    int mOriginalViewWidth = 0;
+    float mTranslationX = 0.f;
+    float mScale = 1.f;
+    float mProgress = 0.f;
+    float mDimming = 0.f;
+    SpringAnimation* mDismissalSpring = nullptr;
+    SpringAnimation* mRecoverySpring = nullptr;
     // Variable to restore the parent's background which is added below mScrimBackground.
     Drawable* mPrevParentBackground = nullptr;
 private:

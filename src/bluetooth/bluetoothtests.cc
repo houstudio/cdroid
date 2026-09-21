@@ -8,6 +8,8 @@
 #include <vector>
 
 #include <bluetoothuuid.h>
+#include <bluetoothadapter.h>
+#include <bluetoothprofile.h>
 #include <internal/sdppdu.h>
 #include "internal/btuapi.h"
 
@@ -135,11 +137,59 @@ static void testResponseParsing() {
     }
 }
 
+static void testHidUuidMatching() {
+    /* The HID profile UUID must round-trip between the BlueZ string form
+     * (lowercase 128-bit) and BluetoothUuid::HID() — the matching path
+     * BluetoothHidHost/prefdemo rely on (toString is uppercase, so a
+     * naive string compare would break). */
+    const cdroid::BluetoothUuid hid = cdroid::BluetoothUuid::HID();
+    CHECK(cdroid::BluetoothUuid::fromString(
+            "00001124-0000-1000-8000-00805f9b34fb") == hid);
+    CHECK(cdroid::BluetoothUuid::fromString(
+            "00001124-0000-1000-8000-00805F9B34FB") == hid);
+    CHECK(cdroid::BluetoothUuid::fromString(
+            "00001125-0000-1000-8000-00805f9b34fb") != hid);
+    /* junk parses to the all-zero UUID */
+    CHECK(cdroid::BluetoothUuid::fromString("not-a-uuid")
+          == cdroid::BluetoothUuid());
+}
+
+static void testHidHostStateWithoutStack() {
+    /* No bluetoothd on the bench: an unknown device must report the
+     * disconnected default, not hang or crash (the cache miss path). */
+    cdroid::BluetoothAdapter& adapter = cdroid::BluetoothAdapter::getDefaultAdapter();
+    cdroid::BluetoothHidHost* hid = nullptr;
+    cdroid::BluetoothProfile::ServiceListener getter;
+    getter.onServiceConnected = [&hid](int, cdroid::BluetoothProfile* proxy) {
+        hid = static_cast<cdroid::BluetoothHidHost*>(proxy);
+    };
+    CHECK(adapter.getProfileProxy(getter, cdroid::BluetoothProfile::HID_HOST));
+    CHECK(hid != nullptr);
+    const cdroid::BluetoothDevice unknown =
+            adapter.getRemoteDevice("AA:11:22:33:44:55");
+    CHECK(hid->getConnectionState(unknown)
+          == cdroid::BluetoothProfile::PROFILE_DISCONNECTED);
+    CHECK(hid->getConnectedDevices().empty());
+    /* State matching + policy defaults on an unseen device. */
+    CHECK(hid->getDevicesMatchingConnectionStates(
+            {cdroid::BluetoothProfile::STATE_CONNECTED,
+             cdroid::BluetoothProfile::STATE_DISCONNECTED}).empty());
+    CHECK(hid->getConnectionPolicy(unknown)
+          == cdroid::BluetoothProfile::CONNECTION_POLICY_UNKNOWN);
+    CHECK(hid->getPriority(unknown)
+          == cdroid::BluetoothProfile::PRIORITY_UNDEFINED);
+    /* Invalid policies are rejected before any transport use. */
+    CHECK(!hid->setConnectionPolicy(unknown, 12345));
+    adapter.closeProfileProxy(cdroid::BluetoothProfile::HID_HOST, hid);
+}
+
 int main() {
     testBdaddrByteOrder();
     testUuidExpansion();
     testRequestAssembly();
     testResponseParsing();
+    testHidUuidMatching();
+    testHidHostStateWithoutStack();
     printf(gFailures == 0 ? "ALL PASS\n" : "%d FAILURES\n", gFailures);
     return gFailures == 0 ? 0 : 1;
 }

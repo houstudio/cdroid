@@ -77,6 +77,7 @@ public:
     void setContentView(View*view);
     void addContentView(View* view,ViewGroup::LayoutParams* params);
     void setTitle(const std::string&);
+    void setTitle(int titleId);
     bool onKeyDown(int keyCode,KeyEvent& event)override;
     bool onKeyLongPress(int keyCode,KeyEvent& event)override;
     bool onKeyUp(int keyCode,KeyEvent& event)override;

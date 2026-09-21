@@ -39,6 +39,10 @@ void RoundedDrawable::inflate(Resources& r, XmlPullParser& parser, const Attribu
     // androidx R.styleable.RoundedDrawable (TypedArray; binary AXML ids)
     auto ta = obtainAttributes(r, theme, attrs, internal::R::styleable::RoundedDrawable);
     if (ta) {
+        // androidx RoundedDrawable.java:105-108 reads android:src first.
+        if (ta->hasValue(internal::R::styleable::RoundedDrawable_src)) {
+            setDrawable(ta->getDrawable(internal::R::styleable::RoundedDrawable_src));
+        }
         setRadius(ta->getDimensionPixelSize(internal::R::styleable::RoundedDrawable_radius, 0));
         setClipEnabled(ta->getBoolean(internal::R::styleable::RoundedDrawable_clipEnabled, false));
         setBackgroundColor(ta->getColor(internal::R::styleable::RoundedDrawable_backgroundColor, Color::TRANSPARENT));

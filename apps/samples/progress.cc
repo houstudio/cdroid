@@ -1,7 +1,6 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <fstream>
-#include <widgetEx/wear/circularprogresslayout.h>
 #include <widget/R.h>   // public cdroid::R (android.R role)
 int main(int argc,const char*argv[]){
     App app(argc,argv);

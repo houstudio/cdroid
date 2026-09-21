@@ -103,6 +103,14 @@ public:
     // plumbing stays inside TypedArray, converted at the StyledAttr boundary.
     bool      peekValue(size_t idx, TypedValue* out) const;
     bool      getValue(size_t idx, TypedValue* out) const;
+    // AOSP TypedArray.getChangingConfigurations(): mask of the configuration
+    // parameters for which values in this array may change (?attr/refs),
+    // requiring re-resolution — drains (reads and resets) the mask, as AOSP.
+    // CDROID's styled-attr pipeline does not yet model per-value
+    // changing-config bits, so the mask stays 0; the API exists for call-site
+    // fidelity (e.g. drawable updateStateFromTypedArray). const + mutable so
+    // the const-ref house signature of updateStateFromTypedArray can call it.
+    int       getChangingConfigurations() const;
     // AOSP extractThemeAttrs(): the ?attr (TYPE_ATTRIBUTE) ids this array
     // carries, one slot per entry (0 where the entry is not a theme attr),
     // kept by drawable constant states for Theme re-resolution (applyTheme).

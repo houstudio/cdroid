@@ -22,12 +22,15 @@ Embedded teams keep reinventing UI frameworks, and the results are rarely as goo
 
 ## Features
 
-- **50+ widgets & 20+ drawables**, API-compatible with Android — design them in Android Studio / Eclipse.
+- **100+ widgets & 50 drawables**, API-compatible with Android — design them in Android Studio / Eclipse.
 - **Full AndroidX ports:** RecyclerView, ConstraintLayout + MotionLayout, FragmentManager + Navigation, Flexbox, CoordinatorLayout, ViewPager2.
 - **Fragment + Transition framework**, including shared-element transitions.
+- **Binary AXML resources end to end** — aapt2-compiled XML + `resources.arsc` packed into `.pak` archives, real resource ids in generated `R.h`, build-time resource overlay.
+- **android.app services in-process** — AlarmManager (suspend-aware delivery, no dedicated thread), dialogs, a minimal PendingIntent.
+- **In-process accessibility** — AccessibilityService + node tree, plus UiAutomation semantic test drivers (`--auto-test` sweep, `--test-script` DSL).
 - **Vector graphics via Cairo** — no `Bitmap` class; `Cairo::ImageSurface` plays that role.
 - **Multi-window / multi-layer compositor** with damage-region rendering.
-- **Faithful text stack:** spans, `StaticLayout`/`DynamicLayout`, minikin line-breaking, `KeyCharacterMap`, IME.
+- **Faithful text stack:** spans, `StaticLayout`/`DynamicLayout`, minikin line-breaking, fonts.xml family/fallback chain, color emoji (CBDT), `KeyCharacterMap`, IME.
 - **Cross-platform backends:** DRM, fb, DirectFB, SDL, XCB/Xlib, VNC.
 
 ## Get involved 👋
@@ -56,41 +59,45 @@ CDroid is a large port — there is always more to translate from AOSP, and we'd
 ![输入图片说明](https://foruda.gitee.com/images/1696897716776731960/47e420c7_8310459.png "asd4.png")
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 
-|  View         |      TextView      |  Button            |  ImageView    |  ImageButton  |
-|---------------|--------------------|--------------------|---------------|---------------|
-|CompoundButton |    ToggleButton    |     CheckBox       | RadioButton   |  ProgressBar  |
-|   SeekBar     |   Chronometer      |    AnalogClock     |   ViewGroup   |  RadioGroup   |
-|  ScrollView   |    ViewPager       |  SimpleMonthView   |    Switch     |   RatingBar   |
-| NumberPicker  |     ListView       |     GridView       | RecyclerView  |  ViewFlipper  |
-| ViewAnimator  |AdapterViewAnimator |    Calendarview    |SimpleMonthView| Chronometer   |
-|  ScrollView   | NestedScrollView   |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |   CardView    |
+| View           | TextView             | Button               | ImageView    | ImageButton |
+|----------------|----------------------|----------------------|--------------|-------------|
+| CompoundButton | ToggleButton         | CheckBox             | RadioButton  | ProgressBar |
+| SeekBar        | Chronometer          | AnalogClock          | ViewGroup    | RadioGroup  |
+| ScrollView     | ViewPager            | SimpleMonthView      | Switch       | RatingBar   |
+| NumberPicker   | ListView             | GridView             | RecyclerView | ViewFlipper |
+| ViewAnimator   | AdapterViewAnimator  | CalendarView         | TabLayout    | DatePicker  |
+| TimePicker     | NestedScrollView     | HorizontalScrollView | DateTimeView | ViewPager2  |
+| YearPickerView | WearableRecyclerView | Toolbar              | QRCodeView   | CardView    |
 
 # **Supported Layouts:**
-|   FrameLayout   |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
-|-----------------|----------------|----------------|------------------|-------------------|
-|   TableLayout   | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
-| ConstrainLayout |  MotionLayout  |  FlexboxLayout |                  |                   |
+| FrameLayout      | LinearLayout   | RelativeLayout | TableRow           | DrawerLayout      |
+|------------------|----------------|----------------|--------------------|-------------------|
+| TableLayout      | AbsoluteLayout | GridLayout     | GestureOverlayView | CoordinatorLayout |
+| ConstraintLayout | MotionLayout   | FlexboxLayout  | SlidingPaneLayout  |                   |
+
 # **Supported Drawables:**
-|   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
-|-------------------|------------------|--------------------------|-----------------|
-|ShapeDrawable      |TransitionDrawable|  AnimatedVectorDrawable  |StateListDrawable|
-| LevelListDrawable |   ClipDrawable   |  AnimatedRotateDrawable  | RotateDrawable  |
-|GradientDrawable   |  ScaleDrawable   |  AnimatedImageDrawable   | VectorDrawable  |
-|  RippleDrawable   |AnimationDrawable |AnimatedStateListDrawable |  LayerDrawable  |
-|   BadgeDrawable   | PictureDrawable  |AnimationScaleListDrawable| RippleDrawable  |
+| ColorDrawable     | BitmapDrawable     | NinePatchDrawable          | InsetDrawable        |
+|-------------------|--------------------|----------------------------|----------------------|
+| ShapeDrawable     | TransitionDrawable | AnimatedVectorDrawable     | StateListDrawable    |
+| LevelListDrawable | ClipDrawable       | AnimatedRotateDrawable     | RotateDrawable       |
+| GradientDrawable  | ScaleDrawable      | AnimatedImageDrawable      | VectorDrawable       |
+| RippleDrawable    | AnimationDrawable  | AnimatedStateListDrawable  | LayerDrawable        |
+| BadgeDrawable     | PictureDrawable    | AnimationScaleListDrawable | AdaptiveIconDrawable |
+
 # **Porting guide:**
 
 * 1 A new product porting should be placed to src/porting/xxx(where xxx is you chipset name)
 * 2 implement your porting api to xxx directory
 * 3 modify build.sh to support your port(you should configure sysroot toolchain...).
 * 4 call build.sh --product=xxx
-* 5 make you project(SeeAlso **Building CDROID**) 
+* 5 make you project(SeeAlso **Building CDROID**)
 
 # **Building CDROID:**
-### 1.install dependencs:
- sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python>=3.7 pip3-python python3-lxml meson
- pip install lxml Pillow polib requests xlrd xlwt
+### 1.install dependencies(Ubuntu 22+):
+sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip curl unzip gettext libx11-dev libxcursor-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python3 python3-pip python3-lxml python3-pil meson
+# notes: the "aapt" package ships /usr/bin/aapt2; all Python deps of the build
+# scripts (lxml + Pillow) come from python3-lxml / python3-pil above -- no pip
+# install is needed (and bare "pip install" is refused on Ubuntu 23.04+).
 ### 2.install vcpkg:
 * git clone https://www.github.com/microsoft/vcpkg.git
 * cd vcpkg
@@ -110,11 +117,11 @@ CDroid is a large port — there is always more to translate from AOSP, and we'd
 * cd outX64-Debug
 * make -j
 ### 7.prepare system and app resource
-*The cdroid.pak and yourapp's pak must be in your working directory*
-* cp src/gui/cdroid.pak ./
-* cp apps/appname/appname.pak ./
-### 8.run samples(in directory outX64-Debug)
-* apps/samples/helloworld
-* apps/uidemo1/uidemo1
+* No manual copy in the build tree: cdroid.pak / widgetex.pak are generated at the out-root and every app locates them automatically (probe order: the executable's directory and its parents, then cwd, then /usr/share/cdroid and /opt/cdroid).
+* An app's own `<app>.pak` is picked up beside its binary (override the directory with `--data`).
+* For device installs put cdroid.pak / widgetex.pak under /usr/share/cdroid (or /opt/cdroid).
+### 8.build & run samples(in directory outX64-Debug)
+* each sample is its own make target, e.g. `make buttons` then run `apps/samples/buttons`
+* `make alarmmanager && apps/samples/alarmmanager` (AlarmManager demo)
 
 

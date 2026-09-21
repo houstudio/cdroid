@@ -1,11 +1,12 @@
 out*
 /build/
 apps/*
+!apps/deskclock
 !apps/printerdemo
 !apps/preferencedemo
-!apps/deskclock
-!apps/widgetsDemo
 !apps/remusic
+!apps/weardemos
+!apps/widgetsDemo
 !apps/createPrj.py
 !apps/samples
 *.bak

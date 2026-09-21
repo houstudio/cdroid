@@ -7,8 +7,10 @@
 namespace preferencedemo {
 
 CachedBluetoothDeviceManager::CachedBluetoothDeviceManager(
-        LocalBluetoothAdapter* localAdapter)
-    : mLocalAdapter(localAdapter) {
+        LocalBluetoothAdapter* localAdapter,
+        LocalBluetoothProfileManager* profileManager)
+    : mLocalAdapter(localAdapter),
+      mProfileManager(profileManager) {
 }
 
 std::vector<CachedBluetoothDevice*> CachedBluetoothDeviceManager::getCachedDevicesCopy() const {
@@ -31,7 +33,7 @@ CachedBluetoothDevice* CachedBluetoothDeviceManager::onDeviceAdded(
     const std::string address = device.getAddress();
     CachedBluetoothDevice* cachedDevice = findDevice(address);
     if (cachedDevice == nullptr) {
-        cachedDevice = new CachedBluetoothDevice(mLocalAdapter, device);
+        cachedDevice = new CachedBluetoothDevice(mProfileManager, mLocalAdapter, device);
         mCachedDevices[address] = cachedDevice;
     }
     return cachedDevice;

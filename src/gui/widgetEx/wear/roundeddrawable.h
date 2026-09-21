@@ -22,10 +22,10 @@ namespace cdroid{
 class RoundedDrawable:public Drawable {
 private:
     int mBackgroundColor;
-    int mRadius;// Radius applied to corners in pixels
+    int mRadius = 0;// Radius applied to corners in pixels
     int mAlpha;
     Drawable* mDrawable;
-    bool mIsClipEnabled;
+    bool mIsClipEnabled = false;
 
     // Used to avoid creating new Rect objects every time draw() is called
     Rect mTmpBounds;

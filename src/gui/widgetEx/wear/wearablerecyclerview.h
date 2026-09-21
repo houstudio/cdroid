@@ -25,9 +25,9 @@ private:
     static constexpr int NO_VALUE = INT_MIN;
 
     ScrollManager* mScrollManager;
-    bool mCircularScrollingEnabled;
-    bool mEdgeItemsCenteringEnabled;
-    bool mCenterEdgeItemsWhenThereAreChildren;
+    bool mCircularScrollingEnabled = false;
+    bool mEdgeItemsCenteringEnabled = false;
+    bool mCenterEdgeItemsWhenThereAreChildren = false;
 
     int mOriginalPaddingTop = NO_VALUE;
     int mOriginalPaddingBottom = NO_VALUE;

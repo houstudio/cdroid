@@ -12,7 +12,6 @@ find_package(Freetype REQUIRED)
 find_package(HarfBuzz)
 find_package(EXPAT REQUIRED)
 find_package(Cairo REQUIRED)
-find_package(Fontconfig REQUIRED)
 find_package(UniBreak REQUIRED)
 find_package(RTAUDIO)
 find_package(Pthread)
@@ -67,7 +66,6 @@ list(APPEND CDROID_PUBLIC_DEPLIBS  ${CAIRO_LIBRARIES} ${PIXMAN_LIBRARIES})
 #  --as-needed on cdroid drops them from DT_NEEDED. Kept on the link line for static fallback.)
 list(APPEND CDROID_PRIVATE_DEPLIBS
     ${FREETYPE_LIBRARIES}
-    #${FONTCONFIG_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
     ${PNG_LIBRARIES}
     ${ZIP_LIBRARIES}

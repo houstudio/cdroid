@@ -19,6 +19,7 @@
 #include <drawable/animationscalelistdrawable.h>
 #include <content/typedvalue.h>
 #include <image-decoders/imagedecoder.h>  // ImageDecoder::decodeDrawable(Resources, id)
+#include <widgetEx/wear/roundeddrawable.h>
 #include <text/textutils.h>
 namespace cdroid{
 /**
@@ -144,7 +145,9 @@ static const std::unordered_map<std::string,std::function<Drawable*()>>drawableP
     {"rotate",    [](){return new RotateDrawable();}},
     {"inset",     [](){return new InsetDrawable();}},
     {"bitmap",    [](){return new BitmapDrawable();}},
-    {"nine-patch",[](){return new NinePatchDrawable();}}
+    {"nine-patch",[](){return new NinePatchDrawable();}},
+    {"RoundedDrawable",[](){return new RoundedDrawable();}},
+    {"androidx.wear.widget.RoundedDrawable",[](){return new RoundedDrawable();}}
 };
 
 Drawable* DrawableInflater::inflateFromTag(const std::string& name) {

@@ -185,24 +185,91 @@ namespace internal { namespace R { namespace attr {
     constexpr uint32_t nullable = 0x0201012f;
     constexpr uint32_t dataPattern = 0x02010132;
 } } } // namespace internal::R::attr
+namespace internal { namespace R { namespace array {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t circular_progress_layout_color_scheme_colors = 0x02020000;
+} } } // namespace internal::R::array
+namespace internal { namespace R { namespace color {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t circular_progress_layout_background_color = 0x02030000;
+} } } // namespace internal::R::color
+namespace internal { namespace R { namespace dimen {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t circular_progress_layout_stroke_width = 0x02050000;
+    constexpr uint32_t ws_action_drawer_item_bottom_padding = 0x02050016;
+    constexpr uint32_t ws_action_drawer_item_icon_right_margin = 0x02050017;
+    constexpr uint32_t ws_action_drawer_item_top_padding = 0x02050015;
+    constexpr uint32_t ws_wearable_drawer_view_elevation = 0x02050014;
+    constexpr uint32_t ws_wrv_curve_default_x_offset = 0x02050013;
+} } } // namespace internal::R::dimen
 namespace internal { namespace R { namespace drawable {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
     constexpr uint32_t confirmation_animation = 0x0204003a;
     constexpr uint32_t failure_animation = 0x0204003b;
     constexpr uint32_t open_on_phone_animation = 0x0204003d;
+    constexpr uint32_t ws_action_item_background = 0x0204003e;
+    constexpr uint32_t ws_action_item_icon_background = 0x0204003f;
+    constexpr uint32_t ws_ic_expand_less_white_22 = 0x02040040;
+    constexpr uint32_t ws_ic_expand_more_white_22 = 0x02040041;
+    constexpr uint32_t ws_ic_more_horiz_24dp_wht = 0x02040042;
+    constexpr uint32_t ws_ic_more_vert_24dp_wht = 0x02040043;
 } } } // namespace internal::R::drawable
 namespace internal { namespace R { namespace id {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t action_list = 0x020600be;
     constexpr uint32_t wearable_support_confirmation_overlay_image = 0x020600b5;
     constexpr uint32_t wearable_support_confirmation_overlay_message = 0x020600b6;
+    constexpr uint32_t ws_action_drawer_expand_icon = 0x020600ba;
+    constexpr uint32_t ws_action_drawer_item_icon = 0x020600bb;
+    constexpr uint32_t ws_action_drawer_item_text = 0x020600bc;
+    constexpr uint32_t ws_action_drawer_peek_action_icon = 0x020600b9;
+    constexpr uint32_t ws_action_drawer_title = 0x020600bd;
+    constexpr uint32_t ws_drawer_view_peek_container = 0x020600b7;
+    constexpr uint32_t ws_drawer_view_peek_icon = 0x020600b8;
+    constexpr uint32_t ws_nav_drawer_icon_0 = 0x020600c3;
+    constexpr uint32_t ws_nav_drawer_icon_1 = 0x020600c4;
+    constexpr uint32_t ws_nav_drawer_icon_2 = 0x020600c5;
+    constexpr uint32_t ws_nav_drawer_icon_3 = 0x020600c6;
+    constexpr uint32_t ws_nav_drawer_icon_4 = 0x020600c7;
+    constexpr uint32_t ws_nav_drawer_icon_5 = 0x020600c8;
+    constexpr uint32_t ws_nav_drawer_icon_6 = 0x020600c9;
+    constexpr uint32_t ws_nav_drawer_text = 0x020600ca;
+    constexpr uint32_t ws_navigation_drawer_item_icon = 0x020600c1;
+    constexpr uint32_t ws_navigation_drawer_item_text = 0x020600c2;
+    constexpr uint32_t ws_navigation_drawer_page_indicator = 0x020600c0;
+    constexpr uint32_t ws_navigation_drawer_view_pager = 0x020600bf;
 } } } // namespace internal::R::id
 namespace internal { namespace R { namespace layout {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t ws_action_drawer_item_view = 0x02080003;
+    constexpr uint32_t ws_action_drawer_peek_view = 0x02080002;
+    constexpr uint32_t ws_action_drawer_title_view = 0x02080004;
+    constexpr uint32_t ws_navigation_drawer_item_view = 0x02080006;
+    constexpr uint32_t ws_navigation_drawer_view = 0x02080005;
     constexpr uint32_t ws_overlay_confirmation = 0x02080000;
+    constexpr uint32_t ws_single_page_nav_drawer_1_item = 0x02080007;
+    constexpr uint32_t ws_single_page_nav_drawer_2_item = 0x02080008;
+    constexpr uint32_t ws_single_page_nav_drawer_3_item = 0x02080009;
+    constexpr uint32_t ws_single_page_nav_drawer_4_item = 0x0208000a;
+    constexpr uint32_t ws_single_page_nav_drawer_5_item = 0x0208000b;
+    constexpr uint32_t ws_single_page_nav_drawer_6_item = 0x0208000c;
+    constexpr uint32_t ws_single_page_nav_drawer_7_item = 0x0208000d;
+    constexpr uint32_t ws_single_page_nav_drawer_peek_view = 0x0208000e;
+    constexpr uint32_t ws_single_page_nav_drawer_text = 0x0208000f;
+    constexpr uint32_t ws_wearable_drawer_view = 0x02080001;
 } } } // namespace internal::R::layout
+namespace internal { namespace R { namespace string {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t ws_action_drawer_content_description = 0x02070001;
+    constexpr uint32_t ws_navigation_drawer_content_description = 0x02070000;
+} } } // namespace internal::R::string
 namespace internal { namespace R { namespace style {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
@@ -213,6 +280,11 @@ namespace internal { namespace R { namespace style {
     constexpr uint32_t Widget_Design_CollapsingToolbar = 0x02090002;
     constexpr uint32_t Widget_Design_NavigationView = 0x02090004;
     constexpr uint32_t Widget_Design_TabLayout = 0x02090007;
+    constexpr uint32_t Widget_Wear_WearableDrawerView = 0x02090008;
+    constexpr uint32_t WsPageIndicatorViewStyle = 0x02090009;
+    constexpr uint32_t WsSinglePageNavDrawerIconStyle = 0x0209000a;
+    constexpr uint32_t WsWearableActionDrawerItemText = 0x0209000b;
+    constexpr uint32_t WsWearableActionDrawerTitleText = 0x0209000c;
 } } } // namespace internal::R::style
 namespace internal { namespace R { namespace styleable {
     // CoordinatorLayout (2 attrs)
@@ -966,6 +1038,58 @@ namespace internal { namespace R { namespace styleable {
     extern const uint32_t BoxInsetLayoutLayout[];
     constexpr int BoxInsetLayoutLayout_boxedEdges = 0;
     constexpr int BoxInsetLayoutLayout_layout_boxedEdges = 1;
+
+    // WearableDrawerView (5 attrs)
+    extern const uint32_t WearableDrawerView[];
+    constexpr int WearableDrawerView_peekView = 0;
+    constexpr int WearableDrawerView_drawerContent = 1;
+    constexpr int WearableDrawerView_enableAutoPeek = 2;
+    constexpr int WearableDrawerView_background = 3;
+    constexpr int WearableDrawerView_elevation = 4;
+
+    // WearableActionDrawerView (3 attrs)
+    extern const uint32_t WearableActionDrawerView[];
+    constexpr int WearableActionDrawerView_drawerTitle = 0;
+    constexpr int WearableActionDrawerView_actionMenu = 1;
+    constexpr int WearableActionDrawerView_showOverflowInPeek = 2;
+
+    // WearableNavigationDrawerView (1 attrs)
+    extern const uint32_t WearableNavigationDrawerView[];
+    constexpr int WearableNavigationDrawerView_navigationStyle = 0;
+
+    // PageIndicatorView (13 attrs)
+    extern const uint32_t PageIndicatorView[];
+    constexpr int PageIndicatorView_wsPageIndicatorDotSpacing = 0;
+    constexpr int PageIndicatorView_wsPageIndicatorDotRadius = 1;
+    constexpr int PageIndicatorView_wsPageIndicatorDotRadiusSelected = 2;
+    constexpr int PageIndicatorView_wsPageIndicatorDotColor = 3;
+    constexpr int PageIndicatorView_wsPageIndicatorDotColorSelected = 4;
+    constexpr int PageIndicatorView_wsPageIndicatorDotFadeWhenIdle = 5;
+    constexpr int PageIndicatorView_wsPageIndicatorDotFadeOutDelay = 6;
+    constexpr int PageIndicatorView_wsPageIndicatorDotFadeOutDuration = 7;
+    constexpr int PageIndicatorView_wsPageIndicatorDotFadeInDuration = 8;
+    constexpr int PageIndicatorView_wsPageIndicatorDotShadowColor = 9;
+    constexpr int PageIndicatorView_wsPageIndicatorDotShadowRadius = 10;
+    constexpr int PageIndicatorView_wsPageIndicatorDotShadowDx = 11;
+    constexpr int PageIndicatorView_wsPageIndicatorDotShadowDy = 12;
+
+    // CircledImageView (15 attrs)
+    extern const uint32_t CircledImageView[];
+    constexpr int CircledImageView_src = 0;
+    constexpr int CircledImageView_background_color = 1;
+    constexpr int CircledImageView_background_radius = 2;
+    constexpr int CircledImageView_background_radius_pressed = 3;
+    constexpr int CircledImageView_background_border_width = 4;
+    constexpr int CircledImageView_background_border_color = 5;
+    constexpr int CircledImageView_background_border_cap = 6;
+    constexpr int CircledImageView_img_padding = 7;
+    constexpr int CircledImageView_background_shadow_width = 8;
+    constexpr int CircledImageView_img_circle_percentage = 9;
+    constexpr int CircledImageView_img_horizontal_offset_percentage = 10;
+    constexpr int CircledImageView_img_tint = 11;
+    constexpr int CircledImageView_background_radius_percent = 12;
+    constexpr int CircledImageView_background_radius_pressed_percent = 13;
+    constexpr int CircledImageView_clip_dimen = 14;
 
 } } } // namespace internal::R::styleable
 } // namespace cdroid

@@ -33,31 +33,26 @@ CircularProgressLayout::CircularProgressLayout(Context* context,const AttributeS
     :FrameLayout(context, pAttrs, defStyleAttr){
 
     initCircularProgressLayout();
-    //Resources r = context.getResources();
-    /*TypedArray a = r.obtainAttributes(attrs, R.styleable.CircularProgressLayout);
-
-    if (a.getType(R.styleable.CircularProgressLayout_colorSchemeColors) == TypedValue
-            .TYPE_REFERENCE || !a.hasValue(
-            R.styleable.CircularProgressLayout_colorSchemeColors)) {
-        // AOSP passes R.array.circular_progress_layout_color_scheme_colors; the
-        // typed attr reference (or the default name) resolves to an array id.
-        int arrayResId = a.getResourceId(R::styleable.CircularProgressLayout_colorSchemeColors, 0);
-        if (!arrayResId) {
-            arrayResId = r.getIdentifier("circular_progress_layout_color_scheme_colors", "array", "cdroid");
-        }
-        setColorSchemeColors(getColorListFromResources(arrayResId));
-    } else {
-        setColorSchemeColors(a.getColor(R.styleable.CircularProgressLayout_colorSchemeColors, Color::BLACK));
-    }
-
-    setStrokeWidth(a.getDimensionPixelSize("strokeWidth",r.getDimensionPixelSize("cdroid:dimen/circular_progress_layout_stroke_width")));
-    */
-
-    // androidx R.styleable.CircularProgressLayout (TypedArray; binary AXML ids)
+    // androidx CircularProgressLayout.java:137-158.
     auto ta = context->obtainStyledAttributes(pAttrs, internal::R::styleable::CircularProgressLayout, defStyleAttr);
     if (ta) {
-        const int defBg = context->getColor(context->getResources().getIdentifier(
-                "circular_progress_layout_background_color", "color", "cdroid.widgetex"));
+        if (ta->getResourceId(internal::R::styleable::CircularProgressLayout_colorSchemeColors, 0) != 0
+                || !ta->hasValue(internal::R::styleable::CircularProgressLayout_colorSchemeColors)) {
+            int arrayResId = (int)ta->getResourceId(
+                    internal::R::styleable::CircularProgressLayout_colorSchemeColors, 0);
+            if (arrayResId == 0) {
+                arrayResId = (int)internal::R::array::circular_progress_layout_color_scheme_colors;
+            }
+            setColorSchemeColors(getColorListFromResources(arrayResId));
+        } else {
+            setColorSchemeColors({(int)ta->getColor(
+                    internal::R::styleable::CircularProgressLayout_colorSchemeColors, Color::BLACK)});
+        }
+        const int defStroke = context->getResources().getDimensionPixelSize(
+                (int)internal::R::dimen::circular_progress_layout_stroke_width);
+        setStrokeWidth(ta->getDimensionPixelSize(
+                internal::R::styleable::CircularProgressLayout_strokeWidth, defStroke));
+        const int defBg = context->getColor((int)internal::R::color::circular_progress_layout_background_color);
         setBackgroundColor(ta->getColor(internal::R::styleable::CircularProgressLayout_backgroundColor, defBg));
         setIndeterminate(ta->getBoolean(internal::R::styleable::CircularProgressLayout_indeterminate, false));
     }
@@ -90,7 +85,21 @@ CircularProgressLayout::~CircularProgressLayout(){
 }
 
 std::vector<int> CircularProgressLayout::getColorListFromResources(int arrayResId) {
-    return arrayResId ? mContext->getResources().getIntArray(arrayResId) : std::vector<int>();
+    // androidx CircularProgressLayout.java:165-171. A plain @color id (kept as
+    // a reference by binary AXML) resolves here as a single-element color.
+    std::vector<int> colors;
+    if (arrayResId == 0) return colors;
+    auto colorArray = mContext->getResources().obtainTypedArray(arrayResId);
+    if (!colorArray) {
+        const int color = mContext->getResources().getColor(arrayResId);
+        if (color != 0) colors.push_back(color);
+        return colors;
+    }
+    colors.reserve(colorArray->length());
+    for (size_t i = 0; i < colorArray->length(); i++) {
+        colors.push_back((int)colorArray->getColor(i, 0));
+    }
+    return colors;
 }
 
 void CircularProgressLayout::onLayout(bool changed, int left, int top, int right, int bottom) {

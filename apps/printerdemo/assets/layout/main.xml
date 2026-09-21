@@ -8,7 +8,7 @@
     <Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
+        android:layout_height="48dp"
         android:minHeight="42dp"
         android:gravity="center_vertical"
         android:buttonGravity="center_vertical"
@@ -29,13 +29,15 @@
     <BottomNavigationView
         android:id="@+id/bottom_navigation"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:background="?attr/navBackground"
         app:itemBackground="@drawable/nav_item_background"
         app:itemTextColor="@color/nav_item_text"
         app:itemIconTint="@color/nav_item_icon"
         app:itemIconGravity="start"
         app:itemGravity="center"
+        app:itemPaddingTop="8dp"
+        app:itemPaddingBottom="8dp"
         app:iconLabelHorizontalSpacing="5dp"
         app:labelVisibilityMode="labeled" />
 </LinearLayout>

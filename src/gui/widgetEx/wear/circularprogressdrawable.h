@@ -141,9 +141,6 @@ public:
 class CircularProgressDrawable::Ring {
     
     RectF mTempBounds;
-    /*Paint mPaint = new Paint();
-    Paint mArrowPaint = new Paint();
-    Paint mCirclePaint = new Paint();*/
     int mRingCap;
     int mCircleColor;
 

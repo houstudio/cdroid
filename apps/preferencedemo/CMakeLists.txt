@@ -19,6 +19,7 @@ include_directories(
 add_executable(preferencedemo
     main.cc
     bluetooth/localbluetoothmanager.cc
+    bluetooth/localbluetoothprofilemanager.cc
     bluetooth/cachedbluetoothdevice.cc
     bluetooth/cachedbluetoothdevicemanager.cc
     bluetooth/bluetoothutils.cc

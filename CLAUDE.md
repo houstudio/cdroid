@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What CDROID is
 
-CDROID is a **line-by-line C++ port of Android's Java UI SDK** (the `android.widget` / `android.view` / `android.text` / `android.graphics.drawable` / `android.animation` frameworks) on top of **Cairo** (vector graphics), targeting embedded systems. The overriding rule: **fidelity to the official Android implementation** — match class names, member names, method signatures, and behavior; translate Android's logic verbatim rather than redesign. `AGENTS.md` (Chinese) states the principles and is authoritative. Reference sources: `/opt/android-sdk/sources/android-36/` (primary) and `android-34/`. Read the Android original before porting or fixing.
+CDROID is a **line-by-line C++ port of Android's Java UI SDK** (the `android.widget` / `android.view` / `android.text` / `android.graphics.drawable` / `android.animation` frameworks) on top of **Cairo** (vector graphics), targeting embedded systems. The overriding rule: **fidelity to the official Android implementation** — match class names, member names, method signatures, and behavior; translate Android's logic verbatim rather than redesign. `AGENTS.md` (Chinese) states the principles and is authoritative. Reference sources: `~/android-35/` (primary) . Read the Android original before porting or fixing.
 
 The whole tree lives under `src/gui/` (mirrors `android.*` packages) plus `src/porting/` (platform backends), `src/3rdparty/`, `src/modules/`. `apps/` holds per-product apps and one-file `apps/samples/`.
 

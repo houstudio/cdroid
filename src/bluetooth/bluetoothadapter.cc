@@ -279,6 +279,9 @@ bool BluetoothAdapter::getProfileProxy(
     case BluetoothProfile::HEADSET:
         listener.onServiceConnected(profile, new BluetoothHeadset());
         return true;
+    case BluetoothProfile::HID_HOST:
+        listener.onServiceConnected(profile, new BluetoothHidHost(*this));
+        return true;
     case BluetoothProfile::PAN:
         listener.onServiceConnected(profile,
                 new BluetoothPan(*this));
@@ -405,6 +408,17 @@ void BluetoothAdapter::removeBondStateListener(const BondStateListener& listener
                                      mBondListeners.end(), listener),
                          mBondListeners.end());
 }
+void BluetoothAdapter::addConnectionStateListener(const ConnectionStateListener& listener) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mConnectionStateListeners.push_back(listener);
+}
+void BluetoothAdapter::removeConnectionStateListener(const ConnectionStateListener& listener) {
+    std::lock_guard<std::mutex> lock(mListenersMutex);
+    mConnectionStateListeners.erase(std::remove(mConnectionStateListeners.begin(),
+                                                mConnectionStateListeners.end(),
+                                                listener),
+                                    mConnectionStateListeners.end());
+}
 
 /* --- notify tails: snapshot under the lock, invoke without it ----------------- */
 
@@ -454,6 +468,16 @@ void BluetoothAdapter::notifyBondStateChanged(const BluetoothDevice& device,
     }
     /* Writable copies: CallbackBase::operator() is non-const. */
     for (BondStateListener l : listeners) l(device, bondState, prevState);
+}
+
+void BluetoothAdapter::notifyConnectionStateChanged(const BluetoothDevice& device,
+                                                    int state, int prevState) {
+    std::vector<ConnectionStateListener> listeners;
+    {
+        std::lock_guard<std::mutex> lock(mListenersMutex);
+        listeners = mConnectionStateListeners;
+    }
+    for (ConnectionStateListener l : listeners) l(device, state, prevState);
 }
 
 void BluetoothAdapter::notifyPairingRequest(const BluetoothDevice& device,
@@ -523,6 +547,18 @@ int BluetoothAdapter::resolveDeviceClass(const std::string& address) const {
     BluezDevice d;
     if (!const_cast<BluezClient&>(mClient).findDevice(address, d)) return 0;
     return (int)d.cod;
+}
+
+std::vector<BluetoothUuid> BluetoothAdapter::resolveDeviceUuids(
+        const std::string& address) const {
+    std::vector<BluetoothUuid> out;
+    BluezDevice d;
+    if (!const_cast<BluezClient&>(mClient).findDevice(address, d)) return out;
+    for (const std::string& u : d.uuids) {
+        const BluetoothUuid uuid = BluetoothUuid::fromString(u);
+        if (uuid != BluetoothUuid()) out.push_back(uuid);   /* skip junk */
+    }
+    return out;
 }
 
 int BluetoothAdapter::resolveDeviceType(const std::string& address) const {
@@ -599,6 +635,25 @@ void BluetoothAdapter::onDevicePropertyChanged(const BluezDevice& device,
         }
         if (prev != bond) {
             notifyBondStateChanged(BluetoothDevice(device.address), bond, prev);
+        }
+        return;
+    }
+    if (name == "Connected") {
+        /* ACTION_CONNECTION_STATE_CHANGED analog: maintain the prev-state
+         * map and fire the connection listeners (STATE_* values). */
+        const int state = device.connected
+                ? BluetoothProfile::STATE_CONNECTED
+                : BluetoothProfile::STATE_DISCONNECTED;
+        int prev = BluetoothProfile::STATE_DISCONNECTED;
+        {
+            std::lock_guard<std::mutex> lock(mStateMutex);
+            auto it = mConnectionStates.find(device.objectPath);
+            if (it != mConnectionStates.end()) prev = it->second;
+            mConnectionStates[device.objectPath] = state;
+        }
+        if (prev != state) {
+            notifyConnectionStateChanged(
+                    BluetoothDevice(device.address), state, prev);
         }
         return;
     }

@@ -51,10 +51,10 @@ private:
     int mScreenHeight;
     int mScreenWidth;
 
-    bool mIsRound;
+    bool mIsRound = false;
     Rect mForegroundPadding;
     Rect mInsets;
-    Drawable* mForegroundDrawable;
+    Drawable* mForegroundDrawable = nullptr;   // Java zero-inits fields; the C++ port must too (an uninitialized slot on a recycled heap block vcall-crashed onMeasure)
 private:
     void measureChild(int widthMeasureSpec, int heightMeasureSpec, int desiredMinInset,int i);
 

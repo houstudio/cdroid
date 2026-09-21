@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drawer family ids, verbatim from upstream wear values/ids.xml. -->
+<resources>
+    <item name="ws_navigation_drawer_view_pager" type="id" />
+    <item name="action_list" type="id" />
+</resources>

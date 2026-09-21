@@ -13,6 +13,7 @@
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
+class WearGestureInterceptionDetector; // AOSP DecorView wear swipe-to-dismiss detector
 class ActionBar;
 class Toolbar;
 class Menu;
@@ -21,6 +22,7 @@ class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
 class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
+class ValueAnimator;
 class ActivityOptions; // forward — scene-transition (shared element) options for startActivityForResult
 class ActivityTransitionCoordinator; // forward — the shared-element flight engine (B route)
 class Window : public FrameLayout, public WindowCallback {
@@ -40,9 +42,10 @@ protected:
         ~InvalidateOnAnimationRunnable();
         void setOwner(Window*w);
         void addView(View* view);
-        void addViewRect(View*view,const Rect&);
+        void addViewRect(View*view,const Rect&,bool full=false);
         void removeView(View* view);
         void run();
+        void drain();   // shared flush loop (run + dtor)
     };
 private:
     class SendWindowContentChangedAccessibilityEvent;
@@ -57,7 +60,6 @@ private:
     AccessibilityManager::AccessibilityStateChangeListener mA11yStateListener;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
-    bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
     AccessibilityManager*mAccessibilityManager;
     ActionMode* mActionMode = nullptr;
@@ -68,7 +70,6 @@ private:
     int mResultCode = 0;     // Activity result (set by setResult, delivered on close)
     Intent* mResultData = nullptr; // borrowed (set by setResult, not deleted by ~Window)
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
-    std::vector<LayoutTransition*> mPendingTransitions;
     // Window-level Activity transitions (owned). Mirror android.app.Activity transition API names,
     // but implemented Window-level (setAlpha/setPos), not android.transition content-level — CDROID's
     // Window is the composition root, so only moving the Window / setting surface opacity is visible.
@@ -98,6 +99,21 @@ private:
     // unset callback means "Window plays its own Activity" — exactly the
     // pre-graft behavior.
     WindowCallback* mCallback = nullptr;
+    // AOSP DecorView's wear swipe-to-dismiss (WearGestureInterceptionDetector
+    // installed at the decor; SystemUI's visual half is driven by the Window).
+    // Armed by the theme's windowSwipeToDismiss — see loadThemeSwipeToDismiss.
+    static constexpr float DEFAULT_SWIPE_DISMISS_DRAG_WIDTH_RATIO = 0.33f;
+    WearGestureInterceptionDetector* mSwipeDismissDetector = nullptr; // owned
+    bool mSwipeDismissDragging = false;  // decor consumed the stream (surface-drag driver)
+    float mSwipeDismissDownX = 0.f;      // raw X where the drag took over
+    float mSwipeDismissLastX = 0.f;      // velocity sampling for the release decision
+    int64_t mSwipeDismissLastT = 0;
+    float mSwipeDismissVelocity = 0.f;   // px/s at release
+    ValueAnimator* mSwipeBackAnimator = nullptr; // owned; surface spring-back
+    void loadThemeSwipeToDismiss();
+    void handleSwipeDismissTouch(MotionEvent& event);
+    void springBackSurface();
+    bool onInterceptTouchEvent(MotionEvent&event)override;
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
@@ -118,6 +134,15 @@ private:
     // AOSP ActivityInfo.configChanges bits (android:configChanges).
     int mConfigChanges = 0;
 private:
+    /* WM lifecycle bookkeeping: TRUE once WindowManager has DELIVERED onStop
+     * to this window (addWindow's covering-deactivation, bringToFront,
+     * removeWindow's dying block), FALSE again when WM delivers
+     * onStart. Single source of truth for the restart side — removeWindow
+     * reads THIS instead of re-deriving "was the host stopped" from bounds at
+     * remove time (the add-side verdict ran at post time; geometry and
+     * visibility in between made the two derivations disagree, producing
+     * out-of-order onStart-without-onStop and resume-without-start pairs). */
+    bool mStoppedByWm = false;
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
     // Moves draw from the doEventHandlers phase (UIEventSource poll) into drainMessageQueue (the
@@ -127,7 +152,6 @@ private:
     void scheduleTraversals();
     void doTraversal();
     bool performFocusNavigation(KeyEvent& event);
-    static View*inflate(Context*ctx,std::istream&stream);
     static ViewGroup*findAncestorToTakeFocusInTouchMode(View* focused);
     void initWindow();
     bool ensureTouchModeLocally(bool);
@@ -149,6 +173,10 @@ private:
     // Activity-transition driver. enter=true plays the open animation; enter=false plays the close
     // one. onEnd (may be empty) runs when the animation completes (or immediately if NONE).
     void runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd);
+    // Cancel + free the in-flight transition animator: null the member FIRST so
+    // the onAnimationEnd cancel() fires sees null (plus mDestroyed in ~Window)
+    // and skips finishClose, then cancel-then-delete off the dispatch stack.
+    void cancelTransitionAnimator();
     void startEnterAnimation();
     // Ghost-exit support (AOSP: WMS animates the removed window's surface):
     // snapshot this window's surface into a compositor ghost, then animate IT.
@@ -156,6 +184,12 @@ private:
     void startGhostExit(ActivityTransition* t);
     void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
     static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
+    /* The slide's start/end visual offsets as TRANSLATIONS: authored resource
+     * deltas when the style carried them (AOSP plays the resource's own
+     * motion — popup_enter_material's 20dp rise), else the edge-based
+     * full-offscreen formula (computeSlidePos at origin 0,0). from=true reads
+     * the enter start (From); from=false the exit end (To). */
+    void slideOffset(const ActivityTransition* t, bool from, int w, int h, int& dx, int& dy);
     void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
 protected:
     // The teardown callback handed to close(cb): invoked at finishClose time
@@ -190,7 +224,6 @@ private:
     // bar views): fill the strips no opaque child covers with the fallback drawable.
     void drawBackgroundFallback(Canvas& canvas);
 protected:
-    std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
     /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window
      *is resized or moved*/
@@ -218,9 +251,7 @@ protected:
     // AOSP DecorView.onDraw: super, then the background fallback.
     void onDraw(Canvas&)override;
     ViewGroup*invalidateChildInParent(int* location,Rect& dirty)override;
-    int processInputEvent(InputEvent&event);
     int processKeyEvent(KeyEvent&event);
-    int processPointerEvent(MotionEvent&event);
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
@@ -260,11 +291,15 @@ public:
            bool themeWindowAnimations = true);
     Window(Context*,const AttributeSet*);
     ~Window()override;
-    void setRegion(const Cairo::RefPtr<Cairo::Region>&region);
     void draw();
     virtual void setText(const std::string&);
     const std::string getText()const;
     void setPos(int x,int y);
+    /* Resize keeping the current position (AOSP ViewRootImpl's relayout with a
+     * changed frame: WMS applies the new size, the old surface is replaced, the
+     * vacated band repaints from the windows below). The size-driven counterpart
+     * of setPos — the IME window resizes itself to its keyboard content. */
+    void resize(int width,int height);
     /* Visual-only surface translation (see mSurfaceDx). Real moves go through setPos. */
     void setSurfaceTranslation(int dx,int dy);
     // AOSP Window.getAttributes/setAttributes. getAttributes returns the LIVE
@@ -314,7 +349,6 @@ public:
     bool superDispatchGenericMotionEvent(MotionEvent& event);
     bool ensureTouchMode(bool inTouchMode)override;
     View& setAlpha(float a);
-    void sendToBack();
     void bringToFront();
     void notifySubtreeAccessibilityStateChanged(View* child, View* source, int changeType)override;
     bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event)override;
@@ -523,4 +557,4 @@ public:
 };
 }  // namespace cdroid
 
-#endif  // UI_LIBUI_WINDOW_H_
+#endif  // __CDROID_WINDOW_H__

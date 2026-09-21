@@ -27,6 +27,7 @@ namespace preferencedemo {
 class CachedBluetoothDevice;
 class CachedBluetoothDeviceManager;
 class LocalBluetoothManager;
+class LocalBluetoothProfileManager;
 
 /** SettingsLib BluetoothCallback: default-empty methods, AOSP shape. */
 class BluetoothCallback {
@@ -88,9 +89,14 @@ private:
     void onDiscoveryFinished();
     void onBondStateChanged(const cdroid::BluetoothDevice& device,
                             int bondState, int prevState);
+    /* ACTION_CONNECTION_STATE_CHANGED analog (AOSP: the ACL/profile
+     * connection broadcasts refresh the row — summary flips to 已连接). */
+    void onDeviceConnectionStateChanged(const cdroid::BluetoothDevice& device,
+                                        int state, int prevState);
     cdroid::BluetoothAdapter::AdapterStateListener mStateListener;
     cdroid::BluetoothAdapter::DiscoveryListener mDiscoveryListener;
     cdroid::BluetoothAdapter::BondStateListener mBondListener;
+    cdroid::BluetoothAdapter::ConnectionStateListener mConnectionListener;
 
     CachedBluetoothDeviceManager* mDeviceManager;
     std::vector<BluetoothCallback*> mCallbacks;   // main thread only
@@ -104,12 +110,14 @@ public:
     LocalBluetoothAdapter* getBluetoothAdapter() { return &mLocalAdapter; }
     CachedBluetoothDeviceManager* getCachedDeviceManager() { return mDeviceManager.get(); }
     BluetoothEventManager* getEventManager() { return &mEventManager; }
+    LocalBluetoothProfileManager* getProfileManager() { return mProfileManager.get(); }
 
 private:
     LocalBluetoothManager();
     ~LocalBluetoothManager();
 
     LocalBluetoothAdapter mLocalAdapter;
+    std::unique_ptr<LocalBluetoothProfileManager> mProfileManager;
     std::unique_ptr<CachedBluetoothDeviceManager> mDeviceManager;
     BluetoothEventManager mEventManager;
 };

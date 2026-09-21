@@ -52,7 +52,9 @@ public:
     int getXOffset()const;
     int getYOffset()const;
     Toast& setText(const std::string&);
+    Toast& setText(int resId);
     static Toast*makeText(Context*,const std::string&text,int duration= LENGTH_SHORT);
+    static Toast*makeText(Context*,int resId,int duration= LENGTH_SHORT);
 };
 }//endof namespace
 

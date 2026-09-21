@@ -203,6 +203,7 @@
                 android:layout_marginTop="@dimen/row_gap"
                 android:singleLine="true"
                 android:ellipsize="marquee"
+                android:marqueeRepeatLimit="marquee_forever"
                 android:textColor="@color/accent"
                 android:textSize="16sp"
                 android:text="CDROID ports Android's TextView layout engine line-by-line — BiDi, spans, ellipsize and marquee all included — StaticLayout line breaking, minikin measurement, spannable rich text, and a faithful marquee that keeps scrolling forever like a status-bar notification on a real device." />
@@ -303,17 +304,6 @@
                 android:textColor="@color/text_disabled"
                 android:textSize="11sp" />
 
-            <TextView
-                android:id="@+id/marquee2_tv"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:textColor="@color/good"
-                android:textSize="15sp"
-                android:text="@string/marquee2_text" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

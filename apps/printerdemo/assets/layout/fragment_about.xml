@@ -87,6 +87,6 @@
 
         <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
             android:gravity="center" android:layout_marginBottom="24dp"
-            android:text="www.cdroid.org" android:textSize="13sp" android:textColor="#FF9AA0A6"/>
+            android:text="www.cdroid.org" android:textSize="13sp" android:textColor="#FF0066CC"/>
     </LinearLayout>
 </ScrollView>

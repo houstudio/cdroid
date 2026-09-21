@@ -29,6 +29,6 @@
    preferencedemo export SCREEN_SIZE=1280*960
    hauswirt_63343 不需要SCREEN_SIZE
 ## 参考路径
-- Android SDK 来源：/opt/android-sdk/sources/android-36/
+- Android SDK 来源：~/android-35
 - AndroidX $HOME/research/androidx
 - material-components-android $HOME/research/material-components-android/
