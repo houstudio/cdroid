@@ -26,6 +26,9 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
 #include <core/systemclock.h>
+#include <view/viewconfiguration.h>
+#include <view/weargestureinterceptiondetector.h>
+#include <animation/valueanimator.h>
 #include <content/typedvalue.h>
 #include <core/windowmanager.h>
 #include <animation/animator.h>
@@ -54,6 +57,27 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     loadThemeWindowAnimations();
     loadThemeWindowBackground();
     loadThemeCloseOnTouchOutside();
+    loadThemeSwipeToDismiss();
+}
+
+void Window::loadThemeSwipeToDismiss(){
+    // AOSP WearGestureInterceptionDetector.isEnabled (Detector.java:60-75):
+    // the wear system gesture is theme-gated by windowSwipeToDismiss, default
+    // TRUE on watch devices (FEATURE_WATCH). CDROID windows are not watch
+    // windows by default — with the attr absent the gesture stays OFF so no
+    // existing app changes behavior; a window opts in from its theme. The
+    // window-type gate keeps satellite windows (IME/status/toast) out: their
+    // themed context inherits the last started activity's theme and would
+    // otherwise arm the keyboard.
+    if (window_type >= TYPE_SYSTEM_WINDOW || mContext == nullptr) return;
+    static const uint32_t attrs[] = {R::attr::windowSwipeToDismiss, 0};
+    auto ta = mContext->getTheme().obtainStyledAttributes(attrs);
+    if (!ta) return;
+    delete mSwipeDismissDetector;   // theme re-apply replaces the detector
+    mSwipeDismissDetector = nullptr;
+    if (ta->getBoolean(0, false)) {
+        mSwipeDismissDetector = new WearGestureInterceptionDetector(mContext, this);
+    }
 }
 
 void Window::loadThemeCloseOnTouchOutside() {
@@ -130,6 +154,7 @@ Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool theme
     if (themeWindowAnimations) {
         loadThemeWindowAnimations();
         loadThemeWindowBackground();
+        loadThemeSwipeToDismiss();
     }
 }
 
@@ -201,6 +226,13 @@ Window::~Window(){
     }
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
     cancelTransitionAnimator();
+    if (mSwipeBackAnimator != nullptr) {
+        ValueAnimator* a = mSwipeBackAnimator;
+        mSwipeBackAnimator = nullptr;
+        a->cancel();
+        delete a;
+    }
+    delete mSwipeDismissDetector;
     // Shared-element coordinator: its dtor cancels its animator safely (own mTornDown guard)
     // and returns any ghosts still parked in the caller's overlay. Runs while this window's
     // view tree is still intact — before the base ~ViewGroup frees the overlay.
@@ -241,6 +273,7 @@ void Window::setTheme(int resid){
     loadThemeWindowAnimations();
     loadThemeWindowBackground();
     loadThemeCloseOnTouchOutside();
+    loadThemeSwipeToDismiss();
 }
 
 // AOSP Activity.recreate(): the system relaunches the activity with a NEW
@@ -707,7 +740,11 @@ void Window::setSurfaceTranslation(int dx,int dy){
         WindowManager::getInstance().exposeRegionBelow(this, vacated);
     const Rect selfLocal = Rect::Make(0, 0, getWidth(), getHeight());
     mPendingRgn->do_union((Cairo::RectangleInt&)selfLocal);
-    GraphDevice::getInstance().flip();
+    // Compose directly, not flip(): this runs from the Choreographer's
+    // ANIMATION callback (window SLIDE transitions, the swipe-dismiss drag,
+    // the spring-back), outside any traversal — flip() only arms the sync-mode
+    // compose counter nothing pumps (see setAlpha).
+    GraphDevice::getInstance().composeSurfaces();
 }
 
 WindowManager::LayoutParams& Window::getAttributes(){
@@ -1455,8 +1492,100 @@ bool Window::dispatchTouchEvent(MotionEvent& event){
     return FrameLayout::dispatchTouchEvent(event);
 }
 
+bool Window::onInterceptTouchEvent(MotionEvent& event){
+    // AOSP DecorView.java:531-540: the wear detector decides whether the decor
+    // takes the stream for the system swipe-to-dismiss.
+    if (mSwipeDismissDetector != nullptr) {
+        if (mSwipeDismissDragging) return true;
+        if (mSwipeDismissDetector->onInterceptTouchEvent(event)) {
+            mSwipeDismissDragging = true;
+            mSwipeDismissDownX = event.getRawX();
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = SystemClock::uptimeMillis();
+            mSwipeDismissVelocity = 0.f;
+            if (mSwipeBackAnimator != nullptr) {
+                ValueAnimator* a = mSwipeBackAnimator;
+                mSwipeBackAnimator = nullptr;
+                a->cancel();
+                delete a;
+            }
+            return true;
+        }
+    }
+    return FrameLayout::onInterceptTouchEvent(event);
+}
+
 bool Window::onTouchEvent(MotionEvent& event){
+    // AOSP DecorView.java:495-498: keep the detector's state machine fed with
+    // streams the decor itself receives (children that consumed the gesture
+    // still update the DOWN tracking).
+    if (mSwipeDismissDetector != nullptr && !mSwipeDismissDragging) {
+        mSwipeDismissDetector->onInterceptTouchEvent(event);
+        // A decor-owned stream (no child target) latches here: ViewGroup never
+        // re-consults onInterceptTouchEvent once this view is the target.
+        if (mSwipeDismissDetector->isIntercepting()) {
+            mSwipeDismissDragging = true;
+            mSwipeDismissDownX = event.getRawX();
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = SystemClock::uptimeMillis();
+            mSwipeDismissVelocity = 0.f;
+        }
+    }
+    if (mSwipeDismissDragging) {
+        handleSwipeDismissTouch(event);
+        return true;
+    }
     return FrameLayout::onTouchEvent(event);
+}
+
+void Window::handleSwipeDismissTouch(MotionEvent& event){
+    // The SystemUI half of the AOSP gesture, driven by the decor: the surface
+    // follows the finger (compose-side only — frame, a11y and WMS geometry
+    // stay at rest), and on release the window either dismisses through
+    // close() — the ghost exit continues from the dragged position
+    // (captureGhost inherits dx/alpha) — or springs back.
+    switch (event.getActionMasked()) {
+    case MotionEvent::ACTION_MOVE: {
+        const int64_t now = SystemClock::uptimeMillis();
+        if (now > mSwipeDismissLastT) {
+            mSwipeDismissVelocity = (event.getRawX() - mSwipeDismissLastX) * 1000.f
+                    / (now - mSwipeDismissLastT);
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = now;
+        }
+        const float dx = event.getRawX() - mSwipeDismissDownX;
+        setSurfaceTranslation(std::max(0, (int)dx), 0);
+        break;
+    }
+    case MotionEvent::ACTION_UP: {
+        const bool dismiss = (mSurfaceDx > getWidth() * DEFAULT_SWIPE_DISMISS_DRAG_WIDTH_RATIO)
+                || (mSurfaceDx > 0 && mSwipeDismissVelocity
+                        > ViewConfiguration::get(getContext()).getScaledMinimumFlingVelocity());
+        mSwipeDismissDragging = false;
+        if (dismiss) {
+            close();
+        } else {
+            springBackSurface();
+        }
+        break;
+    }
+    default:  // ACTION_CANCEL and the rest: no dismissal on an aborted stream
+        mSwipeDismissDragging = false;
+        springBackSurface();
+        break;
+    }
+}
+
+void Window::springBackSurface(){
+    if (mSurfaceDx == 0 && mSurfaceDy == 0) return;
+    const int from = mSurfaceDx;
+    ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
+    anim->setDuration(200);
+    anim->addUpdateListener([this, from](ValueAnimator& a) {
+        setSurfaceTranslation((int)(from * (1.f - a.getAnimatedFraction())), 0);
+    });
+    mSwipeBackAnimator = anim;
+    anim->start();
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

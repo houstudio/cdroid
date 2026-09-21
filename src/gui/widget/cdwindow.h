@@ -13,6 +13,7 @@
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
+class WearGestureInterceptionDetector; // AOSP DecorView wear swipe-to-dismiss detector
 class ActionBar;
 class Toolbar;
 class Menu;
@@ -21,6 +22,7 @@ class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
 class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
+class ValueAnimator;
 class ActivityOptions; // forward — scene-transition (shared element) options for startActivityForResult
 class ActivityTransitionCoordinator; // forward — the shared-element flight engine (B route)
 class Window : public FrameLayout, public WindowCallback {
@@ -97,6 +99,21 @@ private:
     // unset callback means "Window plays its own Activity" — exactly the
     // pre-graft behavior.
     WindowCallback* mCallback = nullptr;
+    // AOSP DecorView's wear swipe-to-dismiss (WearGestureInterceptionDetector
+    // installed at the decor; SystemUI's visual half is driven by the Window).
+    // Armed by the theme's windowSwipeToDismiss — see loadThemeSwipeToDismiss.
+    static constexpr float DEFAULT_SWIPE_DISMISS_DRAG_WIDTH_RATIO = 0.33f;
+    WearGestureInterceptionDetector* mSwipeDismissDetector = nullptr; // owned
+    bool mSwipeDismissDragging = false;  // decor consumed the stream (surface-drag driver)
+    float mSwipeDismissDownX = 0.f;      // raw X where the drag took over
+    float mSwipeDismissLastX = 0.f;      // velocity sampling for the release decision
+    int64_t mSwipeDismissLastT = 0;
+    float mSwipeDismissVelocity = 0.f;   // px/s at release
+    ValueAnimator* mSwipeBackAnimator = nullptr; // owned; surface spring-back
+    void loadThemeSwipeToDismiss();
+    void handleSwipeDismissTouch(MotionEvent& event);
+    void springBackSurface();
+    bool onInterceptTouchEvent(MotionEvent&event)override;
     // AOSP LayoutParams.windowAnimations source: an explicit animation STYLE overriding the
     // theme's windowAnimationStyle (setWindowAnimations). 0 -> resolve from the theme.
     int mWindowAnimationStyle = 0;
