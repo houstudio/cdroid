@@ -13,8 +13,9 @@
  *   roundeddrawabledemo.cc          RoundedDrawable (code-built, see rd_demo.xml)
  *   alertdialogdemo.cc              AlertDialog (upstream shows appcompat + framework)
  *   confirmationoverlaydemo.cc      ConfirmationOverlay showOn/showAbove
- * NOT ported from upstream: WearableDrawersDemo (needs WearableDrawerLayout) and
- * AmbientModeDemo (needs AmbientModeSupport) — neither is in the CDROID wear module.
+ *   wearabledrawersdemo.cc         WearableDrawerLayout + navigation/action drawers
+ * NOT ported from upstream: AmbientModeDemo (needs AmbientModeSupport, which the
+ * CDROID wear module does not carry).
  *
  * This file: the launcher (MainDemoActivity — a WearableRecyclerView of Buttons,
  * one per demo) and main(). Navigation is App's startActivity by REGISTER_ACTIVITY
@@ -43,7 +44,7 @@ struct DemoEntry {
     const char* activity;   // REGISTER_ACTIVITY key (upstream: Intent target class)
 };
 const DemoEntry kDemos[] = {
-    {"Horizontal Recycler",    "HorizontalRecyclerViewDemo"},
+    {"Wearable Drawers",       "WearableDrawersDemo"},
     {"Wearable Recycler View", "SimpleWearableRecyclerViewDemo"},
     {"Recycler View",          "SimpleRecyclerViewDemo"},
     {"NestedScrollView View",  "SimpleNestedScrollViewDemo"},
@@ -52,7 +53,6 @@ const DemoEntry kDemos[] = {
     {"Rounded Drawable",       "RoundedDrawableDemo"},
     {"Alert Dialog (v7)",      "AlertDialogDemo"},
     {"Confirmation Overlay",   "ConfirmationOverlayDemo"},
-    {"Horizontal Recycler",    "HorizontalRecyclerViewDemo"},
 };
 } // namespace
 

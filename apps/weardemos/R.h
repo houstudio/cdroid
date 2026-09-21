@@ -33,18 +33,25 @@ namespace R{
 
     namespace id{
         enum : int {
-            activity_overlay_button = 0x7f040000,
-            circularProgressLayout_child = 0x7f040001,
-            circularProgressLayout_layout = 0x7f040002,
-            content = 0x7f040003,
-            framework_dialog_button = 0x7f040004,
-            linear_layout = 0x7f040005,
-            nested_scroll_view = 0x7f040006,
-            rd_image = 0x7f040007,
-            rv_container = 0x7f040008,
-            v7_dialog_button = 0x7f040009,
-            view_overlay_button = 0x7f04000a,
-            wrv_container = 0x7f04000b,
+            action_drawer = 0x7f040000,
+            activity_overlay_button = 0x7f040001,
+            circularProgressLayout_child = 0x7f040002,
+            circularProgressLayout_layout = 0x7f040003,
+            content = 0x7f040004,
+            fragment_container = 0x7f040005,
+            framework_dialog_button = 0x7f040006,
+            item_1 = 0x7f040007,
+            item_2 = 0x7f040008,
+            item_3 = 0x7f040009,
+            item_4 = 0x7f04000a,
+            linear_layout = 0x7f04000b,
+            nav_drawer = 0x7f04000c,
+            nested_scroll_view = 0x7f04000d,
+            rd_image = 0x7f04000e,
+            rv_container = 0x7f04000f,
+            v7_dialog_button = 0x7f040010,
+            view_overlay_button = 0x7f040011,
+            wrv_container = 0x7f040012,
         };
     }/*namespace id*/
 
@@ -57,21 +64,31 @@ namespace R{
             rd_demo = 0x7f050004,
             rv_demo = 0x7f050005,
             switch_demo = 0x7f050006,
-            wrv_demo = 0x7f050007,
+            wearable_drawers_demo = 0x7f050007,
+            wearable_drawers_frame_layout_demo = 0x7f050008,
+            wearable_drawers_scroll_view_demo = 0x7f050009,
+            wrv_demo = 0x7f05000a,
         };
     }/*namespace layout*/
 
+    namespace menu{
+        enum : int {
+            action_drawer_menu = 0x7f060000,
+        };
+    }/*namespace menu*/
+
     namespace string{
         enum : int {
-            cpl_click_me = 0x7f060000,
-            cpl_clicked = 0x7f060001,
-            cpl_finished = 0x7f060002,
+            cpl_click_me = 0x7f070000,
+            cpl_clicked = 0x7f070001,
+            cpl_finished = 0x7f070002,
+            lorem_ipsum = 0x7f070003,
         };
     }/*namespace string*/
 
     namespace style{
         enum : int {
-            WearTheme = 0x7f070000,
+            WearTheme = 0x7f080000,
         };
     }/*namespace style*/
 
