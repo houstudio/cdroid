@@ -182,6 +182,16 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         std::exit(EXIT_SUCCESS);
     }
     Typeface::setContext(this);
+    // --density must land before onInit(): setToDefaults() snapshots
+    // DENSITY_DEVICE into mDisplayMetrics, and the first addResource seeds
+    // ResTable_config.density from that snapshot. The old spot (near graph
+    // init, after every addResource) reached no remaining reader — a no-op.
+    // DENSITY_DEVICEE_STABLE rides along (same source, currently unread).
+    DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
+    if(density) {
+        DisplayMetrics::DENSITY_DEVICE = density;
+        DisplayMetrics::DENSITY_DEVICEE_STABLE = density;
+    }
     onInit();
     std::string appPakPath;
     const size_t pos = mName.rfind(PATH_SEP);
@@ -279,9 +289,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(!logo.empty()) graph.setLogo(logo);
     graph.showFPS(showFPS).init();
     View::VIEW_DEBUG = debug;
-    DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
     if(alpha!=255) setOpacity(alpha);
-    if(density) DisplayMetrics::DENSITY_DEVICE = density;
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
     // --input-mode: fix the InputEventSource reader backend before its lazy
     // init (the first checkEvents) — thread is the stock behavior;
