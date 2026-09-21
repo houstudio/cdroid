@@ -848,7 +848,15 @@ View& Window::setAlpha(float alpha){
         GFXSurfaceSetOpacity(mAttachInfo->mCanvas->mHandle, (alpha*255));
         const RectangleInt full = {0, 0, getWidth(), getHeight()};
         mPendingRgn->do_union(full);
-        GraphDevice::getInstance().flip();
+        // The fade animator drives this from the Choreographer's ANIMATION
+        // callback, NOT from a traversal — flip() only arms mPendingCompose,
+        // which nothing pumps in sync (non-COMPOSE_ASYNC) builds, so every
+        // fade frame composed nothing and the screen stayed frozen at the
+        // last traversal's frame (a themed enter fade left the window blank
+        // until some input damage finally triggered a traversal). Compose
+        // directly here, exactly like GraphDevice::composeGhosts' frames —
+        // the other Choreographer-driven, traversal-independent driver.
+        GraphDevice::getInstance().composeSurfaces();
     }
     return *this;
 }
