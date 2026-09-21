@@ -619,14 +619,19 @@ void WindowManager::onMotion(MotionEvent&event) {
        // Dispatch the original event to target window (offset to its coords)
        event.offsetLocation(-target->getLeft(), -target->getTop());
 
-       // If this is a button press, bring window to front / activate it
+       // If this is a button press, bring window to front / activate it.
+       // The lifecycle pair arrives ONCE, via bringToFront's post — FIFO with
+       // the demoted window's queued pauseAndStop, like every other
+       // bringToFront caller. The old synchronous pair re-delivered
+       // onStart/onResume a second time (post + sync) and ran the resume
+       // BEFORE the old window's queued pause, a state no AOSP app ever sees.
+       // Only the focus change stays synchronous (bringToFront does not
+       // dispatch it, and it must precede the event below).
        if ((action == MotionEvent::ACTION_DOWN) || (action == MotionEvent::ACTION_BUTTON_PRESS)) {
            if (mActiveWindow != target) {
                bringToFront(target);
                if (target->hasFlag(View::FOCUSABLE)) {
                    target->dispatchWindowFocusChanged(true);
-                   target->onStart();
-                   target->onResume();
                }
            }
        }
