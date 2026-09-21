@@ -69,6 +69,12 @@ namespace R{
         };
     }/*namespace string*/
 
+    namespace style{
+        enum : int {
+            WearTheme = 0x7f070000,
+        };
+    }/*namespace style*/
+
 };//endof namespace R
 
 }//endof namespace

@@ -43,6 +43,7 @@ struct DemoEntry {
     const char* activity;   // REGISTER_ACTIVITY key (upstream: Intent target class)
 };
 const DemoEntry kDemos[] = {
+    {"Horizontal Recycler",    "HorizontalRecyclerViewDemo"},
     {"Wearable Recycler View", "SimpleWearableRecyclerViewDemo"},
     {"Recycler View",          "SimpleRecyclerViewDemo"},
     {"NestedScrollView View",  "SimpleNestedScrollViewDemo"},
@@ -51,6 +52,7 @@ const DemoEntry kDemos[] = {
     {"Rounded Drawable",       "RoundedDrawableDemo"},
     {"Alert Dialog (v7)",      "AlertDialogDemo"},
     {"Confirmation Overlay",   "ConfirmationOverlayDemo"},
+    {"Horizontal Recycler",    "HorizontalRecyclerViewDemo"},
 };
 } // namespace
 

@@ -21,6 +21,7 @@ set(DEMO_SRCS
    roundeddrawabledemo.cc
    alertdialogdemo.cc
    confirmationoverlaydemo.cc
+   horizontalrecyclerdemo.cc
 )
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(weardemos ${DEMO_SRCS})
