@@ -17,5 +17,25 @@ SET(WEAR_SOURCES
     widgetEx/wear/swipedismisstransitionhelper.cc
     widgetEx/wear/wearablelinearlayoutmanager.cc
     widgetEx/wear/confirmationoverlay.cc
+    widgetEx/wear/resourcesutil.cc
+    widgetEx/wear/simpleanimatorlistener.cc
+    widgetEx/wear/wearabledrawerlayout.cc
+    widgetEx/wear/wearabledrawercontroller.cc
+    widgetEx/wear/wearabledrawerview.cc
+    widgetEx/wear/flingwatcherfactory.cc
+    widgetEx/wear/recyclerviewflingwatcher.cc
+    widgetEx/wear/abslistviewflingwatcher.cc
+    widgetEx/wear/scrollviewflingwatcher.cc
+    widgetEx/wear/nestedscrollviewflingwatcher.cc
+    widgetEx/wear/circledimageview.cc
+    widgetEx/wear/pageindicatorview.cc
+    widgetEx/wear/wearabledraweractionmenu.cc
+    widgetEx/wear/wearabledraweractionview.cc
+    widgetEx/wear/wearablenavigationdraweradapter.cc
+    widgetEx/wear/wearablenavigationdrawerview.cc
+    widgetEx/wear/singlepagepresenter.cc
+    widgetEx/wear/singlepageui.cc
+    widgetEx/wear/multipagepresenter.cc
+    widgetEx/wear/multipageui.cc
 )
 endif(ENABLE_WEARABLE_WIDGETS)
