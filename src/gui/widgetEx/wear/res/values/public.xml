@@ -133,6 +133,15 @@
     <!-- Drawer strings the classes read via R.string (first 0x02 strings). -->
     <public type="string" name="ws_navigation_drawer_content_description" id="0x02070000"/>
     <public type="string" name="ws_action_drawer_content_description" id="0x02070001"/>
+    <!-- ConfirmationOverlay a11y descriptions (appended after the drawer pair). -->
+    <public type="string" name="confirmation_overlay_a11y_description_success" id="0x02070002"/>
+    <public type="string" name="confirmation_overlay_a11y_description_fail" id="0x02070003"/>
+    <public type="string" name="confirmation_overlay_a11y_description_phone" id="0x02070004"/>
+
+    <!-- Fractions (0x020a0000 = the id aapt2 already assigned this entry in
+         widgetex.pak; pinning it keeps gen_styleable and future pak builds
+         reading the same value). -->
+    <public type="fraction" name="confirmation_overlay_text_inset_margin" id="0x020a0000"/>
 
     <!-- CurvedTextView (attr 0x020101a7..; CircledImageView ends at 0x020101a6).
          Ids follow upstream attrs.xml first-seen order: the three top-level

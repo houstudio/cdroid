@@ -221,6 +221,11 @@ namespace internal { namespace R { namespace drawable {
     constexpr uint32_t ws_ic_more_horiz_24dp_wht = 0x02040042;
     constexpr uint32_t ws_ic_more_vert_24dp_wht = 0x02040043;
 } } } // namespace internal::R::drawable
+namespace internal { namespace R { namespace fraction {
+    // Resources pinned in the component res/values/public.xml
+    // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t confirmation_overlay_text_inset_margin = 0x020a0000;
+} } } // namespace internal::R::fraction
 namespace internal { namespace R { namespace id {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
@@ -270,6 +275,9 @@ namespace internal { namespace R { namespace layout {
 namespace internal { namespace R { namespace string {
     // Resources pinned in the component res/values/public.xml
     // (0x02 shared-lib); the R constants widget code references by id.
+    constexpr uint32_t confirmation_overlay_a11y_description_fail = 0x02070003;
+    constexpr uint32_t confirmation_overlay_a11y_description_phone = 0x02070004;
+    constexpr uint32_t confirmation_overlay_a11y_description_success = 0x02070002;
     constexpr uint32_t ws_action_drawer_content_description = 0x02070001;
     constexpr uint32_t ws_navigation_drawer_content_description = 0x02070000;
 } } } // namespace internal::R::string
