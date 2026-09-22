@@ -938,7 +938,9 @@ class PakBuilder:
                 for name in zf.namelist():
                     if name.startswith("res/"):
                         res_files.append((name, zf.read(name)))
-            with zipfile.ZipFile(self.pak_path, "w") as zf:
+            # Atomic publish — same MAP_SHARED rationale as the app pak above.
+            _pak_tmp = self.pak_path + ".tmp"
+            with zipfile.ZipFile(_pak_tmp, "w") as zf:
                 if arsc:
                     # AOSP aapt2 policy: resources.arsc is STORED — the AM2
                     # runtime (AssetsProvider zero-copy reader) mmaps it as a
@@ -947,9 +949,13 @@ class PakBuilder:
                     zf.writestr("resources.arsc", arsc, zipfile.ZIP_STORED)
                 for name, data in res_files:
                     zf.writestr(name, data, zipfile.ZIP_DEFLATED)
-            # Keep the intermediate widgetex.apk for app -I linking.
+            os.replace(_pak_tmp, self.pak_path)
+            # Keep the intermediate widgetex.apk for app -I linking (atomic:
+            # running processes hold it mapped exactly like the pak).
             bin_dir = os.path.dirname(self.pak_path)
-            shutil.copyfile(out_apk, os.path.join(bin_dir, "widgetex.apk"))
+            shutil.copyfile(out_apk, os.path.join(bin_dir, "widgetex.apk.tmp"))
+            os.replace(os.path.join(bin_dir, "widgetex.apk.tmp"),
+                       os.path.join(bin_dir, "widgetex.apk"))
             sys.stderr.write("widgetex.pak: built (%d bytes arsc)\n" % (len(arsc) if arsc else 0))
             return arsc is not None
         finally:
@@ -1195,7 +1201,17 @@ class PakBuilder:
                     break
             _apk_identity.add((_head.split('-')[0], _stem))
         binary_ok = bool(sdk_data) or (app_arsc is not None)
-        with zipfile.ZipFile(self.pak_path, "w") as zf:
+        # Atomic pak publication: write to a sibling temp file and rename it
+        # over the destination. zipfile.ZipFile(path, "w") truncates IN PLACE —
+        # a running app holds the pak MAP_SHARED (ZeroCopyZip), and reads
+        # landing inside the rewrite window die (SIGBUS past the truncation
+        # point, e.g. zlib on a half-written layout; garbage bytes inside it,
+        # e.g. a corrupted ResTable_type in the STORED arsc walking off as a
+        # bogus FLAG_SPARSE chunk). rename(2) swaps the inode atomically:
+        # running processes keep the old mapping, the next launch opens the
+        # new file.
+        _pak_tmp = self.pak_path + ".tmp"
+        with zipfile.ZipFile(_pak_tmp, "w") as zf:
             # SDK framework: store binary AXML + arsc + drawables. Skip values/
             # here — values resolve from the arsc (the text-cache loadKeyValues
             # consumer is retired). Writing both a text and a binary entry for
@@ -1288,6 +1304,7 @@ class PakBuilder:
                         # view straight into the mapped pak.
                         zf.writestr(zname, open(p, "rb").read(), zipfile.ZIP_STORED)
                     # other extensions skipped
+        os.replace(_pak_tmp, self.pak_path)   # atomic publish (see comment above)
 
 
 def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
@@ -1348,12 +1365,14 @@ def build_shared_lib_pak(res_dir, pak_path, rh_path, namespace,
         if "resources.arsc" not in names:
             sys.stderr.write("shared-lib link produced no resources.arsc (%s)\n" % namespace)
             return False
-        with zipfile.ZipFile(pak_path, "w") as out:
+        _pak_tmp = pak_path + ".tmp"   # atomic publish (same MAP_SHARED rationale)
+        with zipfile.ZipFile(_pak_tmp, "w") as out:
             for name in names:
                 if name == "resources.arsc" or not name.startswith("res/"):
                     continue
                 out.writestr(name[4:], zf.read(name), zipfile.ZIP_DEFLATED)
             out.writestr("resources.arsc", zf.read("resources.arsc"), zipfile.ZIP_DEFLATED)
+    os.replace(_pak_tmp, pak_path)
     sys.stderr.write("%s: built shared-lib pak at package id %s\n" % (namespace, package_id))
 
     if rh_path:
