@@ -133,4 +133,16 @@
     <!-- Drawer strings the classes read via R.string (first 0x02 strings). -->
     <public type="string" name="ws_navigation_drawer_content_description" id="0x02070000"/>
     <public type="string" name="ws_action_drawer_content_description" id="0x02070001"/>
+
+    <!-- CurvedTextView (attr 0x020101a7..; CircledImageView ends at 0x020101a6).
+         Ids follow upstream attrs.xml first-seen order: the three top-level
+         attrs, then the two styleable-local sweep attrs. -->
+    <public type="attr" name="anchorAngleDegrees" id="0x020101a7"/>
+    <public type="attr" name="anchorPosition" id="0x020101a8"/>
+    <public type="attr" name="clockwise" id="0x020101a9"/>
+    <public type="attr" name="minSweepDegrees" id="0x020101aa"/>
+    <public type="attr" name="maxSweepDegrees" id="0x020101ab"/>
+    <public type="attr" name="layout_rotate" id="0x020101ac"/>
+    <public type="attr" name="layout_valign" id="0x020101ad"/>
+    <public type="attr" name="layout_weight" id="0x020101ae"/>
 </resources>

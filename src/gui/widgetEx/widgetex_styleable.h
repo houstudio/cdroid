@@ -184,6 +184,9 @@ namespace internal { namespace R { namespace attr {
     constexpr uint32_t argType = 0x0201012e;
     constexpr uint32_t nullable = 0x0201012f;
     constexpr uint32_t dataPattern = 0x02010132;
+    constexpr uint32_t anchorAngleDegrees = 0x020101a7;
+    constexpr uint32_t anchorPosition = 0x020101a8;
+    constexpr uint32_t clockwise = 0x020101a9;
 } } } // namespace internal::R::attr
 namespace internal { namespace R { namespace array {
     // Resources pinned in the component res/values/public.xml
@@ -1090,6 +1093,54 @@ namespace internal { namespace R { namespace styleable {
     constexpr int CircledImageView_background_radius_percent = 12;
     constexpr int CircledImageView_background_radius_pressed_percent = 13;
     constexpr int CircledImageView_clip_dimen = 14;
+
+    // CurvedTextView (17 attrs)
+    extern const uint32_t CurvedTextView[];
+    constexpr int CurvedTextView_text = 0;
+    constexpr int CurvedTextView_textSize = 1;
+    constexpr int CurvedTextView_textColor = 2;
+    constexpr int CurvedTextView_typeface = 3;
+    constexpr int CurvedTextView_fontFamily = 4;
+    constexpr int CurvedTextView_textStyle = 5;
+    constexpr int CurvedTextView_textFontWeight = 6;
+    constexpr int CurvedTextView_letterSpacing = 7;
+    constexpr int CurvedTextView_fontFeatureSettings = 8;
+    constexpr int CurvedTextView_fontVariationSettings = 9;
+    constexpr int CurvedTextView_textAppearance = 10;
+    constexpr int CurvedTextView_ellipsize = 11;
+    constexpr int CurvedTextView_anchorAngleDegrees = 12;
+    constexpr int CurvedTextView_anchorPosition = 13;
+    constexpr int CurvedTextView_minSweepDegrees = 14;
+    constexpr int CurvedTextView_maxSweepDegrees = 15;
+    constexpr int CurvedTextView_clockwise = 16;
+
+    // WearTextAppearance (9 attrs)
+    extern const uint32_t WearTextAppearance[];
+    constexpr int WearTextAppearance_textColor = 0;
+    constexpr int WearTextAppearance_textSize = 1;
+    constexpr int WearTextAppearance_textStyle = 2;
+    constexpr int WearTextAppearance_textFontWeight = 3;
+    constexpr int WearTextAppearance_typeface = 4;
+    constexpr int WearTextAppearance_fontFamily = 5;
+    constexpr int WearTextAppearance_letterSpacing = 6;
+    constexpr int WearTextAppearance_fontVariationSettings = 7;
+    constexpr int WearTextAppearance_fontFeatureSettings = 8;
+
+    // WearTextViewAppearance (1 attrs)
+    extern const uint32_t WearTextViewAppearance[];
+    constexpr int WearTextViewAppearance_textAppearance = 0;
+
+    // ArcLayoutLayout (3 attrs)
+    extern const uint32_t ArcLayoutLayout[];
+    constexpr int ArcLayoutLayout_layout_rotate = 0;
+    constexpr int ArcLayoutLayout_layout_valign = 1;
+    constexpr int ArcLayoutLayout_layout_weight = 2;
+
+    // ArcLayout (3 attrs)
+    extern const uint32_t ArcLayout[];
+    constexpr int ArcLayout_anchorAngleDegrees = 0;
+    constexpr int ArcLayout_anchorPosition = 1;
+    constexpr int ArcLayout_clockwise = 2;
 
 } } } // namespace internal::R::styleable
 } // namespace cdroid

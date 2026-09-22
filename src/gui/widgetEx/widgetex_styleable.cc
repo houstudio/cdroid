@@ -143,5 +143,15 @@ namespace internal { namespace R { namespace styleable {
         0x01010119, 0x02010199, 0x0201019a, 0x0201019b, 0x0201019c, 0x0201019d, 0x0201019e,
         0x0201019f, 0x020101a0, 0x020101a1, 0x020101a2, 0x020101a3, 0x020101a4, 0x020101a5,
         0x020101a6, 0 };
+    const uint32_t CurvedTextView[] = {
+        0x0101014f, 0x01010095, 0x01010098, 0x01010096, 0x010103ac, 0x01010097, 0x01010585,
+        0x010104b6, 0x010104b7, 0x01010570, 0x01010034, 0x010100ab, 0x020101a7, 0x020101a8,
+        0x020101aa, 0x020101ab, 0x020101a9, 0 };
+    const uint32_t WearTextAppearance[] = {
+        0x01010098, 0x01010095, 0x01010097, 0x01010585, 0x01010096, 0x010103ac, 0x010104b6,
+        0x01010570, 0x010104b7, 0 };
+    const uint32_t WearTextViewAppearance[] = { 0x01010034, 0 };
+    const uint32_t ArcLayoutLayout[] = { 0x020101ac, 0x020101ad, 0x020101ae, 0 };
+    const uint32_t ArcLayout[] = { 0x020101a7, 0x020101a8, 0x020101a9, 0 };
 } } } // namespace internal::R::styleable
 } // namespace cdroid

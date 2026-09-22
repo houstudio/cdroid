@@ -16,13 +16,22 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/arclayout.h>
+#include <widgetEx/widgetex_styleable.h>
 namespace cdroid{
 ArcLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :ViewGroup::MarginLayoutParams(context, attrs){
 
-    mRotated = attrs.getAttributeBooleanValue(std::string(), "layout_rotate", true);
-    mVerticalAlignment = attrs.getAttributeIntValue(std::string(), "layout_valign", VERTICAL_ALIGN_CENTER);
-    mWeight = attrs.getAttributeFloatValue(std::string(), "layout_weight", 0.f);
+    // ArcLayout.java:170-182 (binary AXML styleable; enums compile to ints)
+    auto a = context->obtainStyledAttributes(&attrs, internal::R::styleable::ArcLayoutLayout);
+    if (a) {
+        mRotated = a->getBoolean(internal::R::styleable::ArcLayoutLayout_layout_rotate, true);
+        mVerticalAlignment = a->getInt(internal::R::styleable::ArcLayoutLayout_layout_valign, VERTICAL_ALIGN_CENTER);
+        mWeight = a->getFloat(internal::R::styleable::ArcLayoutLayout_layout_weight, 0.f);
+    } else {
+        mRotated = true;
+        mVerticalAlignment = VERTICAL_ALIGN_CENTER;
+        mWeight = 0.f;
+    }
 }
 
 ArcLayout::LayoutParams::LayoutParams(int width, int height)
@@ -61,6 +70,8 @@ void ArcLayout::LayoutParams::setWeight(float weight) {
 
 DECLARE_WIDGET2(ArcLayout, "androidx.wear.widget.ArcLayout");
 
+ArcLayout::Widget::~Widget() {}
+
 ArcLayout::ArcLayout(Context* context,const AttributeSet* attrs):ArcLayout(context,attrs,0){}
 
 ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
@@ -68,9 +79,17 @@ ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAtt
     // androidx ArcLayout.java:309 — final field, constructed inline.
     mChildArcAngles = new ChildArcAngles();
 
-    mAnchorType = pAttrs ? pAttrs->getAttributeIntValue(std::string(), "anchorPosition", DEFAULT_ANCHOR_TYPE) : DEFAULT_ANCHOR_TYPE;
-    mAnchorAngleDegrees = pAttrs ? pAttrs->getAttributeFloatValue(std::string(), "anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES) : DEFAULT_START_ANGLE_DEGREES;
-    mClockwise = pAttrs ? pAttrs->getAttributeBooleanValue(std::string(), "clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE) : DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE;
+    // ArcLayout.java:328-342 (binary AXML styleable; enums compile to ints)
+    auto a = context->obtainStyledAttributes(pAttrs, internal::R::styleable::ArcLayout, defStyleAttr);
+    if (a) {
+        mAnchorType = a->getInt(internal::R::styleable::ArcLayout_anchorPosition, DEFAULT_ANCHOR_TYPE);
+        mAnchorAngleDegrees = a->getFloat(internal::R::styleable::ArcLayout_anchorAngleDegrees, DEFAULT_START_ANGLE_DEGREES);
+        mClockwise = a->getBoolean(internal::R::styleable::ArcLayout_clockwise, DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE);
+    } else {
+        mAnchorType = DEFAULT_ANCHOR_TYPE;
+        mAnchorAngleDegrees = DEFAULT_START_ANGLE_DEGREES;
+        mClockwise = DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE;
+    }
 }
 
 ArcLayout::~ArcLayout() {
@@ -132,12 +151,9 @@ void ArcLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         // ArcLayoutWidget is a special case. Because of how it draws, fit it to the size
         // of the whole widget.
         int childMeasuredHeight;
-#ifdef ENABLE_WIDGET
-        if (child instanceof Widget) {
-            childMeasuredHeight = ((Widget) child)->getThickness();
-        } else 
-#endif
-        {
+        if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
+            childMeasuredHeight = dynamic_cast<ArcLayout::Widget*>(child)->getThickness();
+        } else {
             measureChild(child,
                     getChildMeasureSpec(childMeasureSpec, 0, child->getLayoutParams()->width),
                     getChildMeasureSpec(childMeasureSpec, 0, child->getLayoutParams()->height)
@@ -160,8 +176,7 @@ void ArcLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         if (child->getVisibility() == GONE) {
             continue;
         }
-#ifdef ENABLE_WIDGET
-        if (child instanceof Widget) {
+        if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
             LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
 
             const float insetPx = getChildTopInset(child);
@@ -176,7 +191,6 @@ void ArcLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
             childState = combineMeasuredStates(childState, child->getMeasuredState());
         }
-#endif
     }
 
     setMeasuredDimension(
@@ -234,14 +248,11 @@ void ArcLayout::onLayout(bool changed, int l, int t, int r, int b) {
         LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
         if (childLayoutParams->mWeight > 0) {
             mChildArcAngles->actualChildAngle = childLayoutParams->mWeight * weightMultiplier;
-#ifdef ENABLE_WIDGET
-            if (child instanceof Widget) {
+            if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
                 // NB we need to be careful since the child itself may set this value dueing
                 // measure.
-                ((Widget) child).setSweepAngleDegrees(mChildArcAngles->actualChildAngle);
-            } else 
-#endif
-            {
+                dynamic_cast<ArcLayout::Widget*>(child)->setSweepAngleDegrees(mChildArcAngles->actualChildAngle);
+            } else {
                 throw std::invalid_argument("ArcLayout.LayoutParams with non zero weights"
                         " are only supported for views implementing ArcLayout.Widget");
             }
@@ -266,14 +277,12 @@ void ArcLayout::onLayout(bool changed, int l, int t, int r, int b) {
         // Curved container widgets have been measured so that the "arc" inside their widget
         // will touch the outside of the box they have been measured in, taking into account
         // the vertical alignment. Just grow them from the center.
-#ifdef ENABLE_WIDGET
-        if (child instanceof Widget) {
+        if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
             const int leftPx = std::round((getMeasuredWidth() / 2.f) - (child->getMeasuredWidth() / 2.f));
             const int topPx = std::round((getMeasuredHeight() / 2.f) - (child->getMeasuredHeight() / 2.f));
 
             child->layout(leftPx,topPx, child->getMeasuredWidth(), child->getMeasuredHeight());
         } else 
-#endif
         {
             // Normal widget's centers need to be placed on their final position,
             // the only thing left for drawing is to maybe rotate them.
@@ -317,11 +326,9 @@ bool ArcLayout::onInterceptTouchEvent(MotionEvent& event) {
 }
 
 bool ArcLayout::insideChildClickArea(View* child, float x, float y) {
-#if ENABLE_WIDGET
-    if (child instanceof Widget) {
-        return ((Widget) child).isPointInsideClickArea(x, y);
+    if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
+        return dynamic_cast<ArcLayout::Widget*>(child)->isPointInsideClickArea(x, y);
     }
-#endif
     return (x >= 0) && (x < child->getMeasuredWidth()) && (y >= 0) && (y < child->getMeasuredHeight());
 }
 
@@ -330,18 +337,21 @@ void ArcLayout::mapPoint(View* child, float angle, float* point) {
     Cairo::Matrix m = Cairo::identity_matrix();
 
     LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
-#ifdef ENABLE_WIDGET
-    if (child instanceof Widget) {
-        m.postRotate(-angle, getMeasuredWidth() / 2, getMeasuredHeight() / 2);
-        m.postTranslate(-child->getX(), -child->getY());
-    } else 
-#endif
-    {
-        m.translate(-childLayoutParams->mCenterX, -childLayoutParams->mCenterY);
+    if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
+        // java postRotate(-a, c) postTranslate(-x,-y): M = T(-x,-y)·R_c — cairo
+        // composes later calls first, so rotate-about-c then translate.
+        m.translate(getMeasuredWidth() / 2.f, getMeasuredHeight() / 2.f);
+        m.rotate(-angle * M_PI / 180.f);
+        m.translate(-getMeasuredWidth() / 2.f, -getMeasuredHeight() / 2.f);
+        m.translate(-child->getX(), -child->getY());
+    } else {
+        // java postTranslate(-c) postRotate(-a) postTranslate(+k):
+        // M = T(k)·R·T(-c) — cairo call order is the reverse point-application order.
+        m.translate(child->getWidth() / 2.f, child->getHeight() / 2.f);
         if (childLayoutParams->isRotated()) {
-            m.rotate(-angle*M_PI/180.f);
+            m.rotate(-angle * M_PI / 180.f);
         }
-        m.translate(child->getWidth() / 2, child->getHeight() / 2);
+        m.translate(-childLayoutParams->mCenterX, -childLayoutParams->mCenterY);
     }
     double x = point[0];
     double y = point[1];
@@ -379,18 +389,16 @@ bool ArcLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 
     LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
     float middleAngle = childLayoutParams->mMiddleAngle;
-#ifdef ENABLE_WIDGET
-    if (child instanceof Widget) {
+    if (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) {
         // Rotate the child widget. This rotation places child widget in its correct place in
         // the circle. Rotation is done around the center of the circle that components make.
-        canvas.rotate(middleAngle,
-                getMeasuredWidth() / 2.f,
-                getMeasuredHeight() / 2.f);
+        const float cw = getMeasuredWidth() / 2.f, chh = getMeasuredHeight() / 2.f;
+        canvas.translate(cw, chh);
+        canvas.rotate_degrees(middleAngle);
+        canvas.translate(-cw, -chh);
 
-        ((Widget) child).checkInvalidAttributeAsChild();
-    } else 
-#endif
-    {
+        dynamic_cast<ArcLayout::Widget*>(child)->checkInvalidAttributeAsChild();
+    } else {
         // Normal components already have their center in the right position during layout,
         // the only thing remaining is any needed rotation.
         // This rotation is done in place around the center of the
@@ -402,6 +410,7 @@ bool ArcLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
         //canvas.rotate(angleToRotate, childLayoutParams->mCenterX, childLayoutParams->mCenterY);
         canvas.translate(childLayoutParams->mCenterX, childLayoutParams->mCenterY);
         canvas.rotate_degrees(angleToRotate);
+        canvas.translate(-childLayoutParams->mCenterX, -childLayoutParams->mCenterY);
     }
     bool wasInvalidateIssued = ViewGroup::drawChild(canvas, child, drawingTime);
 
@@ -459,12 +468,9 @@ void ArcLayout::calculateArcAngle(View* view, ChildArcAngles* childAngles) {
 
     childAngles->leftMarginAsAngle =  widthToAngleDegrees(childLayoutParams->leftMargin, radiusPx);
     childAngles->rightMarginAsAngle=  widthToAngleDegrees(childLayoutParams->rightMargin, radiusPx);
-#if ENABLE_WIDGET
-    if (view instanceof Widget) {
-        childAngles->actualChildAngle = ((Widget) view).getSweepAngleDegrees();
-    } else 
-#endif
-    {
+    if (dynamic_cast<ArcLayout::Widget*>(view) != nullptr) {
+        childAngles->actualChildAngle = dynamic_cast<ArcLayout::Widget*>(view)->getSweepAngleDegrees();
+    } else {
         childAngles->actualChildAngle = widthToAngleDegrees(view->getMeasuredWidth(), radiusPx);
     }
 }
@@ -473,11 +479,9 @@ float ArcLayout::getChildTopInset(View* child) {
     LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
 
     int childHeight = child->getMeasuredHeight();
-#if ENABLE_WIDGET
-        child instanceof Widget
-            ? ((Widget) child).getThickness()
+        (dynamic_cast<ArcLayout::Widget*>(child) != nullptr)
+            ? dynamic_cast<ArcLayout::Widget*>(child)->getThickness()
             : child->getMeasuredHeight();
-#endif
 
     int thicknessDiffPx = mThicknessPx - childLayoutParams->topMargin
               - childLayoutParams->bottomMargin - childHeight;
@@ -500,9 +504,7 @@ float ArcLayout::getChildTopInset(View* child) {
 
 float ArcLayout::getChildTopOffset(View* child) {
     if (
-#ifdef ENABLE_WIDGET
-            child instanceof Widget || 
-#endif
+            (dynamic_cast<ArcLayout::Widget*>(child) != nullptr) ||
             (getMeasuredWidth() >= getMeasuredHeight())
             ) {
         return 0;
