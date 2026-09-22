@@ -65,14 +65,15 @@ namespace R{
             confirmation_overlay_demo = 0x7f050001,
             cpl_demo = 0x7f050002,
             curved_text_demo = 0x7f050003,
-            nested_sv_demo = 0x7f050004,
-            rd_demo = 0x7f050005,
-            rv_demo = 0x7f050006,
-            switch_demo = 0x7f050007,
-            wearable_drawers_demo = 0x7f050008,
-            wearable_drawers_frame_layout_demo = 0x7f050009,
-            wearable_drawers_scroll_view_demo = 0x7f05000a,
-            wrv_demo = 0x7f05000b,
+            curved_text_outer_demo = 0x7f050004,
+            nested_sv_demo = 0x7f050005,
+            rd_demo = 0x7f050006,
+            rv_demo = 0x7f050007,
+            switch_demo = 0x7f050008,
+            wearable_drawers_demo = 0x7f050009,
+            wearable_drawers_frame_layout_demo = 0x7f05000a,
+            wearable_drawers_scroll_view_demo = 0x7f05000b,
+            wrv_demo = 0x7f05000c,
         };
     }/*namespace layout*/
 

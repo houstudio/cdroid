@@ -45,6 +45,7 @@ struct DemoEntry {
 };
 const DemoEntry kDemos[] = {
     {"Curved Text (ArcLayout)", "CurvedTextDemo"},
+    {"Curved Text Outer Align", "CurvedTextOuterDemo"},
     {"Wearable Drawers",       "WearableDrawersDemo"},
     {"Wearable Recycler View", "SimpleWearableRecyclerViewDemo"},
     {"Recycler View",          "SimpleRecyclerViewDemo"},

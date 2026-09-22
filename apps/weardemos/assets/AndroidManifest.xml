@@ -22,5 +22,6 @@
         <activity android:name="ConfirmationOverlayDemo"/>
         <activity android:name="WearableDrawersDemo"/>
         <activity android:name="CurvedTextDemo"/>
+        <activity android:name="CurvedTextOuterDemo"/>
     </application>
 </manifest>
