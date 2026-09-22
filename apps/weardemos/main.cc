@@ -94,12 +94,16 @@ private:
             return sizeof(kDemos) / sizeof(kDemos[0]);
         }
     };
+    // RecyclerView borrows its Adapter (no ownership) — host it as a member so
+    // teardown frees it (members die before the base Window's view tree, and
+    // ~RecyclerView never touches the borrowed mAdapter).
+    DemoAdapter mAdapter{this};
 public:
     MainDemoActivity() : Window(&App::getInstance(), 0, 0, -1, -1) {
         WearableRecyclerView* demoList = new WearableRecyclerView(getContext(), nullptr);
         demoList->setPadding(30, 0, 30, 0);
         demoList->setLayoutManager(new LinearLayoutManager(getContext()));
-        demoList->setAdapter(new DemoAdapter(this));
+        demoList->setAdapter(&mAdapter);
         demoList->setEdgeItemsCenteringEnabled(true);
         // AOSP Activity.setContentView installs MATCH_PARENT on the content
         // view; a bare addView would take the ViewGroup default (wrap) and the

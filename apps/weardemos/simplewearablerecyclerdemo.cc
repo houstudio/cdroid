@@ -36,6 +36,9 @@ private:
         }
         int getItemCount() override { return ITEM_COUNT; }
     };
+    // RecyclerView borrows its Adapter — host it as a member so teardown frees
+    // it (members die before the base Window's view tree).
+    DemoAdapter mAdapter;
 public:
     SimpleWearableRecyclerViewDemo() : Window(&App::getInstance(), 0, 0, -1, -1) {
         ViewGroup* root = (ViewGroup*)LayoutInflater::from(getContext())
@@ -45,7 +48,7 @@ public:
         WearableRecyclerView* wrv = (WearableRecyclerView*)root->findViewById(
                 weardemos::R::id::wrv_container);
         wrv->setLayoutManager(new WearableLinearLayoutManager(getContext()));
-        wrv->setAdapter(new DemoAdapter());
+        wrv->setAdapter(&mAdapter);
         wrv->setCircularScrollingGestureEnabled(true);
         wrv->setEdgeItemsCenteringEnabled(true);
     }
