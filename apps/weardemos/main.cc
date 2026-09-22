@@ -44,6 +44,7 @@ struct DemoEntry {
     const char* activity;   // REGISTER_ACTIVITY key (upstream: Intent target class)
 };
 const DemoEntry kDemos[] = {
+    {"Curved Text (ArcLayout)", "CurvedTextDemo"},
     {"Wearable Drawers",       "WearableDrawersDemo"},
     {"Wearable Recycler View", "SimpleWearableRecyclerViewDemo"},
     {"Recycler View",          "SimpleRecyclerViewDemo"},
