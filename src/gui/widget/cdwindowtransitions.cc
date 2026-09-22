@@ -268,7 +268,19 @@ struct ResolvedAnimStyle {
 // same numeric 0x7f style id with different content; keying by styleRes alone
 // would cross-contaminate them. A dead theme's entries simply never hit again
 // (pointer compare only — no dereference, a few hundred stale bytes at most).
-static std::unordered_map<uint64_t, ResolvedAnimStyle> sAnimStyleCache;
+// The interpolator clones are owned by the cache (AnimSpec's contract above);
+// the map's own static destruction frees the nodes but not the raw-pointer
+// members — reap them here so process exit leaves nothing behind (valgrind
+// definite-lost otherwise, one enter/exit pair per distinct theme).
+struct AnimStyleCache : std::unordered_map<uint64_t, ResolvedAnimStyle> {
+    ~AnimStyleCache() {
+        for (auto& kv : *this) {
+            delete kv.second.enter.interpolator;
+            delete kv.second.exit.interpolator;
+        }
+    }
+};
+static AnimStyleCache sAnimStyleCache;
 
 void Window::setWindowAnimations(int resId, bool enableExit) {
     mWindowAnimationStyle = resId;
