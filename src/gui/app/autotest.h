@@ -145,6 +145,17 @@ private:
     int mScrollExhausted = 0;             // consecutive failed forward scrolls
     int mEmptySteps = 0;                  // consecutive steps with zero clickables
     int mEscapeRounds = 0;                // BACK rounds that changed nothing
+
+    // --- deterministic page-exit (full-cycle navigation-up) ---
+    /* Policy is our own — AOSP drivers never auto-leave a swept page (monkey
+     * relies on its 2% SYSOPS BACK, uiautomator scripts press back
+     * explicitly); the exit ACTION is AOSP primitives only (see
+     * exitCurrentPage: swipe-to-dismiss drag or GLOBAL_ACTION_BACK). */
+    int mPageEscapeRounds = 0;          // exits fired at one window without leaving it
+    Window* mPageEscapeFrom = nullptr;  // the window the last exit tried to leave
+    static bool windowSwipeArmed(Window* w);
+    bool isBottomApplicationWindow(Window* w) const;
+    void exitCurrentPage();
     std::vector<AccessibilityNodeInfo*> mClickables;
     std::ofstream mRecord;               // shared script-recorder sink (sweep + manual)
 

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CDROID-added (not from SupportWearDemos): the ArcLayout x CurvedTextView
+     verification page, modeled on upstream's androidTest layout
+     wear_arc_layout_touch_test.xml (minus DrawableSurface, not ported).
+     Curved texts ring the circle; one plain TextView child exercises the
+     non-widget layout path. -->
+<androidx.wear.widget.ArcLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/arc_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF303030"
+    app:anchorAngleDegrees="0"
+    app:anchorPosition="center"
+    app:clockwise="true">
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_left"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Left"
+        android:textSize="16sp"
+        android:textColor="#FFFFC107"/>
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_right"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Right side text"
+        android:textSize="16sp"
+        android:textColor="#FF4FC3F7"/>
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_long"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="The quick brown fox jumps over the lazy dog 0123456789"
+        android:textSize="12sp"
+        android:textColor="#FF81C784"/>
+</androidx.wear.widget.ArcLayout>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- CurvedTextDemo's outer-alignment twin (CDROID-added): every child carries
+     app:layout_valign="outer" — ArcLayout offsets widget children by their
+     vertical alignment, so with mixed text sizes the glyph tops all hug the
+     same outer circle (the thickest child defines the ring; with the default
+     center alignment thinner texts ride proportionally further in). -->
+<androidx.wear.widget.ArcLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/arc_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FF303030"
+    app:anchorAngleDegrees="0"
+    app:anchorPosition="center"
+    app:clockwise="true">
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_left"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Left"
+        android:textSize="28sp"
+        android:textColor="#FFFFC107"
+        app:layout_valign="outer"/>
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_right"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Right side text"
+        android:textSize="20sp"
+        android:textColor="#FF4FC3F7"
+        app:layout_valign="outer"/>
+
+    <androidx.wear.widget.CurvedTextView
+        android:id="@+id/curved_long"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="The quick brown fox jumps over the lazy dog 0123456789"
+        android:textSize="12sp"
+        android:textColor="#FF81C784"
+        app:layout_valign="outer"/>
+</androidx.wear.widget.ArcLayout>

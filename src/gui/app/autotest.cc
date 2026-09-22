@@ -381,6 +381,98 @@ size_t UiAutoTest::advancePastIdentity(const std::vector<AccessibilityNodeInfo*>
     return SIZE_MAX;
 }
 
+// static
+bool UiAutoTest::windowSwipeArmed(Window* w) {
+    /*The discovery probe: AOSP WearGestureInterceptionDetector.isEnabled
+      (Detector.java:60-75) minus FEATURE_WATCH (CDROID models no watch
+      feature) — resolve windowSwipeToDismiss against the window's own
+      context theme, the same read Window::loadThemeSwipeToDismiss made when
+      it armed the detector. The a11y tree never carries this (AOSP: the
+      interception goes DecorView -> ViewRootImpl -> SystemUI, bypassing
+      accessibility), so the driver asks the theme directly.*/
+    if (w == nullptr) return false;
+    Context* ctx = w->getContext();
+    if (ctx == nullptr) return false;
+    namespace R = cdroid::internal::R;
+    static const uint32_t attrs[] = {R::attr::windowSwipeToDismiss, 0};
+    auto ta = ctx->getTheme().obtainStyledAttributes(attrs);
+    if (!ta) return false;
+    return ta->getBoolean(0, false);
+}
+
+bool UiAutoTest::isBottomApplicationWindow(Window* w) const {
+    /*mWindows is bottom-up (WindowManager): the FIRST application window in
+      stack order is the app's root surface. Leaving it (BACK on the root
+      activity) ends the app — the endurance model keeps cycling the root
+      window instead (printerdemo's 9h runs). getWindows, not
+      getVisibleWindows, on purpose: a covered parent stays a valid root even
+      when it reports INVISIBLE. Same application-type predicate as
+      getActiveApplicationWindow (type < TYPE_SYSTEM_WINDOW).*/
+    std::vector<Window*> all;
+    WindowManager::getInstance().getWindows(all);
+    for (Window* c : all) {
+        if (c->getAttributes().type < Window::TYPE_SYSTEM_WINDOW) return c == w;
+    }
+    return false;
+}
+
+void UiAutoTest::exitCurrentPage() {
+    /*The exit ACTION inventory — all AOSP primitives, picked by capability
+      (no configuration): a theme-armed window (windowSwipeArmed probe) exits
+      with the wear gesture itself — a right-drag covering ~65% of the window
+      in 10 interpolated MOVEs, past the 33% distance ratio and fast enough
+      to fling (monkey's MOTION family injects drags the same way) — every
+      other window, and any later round (e.g. a drag that latched canScroll
+      on horizontally scrollable content), with GLOBAL_ACTION_BACK, the
+      TalkBack/uiautomator/monkey-SYSOPS exit. Window frame comes from the
+      a11y root: screen coordinates the injected stream needs.*/
+    Window* active = mLastActiveWindow;
+    const bool trySwipe = mPageEscapeRounds == 0 && windowSwipeArmed(active);
+    Rect bounds;
+    if (trySwipe) {
+        AccessibilityNodeInfo* root = UiAutomation::getInstance().getRootInActiveWindow();
+        if (root != nullptr) {
+            root->getBoundsInScreen(bounds);
+            root->recycle();
+        }
+    }
+    if (trySwipe && bounds.width > 0 && bounds.height > 0) {
+        LOGI("AUTOTEST page exit: swipe-dismiss drag on window %p", (void*)active);
+        const float y = (float)bounds.centerY();
+        const float x0 = bounds.left + bounds.width * 0.10f;
+        const float x1 = bounds.left + bounds.width * 0.75f;
+        const int64_t downTime = SystemClock::uptimeMillis();
+        injectMarkedMotion(MotionEvent::ACTION_DOWN, x0, y, downTime, downTime);
+        for (int i = 1; i <= 10; i++) {
+            const float t = (float)i / 10;
+            stepHandler().postDelayed([this, x0, x1, y, t, downTime]() {
+                injectMarkedMotion(MotionEvent::ACTION_MOVE,
+                        x0 + (x1 - x0) * t, y, downTime, SystemClock::uptimeMillis());
+            }, i * 16);
+        }
+        stepHandler().postDelayed([this, x1, y, downTime]() {
+            injectMarkedMotion(MotionEvent::ACTION_UP, x1, y,
+                    downTime, SystemClock::uptimeMillis());
+        }, 11 * 16);
+        if (mRecord.is_open()) {
+            char line[64];
+            snprintf(line, sizeof(line), "drag %d,%d %d,%d 10",
+                     (int)x0, (int)y, (int)x1, (int)y);
+            recordLine(line);
+        }
+    } else {
+        LOGI("AUTOTEST page exit: BACK on window %p", (void*)active);
+        // The escape is a global BACK (UiAutomation.performGlobalAction ->
+        // the service synthesizes the key through the input pipeline).
+        UiAutomation::getInstance().performGlobalAction(
+                AccessibilityService::GLOBAL_ACTION_BACK);
+        if (mRecord.is_open()) recordLine("back");
+    }
+    mPageEscapeFrom = active;
+    mPageEscapeRounds++;
+    stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+}
+
 void UiAutoTest::step() {
     if (!mRunning) return;
     UiAutomation& automation = UiAutomation::getInstance();
@@ -392,6 +484,10 @@ void UiAutoTest::step() {
         if (active != mLastActiveWindow) {
             LOGI("AUTOTEST active window %p -> %p", (void*)mLastActiveWindow, (void*)active);
             mLastActiveWindow = active;
+            // Any window change proves the last page-exit worked (or the last
+            // click navigated) — restart the escape ladder.
+            mPageEscapeRounds = 0;
+            mPageEscapeFrom = nullptr;
         }
     }
     AccessibilityNodeInfo* root = automation.getRootInActiveWindow();
@@ -480,6 +576,18 @@ void UiAutoTest::step() {
     size_t idx = 0;
     std::string pageSig;  // deterministic mode: identity of this page for the cursor
     if (mRandomWalk) {
+        // Monkey SYSOPS (MonkeySourceRandom:135, default 2.0): system keys
+        // HOME/BACK/CALL/ENDCALL/VOLUME*; the global-action surface here
+        // implements BACK only, so the factor collapses to a BACK — the
+        // random walk's page-escape, exactly monkey's.
+        if (mRng() % 100 < 2) {
+            LOGI("AUTOTEST [%d] SYSOPS -> BACK", mStepCount);
+            UiAutomation::getInstance().performGlobalAction(
+                    AccessibilityService::GLOBAL_ACTION_BACK);
+            if (mRecord.is_open()) recordLine("back");
+            stepHandler().postDelayed([this]() { step(); }, mStepIntervalMs);
+            return;
+        }
         // Monkey -s semantics: pick uniformly from the fresh snapshot — the seed
         // alone makes the walk reproducible, so there is no cursor state to keep.
         idx = mRng() % mClickables.size();
@@ -504,6 +612,27 @@ void UiAutoTest::step() {
         if (cursorIt != mPageCursor.end()) {
             idx = advancePastIdentity(mClickables, cursorIt->second);
             cursorHit = (idx != SIZE_MAX);
+        }
+        // Page fully swept (known page, cursor wrapped to the top) — leave it
+        // (swipe/BACK, see exitCurrentPage) unless it is the app's root
+        // window: there the sweep keeps cycling (BACK on the root activity
+        // would end the app — the endurance model). The cursor is dropped so
+        // a later re-entry sweeps the page from the top instead of wrapping
+        // straight back out; mLastClicked too, or the resume-after anchor
+        // would shortcut to the same wrap.
+        if (cursorHit && idx == 0 && !isBottomApplicationWindow(mLastActiveWindow)) {
+            if (mPageEscapeRounds >= 3) {
+                LOGW("AUTOTEST page exit failed %d rounds on window %p — stopping sweep",
+                     mPageEscapeRounds, (void*)mLastActiveWindow);
+                stop();
+                return;
+            }
+            LOGI("AUTOTEST page cycle complete on window %p — exiting (round %d)",
+                 (void*)mLastActiveWindow, mPageEscapeRounds);
+            mPageCursor.erase(pageSig);
+            mLastClickedValid = false;
+            exitCurrentPage();
+            return;
         }
         if (!cursorHit && mLastClickedValid) {
             // Unknown page (first visit, or the cursor identity left the

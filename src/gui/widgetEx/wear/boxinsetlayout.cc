@@ -45,7 +45,7 @@ BoxInsetLayout::LayoutParams* BoxInsetLayout::generateLayoutParams(const Attribu
 
 void BoxInsetLayout::onAttachedToWindow() {
     ViewGroup::onAttachedToWindow();
-    mIsRound = true;//getResources().getConfiguration().isScreenRound();
+    mIsRound = getResources().getConfiguration().isScreenRound();
     WindowInsets insets({});// = getRootWindowInsets();
     mInsets.set(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
             insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());

@@ -21,12 +21,15 @@
 namespace cdroid{
 class ArcLayout:public ViewGroup {
 public:
+    // virtual since the androidx interface methods are implemented by children
+    // (CurvedTextView); no base definitions exist — implementers override all five.
     struct Widget {
-        float getSweepAngleDegrees();
-        void setSweepAngleDegrees(float sweepAngleDegrees);
-        int getThickness();
-        void checkInvalidAttributeAsChild();
-        bool isPointInsideClickArea(float x, float y);
+        virtual ~Widget();   // key function: emits the interface vtable here
+        virtual float getSweepAngleDegrees() = 0;
+        virtual void setSweepAngleDegrees(float sweepAngleDegrees) = 0;
+        virtual int getThickness() = 0;
+        virtual void checkInvalidAttributeAsChild() = 0;
+        virtual bool isPointInsideClickArea(float x, float y) = 0;
     };
 
     class LayoutParams:public ViewGroup::MarginLayoutParams {

@@ -48,6 +48,9 @@ public:
     /** Default animation duration in ms. **/
     static constexpr int DEFAULT_ANIMATION_DURATION_MS = 1000;
 
+    /** Default animation duration in ms. */
+    static constexpr int A11Y_ANIMATION_DURATION_MS = 5000;
+
     /** Types of animations to display in the overlay. */
 
     /** {@link OverlayType} indicating the success animation overlay should be displayed. */
@@ -76,9 +79,12 @@ private:
     void updateOverlayView(Context* context);
     void updateMessageView(Context* context, View* overlayView);
     void updateImageView(Context* context, View* overlayView);
+    void setUpForAccessibility();
+    int getDurationMillis();
+    std::string getAccessibilityText();
 public:
     ConfirmationOverlay();
-    ConfirmationOverlay(const std::string&message);
+    ConfirmationOverlay(const std::string&message);   // CDROID-added convenience (no upstream counterpart)
     virtual ~ConfirmationOverlay();
     /**
      * Sets a message which will be displayed at the same time as the animation.
@@ -109,6 +115,7 @@ public:
      * @return {@code this} object for method chaining.
      */
     ConfirmationOverlay& setFinishedAnimationListener(const OnAnimationFinishedListener& listener);
+    ConfirmationOverlay& setOnAnimationFinishedListener(const OnAnimationFinishedListener& listener);   // HEAD rename (java:214-218)
 
     /**
      * Adds the overlay as a child of {@code view.getRootView()}, removing it when complete. While

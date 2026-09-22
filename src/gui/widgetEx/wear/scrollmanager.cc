@@ -42,8 +42,6 @@ void ScrollManager::setRecyclerView(RecyclerView* recyclerView, int width, int h
     mRecyclerView = recyclerView;
     mScreenRadiusPx = std::max(width, height) / 2.f;
     mScreenRadiusPxSquared = mScreenRadiusPx * mScreenRadiusPx;
-    mScrollPixelsPerRadian = height / mScrollRadiansPerScreen;
-    mScrollRadiansPerScreen = (float) MathUtils::toRadians(mScrollDegreesPerScreen);
     mVelocityTracker = VelocityTracker::obtain();
 }
 

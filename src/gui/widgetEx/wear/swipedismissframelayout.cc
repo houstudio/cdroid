@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/swipedismissframelayout.h>
+#include <stdexcept>
 namespace cdroid{
 
 DECLARE_WIDGET2(SwipeDismissFrameLayout, "androidx.wear.widget.SwipeDismissFrameLayout");
@@ -32,9 +33,10 @@ void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callbac
 
 void SwipeDismissFrameLayout::removeCallback(const SwipeDismissFrameLayout::Callback& callback) {
     auto it =std::find(mCallbacksCompat.begin(),mCallbacksCompat.end(),callback);
-    if(it!=mCallbacksCompat.end()){
-        mCallbacksCompat.erase(it);
+    if(it==mCallbacksCompat.end()){
+        throw std::runtime_error("removeCallback called with nonexistent callback");
     }
+    mCallbacksCompat.erase(it);
 }
 
 void SwipeDismissFrameLayout::setSwipeable(bool swipeable) {

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- androidx wear res/values/strings.xml:23-31, verbatim (the two ws_* drawer
+     content descriptions live in drawer_strings.xml; this file carries the
+     ConfirmationOverlay a11y descriptions). -->
+<resources>
+    <!-- String describing successful animation which is read aloud when opened if accessibility is turned on [CHAR_LIMIT='NONE'] -->
+    <string name="confirmation_overlay_a11y_description_success">Success</string>
+
+    <!-- String describing failed animation which is read aloud when opened if accessibility is turned on [CHAR_LIMIT='NONE'] -->
+    <string name="confirmation_overlay_a11y_description_fail">Failure</string>
+
+    <!-- String describing opened on phone animation which is read aloud when opened if accessibility is turned on [CHAR_LIMIT='NONE'] -->
+    <string name="confirmation_overlay_a11y_description_phone">Opened on your phone</string>
+</resources>

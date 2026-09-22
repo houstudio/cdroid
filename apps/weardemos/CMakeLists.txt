@@ -22,6 +22,8 @@ set(DEMO_SRCS
    alertdialogdemo.cc
    confirmationoverlaydemo.cc
    wearabledrawersdemo.cc
+   curvedtextdemo.cc
+   curvedtextouterdemo.cc
 )
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(weardemos ${DEMO_SRCS})

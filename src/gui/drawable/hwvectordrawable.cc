@@ -408,8 +408,12 @@ int Tree::draw(Canvas& outCanvas, ColorFilter* colorFilter, const Rect& bounds, 
 void Tree::drawStaging(Canvas& outCanvas) {
     bool redrawNeeded = allocateBitmapIfNeeded(mStagingCache, mStagingProperties.getScaledWidth(),
                                                mStagingProperties.getScaledHeight());
-    // draw bitmap cache
-    if (redrawNeeded || mStagingCache.dirty) {
+    // draw bitmap cache. !mAllowCaching is AOSP's software-animation path: an
+    // AVD sets it false at inflate, and the staging cache must then rebuild
+    // every draw — animator frames mutate VPath/VGroup staging properties
+    // through paths that carry no dirty notification, so the flag is the only
+    // thing keeping the cached frame from freezing at trimPathEnd=0.
+    if (redrawNeeded || mStagingCache.dirty || !mAllowCaching) {
         updateBitmapCache(mStagingCache.bitmap, true);
         mStagingCache.dirty = false;
     }
@@ -430,7 +434,6 @@ void Tree::drawStaging(Canvas& outCanvas) {
                           mStagingProperties.getBounds().top,
                           mStagingProperties.getBounds().right(),
                           mStagingProperties.getBounds().bottom(), paint);*/
-    outCanvas.set_source(mStagingCache.bitmap,0,0);
     // Composite the cache OVER the destination (Skia's drawBitmap uses SRC_OVER). SOURCE was a
     // porting bug: it replaced the destination with the cache, so the cache's transparent areas
     // (everywhere outside the vector paths) erased the host content beneath — e.g. a nav-button
@@ -439,6 +442,14 @@ void Tree::drawStaging(Canvas& outCanvas) {
     outCanvas.set_operator(Cairo::Context::Operator::OVER);
     outCanvas.scale(float(mStagingProperties.getBounds().width)/mStagingCache.bitmap->get_width(),
             float(mStagingProperties.getBounds().height)/mStagingCache.bitmap->get_height());
+    // cairo anchors a surface pattern in the user space current AT set_source()
+    // time — a scale() between set_source and paint samples the cache through
+    // the PRE-scale space, so the blit degenerated to the cache's top-left
+    // ~5x5 pixels (the AVD checkmark rendered as a few-pixel sliver). Scale
+    // FIRST, flush (the cache was rasterized through a separate cairo context
+    // in updateBitmapCache), then set the source and paint.
+    mStagingCache.bitmap->flush();
+    outCanvas.set_source(mStagingCache.bitmap,0,0);
     outCanvas.paint();
 }
 
