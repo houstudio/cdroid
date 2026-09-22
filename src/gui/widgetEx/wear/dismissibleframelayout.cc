@@ -49,6 +49,7 @@ void DismissibleFrameLayout::unregisterCallback(const Callback& callback) {
     if (it==mCallbacks.end()) {
         throw std::runtime_error("removeCallback called with nonexistent callback");
     }
+    mCallbacks.erase(it);
 }
 
 void DismissibleFrameLayout::setSwipeDismissible(bool swipeDismissible) {
@@ -91,19 +92,19 @@ SwipeDismissController* DismissibleFrameLayout::getSwipeDismissController() cons
 
 void DismissibleFrameLayout::performDismissFinishedCallbacks() {
     for (int i = mCallbacks.size() - 1; i >= 0; i--) {
-        mCallbacks.at(i).onDismissFinished(*this);
+        auto& cb = mCallbacks.at(i); if (cb.onDismissFinished) cb.onDismissFinished(*this);
     }
 }
 
 void DismissibleFrameLayout::performDismissStartedCallbacks() {
     for (int i = mCallbacks.size() - 1; i >= 0; i--) {
-        mCallbacks.at(i).onDismissStarted(*this);
+        auto& cb = mCallbacks.at(i); if (cb.onDismissStarted) cb.onDismissStarted(*this);
     }
 }
 
 void DismissibleFrameLayout::performDismissCanceledCallbacks() {
     for (int i = mCallbacks.size() - 1; i >= 0; i--) {
-        mCallbacks.at(i).onDismissCanceled(*this);
+        auto& cb = mCallbacks.at(i); if (cb.onDismissCanceled) cb.onDismissCanceled(*this);
     }
 }
 

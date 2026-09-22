@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Flat Action Blue plate (unused legacy resource, kept on-system). -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:startColor="#FF1565C0" android:endColor="#FF42A5F5" android:angle="45"/>
-    <corners android:radius="14dp"/>
+    <solid android:color="#FF0066CC"/>
+    <corners android:radius="8dp"/>
 </shape>

@@ -584,10 +584,18 @@ void BitmapDrawable::draw(Canvas&canvas){
         // the bare surface source while the CTM is still the identity — cairo
         // bakes CTM^-1 into set_source(surface) at call time, making it exactly
         // equivalent to the explicit pattern while skipping the wrapper +
-        // matrix calls every draw.
+        // matrix calls every draw. The gate is load-bearing: under a rotated
+        // CTM (AnimatedRotateDrawable wraps this draw) the baked matrix pins
+        // the surface to the wrong anchor and the bitmap orbits — AOSP's
+        // drawBitmap(bitmap, null, dstRect) makes no CTM assumption, so the
+        // fast path only fires on a true identity CTM and everything else
+        // takes the explicit-pattern route.
         const bool identityDensity = (source->get_width() == mBitmapWidth)
                 && (source->get_height() == mBitmapHeight);
-        if (identityDensity) canvas.set_source(source, 0, 0);
+        const Cairo::Matrix ctm = canvas.get_matrix();
+        const bool identityCtm = (ctm.xx == 1.0 && ctm.yy == 1.0 && ctm.xy == 0.0
+                                  && ctm.yx == 0.0 && ctm.x0 == 0.0 && ctm.y0 == 0.0);
+        if (identityDensity && identityCtm) canvas.set_source(source, 0, 0);
         const float alpha = mBitmapState->mBaseAlpha*mBitmapState->mAlpha/255.f;
 
         LOGV_IF(mBitmapState->mFilterBitmap&&(mBitmapWidth*mBitmapHeight>=512*512),
@@ -618,7 +626,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         // drawable painted nothing. Pattern matrix maps USER -> PATTERN
         // space, so scale = surface px per user unit (AOSP's software
         // drawBitmap(bitmap, null, dstRect) semantics).
-        if (!identityDensity) {
+        if (!identityDensity || !identityCtm) {
             Cairo::RefPtr<SurfacePattern> srcPattern = Cairo::SurfacePattern::create(source);
             Cairo::Matrix srcMatrix = Cairo::identity_matrix();
             srcMatrix.scale((double)source->get_width() / std::max(1, mBitmapWidth),

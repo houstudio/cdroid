@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dark-variant card: elevated surface + subtle stroke (Material dark). -->
+<!-- Dark-variant card: near-black tile 3 surface with a faint tile-2 stroke. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#FF212429"/>
+    <solid android:color="#FF252527"/>
     <corners android:radius="18dp"/>
-    <stroke android:width="1dp" android:color="#FF34383E"/>
+    <stroke android:width="1dp" android:color="#FF2F2F33"/>
 </shape>

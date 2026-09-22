@@ -7,7 +7,9 @@
  *   Adapter1: Powered/Alias/Address/Discovering properties,
  *             StartDiscovery/StopDiscovery/RemoveDevice
  *   Device1:  Address/Name/Alias/Paired/Connected/RSSI/Class/UUIDs/AddressType,
- *             Pair
+ *             Trusted (writable), Pair, Connect/Disconnect,
+ *             ConnectProfile/DisconnectProfile (the HID host path; the
+ *             keyboard device advertises the HID UUID)
  *   signals:  PropertiesChanged (RSSI flips each second, Powered follows the
  *             setter), InterfacesAdded (a third device appears on discovery)
  *
@@ -157,6 +159,58 @@ static int get_device_name(sd_bus*, const char* path, const char*,
     return sd_bus_message_append(reply, "s", device_for_path(path)->name);
 }
 static bool gDev2Paired = false;   /* Pair() flips this */
+/* Per-device Connected/Trusted state (Connect()/ConnectProfile()/Set flip
+ * these; the vtable getters serve them). */
+static bool gDevConnected[] = {false, false, false};
+static bool gDevTrusted[] = {false, false, false};
+/* The keyboard advertises the HID profile UUID (lowercase, like BlueZ). */
+static const char* kKeyboardUuids[] = {
+    "00001124-0000-1000-8000-00805f9b34fb",   /* HID */
+    "00001101-0000-1000-8000-00805f9b34fb",   /* SPP */
+    nullptr,
+};
+static const char* kDefaultUuids[] = {
+    "00001101-0000-1000-8000-00805f9b34fb",   /* SPP */
+    nullptr,
+};
+static int device_index(const MockDevice* d) { return (int)(d - kDevices); }
+static int get_device_connected(sd_bus*, const char* path, const char*,
+                                const char*, sd_bus_message* reply, void*,
+                                sd_bus_error*) {
+    const MockDevice* d = device_for_path(path);
+    return sd_bus_message_append(reply, "b",
+                                 gDevConnected[device_index(d)] ? 1 : 0);
+}
+static int get_device_trusted(sd_bus*, const char* path, const char*,
+                              const char*, sd_bus_message* reply, void*,
+                              sd_bus_error*) {
+    const MockDevice* d = device_for_path(path);
+    return sd_bus_message_append(reply, "b",
+                                 gDevTrusted[device_index(d)] ? 1 : 0);
+}
+/* Properties.Set(Trusted) — the writable seam the client's auto-trust
+ * path after pairing exercises. Emits the change like real bluetoothd
+ * (the client cache tracks the property from the signal). */
+static int set_device_trusted(sd_bus* bus, const char* path, const char*,
+                              const char*, sd_bus_message* m, void*,
+                              sd_bus_error*) {
+    int v = 0;
+    if (sd_bus_message_read(m, "b", &v) < 0) return -EINVAL;
+    gDevTrusted[device_index(device_for_path(path))] = v != 0;
+    printf("[btmock] Trusted %s = %d\n", path, v);
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Trusted", v != 0);
+}
+static int get_device_uuids(sd_bus*, const char* path, const char*,
+                            const char*, sd_bus_message* reply, void*,
+                            sd_bus_error*) {
+    const MockDevice* d = device_for_path(path);
+    const char* const* u = (d == &kDevices[0]) ? kKeyboardUuids
+                                               : kDefaultUuids;
+    int rc = sd_bus_message_open_container(reply, 'a', "s");
+    for (; rc >= 0 && *u; u++) rc = sd_bus_message_append(reply, "s", *u);
+    if (rc >= 0) rc = sd_bus_message_close_container(reply);
+    return rc;
+}
 static int get_device_paired(sd_bus*, const char* path, const char*,
                              const char*, sd_bus_message* reply, void*,
                              sd_bus_error*) {
@@ -168,6 +222,7 @@ static int get_device_paired(sd_bus*, const char* path, const char*,
 static int device_connect(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     const char* path = sd_bus_message_get_path(m);
+    gDevConnected[device_index(device_for_path(path))] = true;
     sd_bus_reply_method_return(m, "");
     printf("[btmock] Connect %s\n", path);
     return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", true);
@@ -175,8 +230,31 @@ static int device_connect(sd_bus_message* m, void*, sd_bus_error*) {
 static int device_disconnect(sd_bus_message* m, void*, sd_bus_error*) {
     sd_bus* bus = sd_bus_message_get_bus(m);
     const char* path = sd_bus_message_get_path(m);
+    gDevConnected[device_index(device_for_path(path))] = false;
     sd_bus_reply_method_return(m, "");
     printf("[btmock] Disconnect %s\n", path);
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", false);
+}
+/* ConnectProfile/DisconnectProfile(uuid): same Connected flip, logging the
+ * requested profile uuid (the HID host path through the mock). */
+static int device_connect_profile(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus* bus = sd_bus_message_get_bus(m);
+    const char* path = sd_bus_message_get_path(m);
+    const char* uuid = nullptr;
+    sd_bus_message_read_basic(m, 's', &uuid);
+    gDevConnected[device_index(device_for_path(path))] = true;
+    sd_bus_reply_method_return(m, "");
+    printf("[btmock] ConnectProfile %s (%s)\n", path, uuid ? uuid : "?");
+    return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", true);
+}
+static int device_disconnect_profile(sd_bus_message* m, void*, sd_bus_error*) {
+    sd_bus* bus = sd_bus_message_get_bus(m);
+    const char* path = sd_bus_message_get_path(m);
+    const char* uuid = nullptr;
+    sd_bus_message_read_basic(m, 's', &uuid);
+    gDevConnected[device_index(device_for_path(path))] = false;
+    sd_bus_reply_method_return(m, "");
+    printf("[btmock] DisconnectProfile %s (%s)\n", path, uuid ? uuid : "?");
     return emit_prop_bool(bus, path, "org.bluez.Device1", "Connected", false);
 }
 /* Agent manager: remember who registered an agent, so Pair can ask it. */
@@ -333,9 +411,15 @@ static const sd_bus_vtable kDeviceVtable[] = {
     SD_BUS_PROPERTY("Address", "s", get_device_address, 0, 0),
     SD_BUS_PROPERTY("Name", "s", get_device_name, 0, 0),
     SD_BUS_PROPERTY("Paired", "b", get_device_paired, 0, 0),
+    SD_BUS_PROPERTY("Connected", "b", get_device_connected, 0, 0),
+    SD_BUS_PROPERTY("UUIDs", "as", get_device_uuids, 0, 0),
+    SD_BUS_WRITABLE_PROPERTY("Trusted", "b", get_device_trusted,
+                             set_device_trusted, 0, 0),
     SD_BUS_METHOD("Pair", NULL, NULL, pair_device, 0),
     SD_BUS_METHOD("Connect", NULL, NULL, device_connect, 0),
     SD_BUS_METHOD("Disconnect", NULL, NULL, device_disconnect, 0),
+    SD_BUS_METHOD("ConnectProfile", "s", NULL, device_connect_profile, 0),
+    SD_BUS_METHOD("DisconnectProfile", "s", NULL, device_disconnect_profile, 0),
     SD_BUS_VTABLE_END,
 };
 
@@ -377,11 +461,12 @@ static int emit_device(sd_bus* bus, const MockDevice* d, const char* path) {
         }
         sd_bus_message_close_container(m);
     }
-    /* UUIDs: as array-of-string variant */
+    /* UUIDs: as array-of-string variant (the keyboard set carries HID). */
     sd_bus_message_open_container(m, 'e', "sv");
     sd_bus_message_append(m, "s", "UUIDs");
     sd_bus_message_open_container(m, 'v', "as");
-    sd_bus_message_append_strv(m, (char**) (const char*[]) {(char*)"00001101-0000-1000-8000-00805f9b34fb", nullptr});
+    sd_bus_message_append_strv(m, const_cast<char**>(
+            (d == &kDevices[0]) ? kKeyboardUuids : kDefaultUuids));
     sd_bus_message_close_container(m);
     sd_bus_message_close_container(m);
     sd_bus_message_close_container(m);   // a{sv}

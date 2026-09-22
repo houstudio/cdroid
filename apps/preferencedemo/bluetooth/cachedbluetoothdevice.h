@@ -4,10 +4,10 @@
  *   bluetooth/CachedBluetoothDevice.java
  *
  * One cached entry per remote address: display name, bond state, connection
- * summary, pairing entry points. Profile machinery (A2DP/HFP/HearingAid,
- * battery metadata, TWS) is stubbed in cdblue, so the connection summary
- * reduces to the bond-state branch of AOSP's getConnectionSummary — same
- * structure, documented divergence at the profile layer.
+ * summary, pairing entry points. The profile set is the HID host (the one
+ * profile cdblue serves end to end); A2DP/HFP/HearingAid, battery metadata
+ * and TWS stay stubbed, so the connection summary keeps the bond-state
+ * branch plus the HID-connected branch of AOSP's getConnectionSummary.
  *********************************************************************************/
 #ifndef PREFERENCEDRMO_CACHED_BLUETOOTH_DEVICE_H
 #define PREFERENCEDRMO_CACHED_BLUETOOTH_DEVICE_H
@@ -23,14 +23,17 @@
 namespace preferencedemo {
 
 class CachedBluetoothDeviceManager;
+class LocalBluetoothProfileManager;
 
 class CachedBluetoothDevice {
 public:
     /** AOSP CachedBluetoothDevice.Callback (single-method register list). */
     using Callback = std::function<void()>;
 
-    explicit CachedBluetoothDevice(LocalBluetoothAdapter* localAdapter,
-                                    cdroid::BluetoothDevice device);
+    /* AOSP ctor shape (context dropped): profileManager + localAdapter. */
+    CachedBluetoothDevice(LocalBluetoothProfileManager* profileManager,
+                          LocalBluetoothAdapter* localAdapter,
+                          cdroid::BluetoothDevice device);
 
     cdroid::BluetoothDevice getDevice() const { return mDevice; }
     std::string getAddress() const { return mDevice.getAddress(); }
@@ -45,15 +48,15 @@ public:
 
     /* AOSP isBusy: profile busy states stub away; bonding remains. */
     bool isBusy() const { return getBondState() == cdroid::BluetoothDevice::BOND_BONDING; }
-    /* Profiles are stubbed in cdblue — never "connected". */
-    bool isConnected() const { return false; }
+    /* AOSP isConnected: any profile connected — here the HID host. */
+    bool isConnected() const;
 
     bool startPairing();
     void unpair();
-    /* AOSP connect()/disconnect() iterate the profile set; the set is empty
-     * until the profile layer lands (kept for interface parity). */
-    void connect() {}
-    void disconnect() {}
+    /* AOSP connect(): ensurePaired (pairs first when unpaired) then
+     * connectAllEnabledProfiles — the HID host when the device is one. */
+    void connect();
+    void disconnect();
 
     /* AOSP getConnectionSummary(boolean): the bond-state half; profile and
      * battery branches collapse (no profiles, battery unknown). Returns ""
@@ -74,7 +77,10 @@ public:
 private:
     friend class CachedBluetoothDeviceManager;
     void refresh();   // re-read properties after an event
+    /* The HID proxy via the profile manager (nullptr for non-HID sets). */
+    cdroid::BluetoothHidHost* hidProfile() const;
 
+    LocalBluetoothProfileManager* mProfileManager;
     LocalBluetoothAdapter* mLocalAdapter;
     cdroid::BluetoothDevice mDevice;
     std::vector<Callback> mCallbacks;   // main thread only

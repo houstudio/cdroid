@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/boxinsetlayout.h>
+#include <widgetEx/widgetex_styleable.h>
 namespace cdroid{
 
 DECLARE_WIDGET2(BoxInsetLayout, "androidx.wear.widget.BoxInsetLayout");
@@ -24,13 +25,6 @@ BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet* attrs):BoxIn
 
 BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
-    // make sure we have a foreground padding object
-    /*if (mForegroundPadding == nullptr) {
-        mForegroundPadding = new Rect();
-    }
-    if (mInsets == null) {
-        mInsets = new Rect();
-    }*/
     mForegroundPadding.setEmpty();
     mScreenHeight= context->getDisplayMetrics().heightPixels;
     mScreenWidth = context->getDisplayMetrics().widthPixels;
@@ -298,12 +292,17 @@ int BoxInsetLayout::calculateInset(int measuredWidth, int measuredHeight) {
 
 BoxInsetLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet& attrs)
     :FrameLayout::LayoutParams(context, attrs){
-    /*TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.BoxInsetLayout_Layout,0, 0);
-    int boxedEdgesResourceKey = R.styleable.BoxInsetLayout_Layout_layout_boxedEdges;
-    if (!a.hasValueOrEmpty(R.styleable.BoxInsetLayout_Layout_layout_boxedEdges)){
-        boxedEdgesResourceKey = R.styleable.BoxInsetLayout_Layout_boxedEdges;
-    }*/
-    boxedEdges = attrs.getAttributeIntValue(std::string(), "boxedEdges", BOX_NONE);
+    // androidx BoxInsetLayout.java:429-438
+    auto a = context->obtainStyledAttributes(&attrs, internal::R::styleable::BoxInsetLayoutLayout);
+    if (a) {
+        int boxedEdgesResourceKey = internal::R::styleable::BoxInsetLayoutLayout_layout_boxedEdges;
+        if (!a->hasValueOrEmpty(internal::R::styleable::BoxInsetLayoutLayout_layout_boxedEdges)) {
+            boxedEdgesResourceKey = internal::R::styleable::BoxInsetLayoutLayout_boxedEdges;
+        }
+        boxedEdges = a->getInt(boxedEdgesResourceKey, BOX_NONE);
+    } else {
+        boxedEdges = BOX_NONE;
+    }
 }
 
 BoxInsetLayout::LayoutParams::LayoutParams(int width, int height)

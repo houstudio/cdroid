@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <gradient android:startColor="#FF2E7CF6" android:endColor="#FF1558CE" android:angle="270"/>
-    <corners android:radius="27dp"/>
-</shape>
+<!-- button-primary (DESIGN.md): the signature Apple action — Action Blue,
+     full-pill capsule (54dp-tall CTA -> 27dp radius), flat fill. The real
+     press cue is scale(0.95); here the fill shifts to Focus Blue. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0071E3"/>
+            <corners android:radius="27dp"/>
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0066CC"/>
+            <corners android:radius="27dp"/>
+        </shape>
+    </item>
+</selector>

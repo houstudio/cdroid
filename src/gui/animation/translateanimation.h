@@ -34,6 +34,18 @@ public:
     float resolveToX(int size, int parentSize)   { return resolveSize(mToXType, mToXValue, size, parentSize); }
     float resolveFromY(int size, int parentSize) { return resolveSize(mFromYType, mFromYValue, size, parentSize); }
     float resolveToY(int size, int parentSize)   { return resolveSize(mToYType, mToYValue, size, parentSize); }
+    // CDROID extension (whole-window transition extraction): the authored
+    // deltas WITH their units, so window-level slides can reproduce the
+    // resource's own motion (popup_enter_material's 20dp rise) instead of the
+    // edge-based full-offscreen fly-in.
+    int   fromXType()  const { return mFromXType; }
+    float fromXValue() const { return mFromXValue; }
+    int   fromYType()  const { return mFromYType; }
+    float fromYValue() const { return mFromYValue; }
+    int   toXType()    const { return mToXType; }
+    float toXValue()   const { return mToXValue; }
+    int   toYType()    const { return mToYType; }
+    float toYValue()   const { return mToYValue; }
 };
 
 class TranslateXAnimation :public TranslateAnimation{

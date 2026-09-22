@@ -109,7 +109,7 @@ bool App::addAppOptions(const std::string& group,
 App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
-    std::string autoTest, autoTestRecord, testScript, orientation;
+    std::string autoTest, autoTestRecord, testScript, orientation, inputMode;
     std::string logo, datapath;
     LogParseModules(argc,argv);
     mInst = this;
@@ -135,7 +135,10 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
          "combined with --auto-test the sweep's steps join the same script",
          cxxopts::value<std::string>(autoTestRecord))
         ("test-script","line-based a11y test script (wait/click/assert/dump; exit code = failures)",
-         cxxopts::value<std::string>(testScript));
+         cxxopts::value<std::string>(testScript))
+        ("input-mode","input reader mode: thread (dedicated reader thread, default) | "
+         "choreographer (per-frame CALLBACK_INPUT polling, no reader thread)",
+         cxxopts::value<std::string>(inputMode)->default_value("thread"));
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
@@ -179,20 +182,27 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         std::exit(EXIT_SUCCESS);
     }
     Typeface::setContext(this);
+    // --density must land before onInit(): setToDefaults() snapshots
+    // DENSITY_DEVICE into mDisplayMetrics, and the first addResource seeds
+    // ResTable_config.density from that snapshot. The old spot (near graph
+    // init, after every addResource) reached no remaining reader — a no-op.
+    // DENSITY_DEVICEE_STABLE rides along (same source, currently unread).
+    DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
+    if(density) {
+        DisplayMetrics::DENSITY_DEVICE = density;
+        DisplayMetrics::DENSITY_DEVICEE_STABLE = density;
+    }
     onInit();
     std::string appPakPath;
     const size_t pos = mName.rfind(PATH_SEP);
     if(pos!=std::string::npos){
         const std::string name = mName.substr(pos+1);
+        /* The app's own pak lives beside the executable (getDataPath, overridable
+         * with --data). No cwd probing: launching from a different directory
+         * must not silently pick up some other directory's pak. */
         std::string pakPath =getDataPath()+name+std::string(".pak");
-        if(0==access(pakPath.c_str(),F_OK)) {
-            addResource(pakPath,getName());
-            appPakPath = pakPath;
-        }
-        else {
-            addResource(name+".pak",getName());
-            appPakPath = name+".pak";
-        }
+        addResource(pakPath,getName());
+        appPakPath = pakPath;
     }
     // AOSP: the application theme comes from the manifest (android:theme) and
     // falls back to the platform default; applyStyle follows the style's parent
@@ -279,10 +289,17 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(!logo.empty()) graph.setLogo(logo);
     graph.showFPS(showFPS).init();
     View::VIEW_DEBUG = debug;
-    DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
     if(alpha!=255) setOpacity(alpha);
-    if(density) DisplayMetrics::DENSITY_DEVICE = density;
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
+    // --input-mode: fix the InputEventSource reader backend before its lazy
+    // init (the first checkEvents) — thread is the stock behavior;
+    // choreographer polls InputGetEvents(0ms) per frame on CALLBACK_INPUT
+    // with no reader thread (see InputEventSource::Mode).
+    if (inputMode == "choreographer") {
+        InputEventSource::setMode(InputEventSource::Mode::Choreographer);
+    } else if (inputMode != "thread") {
+        LOGW("unknown --input-mode=%s, using thread", inputMode.c_str());
+    }
     Typeface::loadPreinstalledSystemFontMap();
 
     InputEventSource*inputsource=&InputEventSource::getInstance();
@@ -333,11 +350,12 @@ void App::onInit(){
     // Locate a shared pak (cdroid.pak / widgetex.pak): data path first, then
     // the executable's directory (build-tree layout puts the app binary in
     // apps/<name>/ with cdroid.pak at the binary-root, so walk up a couple of
-    // levels), then the cwd, then system install paths ($CDROID_PAK_PATH,
-    // /usr/share/cdroid, /opt/cdroid) for pm-installed apps. Without the
-    // framework pak every framework style resolves empty — a themed app
-    // silently loses its parent chain and the overflow menu renders with no
-    // background style at all.
+    // levels), then system install paths ($CDROID_PAK_PATH, /usr/share/cdroid,
+    // /opt/cdroid) for pm-installed apps. The cwd is deliberately NOT probed:
+    // where the process happens to be launched from must not decide which pak
+    // wins. Without the framework pak every framework style resolves empty —
+    // a themed app silently loses its parent chain and the overflow menu
+    // renders with no background style at all.
     auto findSharedPak = [this](const std::string& name) -> std::string {
         std::vector<std::string> cands;
         cands.push_back(getDataPath() + name);
@@ -352,7 +370,22 @@ void App::onInit(){
             if (dir.empty()) dir = "/";
             cands.push_back(dir + PATH_SEP + name);
         }
-        cands.push_back(name);   // cwd
+        // $CDROID_PAK_PATH: optional extra search dir(s), colon-separated,
+        // probed before the standard install locations. No cwd probing: where
+        // the process happens to be launched from must not decide which pak
+        // wins.
+        if (const char* extra = getenv("CDROID_PAK_PATH")) {
+            const std::string dirs(extra);
+            size_t start = 0;
+            while (start <= dirs.size()) {
+                const size_t colon = dirs.find(':', start);
+                const std::string dir = dirs.substr(start,
+                        colon == std::string::npos ? std::string::npos : colon - start);
+                if (!dir.empty()) cands.push_back(dir + PATH_SEP + name);
+                if (colon == std::string::npos) break;
+                start = colon + 1;
+            }
+        }
         // System search paths: an installed app (pm install layout:
         // /data/app/cdroid/<pkg>/...) can't reach the out-tree root by walking
         // up, so probe the standard install locations.

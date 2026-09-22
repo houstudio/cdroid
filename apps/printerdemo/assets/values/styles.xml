@@ -5,19 +5,21 @@
          about. Framework attrs carry the android: namespace (aapt2 resolves
          them against the linked framework package, not the app's own).
 
-         Brand system: one primary blue (#1A73E8) drives toolbar, hero
-         gradient start, colorAccent (Theme.Material aliases
-         colorControlActivated to ?attr/colorAccent, so radios / switches /
-         seekbars pick it up automatically). Per-function accents:
-         copy=blue, scan=green(#188038), maintain=amber(#E8710A),
-         settings=purple(#8430CE) — used by the tonal chips + icons. -->
+         Skin: DESIGN.md "Apple-design-analysis" — a photography-first museum
+         gallery. Parchment #f5f5f7 canvas, white utility cards with hairline
+         borders, a true-black 44px global-nav command bar, and ONE
+         interactive color: Action Blue #0066cc on every link, pill CTA and
+         focus signal. No decorative gradients, no shadows on chrome. -->
     <style name="AppTheme" parent="@android:style/Theme.Material.Light">
-        <item name="android:colorPrimary">#ff1a73e8</item>
-        <item name="android:colorAccent">#ff1a73e8</item>
-        <item name="android:colorBackground">#fff5f7fa</item>
+        <!-- global-nav: true black command bar (the only pure black on page) -->
+        <item name="android:colorPrimary">#ff000000</item>
+        <!-- Action Blue: switches / seekbars / radios — the single accent -->
+        <item name="android:colorAccent">#ff0066cc</item>
+        <!-- canvas-parchment: the default page canvas -->
+        <item name="android:colorBackground">#fff5f5f7</item>
         <!-- selectableItemBackground ripples (NumberPicker virtual buttons,
-             cards) read this; leaving it unresolved renders presses invisible. -->
-        <item name="android:colorControlHighlight">#1f000000</item>
+             cards): soft hairline wash, rgba(0,0,0,0.04..0.08) family -->
+        <item name="android:colorControlHighlight">#14000000</item>
         <!-- Text state colors go through ColorStateList selectors
              (res/color/app_text_*.xml), like AOSP's primary_text_material_*. -->
         <item name="android:textColorPrimary">@color/app_text_primary</item>
@@ -27,18 +29,21 @@
         <item name="inkBlackFill">@drawable/ink_fill_k</item>
         <item name="navBackground">@drawable/bg_nav</item>
         <item name="progressTrack">@drawable/progress_track_bg</item>
-        <item name="colorSurfaceVariant">#FFE7EAF0</item>
+        <item name="colorSurfaceVariant">#ffe0e0e0</item>
     </style>
 
     <!-- Dark variant: same attr set, Material (dark) parent. The layout's
          backgrounds are ?attr-driven (colorBackground / colorPrimary), so
          toggling the theme + recreate() re-colors the whole UI (AOSP parity:
-         the persisted choice is re-read by every new activity). -->
+         the persisted choice is re-read by every new activity). Reads as the
+         near-black product-tile stack; links go Sky Link Blue. -->
     <style name="AppTheme.Dark" parent="@android:style/Theme.Material">
-        <item name="android:colorPrimary">#ff173b66</item>
-        <item name="android:colorAccent">#ff5b9bff</item>
-        <item name="android:colorBackground">#ff15171b</item>
-        <item name="android:colorControlHighlight">#33ffffff</item>
+        <!-- dark global-nav: ink slab merging with the dark canvas, hairline
+             top seam — light mode keeps the only true-black bar -->
+        <item name="android:colorPrimary">#ff1d1d1f</item>
+        <item name="android:colorAccent">#ff2997ff</item>
+        <item name="android:colorBackground">#ff1d1d1f</item>
+        <item name="android:colorControlHighlight">#29ffffff</item>
         <item name="android:textColorPrimary">@color/app_text_primary_dark</item>
         <item name="android:textColorSecondary">@color/app_text_secondary_dark</item>
         <item name="cardBackground">@drawable/card_bg_dark</item>
@@ -46,11 +51,11 @@
         <item name="inkBlackFill">@drawable/ink_fill_k_dark</item>
         <item name="navBackground">@drawable/bg_nav_dark</item>
         <item name="progressTrack">@drawable/progress_track_bg_dark</item>
-        <item name="colorSurfaceVariant">#FF3A3E45</item>
+        <item name="colorSurfaceVariant">#ff2a2a2c</item>
     </style>
 
     <!-- Referenced by layout/main.xml (android:titleTextAppearance). -->
     <style name="ToolbarTitle" parent="@android:style/TextAppearance.Material.Title">
-        <item name="android:textSize">20sp</item>
+        <item name="android:textSize">17sp</item>
     </style>
 </resources>

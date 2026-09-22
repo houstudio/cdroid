@@ -19,7 +19,7 @@
                 android:background="@drawable/ripple_row" android:padding="14dp" android:clickable="true" android:focusable="true">
                 <FrameLayout android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/chip_blue">
                     <ImageView android:layout_width="24dp" android:layout_height="24dp" android:layout_gravity="center"
-                        android:src="@drawable/ic_wifi_white" android:tint="#FF1A73E8" android:importantForAccessibility="no"/>
+                        android:src="@drawable/ic_wifi_white" android:tint="#FF0066CC" android:importantForAccessibility="no"/>
                 </FrameLayout>
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:orientation="vertical">
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wi-Fi" android:textSize="15sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
@@ -95,7 +95,7 @@
                 <TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="14dp" android:text="@string/settings_brightness" android:textSize="15sp" android:textColor="?android:attr/textColorPrimary"/>
                 <TextView android:id="@+id/tv_brightness"
                     android:layout_width="wrap_content" android:layout_height="wrap_content"
-                    android:text="50%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1A73E8"/>
+                    android:text="50%" android:textSize="14sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
             </LinearLayout>
             <SeekBar android:id="@+id/seek_brightness"
                 android:layout_width="match_parent" android:layout_height="wrap_content"

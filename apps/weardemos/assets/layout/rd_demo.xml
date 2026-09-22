@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upstream: SupportWearDemos res/layout/rd_demo.xml. The android:src
+     reference is set in code (RoundedDrawableDemo): the upstream drawable
+     resource rd_example.xml is a <androidx.wear.widget.RoundedDrawable>
+     drawable-XML, and CDROID's DrawableInflater registry has no entry for it
+     yet, so the drawable is constructed programmatically instead. -->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <ImageView
+        android:id="@+id/rd_image"
+        android:layout_width="@dimen/rd_image_view_edge"
+        android:layout_height="@dimen/rd_image_view_edge"
+        android:layout_gravity="center"/>
+</FrameLayout>

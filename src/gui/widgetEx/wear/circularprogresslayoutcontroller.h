@@ -29,10 +29,6 @@ private:
     bool mIsTimerRunning;
 
     CircularProgressLayout::OnTimerFinishedListener mOnTimerFinishedListener;
-private:
-    void onRunnableProc();
-    void onTick(long millisUntilFinished);
-    void onFinish();
 public:
     CircularProgressLayoutController(CircularProgressLayout* layout);
 

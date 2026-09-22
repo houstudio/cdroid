@@ -67,8 +67,8 @@
                     android:layout_width="match_parent" android:layout_height="28dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintLeft_toLeftOf="parent">
-                    <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="#331A73E8"/>
-                    <View android:layout_width="match_parent" android:layout_height="3dp" android:layout_gravity="center" android:background="#FF1A73E8"/>
+                    <View android:layout_width="match_parent" android:layout_height="match_parent" android:background="#330066CC"/>
+                    <View android:layout_width="match_parent" android:layout_height="3dp" android:layout_gravity="center" android:background="#FF0066CC"/>
                 </FrameLayout>
             </MotionLayout>
 

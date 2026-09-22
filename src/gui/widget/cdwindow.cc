@@ -26,6 +26,9 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/focusfinder.h>
 #include <core/systemclock.h>
+#include <view/viewconfiguration.h>
+#include <view/weargestureinterceptiondetector.h>
+#include <animation/valueanimator.h>
 #include <content/typedvalue.h>
 #include <core/windowmanager.h>
 #include <animation/animator.h>
@@ -54,6 +57,27 @@ Window::Window(Context*ctx,const AttributeSet*atts)
     loadThemeWindowAnimations();
     loadThemeWindowBackground();
     loadThemeCloseOnTouchOutside();
+    loadThemeSwipeToDismiss();
+}
+
+void Window::loadThemeSwipeToDismiss(){
+    // AOSP WearGestureInterceptionDetector.isEnabled (Detector.java:60-75):
+    // the wear system gesture is theme-gated by windowSwipeToDismiss, default
+    // TRUE on watch devices (FEATURE_WATCH). CDROID windows are not watch
+    // windows by default — with the attr absent the gesture stays OFF so no
+    // existing app changes behavior; a window opts in from its theme. The
+    // window-type gate keeps satellite windows (IME/status/toast) out: their
+    // themed context inherits the last started activity's theme and would
+    // otherwise arm the keyboard.
+    if (window_type >= TYPE_SYSTEM_WINDOW || mContext == nullptr) return;
+    static const uint32_t attrs[] = {R::attr::windowSwipeToDismiss, 0};
+    auto ta = mContext->getTheme().obtainStyledAttributes(attrs);
+    if (!ta) return;
+    delete mSwipeDismissDetector;   // theme re-apply replaces the detector
+    mSwipeDismissDetector = nullptr;
+    if (ta->getBoolean(0, false)) {
+        mSwipeDismissDetector = new WearGestureInterceptionDetector(mContext, this);
+    }
 }
 
 void Window::loadThemeCloseOnTouchOutside() {
@@ -69,12 +93,45 @@ void Window::loadThemeCloseOnTouchOutside() {
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : FrameLayout(&App::getInstance()),window_type(type){
+  // Delegate to the THEMED ctor: every window constructor installs the theme
+  // dressing (windowBackground, window animations, closeOnTouchOutside) by
+  // default — AOSP windows are themed windows; the bare-window flavor (popups,
+  // toast) opts out through the explicit themeWindowAnimations=false argument.
+  // This ctor used to build the context as a plain &App (no themed wrapper), so
+  // Activity-family windows here had a fully transparent surface until the
+  // subclass hand-called setTheme (widgetsDemo's transparent window) — and
+  // setTheme itself could not apply (Window::setTheme casts mContext to
+  // ContextThemeWrapper, which the bare assignment never was).
+  // Delegation also keeps the first-frame pending region this ctor used to seed.
+  : Window(&App::getInstance(), x, y, width, height, type){
+    LOGD("Window::Window(%p)",this);
+}
+
+// AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
+// ContextThemeWrapper) context drives inflation instead of the global App.
+// AOSP windows belong to an Activity, which IS a ContextThemeWrapper — CDROID
+// windows are the Activity, so a plain context is wrapped in an empty
+// ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
+// giving every window its own theme for Window::setTheme()/recreate().
+// This ctor owns the geometric setup too (the (x,y,w,h) ctor delegates here):
+// display-size resolution, LayoutParams, frame, first-frame pending region,
+// compositor registration. themeWindowAnimations=false is the bare-window
+// flavor (popup decors, toast) that skips the theme dressing.
+Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool themeWindowAnimations)
+  : FrameLayout(ctx ? ctx : &App::getInstance()),window_type(type){
     initWindow();
     LOGD("Window::Window(%p)",this);
-    // Set the boundary
-    // Do the resizing at first time in order to invoke the OnLayout
-    mContext = &App::getInstance();
+    // AOSP performLaunchActivity applies the manifest theme (activity's, else
+    // the application's) before the activity class instantiates; App routes it
+    // through a pending slot so the themed overlay exists before the subclass
+    // ctor inflates content.
+    const int themeResId = App::getInstance().mPendingActivityTheme;
+    if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
+        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), themeResId);
+        mOwnsContext = true;
+    } else {
+        mContext = ctx;
+    }
     Point size;
     WindowManager::getInstance().getDefaultDisplay().getSize(size);
     if(width<0)  width = size.x;
@@ -89,33 +146,15 @@ Window::Window(int x,int y,int width,int height,int type)
     mPendingRgn->do_union({0,0,width,height});
     WindowManager::getInstance().addWindow(this);
     mAttachInfo->mPlaySoundEffect = std::bind(&Window::playSoundImpl,this,std::placeholders::_1);
-}
-
-// AOSP PhoneWindow(context): same window, but the caller's (possibly themed —
-// ContextThemeWrapper) context drives inflation instead of the global App.
-// AOSP windows belong to an Activity, which IS a ContextThemeWrapper — CDROID
-// windows are the Activity, so a plain context is wrapped in an empty
-// ContextThemeWrapper overlay (inherits the app theme via lazy setTo(base)),
-// giving every window its own theme for Window::setTheme()/recreate().
-Window::Window(Context*ctx,int x,int y,int width,int height,int type, bool themeWindowAnimations)
-  : Window(x,y,width,height,type){
-    // AOSP performLaunchActivity applies the manifest theme (activity's, else
-    // the application's) before the activity class instantiates; App routes it
-    // through a pending slot so the themed overlay exists before the subclass
-    // ctor inflates content.
-    const int themeResId = App::getInstance().mPendingActivityTheme;
-    if (dynamic_cast<ContextThemeWrapper*>(ctx) == nullptr) {
-        mContext = new ContextThemeWrapper(ctx ? ctx : &App::getInstance(), themeResId);
-        mOwnsContext = true;
-    } else {
-        mContext = ctx;
-    }
-    // Theme-driven window animations resolve against the FINAL context (the themed overlay
-    // above), which did not exist when the delegated geometric ctor ran — load them here.
-    // PopupDecorView opts out (see the ctor declaration note).
+    // Theme dressing (windowAnimationStyle pair AND windowBackground/fallback) —
+    // AOSP's generateLayout belongs to app/activity windows; popup decors and
+    // the toast opt out (they carry their own animation style / draw their own
+    // backdrop, and popups align to the anchor AFTER construction, so a
+    // ctor-time enter snap would capture a stale resting position).
     if (themeWindowAnimations) {
         loadThemeWindowAnimations();
         loadThemeWindowBackground();
+        loadThemeSwipeToDismiss();
     }
 }
 
@@ -134,12 +173,6 @@ void Window::initWindow(){
     setBackground(nullptr);
     setLayoutDirection(View::LAYOUT_DIRECTION_LTR);
     setTextDirection(View::TEXT_DIRECTION_LTR);
-    /*mLayoutRequested = false;
-    mTraversalScheduled = false;
-    mTraversalRunnable = [this](){
-        LOGD("mTraversalRunnable.run");
-        doTraversal();
-    };*/
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     setKeyboardNavigationCluster(true);
@@ -153,18 +186,15 @@ void Window::initWindow(){
             [this, alive = mA11yListenerAlive](bool enabled) {
         if (!*alive) return;  // the window is gone (exit-time unbind order)
         LOGD("%d",enabled);
-        if (enabled||1) {
-            if (mAttachInfo->mHasWindowFocus||1) {
-                sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
-                View* focusedView = findFocus();
-                if ((focusedView != nullptr) && (focusedView != this)) {
-                    focusedView->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
-                }
-                LOGD("focusedView=%d",focusedView);
-            }
-        } else {
-            //mHandler.obtainMessage(MSG_CLEAR_ACCESSIBILITY_FOCUS_HOST).sendToTarget();
+        // both gates below were constant-true (||1) in the original port —
+        // flattened; the mAttachInfo dereference they forced is also gone
+        // (the listener can fire between initWindow and addWindow).
+        sendAccessibilityEvent(AccessibilityEvent::TYPE_WINDOW_STATE_CHANGED);
+        View* focusedView = findFocus();
+        if ((focusedView != nullptr) && (focusedView != this)) {
+            focusedView->sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_FOCUSED);
         }
+        LOGD("focusedView=%d",focusedView);
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(mA11yStateListener);
 }
@@ -195,12 +225,14 @@ Window::~Window(){
         mAccessibilityFocusedVirtualView->recycle();
     }
     mDestroyed = true;  // the transition end-callback skips finishClose during teardown
-    if (mCurrentTransitionAnimator) {
-        Animator* a = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;  // end-callback sees null + mDestroyed and skips
-        a->cancel();   // cancel() fires onAnimationEnd (animator.cc)
+    cancelTransitionAnimator();
+    if (mSwipeBackAnimator != nullptr) {
+        ValueAnimator* a = mSwipeBackAnimator;
+        mSwipeBackAnimator = nullptr;
+        a->cancel();
         delete a;
     }
+    delete mSwipeDismissDetector;
     // Shared-element coordinator: its dtor cancels its animator safely (own mTornDown guard)
     // and returns any ghosts still parked in the caller's overlay. Runs while this window's
     // view tree is still intact — before the base ~ViewGroup frees the overlay.
@@ -241,6 +273,7 @@ void Window::setTheme(int resid){
     loadThemeWindowAnimations();
     loadThemeWindowBackground();
     loadThemeCloseOnTouchOutside();
+    loadThemeSwipeToDismiss();
 }
 
 // AOSP Activity.recreate(): the system relaunches the activity with a NEW
@@ -282,24 +315,14 @@ void Window::recreate(){
 // cdwindowmenus.cc (AOSP: Activity delegation + Window.Callback panels).
 
 View* Window::getCommonPredecessor(View* first, View* second){
-     std::set<View*> seen;
-     View* firstCurrent = first;
-     while (firstCurrent != nullptr) {
-         seen.insert(firstCurrent);
-         ViewGroup* firstCurrentParent = firstCurrent->mParent;
-         firstCurrent = firstCurrentParent;
-     }
-     View* secondCurrent = second;
-     while (secondCurrent != nullptr) {
-         if (seen.find(secondCurrent)!=seen.end()) {
-             seen.clear();
-             return secondCurrent;
-         }
-         ViewGroup* secondCurrentParent = secondCurrent->mParent;
-         secondCurrent = secondCurrentParent;
-     }
-     seen.clear();
-     return nullptr;
+    // AOSP ViewRootImpl.getCommonPredecessor: mark first's ancestor chain,
+    // then walk second's until the first marked view.
+    std::set<View*> seen;
+    for (View* v = first; v != nullptr; v = v->mParent)
+        seen.insert(v);
+    for (View* v = second; v != nullptr; v = v->mParent)
+        if (seen.count(v)) return v;
+    return nullptr;
 }
 
 void Window::postSendWindowContentChangedCallback(View*source,int changeType){
@@ -352,10 +375,10 @@ void Window::dispatchDetachedFromWindow(){
     mTraversalScheduled = false;
 }
 
-void Window::requestTransitionStart(LayoutTransition* transition){
-    auto it = std::find(mPendingTransitions.begin(),mPendingTransitions.end(),transition);
-    if(it==mPendingTransitions.end())
-        mPendingTransitions.push_back(transition);
+void Window::requestTransitionStart(LayoutTransition* /*transition*/){
+    // ViewGroup::requestTransitionStart climbs to the root; the Window IS the
+    // root, so the walk ends here (viewgroup.cc drives the transitions itself
+    // — the old pending-vector accumulator this override fed was write-only).
 }
 
 void Window::setText(const std::string&txt){
@@ -364,10 +387,6 @@ void Window::setText(const std::string&txt){
 
 const std::string Window::getText()const{
     return mText;
-}
-
-void Window::sendToBack(){
-    WindowManager::getInstance().sendToBack(this);
 }
 
 void Window::bringToFront(){
@@ -440,14 +459,11 @@ void Window::handleWindowContentChangedEvent(AccessibilityEvent& event){
         // state consistent by clearing focus.
         provider->performAction(focusedChildId,
                 AccessibilityNodeInfo::ACTION_CLEAR_ACCESSIBILITY_FOCUS,nullptr);
-                //AccessibilityAction::ACTION_CLEAR_ACCESSIBILITY_FOCUS.getId(), nullptr);
-        //invalidateRectOnScreen(oldBounds);
     } else {
         // The node was refreshed, invalidate bounds if necessary.
         Rect newBounds = mAccessibilityFocusedVirtualView->getBoundsInScreen();
         if (oldBounds!=newBounds) {
             oldBounds.Union(newBounds);
-            //invalidateRectOnScreen(oldBounds);
         }
     }
 }
@@ -457,13 +473,6 @@ bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& even
         return false;
     }
 
-    // Immediately flush pending content changed event (if any) to preserve event order
-    /*if (event.getEventType() != AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED
-            && mSendWindowContentChangedAccessibilityEvent != null
-            && mSendWindowContentChangedAccessibilityEvent.mSource != null) {
-        mSendWindowContentChangedAccessibilityEvent.removeCallbacksAndRun();
-    }*/
-
     // Intercept accessibility focus events fired by virtual nodes to keep
     // track of accessibility focus position in such nodes.
     const int eventType = event.getEventType();
@@ -472,29 +481,23 @@ bool Window::requestSendAccessibilityEvent(View* child, AccessibilityEvent& even
     View*source = nullptr;
     switch (eventType) {
     case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED:
+    case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED: {
         sourceNodeId = event.getSourceNodeId();
         accessibilityViewId = AccessibilityNodeInfo::getAccessibilityViewId(sourceNodeId);
         source = findViewByAccessibilityId(accessibilityViewId);
-        if (source != nullptr) {
-            AccessibilityNodeProvider* provider = source->getAccessibilityNodeProvider();
-            if (provider != nullptr) {
-                const int virtualNodeId = AccessibilityNodeInfo::getVirtualDescendantId(sourceNodeId);
-                AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(virtualNodeId);
+        AccessibilityNodeProvider* provider =
+                (source != nullptr) ? source->getAccessibilityNodeProvider() : nullptr;
+        if (provider != nullptr) {
+            if (eventType == AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED) {
+                AccessibilityNodeInfo* node = provider->createAccessibilityNodeInfo(
+                        AccessibilityNodeInfo::getVirtualDescendantId(sourceNodeId));
                 setAccessibilityFocus(source, node);
-            }
-        }
-        break;
-    case AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED:
-        sourceNodeId = event.getSourceNodeId();
-        accessibilityViewId = AccessibilityNodeInfo::getAccessibilityViewId(sourceNodeId);
-        source = findViewByAccessibilityId(accessibilityViewId);
-        if (source != nullptr) {
-            AccessibilityNodeProvider* provider = source->getAccessibilityNodeProvider();
-            if (provider != nullptr) {
+            } else {
                 setAccessibilityFocus(nullptr, nullptr);
             }
         }
         break;
+    }
 
     case AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED:
         handleWindowContentChangedEvent(event);
@@ -673,8 +676,6 @@ void Window::draw(){
         const int duration = int(SystemClock::uptimeMillis() - mAttachInfo->mDrawingTime);
         LOGD_IF(duration>10,"%p:%d used %dms",this,mID,duration);
     }
-    //mPendingRgn->do_union(mInvalidRgn);
-    //mInvalidRgn->subtract(mInvalidRgn);
     GraphDevice::getInstance().flip();
 }
 
@@ -693,6 +694,40 @@ void Window::setPos(int x,int y){
     GraphDevice::getInstance().flip();
 }
 
+void Window::resize(int width,int height){
+    if(width<=0||height<=0) return;
+    if(width==getWidth()&&height==getHeight()) return;
+    LOGD("Window::resize %dx%d -> %dx%d pos=(%d,%d)",getWidth(),getHeight(),width,height,mLeft,mTop);
+    // Keep LayoutParams in sync (see setPos: the frame lives in the attributes;
+    // AOSP relayout writes the new size back into WindowManager.LayoutParams).
+    mWindowAttributes.width = width;
+    mWindowAttributes.height = height;
+    if(isAttachedToWindow()){
+        // moveWindow applies the new frame (setFrame invalidates this window
+        // and damages the vacated band into the windows below), exactly like a move.
+        WindowManager::getInstance().moveWindow(this,mLeft,mTop,width,height);
+        if(mAttachInfo && getVisibility()==View::VISIBLE){
+            // Realloc the content canvas and repaint into it SYNCHRONOUSLY, before
+            // any compose can run: compose reads mAttachInfo->mCanvas per pass and
+            // computes the other windows' visible regions from the pass's window
+            // list, so a null (or stale-sized) canvas here would drop this window
+            // out of an interleaved compose while the windows below still carry
+            // damage against its old coverage — a one-pass hole in the screen.
+            // Atomic frame+canvas+content, the way setPos moves atomically.
+            // (The canvas is allocated once in getCanvas() at the then-current
+            // size, so a window that GROWS must swap it or draw clipped.)
+            mAttachInfo->mCanvas = nullptr;
+            invalidate();      // full new bounds queued (setFrame already did too)
+            draw();            // getCanvas() reallocates at the new size and paints NOW
+        }
+        requestLayout();       // re-measure the subtree at the new size (next
+                               // traversal refines the layout the draw above used)
+        GraphDevice::getInstance().flip();
+    } else {
+        FrameLayout::layout(mLeft,mTop,width,height);
+    }
+}
+
 void Window::setSurfaceTranslation(int dx,int dy){
     if (dx == mSurfaceDx && dy == mSurfaceDy) return;
     // Damage model for a moving surface (AOSP's SurfaceFlinger recomposites everything; CDROID's
@@ -705,7 +740,11 @@ void Window::setSurfaceTranslation(int dx,int dy){
         WindowManager::getInstance().exposeRegionBelow(this, vacated);
     const Rect selfLocal = Rect::Make(0, 0, getWidth(), getHeight());
     mPendingRgn->do_union((Cairo::RectangleInt&)selfLocal);
-    GraphDevice::getInstance().flip();
+    // Compose directly, not flip(): this runs from the Choreographer's
+    // ANIMATION callback (window SLIDE transitions, the swipe-dismiss drag,
+    // the spring-back), outside any traversal — flip() only arms the sync-mode
+    // compose counter nothing pumps (see setAlpha).
+    GraphDevice::getInstance().composeSurfaces();
 }
 
 WindowManager::LayoutParams& Window::getAttributes(){
@@ -846,13 +885,21 @@ View& Window::setAlpha(float alpha){
         GFXSurfaceSetOpacity(mAttachInfo->mCanvas->mHandle, (alpha*255));
         const RectangleInt full = {0, 0, getWidth(), getHeight()};
         mPendingRgn->do_union(full);
-        GraphDevice::getInstance().flip();
+        // The fade animator drives this from the Choreographer's ANIMATION
+        // callback, NOT from a traversal — flip() only arms mPendingCompose,
+        // which nothing pumps in sync (non-COMPOSE_ASYNC) builds, so every
+        // fade frame composed nothing and the screen stayed frozen at the
+        // last traversal's frame (a themed enter fade left the window blank
+        // until some input damage finally triggered a traversal). Compose
+        // directly here, exactly like GraphDevice::composeGhosts' frames —
+        // the other Choreographer-driven, traversal-independent driver.
+        GraphDevice::getInstance().composeSurfaces();
     }
     return *this;
 }
 
 void Window::onSizeChanged(int w,int h,int oldw,int oldh){
-    //WindowManager::getInstance().resetVisibleRegion();
+    /* empty by design: the window IS the root — no visible-region reset here. */
 }
 
 void Window::onVisibilityChanged(View& changedView,int visibility){
@@ -921,14 +968,11 @@ RefPtr<Canvas>Window::getCanvas(){
             break;
         }
     }
-#if 1
     Cairo::RefPtr<Cairo::Region>transRgn = Cairo::Region::create();//{0,0,getWidth(),getHeight()});
-    //setWillNotDraw(true);
     int num = gatherTransparentRegion(transRgn);
     Cairo::RectangleInt rec = transRgn->get_extents();
     LOGV_IF(num,"transRgn.rects=%d extents=(%d,%d,%d,%d)",num,rec.x,rec.y,rec.width,rec.height);
     mInvalidRgn->subtract(transRgn);
-#endif
     num = mInvalidRgn->get_num_rectangles();
     canvas->reset_clip();
     for(int i = 0;i < num; i ++){
@@ -980,32 +1024,28 @@ void Window::onDeactive(){
     LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
-int Window::processInputEvent(InputEvent&event){
-    if(dynamic_cast<KeyEvent*>(&event))
-        return processKeyEvent((KeyEvent&)event);
-    else return processPointerEvent((MotionEvent&)event);
-}
-
-int Window::processPointerEvent(MotionEvent&event){
+/* AOSP ViewRootImpl.processKeyEvent's keyboard-group-navigation probe
+ * (ViewRootImpl.java:7729-7741 — single copy there; CDROID also probes it in
+ * dispatchKeyEvent). NOTE: AOSP gates on META_CTRL_ON; CDROID uses META_META_ON
+ * — an intentional divergence, kept verbatim so a future re-sync notices it. */
+static int keyboardGroupNavigationDirection(const KeyEvent& event){
+    if (event.getAction() == KeyEvent::ACTION_DOWN && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
+        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON))
+            return View::FOCUS_FORWARD;
+        if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
+                KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON))
+            return View::FOCUS_BACKWARD;
+    }
     return 0;
 }
 
 int Window::processKeyEvent(KeyEvent&event){
-    int handled = FINISH_NOT_HANDLED;
-    int groupNavigationDirection = 0;
     const int action = event.getAction();
     LOGV_IF(action==KeyEvent::ACTION_DOWN,"%s:0x%x %s %x",event.actionToString(action).c_str(),
             event.getKeyCode(),KeyEvent::keyCodeToString(event.getKeyCode()).c_str(),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
-        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
-            groupNavigationDirection = View::FOCUS_FORWARD;
-        } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
-              KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON)) {
-            groupNavigationDirection = View::FOCUS_BACKWARD;
-        }
-    }
+    const int groupNavigationDirection = keyboardGroupNavigationDirection(event);
     if (event.getAction() == KeyEvent::ACTION_DOWN
             && !KeyEvent::metaStateHasNoModifiers(event.getMetaState())
             && event.getRepeatCount() == 0
@@ -1014,9 +1054,6 @@ int Window::processKeyEvent(KeyEvent&event){
         if (dispatchKeyShortcutEvent(event)) {
             return FINISH_HANDLED;
         }
-        /*if (shouldDropInputEvent(q)) {
-            return FINISH_NOT_HANDLED;
-        }*/
     }
     if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection != 0){
@@ -1045,15 +1082,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     const int action = event.getAction();
     if(focused && focused->dispatchKeyEvent(event))
         return true;
-    int groupNavigationDirection = 0;
-    if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
-        if (KeyEvent::metaStateHasModifiers(event.getMetaState(), KeyEvent::META_META_ON)) {
-            groupNavigationDirection = View::FOCUS_FORWARD;
-        } else if (KeyEvent::metaStateHasModifiers(event.getMetaState(),
-              KeyEvent::META_META_ON | KeyEvent::META_SHIFT_ON)) {
-            groupNavigationDirection = View::FOCUS_BACKWARD;
-        }
-    }
+    const int groupNavigationDirection = keyboardGroupNavigationDirection(event);
     if(action == KeyEvent::ACTION_DOWN){
         if(groupNavigationDirection!=0)
             return performKeyboardGroupNavigation(groupNavigationDirection);
@@ -1154,7 +1183,6 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
         LOGD("recv %d %s flags=%x",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),evt.getFlags());
         return true;
     default:
-        //return performFocusNavigation(evt);
         LOGV("recv %d %s",keyCode,KeyEvent::keyCodeToString(keyCode).c_str());
         return FrameLayout::onKeyDown(keyCode,evt);
     }
@@ -1346,12 +1374,7 @@ void Window::close(const std::function<void()>& onTeardown){
     // listener re-touch this window) while the teardown below proceeds. Cancel
     // it now — its end listener lands the surface at rest (identity), which is
     // also what the ghost snapshot wants to capture.
-    if (mCurrentTransitionAnimator != nullptr) {
-        Animator* prev = mCurrentTransitionAnimator;
-        mCurrentTransitionAnimator = nullptr;
-        prev->cancel();   // cancel-then-delete, off the dispatch stack (~Window's discipline)
-        delete prev;
-    }
+    cancelTransitionAnimator();
     // Shared-element return flight (B route): ghosts fly in the caller's overlay
     // while this window hides at once; finishClose runs on landing. No valid pair
     // (caller gone / no view matches) falls through to the window-level path below.
@@ -1469,8 +1492,100 @@ bool Window::dispatchTouchEvent(MotionEvent& event){
     return FrameLayout::dispatchTouchEvent(event);
 }
 
+bool Window::onInterceptTouchEvent(MotionEvent& event){
+    // AOSP DecorView.java:531-540: the wear detector decides whether the decor
+    // takes the stream for the system swipe-to-dismiss.
+    if (mSwipeDismissDetector != nullptr) {
+        if (mSwipeDismissDragging) return true;
+        if (mSwipeDismissDetector->onInterceptTouchEvent(event)) {
+            mSwipeDismissDragging = true;
+            mSwipeDismissDownX = event.getRawX();
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = SystemClock::uptimeMillis();
+            mSwipeDismissVelocity = 0.f;
+            if (mSwipeBackAnimator != nullptr) {
+                ValueAnimator* a = mSwipeBackAnimator;
+                mSwipeBackAnimator = nullptr;
+                a->cancel();
+                delete a;
+            }
+            return true;
+        }
+    }
+    return FrameLayout::onInterceptTouchEvent(event);
+}
+
 bool Window::onTouchEvent(MotionEvent& event){
+    // AOSP DecorView.java:495-498: keep the detector's state machine fed with
+    // streams the decor itself receives (children that consumed the gesture
+    // still update the DOWN tracking).
+    if (mSwipeDismissDetector != nullptr && !mSwipeDismissDragging) {
+        mSwipeDismissDetector->onInterceptTouchEvent(event);
+        // A decor-owned stream (no child target) latches here: ViewGroup never
+        // re-consults onInterceptTouchEvent once this view is the target.
+        if (mSwipeDismissDetector->isIntercepting()) {
+            mSwipeDismissDragging = true;
+            mSwipeDismissDownX = event.getRawX();
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = SystemClock::uptimeMillis();
+            mSwipeDismissVelocity = 0.f;
+        }
+    }
+    if (mSwipeDismissDragging) {
+        handleSwipeDismissTouch(event);
+        return true;
+    }
     return FrameLayout::onTouchEvent(event);
+}
+
+void Window::handleSwipeDismissTouch(MotionEvent& event){
+    // The SystemUI half of the AOSP gesture, driven by the decor: the surface
+    // follows the finger (compose-side only — frame, a11y and WMS geometry
+    // stay at rest), and on release the window either dismisses through
+    // close() — the ghost exit continues from the dragged position
+    // (captureGhost inherits dx/alpha) — or springs back.
+    switch (event.getActionMasked()) {
+    case MotionEvent::ACTION_MOVE: {
+        const int64_t now = SystemClock::uptimeMillis();
+        if (now > mSwipeDismissLastT) {
+            mSwipeDismissVelocity = (event.getRawX() - mSwipeDismissLastX) * 1000.f
+                    / (now - mSwipeDismissLastT);
+            mSwipeDismissLastX = event.getRawX();
+            mSwipeDismissLastT = now;
+        }
+        const float dx = event.getRawX() - mSwipeDismissDownX;
+        setSurfaceTranslation(std::max(0, (int)dx), 0);
+        break;
+    }
+    case MotionEvent::ACTION_UP: {
+        const bool dismiss = (mSurfaceDx > getWidth() * DEFAULT_SWIPE_DISMISS_DRAG_WIDTH_RATIO)
+                || (mSurfaceDx > 0 && mSwipeDismissVelocity
+                        > ViewConfiguration::get(getContext()).getScaledMinimumFlingVelocity());
+        mSwipeDismissDragging = false;
+        if (dismiss) {
+            close();
+        } else {
+            springBackSurface();
+        }
+        break;
+    }
+    default:  // ACTION_CANCEL and the rest: no dismissal on an aborted stream
+        mSwipeDismissDragging = false;
+        springBackSurface();
+        break;
+    }
+}
+
+void Window::springBackSurface(){
+    if (mSurfaceDx == 0 && mSurfaceDy == 0) return;
+    const int from = mSurfaceDx;
+    ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
+    anim->setDuration(200);
+    anim->addUpdateListener([this, from](ValueAnimator& a) {
+        setSurfaceTranslation((int)(from * (1.f - a.getAnimatedFraction())), 0);
+    });
+    mSwipeBackAnimator = anim;
+    anim->start();
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){
@@ -1503,14 +1618,7 @@ Window::InvalidateOnAnimationRunnable::InvalidateOnAnimationRunnable(){
 }
 
 Window::InvalidateOnAnimationRunnable::~InvalidateOnAnimationRunnable(){
-    for (auto i:mInvalidateViews){
-        Rect&r = i->rect;
-        View*v = i->target;
-        if(r.width<=0||r.height<=0) v->invalidate();
-        else  v->invalidate(r);
-        i->recycle();
-    }
-    mInvalidateViews.clear();
+    drain();
 }
 
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
@@ -1526,29 +1634,24 @@ std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAni
 }
 
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    auto it = find(view);
-    if(it == mInvalidateViews.end()){
-        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
-        info->target = view;
-        info->rect.set(0,0,0,0);
-        mInvalidateViews.push_back(info);
-    }else{
-        AttachInfo::InvalidateInfo* info = (*it);
-        info->rect.set(0,0,0,0);
-    }
-    postIfNeededLocked();
+    // Full invalidate: a pending rect for the same view collapses back to
+    // "invalidate everything" (AOSP ViewRootImpl's InvalidateInfo null-rect).
+    addViewRect(view, Rect::Make(0,0,0,0), true);
 }
 
-void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect){
+void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&rect,bool full){
     auto it = find(view);
+    AttachInfo::InvalidateInfo* info;
     if(it == mInvalidateViews.end()){
-        AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
-        info->target =view;
-        info->rect = rect;
+        info = AttachInfo::InvalidateInfo::obtain();
+        info->target = view;
+        info->rect = full ? Rect::Make(0,0,0,0) : rect;
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info = (*it);
-        if(!info->rect.empty())
+        info = (*it);
+        if (full)
+            info->rect.set(0,0,0,0);
+        else if(!info->rect.empty())
             info->rect.Union(rect);
     }
     postIfNeededLocked();
@@ -1567,6 +1670,10 @@ void Window::InvalidateOnAnimationRunnable::removeView(View* view){
 
 void Window::InvalidateOnAnimationRunnable::run(){
     mPosted = false;
+    drain();
+}
+
+void Window::InvalidateOnAnimationRunnable::drain(){
     std::vector<View::AttachInfo::InvalidateInfo*>& temp = mInvalidateViews;
     for (auto i:temp){
         Rect&r = i->rect;

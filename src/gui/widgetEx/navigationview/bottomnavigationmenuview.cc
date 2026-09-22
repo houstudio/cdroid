@@ -173,11 +173,14 @@ void BottomNavigationMenuView::onLayout(bool changed, int left, int top, int wid
         // View::layout takes (l, t, w, h) here, not AOSP's (l, t, r, b):
         // passing right/used+measuredWidth as the width made each item grow
         // by the sum of its predecessors (205/410/615/... px).
+        // androidx lays each item at the menu view's FULL height (not the
+        // child's measured content height) — the item background/ripple then
+        // spans the whole bar; content positions itself per itemGravity.
         if (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL) {
             child->layout(width - used - child->getMeasuredWidth(), 0,
-                    child->getMeasuredWidth(), child->getMeasuredHeight());
+                    child->getMeasuredWidth(), height);
         } else {
-            child->layout(used, 0, child->getMeasuredWidth(), child->getMeasuredHeight());
+            child->layout(used, 0, child->getMeasuredWidth(), height);
         }
         used += child->getMeasuredWidth();
     }

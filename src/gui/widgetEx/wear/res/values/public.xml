@@ -18,7 +18,119 @@
     <public type="layout" name="ws_overlay_confirmation" id="0x02080000"/>
     <public type="id" name="wearable_support_confirmation_overlay_image" id="0x020600b5"/>
     <public type="id" name="wearable_support_confirmation_overlay_message" id="0x020600b6"/>
+    <!-- CircularProgressLayout / CurvingLayoutCallback defaults (androidx wear
+         R constants; ids pinned at the values aapt2 already assigns) -->
+    <public type="array" name="circular_progress_layout_color_scheme_colors" id="0x02020000"/>
+    <public type="color" name="circular_progress_layout_background_color" id="0x02030000"/>
+    <public type="dimen" name="circular_progress_layout_stroke_width" id="0x02050000"/>
+    <public type="dimen" name="ws_wrv_curve_default_x_offset" id="0x02050013"/>
     <public type="drawable" name="confirmation_animation" id="0x0204003a"/>
     <public type="drawable" name="failure_animation" id="0x0204003b"/>
     <public type="drawable" name="open_on_phone_animation" id="0x0204003d"/>
+
+    <!-- Drawer family (WearableDrawerLayout port). Attrs run 0x02010185..0x020101a6
+         (constraintlayout ends at 0x02010184); only attrs declared with a format
+         here get pinned; the android:* styleable entries are framework attrs. -->
+    <public type="attr" name="peekView" id="0x02010185"/>
+    <public type="attr" name="drawerContent" id="0x02010186"/>
+    <public type="attr" name="enableAutoPeek" id="0x02010187"/>
+    <public type="attr" name="drawerTitle" id="0x02010188"/>
+    <public type="attr" name="actionMenu" id="0x02010189"/>
+    <public type="attr" name="showOverflowInPeek" id="0x0201018a"/>
+    <public type="attr" name="navigationStyle" id="0x0201018b"/>
+    <public type="attr" name="wsPageIndicatorDotSpacing" id="0x0201018c"/>
+    <public type="attr" name="wsPageIndicatorDotRadius" id="0x0201018d"/>
+    <public type="attr" name="wsPageIndicatorDotRadiusSelected" id="0x0201018e"/>
+    <public type="attr" name="wsPageIndicatorDotColor" id="0x0201018f"/>
+    <public type="attr" name="wsPageIndicatorDotColorSelected" id="0x02010190"/>
+    <public type="attr" name="wsPageIndicatorDotFadeWhenIdle" id="0x02010191"/>
+    <public type="attr" name="wsPageIndicatorDotFadeOutDelay" id="0x02010192"/>
+    <public type="attr" name="wsPageIndicatorDotFadeOutDuration" id="0x02010193"/>
+    <public type="attr" name="wsPageIndicatorDotFadeInDuration" id="0x02010194"/>
+    <public type="attr" name="wsPageIndicatorDotShadowColor" id="0x02010195"/>
+    <public type="attr" name="wsPageIndicatorDotShadowRadius" id="0x02010196"/>
+    <public type="attr" name="wsPageIndicatorDotShadowDx" id="0x02010197"/>
+    <public type="attr" name="wsPageIndicatorDotShadowDy" id="0x02010198"/>
+    <public type="attr" name="background_color" id="0x02010199"/>
+    <public type="attr" name="background_radius" id="0x0201019a"/>
+    <public type="attr" name="background_radius_pressed" id="0x0201019b"/>
+    <public type="attr" name="background_border_width" id="0x0201019c"/>
+    <public type="attr" name="background_border_color" id="0x0201019d"/>
+    <public type="attr" name="background_border_cap" id="0x0201019e"/>
+    <public type="attr" name="img_padding" id="0x0201019f"/>
+    <public type="attr" name="background_shadow_width" id="0x020101a0"/>
+    <public type="attr" name="img_circle_percentage" id="0x020101a1"/>
+    <public type="attr" name="img_horizontal_offset_percentage" id="0x020101a2"/>
+    <public type="attr" name="img_tint" id="0x020101a3"/>
+    <public type="attr" name="background_radius_percent" id="0x020101a4"/>
+    <public type="attr" name="background_radius_pressed_percent" id="0x020101a5"/>
+    <public type="attr" name="clip_dimen" id="0x020101a6"/>
+
+    <!-- Drawer layouts (0x02080001..; confirmation overlay ends at 0x02080000). -->
+    <public type="layout" name="ws_wearable_drawer_view" id="0x02080001"/>
+    <public type="layout" name="ws_action_drawer_peek_view" id="0x02080002"/>
+    <public type="layout" name="ws_action_drawer_item_view" id="0x02080003"/>
+    <public type="layout" name="ws_action_drawer_title_view" id="0x02080004"/>
+    <public type="layout" name="ws_navigation_drawer_view" id="0x02080005"/>
+    <public type="layout" name="ws_navigation_drawer_item_view" id="0x02080006"/>
+    <public type="layout" name="ws_single_page_nav_drawer_1_item" id="0x02080007"/>
+    <public type="layout" name="ws_single_page_nav_drawer_2_item" id="0x02080008"/>
+    <public type="layout" name="ws_single_page_nav_drawer_3_item" id="0x02080009"/>
+    <public type="layout" name="ws_single_page_nav_drawer_4_item" id="0x0208000a"/>
+    <public type="layout" name="ws_single_page_nav_drawer_5_item" id="0x0208000b"/>
+    <public type="layout" name="ws_single_page_nav_drawer_6_item" id="0x0208000c"/>
+    <public type="layout" name="ws_single_page_nav_drawer_7_item" id="0x0208000d"/>
+    <public type="layout" name="ws_single_page_nav_drawer_peek_view" id="0x0208000e"/>
+    <public type="layout" name="ws_single_page_nav_drawer_text" id="0x0208000f"/>
+
+    <!-- Drawer ids (0x020600b7..; confirmation overlay ids end at 0x020600b6).
+         Only the ids the drawer code references via R.id; the rest are declared
+         in the layouts and auto-assigned by aapt2. -->
+    <public type="id" name="ws_drawer_view_peek_container" id="0x020600b7"/>
+    <public type="id" name="ws_drawer_view_peek_icon" id="0x020600b8"/>
+    <public type="id" name="ws_action_drawer_peek_action_icon" id="0x020600b9"/>
+    <public type="id" name="ws_action_drawer_expand_icon" id="0x020600ba"/>
+    <public type="id" name="ws_action_drawer_item_icon" id="0x020600bb"/>
+    <public type="id" name="ws_action_drawer_item_text" id="0x020600bc"/>
+    <public type="id" name="ws_action_drawer_title" id="0x020600bd"/>
+    <public type="id" name="action_list" id="0x020600be"/>
+    <public type="id" name="ws_navigation_drawer_view_pager" id="0x020600bf"/>
+    <public type="id" name="ws_navigation_drawer_page_indicator" id="0x020600c0"/>
+    <public type="id" name="ws_navigation_drawer_item_icon" id="0x020600c1"/>
+    <public type="id" name="ws_navigation_drawer_item_text" id="0x020600c2"/>
+    <public type="id" name="ws_nav_drawer_icon_0" id="0x020600c3"/>
+    <public type="id" name="ws_nav_drawer_icon_1" id="0x020600c4"/>
+    <public type="id" name="ws_nav_drawer_icon_2" id="0x020600c5"/>
+    <public type="id" name="ws_nav_drawer_icon_3" id="0x020600c6"/>
+    <public type="id" name="ws_nav_drawer_icon_4" id="0x020600c7"/>
+    <public type="id" name="ws_nav_drawer_icon_5" id="0x020600c8"/>
+    <public type="id" name="ws_nav_drawer_icon_6" id="0x020600c9"/>
+    <public type="id" name="ws_nav_drawer_text" id="0x020600ca"/>
+
+    <!-- Drawer drawables (0x0204003e..). -->
+    <public type="drawable" name="ws_action_item_background" id="0x0204003e"/>
+    <public type="drawable" name="ws_action_item_icon_background" id="0x0204003f"/>
+    <public type="drawable" name="ws_ic_expand_less_white_22" id="0x02040040"/>
+    <public type="drawable" name="ws_ic_expand_more_white_22" id="0x02040041"/>
+    <public type="drawable" name="ws_ic_more_horiz_24dp_wht" id="0x02040042"/>
+    <public type="drawable" name="ws_ic_more_vert_24dp_wht" id="0x02040043"/>
+
+    <!-- Drawer styles (0x02090008..; tablayout ends at 0x02090007). Widget.Wear
+         .WearableDrawerView / WsPageIndicatorViewStyle are the defStyleRes values
+         the classes pass to obtainStyledAttributes. -->
+    <public type="style" name="Widget.Wear.WearableDrawerView" id="0x02090008"/>
+    <public type="style" name="WsPageIndicatorViewStyle" id="0x02090009"/>
+    <public type="style" name="WsSinglePageNavDrawerIconStyle" id="0x0209000a"/>
+    <public type="style" name="WsWearableActionDrawerItemText" id="0x0209000b"/>
+    <public type="style" name="WsWearableActionDrawerTitleText" id="0x0209000c"/>
+
+    <!-- Drawer dimens the classes read via R.dimen (0x02050014..). -->
+    <public type="dimen" name="ws_wearable_drawer_view_elevation" id="0x02050014"/>
+    <public type="dimen" name="ws_action_drawer_item_top_padding" id="0x02050015"/>
+    <public type="dimen" name="ws_action_drawer_item_bottom_padding" id="0x02050016"/>
+    <public type="dimen" name="ws_action_drawer_item_icon_right_margin" id="0x02050017"/>
+
+    <!-- Drawer strings the classes read via R.string (first 0x02 strings). -->
+    <public type="string" name="ws_navigation_drawer_content_description" id="0x02070000"/>
+    <public type="string" name="ws_action_drawer_content_description" id="0x02070001"/>
 </resources>

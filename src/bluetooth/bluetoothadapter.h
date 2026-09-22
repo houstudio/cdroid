@@ -144,6 +144,11 @@ public:
         std::function<void()> onDiscoveryFinished;
     };
     using BondStateListener = CallbackBase<void,const BluetoothDevice&,int,int>;
+    /* ACTION_CONNECTION_STATE_CHANGED analog — states are the
+     * BluetoothProfile.STATE_* values (the broadcast extra's contract);
+     * BlueZ reports a bare Connected bool, so CONNECTING/DISCONNECTING
+     * never fire. */
+    using ConnectionStateListener = CallbackBase<void,const BluetoothDevice&,int,int>;
 
     void addAdapterStateListener(const AdapterStateListener& listener);
     void removeAdapterStateListener(const AdapterStateListener& listener);
@@ -151,11 +156,14 @@ public:
     void removeDiscoveryListener(const DiscoveryListener& listener);
     void addBondStateListener(const BondStateListener& listener);
     void removeBondStateListener(const BondStateListener& listener);
+    void addConnectionStateListener(const ConnectionStateListener& listener);
+    void removeConnectionStateListener(const ConnectionStateListener& listener);
 
     /* --- profile proxies ----------------------------------------------------- */
     /* AOSP getProfileProxy: hands the caller the profile proxy through
      * the ServiceListener (synchronously here — in-process profiles).
-     * A2DP/HEADSET are faithful stubs until the audio pipeline lands. */
+     * HID_HOST/PAN are live (BlueZ serves them); A2DP/HEADSET are
+     * faithful stubs until the audio pipeline lands. */
     bool getProfileProxy(const BluetoothProfile::ServiceListener& listener,
                          int profile);
     void closeProfileProxy(int profile, BluetoothProfile* proxy);
@@ -186,6 +194,7 @@ public:
     int resolveBondState(const std::string& address) const;
     int resolveDeviceType(const std::string& address) const;
     int resolveDeviceClass(const std::string& address) const;
+    std::vector<BluetoothUuid> resolveDeviceUuids(const std::string& address) const;
     bool bondDevice(const std::string& address);
     bool unbondDevice(const std::string& address);
 
@@ -230,6 +239,8 @@ private:
     void notifyDeviceFound(const BluetoothDevice& device);
     void notifyBondStateChanged(const BluetoothDevice& device,
                                 int bondState, int prevState);
+    void notifyConnectionStateChanged(const BluetoothDevice& device,
+                                      int state, int prevState);
     void notifyPairingRequest(const BluetoothDevice& device,
                               int pairingVariant, uint32_t passkey);
     void notifyDisplayPasskey(const BluetoothDevice& device,
@@ -244,11 +255,14 @@ private:
 
     /* objectPath -> bond state snapshot for listener prev-values */
     std::map<std::string, int> mBondStates;
+    /* objectPath -> connection state snapshot (STATE_CONNECTED/…) */
+    std::map<std::string, int> mConnectionStates;
 
     std::mutex mListenersMutex;
     std::vector<AdapterStateListener> mStateListeners;
     std::vector<DiscoveryListener> mDiscoveryListeners;
     std::vector<BondStateListener> mBondListeners;
+    std::vector<ConnectionStateListener> mConnectionStateListeners;
     std::vector<std::weak_ptr<BluetoothGatt>> mGattSessions;   /* guarded by mStateMutex */
     std::vector<BluetoothPairingListener> mPairingListeners;
     BluetoothLeScanner* mLeScanner = nullptr;

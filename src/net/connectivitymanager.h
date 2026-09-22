@@ -1,8 +1,11 @@
 #ifndef __CONNECTIVITY_MANAGER_H__
 #define __CONNECTIVITY_MANAGER_H__
 
+#include <functional>
+#include <map>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <core/callbackbase.h>   /* EventSet listener base (header-only) */
@@ -14,6 +17,8 @@
 #include <wifi/wifimanager.h>
 
 namespace cdroid {
+
+class DhcpServer;
 
 /**
  * Port of android.net.ConnectivityManager (android-36), the aggregation
@@ -75,16 +80,35 @@ public:
     void addNetworkStateListener(const NetworkStateListener& listener);
     void removeNetworkStateListener(const NetworkStateListener& listener);
 
+    /* Tethering bridge bluetoothd enslaves peer bnepX into — the netd name,
+     * mirrored from cdblue's BluetoothPan::TETHERING_BRIDGE (cdnet must not
+     * link cdblue; AOSP splits the same way over binder). */
+    static constexpr const char* BT_TETHERING_BRIDGE = "bt-pan";
+
     /*
      * Tethered hotspot (TETHERING_WIFI): starts the Soft AP with the stored
      * SoftApConfiguration (setSoftApConfiguration), then brings up NAT
      * toward the default-route interface (netd enableNat semantics). The
      * AOSP binder path is async with callbacks — this port is synchronous,
-     * like the WifiManager Soft AP entries. USB/Bluetooth tethering need
-     * their own interface owners and stay TODO (faithful-stub rule).
+     * like the WifiManager Soft AP entries.
+     *
+     * TETHERING_BLUETOOTH: provisions the data plane on BT_TETHERING_BRIDGE
+     * exactly as AOSP's Tethering/netd half (create bridge, address it from
+     * config_tether_bluetooth_ranges 192.168.44.0/24, DHCP server, NAT
+     * toward the upstream), then enables the BNEP server through the
+     * enabler registered below (cdblue's BluetoothPan::setBluetoothTethering
+     * — the PanService half). Without an enabler the data plane still comes
+     * up (bench parity) with a warning. USB/WIFI_P2P tethering need their
+     * own interface owners and stay TODO (faithful-stub rule).
      */
     bool startTethering(int type);
     bool stopTethering(int type);
+
+    /* The Tethering<->PanService binder seam, in-process: the app layer
+     * (which links both cdnet and cdblue) registers the bridge between
+     * startTethering(TETHERING_BLUETOOTH) and
+     * BluetoothPan::setBluetoothTethering. nullptr unregisters. */
+    static void setBluetoothPanEnabler(const std::function<bool(bool enabled)>& enabler);
 
 private:
     ConnectivityManager();
@@ -110,21 +134,25 @@ private:
     void dispatch(const NetworkInfo& info);
     /* Default-route interface, else first link-up ethernet port. */
     std::string tetheringUpstreamIface();
-    /* Removes the recorded NAT pair (if any) — the "enabled iface pair"
-     * ledger netd keeps; called by stopTethering and by the AP-down
-     * callback. */
-    void teardownRecordedNat();
+    /* Removes the recorded NAT pair of one tethering type (if any) — the
+     * "enabled iface pair" ledger netd keeps; called by stopTethering and
+     * (for WIFI) by the AP-down callback. */
+    void teardownRecordedNat(int type);
 
     std::mutex mListenersMutex;
     std::vector<NetworkStateListener> mListeners;
-    /* The (internal, external) pair enableNat actually programmed. stop
-     * must remove what was installed, not whatever the default route
-     * points at by stop time — it may have moved or vanished mid-session,
-     * which stranded the MASQUERADE/FORWARD rules in the kernel while
-     * ip_forward still got cleared for everyone else. */
+    /* The (internal, external) pair enableNat actually programmed, per
+     * tethering type. stop must remove what was installed, not whatever
+     * the default route points at by stop time — it may have moved or
+     * vanished mid-session, which stranded the MASQUERADE/FORWARD rules in
+     * the kernel while ip_forward still got cleared for everyone else. */
     std::mutex mNatMutex;
-    std::string mNatInternal;
-    std::string mNatExternal;
+    std::map<int, std::pair<std::string, std::string>> mNatPairs;
+    /* TETHERING_BLUETOOTH DHCP server on BT_TETHERING_BRIDGE; started/
+     * stopped on the start/stopTethering path only (single-threaded, like
+     * WifiManager's mApDhcpServer). */
+    DhcpServer* mBtDhcpServer = nullptr;
+    static std::function<bool(bool)> sBluetoothPanEnabler;
 };
 
 } // namespace cdroid

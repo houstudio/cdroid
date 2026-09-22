@@ -879,10 +879,12 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
 
     BluezDevice snapshot;
     std::vector<std::string> changedNames;
+    bool wasPaired = false;
     {
         std::lock_guard<std::mutex> lock(mCacheMutex);
         auto it = mDevices.find(objPath);
         if (it == mDevices.end()) return;   /* stale/uninteresting */
+        wasPaired = it->second.paired;
         snapshot = it->second;
         if (sd_bus_message_enter_container(m, 'a', "{sv}") < 0) return;
         while (sd_bus_message_enter_container(m, 'e', "sv") > 0) {
@@ -909,6 +911,15 @@ void BluezClient::handlePropertiesChanged(sd_bus_message* m) {
         queueEvent([fn = mEvents.onDevicePropertyChanged, snap, name] {
             if (fn) fn(snap, name);
         });
+    }
+    /* Bond completion: trust the device the way AOSP's stack does (every
+     * bonded device is trusted — without it BlueZ's agent rejects the
+     * remote-initiated reconnects keyboards/mice make). Queued like the
+     * property events: setDeviceTrusted is a synchronous call, legal
+     * only once the bus lock is released. */
+    if (!wasPaired && snapshot.paired) {
+        std::string addr = snapshot.address;
+        queueEvent([this, addr] { setDeviceTrusted(addr, true); });
     }
 }
 
@@ -1290,6 +1301,31 @@ bool BluezClient::deviceCall(const std::string& address, const char* method) {
     return ok;
 }
 
+/* deviceCall plus one string argument (ConnectProfile/DisconnectProfile). */
+bool BluezClient::deviceCallString(const std::string& address,
+                                   const char* method, const std::string& arg) {
+    std::string path;
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        path = pathForAddressLocked(address);
+    }
+    if (path.empty()) return false;   /* unknown remote — discover it first */
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, path.c_str(),
+                                kDeviceIface, method, &err, &reply,
+                                "s", arg.c_str()) >= 0;
+    }
+    if (!ok && err.message) LOGD("%s failed: %s", method, err.message);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
 static int pairNoReply(sd_bus_message* /*reply*/, void*, sd_bus_error*) {
     return 0;   /* outcome arrives as the Paired property signal */
 }
@@ -1368,6 +1404,32 @@ bool BluezClient::setDeviceAlias(const std::string& address, const std::string& 
     return ok;
 }
 
+/* Properties.Set(Device1.Trusted) — same call shape as setDeviceAlias.
+ * The cache copy updates when bluetoothd announces it back via the
+ * PropertiesChanged signal. */
+bool BluezClient::setDeviceTrusted(const std::string& address, bool trusted) {
+    std::string path;
+    {
+        std::lock_guard<std::mutex> lock(mCacheMutex);
+        path = pathForAddressLocked(address);
+    }
+    if (path.empty()) return false;
+    sd_bus_error err = SD_BUS_ERROR_NULL;
+    sd_bus_message* reply = nullptr;
+    bool ok;
+    {
+        std::lock_guard<std::mutex> lock(mBusMutex);
+        if (!mBus) return false;
+        ok = sd_bus_call_method(mBus, kBluezService, path.c_str(), kPropIface,
+                                "Set", &err, &reply, "ssv", kDeviceIface,
+                                "Trusted", "b", trusted ? 1 : 0) >= 0;
+    }
+    if (!ok && err.message) LOGD("Set Trusted failed: %s", err.message);
+    sd_bus_message_unrefp(&reply);
+    sd_bus_error_free(&err);
+    return ok;
+}
+
 /* ------------------------------------------------------------------ */
 /* BLE / GATT                                                          */
 /* ------------------------------------------------------------------ */
@@ -1431,6 +1493,17 @@ bool BluezClient::connectDevice(const std::string& address) {
 
 bool BluezClient::disconnectDevice(const std::string& address) {
     return deviceCall(address, "Disconnect");
+}
+
+/* Device1.ConnectProfile/DisconnectProfile(uuid) shared body. */
+bool BluezClient::connectDeviceProfile(const std::string& address,
+                                       const std::string& uuid) {
+    return deviceCallString(address, "ConnectProfile", uuid);
+}
+
+bool BluezClient::disconnectDeviceProfile(const std::string& address,
+                                          const std::string& uuid) {
+    return deviceCallString(address, "DisconnectProfile", uuid);
 }
 
 std::vector<BluezGattService> BluezClient::getGattServices(

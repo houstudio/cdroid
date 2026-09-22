@@ -21,9 +21,14 @@
 
 namespace preferencedemo {
 
+class LocalBluetoothProfileManager;
+
 class CachedBluetoothDeviceManager {
 public:
-    explicit CachedBluetoothDeviceManager(LocalBluetoothAdapter* localAdapter);
+    /* AOSP ctor (context dropped): the profile manager rides along so
+     * cached devices can reach the shared profile proxies. */
+    CachedBluetoothDeviceManager(LocalBluetoothAdapter* localAdapter,
+                                 LocalBluetoothProfileManager* profileManager);
 
     std::vector<CachedBluetoothDevice*> getCachedDevicesCopy() const;
 
@@ -54,6 +59,7 @@ private:
     }
 
     LocalBluetoothAdapter* mLocalAdapter;
+    LocalBluetoothProfileManager* mProfileManager;
     std::function<void(CachedBluetoothDevice*)> mOnDeviceDeletedHook;
     std::map<std::string, CachedBluetoothDevice*> mCachedDevices;
     /* Addresses already dispatched by readPairedDevices (dispatch once,

@@ -21,8 +21,8 @@
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
     android:keyWidth="10%p"
     android:horizontalGap=".3%p"
-    android:verticalGap="5%p"
-    android:keyHeight="21%p">
+    android:verticalGap="@dimen/password_keyboard_verticalGap"
+    android:keyHeight="@dimen/password_keyboard_key_height_alpha">
 
     <Row>
         <Key android:codes="49" android:keyLabel="1" android:keyEdgeFlags="left"/>

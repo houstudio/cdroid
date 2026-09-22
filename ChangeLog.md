@@ -1,4 +1,4 @@
-# **V5.0**
+# **V5.6.8**
   - binary AXML resources end to end (aapt2 AXML + resources.arsc + 9-patch chunks in pak, R.h from real arsc ids)
   - AttributeSet and attributes on int resource ids; TypedArray/TypedValue aligned with AOSP
   - build-time resource overlay; multi-pak 0x7f id pinning; i18n.dat packed into pak

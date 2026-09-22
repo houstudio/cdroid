@@ -40,6 +40,13 @@ private:
     int setInputMethod(InputMethod*,const std::string&name);
     void ensureIMEWindow();   // lazily create the on-screen IMEWindow
     void positionIMEWindow(); // place it docked to the bottom of the screen (undo any off-screen hide)
+    /* Wrap-measure the IME content (candidate strip + the installed keyboard)
+     * and resize/re-dock the window to fit it exactly — the adaptive size, the
+     * replacement of the old fixed height. Called from applyKeyboard, so every
+     * keyboard swap (setInputType / toggleSymbolMode / setInputMethod) re-fits.
+     * While visible, the ADJUST_RESIZE pair re-runs so app windows shrink to the
+     * new IME top. No-op when the measured size already matches. */
+    void fitIMEWindow();
     /* Load a Keyboard from the given XML layout resource id and install it on
      * the IME window's KeyboardView. Shared by setInputType (class-driven
      * layout) and setInputMethod (method-switch layout). */
@@ -57,6 +64,10 @@ private:
     void toggleSymbolMode();
 protected:
     InputMethod*im;
+    /* The (resolved) container layout the current IMEWindow was built with;
+     * compared on method switches to decide whether the chrome must be rebuilt
+     * (see setInputMethod). */
+    int mIMEWindowLayout = 0;
     static class InputMethodManager*mInst;
     class IMEWindow*imeWindow;
     InputMethodManager();

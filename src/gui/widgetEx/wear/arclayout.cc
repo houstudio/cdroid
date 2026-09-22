@@ -65,10 +65,16 @@ ArcLayout::ArcLayout(Context* context,const AttributeSet* attrs):ArcLayout(conte
 
 ArcLayout::ArcLayout(Context* context,const AttributeSet* pAttrs,int defStyleAttr)
     :ViewGroup(context, pAttrs, defStyleAttr){
+    // androidx ArcLayout.java:309 — final field, constructed inline.
+    mChildArcAngles = new ChildArcAngles();
 
     mAnchorType = pAttrs ? pAttrs->getAttributeIntValue(std::string(), "anchorPosition", DEFAULT_ANCHOR_TYPE) : DEFAULT_ANCHOR_TYPE;
     mAnchorAngleDegrees = pAttrs ? pAttrs->getAttributeFloatValue(std::string(), "anchorAngleDegrees", DEFAULT_START_ANGLE_DEGREES) : DEFAULT_START_ANGLE_DEGREES;
     mClockwise = pAttrs ? pAttrs->getAttributeBooleanValue(std::string(), "clockwise", DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE) : DEFAULT_LAYOUT_DIRECTION_IS_CLOCKWISE;
+}
+
+ArcLayout::~ArcLayout() {
+    delete mChildArcAngles;
 }
 
 void ArcLayout::requestLayout() {

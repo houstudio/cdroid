@@ -485,10 +485,10 @@ void SettingsFragment::onNetworkStateChanged(const cdroid::WifiInfo&) {
 void SettingsFragment::setupNetworkScreen() {
     *mNetAlive = true;
     // Bluetooth tethering row (AOSP BluetoothTetherPreferenceController):
-    // the switch drives BluetoothPan::setBluetoothTethering (NAP server on
-    // the bt-pan bridge). The bridge/DHCP/NAT data plane is provisioned by
-    // scripts/bt-bench.sh (AOSP: Tethering/netd's half); the switch works
-    // without it only when bluetoothd accepts the Register.
+    // the switch drives start/stopTethering(TETHERING_BLUETOOTH), which
+    // provisions the bt-pan bridge/DHCP/NAT data plane (Tethering/netd half,
+    // ConnectivityManager) and enables the BNEP NAP server through the
+    // enabler seam below (PanService half, BluetoothPan).
     if (auto* tether = dynamic_cast<cdroid::SwitchPreference*>(
             findPreference("bluetooth_tethering"))) {
         const bool btOn = cdroid::BluetoothAdapter::getDefaultAdapter().isEnabled();
@@ -500,18 +500,26 @@ void SettingsFragment::setupNetworkScreen() {
         if (cdroid::BluetoothAdapter::getDefaultAdapter().getProfileProxy(
                 getter, cdroid::BluetoothProfile::PAN) && pan != nullptr) {
             mBtPan = pan;
+            // Wire the Tethering<->PanService seam (in-process stand-in for
+            // the AOSP binder hop between the two stacks).
+            cdroid::ConnectivityManager::setBluetoothPanEnabler(
+                    [pan](bool enabled) { return pan->setBluetoothTethering(enabled); });
             tether->setEnabled(btOn);
             tether->setChecked(mBtPan->isTetheringOn());
             refreshTetheringSummary();
             tether->setOnPreferenceChangeListener(
                     [this](cdroid::Preference&, const nonstd::any& newValue) {
                 const bool on = nonstd::any_cast<bool>(newValue);
-                const bool ok = mBtPan != nullptr && mBtPan->setBluetoothTethering(on);
+                auto& cm = cdroid::ConnectivityManager::getInstance();
+                const bool ok = on ? cm.startTethering(
+                                cdroid::ConnectivityManager::TETHERING_BLUETOOTH)
+                                   : cm.stopTethering(
+                                cdroid::ConnectivityManager::TETHERING_BLUETOOTH);
                 if (!ok) {
                     cdroid::Context* c = requireContext();
                     if (c != nullptr) {
                         cdroid::Toast::makeText(c,
-                                "开启失败:bt-pan 桥不存在(scripts/bt-bench.sh 预置)",
+                                "蓝牙网络共享开关失败(桥/DHCP/NAT 或 BNEP 注册)",
                                 cdroid::Toast::LENGTH_SHORT)->show();
                     }
                 }

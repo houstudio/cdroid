@@ -18,6 +18,7 @@
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
 #include <core/systemclock.h>
+#include <view/choreographer.h>
 #include <porting/cdlog.h>
 #include <unordered_map>
 #include <gui_features.h>
@@ -32,6 +33,16 @@
 #endif
 
 namespace cdroid{
+/*Reader backend selection (--input-mode): read exactly once, by checkEvents'
+  lazy init; the default keeps the stock dedicated reader thread. setMode()
+  must run before that first checkEvents (App parses the option ahead of
+  getInstance()/exec()).*/
+static InputEventSource::Mode sInputMode = InputEventSource::Mode::Thread;
+
+void InputEventSource::setMode(Mode mode){
+    sInputMode = mode;
+}
+
 InputEventSource::InputEventSource(){
     LOGD("InputEventSource %p",this);
     mScreenSaveTimeOut = -1;
@@ -39,6 +50,28 @@ InputEventSource::InputEventSource(){
     mInited = false;
     mIsScreenSaveActived = false;
     mLastInputEventTime = SystemClock::uptimeMillis();
+}
+
+int InputEventSource::consumeRawEvents(const INPUTEVENT*es,int count){
+    /*The queue-fill half of the old inline reader loop, shared verbatim by
+      both backends: stash one InputGetEvents batch into the per-device
+      queues (device add/remove included). Returns the count consumed.*/
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    if(count)mLastInputEventTime = SystemClock::uptimeMillis();
+    for(int i = 0 ; i < count ; i ++){
+        const INPUTEVENT*e = es+i;
+        auto it = mDevices.find(e->device);
+        if(es[i].type >= EV_ADD){
+            onDeviceChanged(es+i);
+            continue;
+        }
+        if(it==mDevices.end()){
+            getDevice(es->device)->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
+            continue;
+        }
+        it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
+    }
+    return count;
 }
 
 void InputEventSource::doEventsConsume(){
@@ -53,21 +86,7 @@ void InputEventSource::doEventsConsume(){
     InputInit();
     while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
-        std::lock_guard<std::recursive_mutex> lock(mtxEvents);
-        if(count)mLastInputEventTime = SystemClock::uptimeMillis();
-        for(int i = 0 ; i < count ; i ++){
-            const INPUTEVENT*e = es+i;
-            auto it = mDevices.find(e->device);
-            if(es[i].type >= EV_ADD){
-                onDeviceChanged(es+i);
-                continue;
-            }
-            if(it==mDevices.end()){
-                getDevice(es->device)->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
-                continue;
-            }
-            it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
-        }
+        consumeRawEvents(es,count);
         if(count) Looper::getMainLooper()->wake();
     }
 }
@@ -79,6 +98,9 @@ InputEventSource::~InputEventSource(){
     // clearEvents() already dropped the flag at shutdown; this covers the
     // dtor being reached without it.
     if (mInputThread.joinable()) mInputThread.join();
+    // Choreographer mode: drop the pending poll record before the members
+    // die (no-op in Thread mode — the thread join above covered that path).
+    stopFramePolling();
     Looper::getMainLooper()->removeEventHandler(this);
     LOGD("%p Destroied",this);
 }
@@ -181,16 +203,62 @@ void setThreadAffinity(std::thread& t, int coreId) {
 #endif
 }
 
+void InputEventSource::startFramePolling(){
+    /*Choreographer-mode reader startup, the mirror of the thread spawn below:
+      InputInit (idempotent; App::onInit already ran it), the reader-alive
+      flag, then the first CALLBACK_INPUT post. The poll re-posts itself every
+      frame, so the Choreographer keeps ticking (and polling) even with
+      nothing animating — that self-repost is what bounds this mode's idle
+      cost: one wakeup per frame interval (default 33ms, follows --framedelay).*/
+    LOGI("InputEventSource polling on Choreographer CALLBACK_INPUT");
+    mRunning = true;
+    InputInit();
+    mFramePoll = [this](){ onFramePoll(); };
+    Choreographer::getInstance().postCallback(Choreographer::CALLBACK_INPUT, mFramePoll, this);
+}
+
+void InputEventSource::stopFramePolling(){
+    /*Drop any pending poll record so a quit cannot resurrect the frame tick
+      into this (dying) object; the Choreographer singleton outlives App, so
+      its queue must not keep a record whose functor captures this. No-op in
+      Thread mode: mFramePoll is only armed by startFramePolling (the null
+      check also avoids needlessly instantiating the Choreographer).*/
+    if(mFramePoll == nullptr) return;
+    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_INPUT, &mFramePoll, this);
+    mFramePoll = nullptr;
+}
+
+void InputEventSource::onFramePoll(){
+    /*One frame's non-blocking probe: InputGetEvents with a 0ms timeout drains
+      whatever is ready into the device queues and returns immediately, then
+      dispatch on the spot — CALLBACK_INPUT precedes this frame's
+      ANIMATION/TRAVERSAL phases (Android frame order; an input-triggered
+      invalidate lands in the same frame's traversal). No looper wake() here:
+      this already runs on the main thread, and the later doEventHandlers
+      pass finds the queues empty, so handleEvents() never double-dispatches
+      (it still runs there for freshly injected work).*/
+    INPUTEVENT es[128];
+    const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),0);
+    consumeRawEvents(es,count);
+    if(count) handleEvents();
+    if(mRunning)
+        Choreographer::getInstance().postCallback(Choreographer::CALLBACK_INPUT, mFramePoll, this);
+}
+
 int InputEventSource::checkEvents(){
     if(!mInited){
-        const auto numCore = std::thread::hardware_concurrency();
-        auto coreId= sched_getcpu();
-        auto func = std::bind(&InputEventSource::doEventsConsume,this);
-        mInputThread = std::thread(func);
-        if(numCore>1){
-            setThreadAffinity(mInputThread,coreId-1>=0?coreId-1:coreId+1);
+        if(sInputMode == Mode::Choreographer){
+            startFramePolling();
+        }else{
+            const auto numCore = std::thread::hardware_concurrency();
+            auto coreId= sched_getcpu();
+            auto func = std::bind(&InputEventSource::doEventsConsume,this);
+            mInputThread = std::thread(func);
+            if(numCore>1){
+                setThreadAffinity(mInputThread,coreId-1>=0?coreId-1:coreId+1);
+            }
+            LOGI("MainLoop on %d/%d",coreId,numCore);
         }
-        LOGI("MainLoop on %d/%d",coreId,numCore);
         mInited = true;
     }
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
@@ -265,6 +333,9 @@ void InputEventSource::clearEvents(){
     // Signal the input thread to stop so it cannot keep filling queues while
     // we drain them (mRunning is its loop condition; see doEventsConsume).
     mRunning = false;
+    // Choreographer mode: mRunning plays the same reader-alive role — also
+    // drop the pending poll record so it cannot re-arm while we drain.
+    stopFramePolling();
     std::vector<InputEvent*> events;
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for (auto& it : mDevices) {

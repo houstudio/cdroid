@@ -1,14 +1,29 @@
 #include "cachedbluetoothdevice.h"
 
+#include <bluetoothprofile.h>
+
 #include "cachedbluetoothdevicemanager.h"
+#include "localbluetoothprofilemanager.h"
 
 namespace preferencedemo {
 
 CachedBluetoothDevice::CachedBluetoothDevice(
+        LocalBluetoothProfileManager* profileManager,
         LocalBluetoothAdapter* localAdapter,
         cdroid::BluetoothDevice device)
-    : mLocalAdapter(localAdapter),
+    : mProfileManager(profileManager),
+      mLocalAdapter(localAdapter),
       mDevice(device) {
+}
+
+cdroid::BluetoothHidHost* CachedBluetoothDevice::hidProfile() const {
+    // AOSP: the profile set comes from updateProfiles(uuids); the HID
+    // membership check is that half, evaluated live (UUIDs resolve late).
+    if (mProfileManager == nullptr
+            || !LocalBluetoothProfileManager::isHidDevice(mDevice.getUuids())) {
+        return nullptr;
+    }
+    return mProfileManager->getHidHostProfile();
 }
 
 std::string CachedBluetoothDevice::getName() const {
@@ -43,19 +58,48 @@ void CachedBluetoothDevice::unpair() {
     mDevice.removeBond();
 }
 
+bool CachedBluetoothDevice::isConnected() const {
+    // AOSP isConnected: any profile connected — the HID host here.
+    cdroid::BluetoothHidHost* hid = hidProfile();
+    return hid != nullptr
+            && hid->getConnectionState(mDevice)
+                       == cdroid::BluetoothProfile::STATE_CONNECTED;
+}
+
+void CachedBluetoothDevice::connect() {
+    // AOSP connect(): ensurePaired() — pairing starts when unpaired — then
+    // connectAllEnabledProfiles(); the enabled set is the HID host.
+    if (getBondState() == cdroid::BluetoothDevice::BOND_NONE) {
+        startPairing();
+        return;
+    }
+    if (cdroid::BluetoothHidHost* hid = hidProfile()) hid->connect(mDevice);
+}
+
+void CachedBluetoothDevice::disconnect() {
+    // AOSP disconnect(): every connected profile — the HID host here.
+    if (cdroid::BluetoothHidHost* hid = hidProfile()) hid->disconnect(mDevice);
+}
+
 std::string CachedBluetoothDevice::getConnectionSummary() const {
-    // AOSP getConnectionSummary: the profile loop is empty (cdblue profile
-    // stubs) and battery is unknown, so only the bond branch remains —
-    // BOND_BONDING shows "正在配对…", otherwise the AOSP null (empty here).
+    // AOSP getConnectionSummary: pairing first, then the profile loop —
+    // a connected profile (HID here) reports bluetooth_connected; the
+    // battery branches stay stubbed away.
     if (getBondState() == cdroid::BluetoothDevice::BOND_BONDING) {
         return "正在配对…";   // R.string.bluetooth_pairing
+    }
+    if (isConnected()) {
+        return "已连接";      // R.string.bluetooth_connected
     }
     return std::string();
 }
 
 int CachedBluetoothDevice::compareTo(const CachedBluetoothDevice& another) const {
-    // AOSP: a connected/bonded device sorts before a connecting one, then by
-    // name. Profiles stub away; the bonded-first tier stays.
+    // AOSP: a connected device sorts first, then bonded before the rest,
+    // then by name.
+    const bool thisConnected = isConnected();
+    const bool anotherConnected = another.isConnected();
+    if (thisConnected != anotherConnected) return thisConnected ? -1 : 1;
     const bool thisBonded = getBondState() == cdroid::BluetoothDevice::BOND_BONDED;
     const bool anotherBonded = another.getBondState() == cdroid::BluetoothDevice::BOND_BONDED;
     if (thisBonded != anotherBonded) return thisBonded ? -1 : 1;

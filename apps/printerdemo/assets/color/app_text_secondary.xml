@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Secondary text state colors (Material light spec): disabled 26% black,
-     default 54% black. -->
+<!-- Secondary text state colors: ink-muted-48 (#7a7a7a) — Apple's quiet
+     secondary tone on light surfaces. -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_enabled="false" android:color="#42000000"/>
-    <item android:color="#8a000000"/>
+    <item android:state_enabled="false" android:color="#427A7A7A"/>
+    <item android:color="#FF7A7A7A"/>
 </selector>

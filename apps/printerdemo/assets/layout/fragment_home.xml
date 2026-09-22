@@ -16,7 +16,7 @@
         <FrameLayout
             android:id="@+id/hero"
             android:layout_width="match_parent"
-            android:layout_height="92dp"
+            android:layout_height="84dp"
             android:background="@drawable/hero_bg">
             <View
                 android:layout_width="210dp"
@@ -56,7 +56,7 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
                         <TextView android:layout_width="wrap_content" android:layout_height="wrap_content"
-                            android:text="@string/home_title" android:textSize="25sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
+                            android:text="@string/home_title" android:textSize="22sp" android:textStyle="bold" android:textColor="#FFFFFFFF"/>
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
@@ -107,39 +107,47 @@
                 android:layout_marginTop="14dp" android:orientation="horizontal" android:gravity="center">
                 <!-- K 85% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_k_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="15"/>
                         <View android:id="@+id/ink_k_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="85" android:background="?attr/inkBlackFill"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="K" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:id="@+id/ink_k_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="85%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="K" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:id="@+id/ink_k_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="85%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
                 </LinearLayout>
                 <!-- C 60% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_c_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40"/>
                         <View android:id="@+id/ink_c_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60" android:background="@drawable/ink_fill_c"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="C" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:id="@+id/ink_c_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="60%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="C" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:id="@+id/ink_c_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="60%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
                 </LinearLayout>
                 <!-- M 40% (low) -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_m_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="60"/>
                         <View android:id="@+id/ink_m_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="40" android:background="@drawable/ink_fill_m"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="M" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:id="@+id/ink_m_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="40%" android:textSize="11sp" android:textColor="#FFEF6C00"/>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="M" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:id="@+id/ink_m_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="40%" android:textSize="11sp" android:textColor="#FF7A7A7A"/>
+                    </LinearLayout>
                 </LinearLayout>
                 <!-- Y 72% -->
                 <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                    <LinearLayout android:layout_width="30dp" android:layout_height="100dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
+                    <LinearLayout android:layout_width="30dp" android:layout_height="80dp" android:weightSum="100" android:orientation="vertical" android:background="?attr/progressTrack" android:padding="3dp">
                         <View android:id="@+id/ink_y_space" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="28"/>
                         <View android:id="@+id/ink_y_fill" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="72" android:background="@drawable/ink_fill_y"/>
                     </LinearLayout>
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:text="Y" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
-                    <TextView android:id="@+id/ink_y_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1dp" android:text="72%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="6dp" android:orientation="horizontal">
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Y" android:textSize="13sp" android:textStyle="bold" android:textColor="?android:attr/textColorPrimary"/>
+                        <TextView android:id="@+id/ink_y_pct" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="4dp" android:text="72%" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
+                    </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -178,22 +186,22 @@
             android:background="?attr/cardBackground"
             android:paddingTop="12dp" android:paddingBottom="12dp" android:paddingLeft="10dp" android:paddingRight="10dp">
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <TextView android:id="@+id/stat_prints" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1A73E8"/>
+                <TextView android:id="@+id/stat_prints" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/stat_total_print" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
             <View android:layout_width="1dp" android:layout_height="30dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <TextView android:id="@+id/stat_scans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF188038"/>
+                <TextView android:id="@+id/stat_scans" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/stat_total_scan" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
             <View android:layout_width="1dp" android:layout_height="30dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <TextView android:id="@+id/stat_copies" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF8430CE"/>
+                <TextView android:id="@+id/stat_copies" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/stat_copies" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
             <View android:layout_width="1dp" android:layout_height="30dp" android:background="?attr/colorSurfaceVariant"/>
             <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center_horizontal">
-                <TextView android:id="@+id/stat_maint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FFE8710A"/>
+                <TextView android:id="@+id/stat_maint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textSize="20sp" android:textStyle="bold" android:textColor="#FF1D1D1F"/>
                 <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/stat_maint" android:textSize="11sp" android:textColor="?android:attr/textColorSecondary"/>
             </LinearLayout>
         </LinearLayout>

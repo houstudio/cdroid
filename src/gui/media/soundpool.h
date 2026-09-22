@@ -39,13 +39,24 @@ private:
     SparseArray<std::shared_ptr<Stream>>mStreams;
     int32_t readChunk(std::istream&,Sound&s);
     void sendOneSample(Channel*channel,void*outputBuffer,uint32_t i);
-    static int32_t audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
+    static int audioCallback(void* outputBuffer, void* inputBuffer, unsigned int nBufferFrames,
                     double streamTime, uint32_t status, void* userData);
+    /*AOSP private _load(fd, offset, length, priority): the single entry every
+      public load converges on. CDROID's fd view is already materialized as a
+      stream positioned at offset (AssetInputStream / ifstream / the fd window
+      built by the FileDescriptor overload).*/
+    int _load(std::istream& is, int priority);
 public:
     SoundPool(int maxStreams, int streamType, int srcQuality);
     ~SoundPool();
-    int32_t load(const std::string& filePath,int priority);
-    int32_t load(Context* context, const std::string& resId, int priority);
+    /*AOSP SoundPool.load family (android-35). All return a sound ID, 0 on
+      failure. The AssetFileDescriptor overload is omitted: CDROID has no
+      fd-based AssetFileDescriptor yet (see Resources::openRawResourceFd), so
+      the resId path goes through Resources.openRawResource — the same pak
+      seam ImageDecoder uses. priority currently has no effect (AOSP parity).*/
+    int load(const std::string& path, int priority);
+    int load(Context* context, int resId, int priority);
+    int load(int fd, int64_t offset, int64_t length, int priority);
     bool unload(int soundID);
     int play(int soundId);
     int play(int soundId,float volume);

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Upstream: androidx wear/src/main/res/values/arrays.xml (verbatim). -->
+<resources>
+    <!-- Default color scheme colors for CircularProgressLayout -->
+    <array name="circular_progress_layout_color_scheme_colors">
+        <item>@color/circular_progress_layout_red</item>
+        <item>@color/circular_progress_layout_yellow</item>
+        <item>@color/circular_progress_layout_green</item>
+        <item>@color/circular_progress_layout_blue</item>
+    </array>
+</resources>

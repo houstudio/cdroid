@@ -29,6 +29,7 @@ SET(VIEW_SOURCES
     view/viewtreeobserver.cc
     view/gesturedetector.cc
     view/scalegesturedetector.cc
+    view/weargestureinterceptiondetector.cc
     view/windowinsets.cc
     view/actionprovider.cc
     view/floatingactionmode.cc

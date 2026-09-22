@@ -33,17 +33,17 @@ public:
 private:
     int mSlop;
     int mMinFlingVelocity;
-    int mActiveTouchId;
-    float mDownX;
-    float mDownY;
-    float mLastX;
-    float mGestureThresholdPx;
+    int mActiveTouchId = -1;
+    float mDownX = 0.f;
+    float mDownY = 0.f;
+    float mLastX = 0.f;
+    float mGestureThresholdPx = 0.f;
     float mDismissMinDragWidthRatio = DEFAULT_DISMISS_DRAG_WIDTH_RATIO;
-    bool mSwiping;
-    bool mDismissed;
-    bool mDiscardIntercept;
+    bool mSwiping = false;
+    bool mDismissed = false;
+    bool mDiscardIntercept = false;
     bool mBlockGesture = false;
-    SwipeDismissTransitionHelper* mSwipeDismissTransitionHelper;
+    SwipeDismissTransitionHelper* mSwipeDismissTransitionHelper = nullptr;
 private:
     bool isPotentialSwipe(float dx, float dy)const;
     void resetSwipeDetectMembers();

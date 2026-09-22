@@ -192,8 +192,6 @@ void setupButtons(View* page) {
 }
 
 void setupProgress(View* page) {
-    App& app = App::getInstance();
-
     ProgressBar* ph = (ProgressBar*)page->findViewById(widgetsDemo::R::id::progress_h);
     if (ph) {
         ph->setMax(100);
@@ -219,37 +217,6 @@ void setupProgress(View* page) {
     // from needsTileify descending into animation-list frames, and Material
     // AVD spinners are started by ProgressBar through the normal Animatable
     // path — no manual wiring needed.
-
-    ProgressBar* spinner = (ProgressBar*)page->findViewById(widgetsDemo::R::id::spinner);
-    if (spinner) {
-        //Drawable* ind = app.getDrawable(cdroid::R::drawable::progress_large);
-        //if (ind) spinner->setIndeterminateDrawable(ind);
-        spinner->setIndeterminate(true);
-    }
-
-    Chronometer* chrono = (Chronometer*)page->findViewById(widgetsDemo::R::id::chrono);
-    Button* ctoggle = (Button*)page->findViewById(widgetsDemo::R::id::chrono_toggle);
-    if (chrono && ctoggle) {
-        chrono->setFormat("Elapsed: %s");
-        auto running = std::make_shared<bool>(false);
-        ctoggle->setOnClickListener([chrono, ctoggle, running](View&) {
-            if (*running) {
-                chrono->stop();
-                ctoggle->setText("Start");
-            } else {
-                chrono->setBase(SystemClock::uptimeMillis());
-                chrono->start();
-                ctoggle->setText("Stop");
-            }
-            *running = !*running;
-        });
-    }
-
-    RatingBar* rating2 = (RatingBar*)page->findViewById(widgetsDemo::R::id::rating2);
-    if (rating2) {
-        rating2->setNumStars(5);
-        rating2->setRating(3);
-    }
 }
 
 // Rich spans, marquee, EditText input types and a Spinner.
@@ -288,8 +255,6 @@ void setupText(View* page) {
     // Marquee only animates on a selected/focused view.
     TextView* marquee = (TextView*)page->findViewById(widgetsDemo::R::id::marquee_tv);
     if (marquee) marquee->setSelected(true);
-    if (TextView* marquee2 = (TextView*)page->findViewById(widgetsDemo::R::id::marquee2_tv))
-        marquee2->setSelected(true);
 
     Spinner* spinner = (Spinner*)page->findViewById(widgetsDemo::R::id::spinner1);
     if (spinner && spinner->getAdapter() == nullptr) {
@@ -517,6 +482,25 @@ void setupMisc(View* page) {
 }
 
 void setupDateTime(View* page) {
+    // Chronometer (moved here from the progress page — timer, not progress).
+    Chronometer* chrono = (Chronometer*)page->findViewById(widgetsDemo::R::id::chrono);
+    Button* ctoggle = (Button*)page->findViewById(widgetsDemo::R::id::chrono_toggle);
+    if (chrono && ctoggle) {
+        chrono->setFormat("Elapsed: %s");
+        auto running = std::make_shared<bool>(false);
+        ctoggle->setOnClickListener([chrono, ctoggle, running](View&) {
+            if (*running) {
+                chrono->stop();
+                ctoggle->setText("Start");
+            } else {
+                chrono->setBase(SystemClock::uptimeMillis());
+                chrono->start();
+                ctoggle->setText("Stop");
+            }
+            *running = !*running;
+        });
+    }
+
     TimePicker*   tpClock = (TimePicker*)page->findViewById(widgetsDemo::R::id::dt_tp_clock);
     TimePicker*   tpSpin  = (TimePicker*)page->findViewById(widgetsDemo::R::id::dt_tp_spinner);
     DatePicker*   dp      = (DatePicker*)page->findViewById(widgetsDemo::R::id::dt_dp);

@@ -3,14 +3,34 @@
 
 #include <ifaddrs.h>
 #include <linux/if.h>   /* IFF_LOWER_UP */
+#include <linux/sockios.h>  /* SIOCBRADDBR/SIOCBRDELBR */
 #include <regex>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
+#include <cerrno>
+#include <cstring>
+
+#include <dhcpserver.h>
+#include <ipapplicator.h>
+#include <linkaddress.h>
 #include <natcontroller.h>
+#include <staticipconfiguration.h>
 
 #include <algorithm>
 #include <cstdio>
 
 namespace cdroid {
+
+/* The Tethering<->PanService binder seam (see the header): the app layer
+ * registers cdblue's BluetoothPan::setBluetoothTethering here. */
+std::function<bool(bool)> ConnectivityManager::sBluetoothPanEnabler = nullptr;
+
+/* ODR: pointer constants bound through std::string/pair initializers need
+ * the out-of-line definition (the (int)-cast trick only covers ints). */
+constexpr const char* ConnectivityManager::BT_TETHERING_BRIDGE;
 
 ConnectivityManager& ConnectivityManager::getInstance() {
     static ConnectivityManager instance;
@@ -187,50 +207,161 @@ std::string ConnectivityManager::tetheringUpstreamIface() {
     return std::string();
 }
 
-bool ConnectivityManager::startTethering(int type) {
-    if (type != TETHERING_WIFI) {
-        fprintf(stderr, "ConnectivityManager E: tethering type %d has no "
-                "interface owner yet (wifi only)\n", type);
-        return false;
+/* --- TETHERING_BLUETOOTH data plane (the netd half) ------------------- */
+
+/* AOSP netd entrusts the bridge to the kernel and the addressing to
+ * Tethering's static IP logic (config_tether_bluetooth_ranges =
+ * 192.168.44.0/24, frameworks/base core/res config.xml); the standalone
+ * module does the same steps directly: SIOCBRADDBR + the shared
+ * bring-up/addressing helpers. */
+static bool ensureBtPanBridge() {
+    const char* bridge = ConnectivityManager::BT_TETHERING_BRIDGE;
+    if (access(("/sys/class/net/" + std::string(bridge)).c_str(), F_OK) != 0) {
+        const int sock = socket(AF_INET, SOCK_DGRAM, 0);
+        if (sock < 0) return false;
+        ifreq ifr = {};
+        strncpy(ifr.ifr_name, bridge, IFNAMSIZ - 1);
+        const int rc = ioctl(sock, SIOCBRADDBR, &ifr);
+        close(sock);
+        if (rc != 0 && errno != EEXIST) {
+            fprintf(stderr, "ConnectivityManager E: SIOCBRADDBR %s: %s\n",
+                    bridge, strerror(errno));
+            return false;
+        }
     }
-    WifiManager& wifi = WifiManager::getInstance();
-    if (!wifi.startTetheredHotspot(nullptr)) return false;
-    const std::string internal = wifi.getSoftApInterfaceName();
-    const std::string external = tetheringUpstreamIface();
-    if (external.empty()) {
-        fprintf(stderr, "ConnectivityManager E: no upstream interface for "
-                "tethering (AP stays up, no NAT)\n");
+    if (!bringInterfaceUp(bridge, true)) return false;
+    StaticIpConfiguration ip;
+    ip.setIpAddress(LinkAddress("192.168.44.1", 24));
+    return applyIpConfiguration(bridge, ip);
+}
+
+/* Dropping the bridge also kicks the enslaved bnep peers — exactly what
+ * netd's interface teardown achieves (peers see the NAP go away). */
+static void destroyBtPanBridge() {
+    const char* bridge = ConnectivityManager::BT_TETHERING_BRIDGE;
+    const int sock = socket(AF_INET, SOCK_DGRAM, 0);
+    if (sock < 0) return;
+    ifreq ifr = {};
+    strncpy(ifr.ifr_name, bridge, IFNAMSIZ - 1);
+    ioctl(sock, SIOCBRDELBR, &ifr);
+    close(sock);
+}
+
+void ConnectivityManager::setBluetoothPanEnabler(
+        const std::function<bool(bool enabled)>& enabler) {
+    sBluetoothPanEnabler = enabler;
+}
+
+bool ConnectivityManager::startTethering(int type) {
+    if (type == TETHERING_WIFI) {
+        WifiManager& wifi = WifiManager::getInstance();
+        if (!wifi.startTetheredHotspot(nullptr)) return false;
+        const std::string internal = wifi.getSoftApInterfaceName();
+        const std::string external = tetheringUpstreamIface();
+        if (external.empty()) {
+            fprintf(stderr, "ConnectivityManager E: no upstream interface for "
+                    "tethering (AP stays up, no NAT)\n");
+            return true;
+        }
+        if (!NatController::enableNat(internal, external)) {
+            wifi.stopSoftAp();
+            return false;
+        }
+        /* Record the pair that was actually programmed — netd's enabled-iface
+         * pair ledger: stop must remove exactly these rules, not whatever the
+         * default route resolves to at stop time. */
+        std::lock_guard<std::mutex> lock(mNatMutex);
+        mNatPairs[type] = {internal, external};
         return true;
     }
-    if (!NatController::enableNat(internal, external)) {
-        wifi.stopSoftAp();
-        return false;
-    }
-    /* Record the pair that was actually programmed — netd's enabled-iface
-     * pair ledger: stop must remove exactly these rules, not whatever the
-     * default route resolves to at stop time. */
-    {
+    if (type == TETHERING_BLUETOOTH) {
+        /* AOSP Tethering.startTethering(BLUETOOTH): enable the BNEP server
+         * (PanService half) and tether the bt-pan interface (netd half).
+         * Refusal of the PanService half fails the request, as upstream. */
+        if (!ensureBtPanBridge()) return false;
+        if (sBluetoothPanEnabler) {
+            if (!sBluetoothPanEnabler(true)) {
+                fprintf(stderr, "ConnectivityManager E: bluetooth pan enabler "
+                        "refused tethering\n");
+                destroyBtPanBridge();
+                return false;
+            }
+        } else {
+            fprintf(stderr, "ConnectivityManager W: no bluetooth pan enabler "
+                    "registered (setBluetoothPanEnabler) — data plane up, "
+                    "BNEP server NOT enabled\n");
+        }
+        /* netd starts dnsmasq per tethered interface; the standalone module
+         * uses its own DHCP server with the same address shape. */
+        mkdir("/tmp/cdroid-tether", 0755);   /* pid/log dir; EEXIST is fine */
+        DhcpServer::Config dhcp;
+        dhcp.iface = BT_TETHERING_BRIDGE;
+        dhcp.serverIp = "192.168.44.1";
+        dhcp.prefixLength = 24;
+        dhcp.rangeStart = "192.168.44.2";
+        dhcp.rangeEnd = "192.168.44.254";
+        dhcp.netmask = "255.255.255.0";
+        dhcp.workDir = "/tmp/cdroid-tether";
+        DhcpServer* server = DhcpServer::create(dhcp);
+        if (server == nullptr || !server->start()) {
+            delete server;
+            destroyBtPanBridge();
+            if (sBluetoothPanEnabler) sBluetoothPanEnabler(false);
+            return false;
+        }
+        mBtDhcpServer = server;
+
+        const std::string external = tetheringUpstreamIface();
+        if (external.empty()) {
+            fprintf(stderr, "ConnectivityManager E: no upstream interface for "
+                    "tethering (bridge stays up, no NAT)\n");
+            return true;
+        }
+        if (!NatController::enableNat(BT_TETHERING_BRIDGE, external)) {
+            server->stop();
+            delete server;
+            mBtDhcpServer = nullptr;
+            destroyBtPanBridge();
+            if (sBluetoothPanEnabler) sBluetoothPanEnabler(false);
+            return false;
+        }
         std::lock_guard<std::mutex> lock(mNatMutex);
-        mNatInternal = internal;
-        mNatExternal = external;
+        mNatPairs[type] = {BT_TETHERING_BRIDGE, external};
+        return true;
     }
-    return true;
+    fprintf(stderr, "ConnectivityManager E: tethering type %d has no "
+            "interface owner yet\n", type);
+    return false;
 }
 
 bool ConnectivityManager::stopTethering(int type) {
-    if (type != TETHERING_WIFI) return false;
-    teardownRecordedNat();
-    return WifiManager::getInstance().stopSoftAp();
+    if (type == TETHERING_WIFI) {
+        teardownRecordedNat(type);
+        return WifiManager::getInstance().stopSoftAp();
+    }
+    if (type == TETHERING_BLUETOOTH) {
+        teardownRecordedNat(type);
+        if (mBtDhcpServer != nullptr) {
+            mBtDhcpServer->stop();
+            delete mBtDhcpServer;
+            mBtDhcpServer = nullptr;
+        }
+        if (sBluetoothPanEnabler) sBluetoothPanEnabler(false);
+        destroyBtPanBridge();
+        return true;
+    }
+    return false;
 }
 
-void ConnectivityManager::teardownRecordedNat() {
+void ConnectivityManager::teardownRecordedNat(int type) {
     std::string internal, external;
     {
         std::lock_guard<std::mutex> lock(mNatMutex);
-        internal = mNatInternal;
-        external = mNatExternal;
-        mNatInternal.clear();
-        mNatExternal.clear();
+        const auto it = mNatPairs.find(type);
+        if (it == mNatPairs.end()) return;
+        internal = it->second.first;
+        external = it->second.second;
+        mNatPairs.erase(it);
     }
     if (!internal.empty() && !external.empty())
         NatController::disableNat(internal, external);
@@ -242,7 +373,7 @@ void ConnectivityManager::onWifiApStateChanged(int wifiApState) {
      * hostapd death): drop the recorded pair so its rules cannot outlive
      * the interface they forward for. */
     if (wifiApState == WifiManager::WIFI_AP_STATE_DISABLED)
-        teardownRecordedNat();
+        teardownRecordedNat(TETHERING_WIFI);
 }
 
 } // namespace cdroid

@@ -1,9 +1,12 @@
 /*********************************************************************************
- * widgetsDemo: a widget showcase framed as a smart-home control panel
- * ("CDroid Home"). Fragment-based — each of the 10 tab pages is a DemoPageFragment
- * driven by the ported androidx FragmentPagerAdapter on a classic ViewPager,
- * with TabLayout wired via setupWithViewPager. The per-page widget demos and
- * their wiring live in pages.cc.
+ * widgetsDemo: a tabbed widget showcase over the ApiDemos-style registry.
+ *
+ * One FragmentActivity hosts DemoTabsFragment as the root: every demo
+ * self-registers at static init through REGISTER_DEMO_FRAGMENT and appears as
+ * one scrollable tab (order = "/"-path order: Layouts/, then Views/). BACK at
+ * the root exits. The ApiDemos-style category list shell
+ * (demolistfragment.cc) stays available, unwired, until the final page-set
+ * decision.
  *********************************************************************************/
 #include <core/app.h>
 #include <cdroid.h>
@@ -22,65 +25,30 @@
 #include <view/layoutinflater.h>
 #include <widget/button.h>
 #include <widget/viewpager.h>
-#include <widgetEx/tablayout/tablayout.h>
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
+#include <fragment/fragmenttransaction.h>
 #include <R.h>
 #include <typeinfo>
-#include "fragments.h"
+#include "demoregistry.h"
+#include "demotabsfragment.h"
 
 using namespace cdroid;
 
 class WidgetsDemoActivity : public FragmentActivity {
-    TabLayout* mTabs = nullptr;
+    DemoTabsFragment* mRootTabs = nullptr;  // the seeded root tab screen
 public:
-    WidgetsDemoActivity() : FragmentActivity(0, 0, -1, -1) {
-        ViewGroup* root = (ViewGroup*)LayoutInflater::from(getContext())
-            ->inflate(widgetsDemo::R::layout::main, this, false);
-        addView(root);
-        mTabs = (TabLayout*)root->findViewById(widgetsDemo::R::id::tabs);
-        if (ViewGroup* host = (ViewGroup*)root->findViewById(widgetsDemo::R::id::pager_container)) {
-            // The legacy androidx ViewPager is not registered for XML inflation,
-            // so the pager is created here and hosted in the layout's container.
-            ViewPager* pager = new ViewPager(getContext());
-            pager->setId(View::generateViewId());  // unique tag base for pager fragments
-            // Creator-owns rule: the adapter is ours, not the pager's — anchor its
-            // deletion to the pager's lifetime with an owned keyed tag.
-            auto* pagerAdapter = new DemoFragmentPagerAdapter(getSupportFragmentManager());
-            pager->setAdapter(pagerAdapter);
-            pager->setTag(View::generateViewId(), pagerAdapter,
-                          [](void* p) { delete static_cast<DemoFragmentPagerAdapter*>(p); });
-            // 10 small static pages: keep them all attached (androidx guidance for
-            // FragmentPagerAdapter) instead of tearing down/rebuilding views through
-            // the SpecialEffects exit pipeline on every tab hop.
-            pager->setOffscreenPageLimit(9);
-            // Start on the progress page (page 1) instead of the buttons page.
-            pager->setCurrentItem(1, false);
-            host->addView(pager, new ViewGroup::LayoutParams(
-                    ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
-            if (mTabs) mTabs->setupWithViewPager(pager);
+    WidgetsDemoActivity() : FragmentActivity(0, 0, -1, -1) {}
 
-            // Valgrind/CI driver: WIDGETSDEMO_AUTOCYCLE sweeps every page once
-            // (0..count-1), then exits cleanly so the leak-check report lands.
-            // No input path involved — valgrind's serialized virtual CPU makes
-            // evdev/touch interaction impractical (clicks starve).
-            if (getenv("WIDGETSDEMO_AUTOCYCLE")) {
-                struct Cycle {
-                    static void step(ViewPager* p, int page) {
-                        const int n = (p->getAdapter() != nullptr) ? p->getAdapter()->getCount() : 0;
-                        if (n == 0 || page >= n) { App::getInstance().exit(0); return; }
-                        p->setCurrentItem(page, false);
-                        p->postDelayed([p, page]() { Cycle::step(p, page + 1); }, 5000);
-                    }
-                };
-                pager->postDelayed([pager]() { Cycle::step(pager, 0); }, 5000);
-            }
+    void onCreate(Bundle* savedInstanceState) override {
+        FragmentActivity::onCreate(savedInstanceState);
+        LayoutInflater::from(getContext())->inflate(widgetsDemo::R::layout::main, this, true);
 
-        // Locale cycle button (top-right): flips zh-CN <-> en-US through the
-        // AOSP-style configuration-change path. The manifest declares
+        // Locale cycle button (header, top-right): flips zh-CN <-> en-US through
+        // the AOSP-style configuration-change path. The manifest declares
         // android:configChanges="locale", so the window takes the in-place
         // dispatch (View.onConfigurationChanged) instead of recreate().
-        if (Button* localeBtn = (Button*)root->findViewById(widgetsDemo::R::id::btn_locale)) {
+        if (Button* localeBtn = (Button*)findViewById(widgetsDemo::R::id::btn_locale)) {
             auto applyButtonLabel = [localeBtn]() {
                 const std::string cur = App::getInstance().getResources()
                         .getConfiguration().getLocales().get(0).toLanguageTag();
@@ -102,43 +70,101 @@ public:
             applyButtonLabel();
         }
 
-            // TEMP STRESS HOOK: PRD_DIALOG=1 opens and dismisses the misc-page
-            // AlertDialog every 400ms (deterministic repro for the decor leak;
-            // input clicks vary in timing). Same builder chain as pages.cc btn_dialog.
-            if (getenv("PRD_DIALOG")) {
-                static AlertDialog* sDialog = nullptr;
-                auto step = new std::function<void()>;
-                ViewPager* p = pager;
-                *step = [step, p]() {
-                    if (sDialog && sDialog->isShowing()) {
-                        sDialog->dismiss();  // same as tapping OK
-                    } else {
-                        auto noop = [](DialogInterface&, int) {};
-                        sDialog = AlertDialog::Builder(&App::getInstance())
-                            .setTitle("cdroid")
-                            .setMessage("stress dialog")
-                            .setPositiveButton("OK", noop)
-                            .setNegativeButton("Cancel", noop)
-                            .show();
-                    }
-                    p->postDelayed([step](){ (*step)(); }, 400);
-                };
-                pager->postDelayed([step](){ (*step)(); }, 400);
+        // Seed the tabbed root directly: every registered demo is one
+        // scrollable tab (the pre-refactor widgetsDemo form — no category-list
+        // hop first). The initial fragment is added — NOT addToBackStack'd
+        // (the FragmentNavigator initial-navigation rule) — so BACK at the
+        // root falls through to the activity, never popping to a blank screen.
+        // The ApiDemos-style category list shell stays in demolistfragment.cc,
+        // unwired, until the final page-set decision.
+        if (findViewById(widgetsDemo::R::id::demo_content) != nullptr) {
+            int initialPage = 0;
+            if (const char* open = getenv("WIDGETSDEMO_OPEN")) {
+                // WIDGETSDEMO_OPEN="Views/DateTime/Text Clock": land the root
+                // tab screen on that demo's tab (headless navigation check —
+                // bare Xvfb delivers no pointer input to this window).
+                const std::vector<const DemoEntry*> leaves = DemoRegistry::get().leavesUnder("");
+                for (size_t i = 0; i < leaves.size(); i++) {
+                    if (leaves[i]->path == open) { initialPage = (int)i; break; }
+                }
             }
+            mRootTabs = DemoTabsFragment::newInstance("", initialPage);
+            getSupportFragmentManager()->beginTransaction()
+                ->add((int)widgetsDemo::R::id::demo_content, mRootTabs)
+                .commit();
+        }
 
-            // TEMP STRESS HOOK: PRD_STRESS=1 pages through tabs every 250ms
-            // (deterministic repro for the teardown UAF; input clicks vary in timing).
-            if (getenv("PRD_STRESS")) {
-                auto step = new std::function<void()>;
-                ViewPager* p = pager;
-                *step = [step, p]() {
-                    static int sNext = 0;
-                    p->setCurrentItem(sNext, false);
-                    sNext = (sNext + 1) % 10;
-                    p->postDelayed([step](){ (*step)(); }, 250);
-                };
-                pager->postDelayed([step](){ (*step)(); }, 250);
-            }
+        // Valgrind/CI driver: WIDGETSDEMO_AUTOCYCLE sweeps every registered
+        // demo once through the root pager's tabs (setCurrentItem — the
+        // pre-refactor app's sweep; replacing the root would dangle the
+        // pager's page fragments), then exits cleanly for the leak-check
+        // report. No input path involved — valgrind's serialized virtual CPU
+        // makes evdev/touch interaction impractical (clicks starve).
+        if (getenv("WIDGETSDEMO_AUTOCYCLE")) {
+            struct Cycle {
+                static void step(WidgetsDemoActivity* self) {
+                    ViewPager* pager =
+                            self->mRootTabs ? self->mRootTabs->getViewPager() : nullptr;
+                    const int count = pager && pager->getAdapter()
+                            ? pager->getAdapter()->getCount() : 0;
+                    const int next = pager ? pager->getCurrentItem() + 1 : count;
+                    if (next >= count) { App::getInstance().exit(0); return; }
+                    pager->setCurrentItem(next, false);
+                    self->postDelayed([self]() { Cycle::step(self); }, 5000);
+                }
+            };
+            postDelayed([this]() {
+                // The sweep's leak-check goal needs no focus; EditText pages
+                // grabbing IME focus mid-switch races the page detach (segfault
+                // under rapid switching), so block descendant focus first.
+                if (mRootTabs && mRootTabs->getViewPager()) {
+                    mRootTabs->getViewPager()->setDescendantFocusability(
+                            ViewGroup::FOCUS_BLOCK_DESCENDANTS);
+                }
+                Cycle::step(this);
+            }, 5000);
+        }
+
+        // TEMP STRESS HOOK: PRD_DIALOG=1 opens and dismisses an AlertDialog
+        // every 400ms (deterministic repro for the decor leak; input clicks
+        // vary in timing).
+        if (getenv("PRD_DIALOG")) {
+            static AlertDialog* sDialog = nullptr;
+            auto step = new std::function<void()>;
+            WidgetsDemoActivity* self = this;
+            *step = [step, self]() {
+                if (sDialog && sDialog->isShowing()) {
+                    sDialog->dismiss();  // same as tapping OK
+                } else {
+                    auto noop = [](DialogInterface&, int) {};
+                    sDialog = AlertDialog::Builder(&App::getInstance())
+                        .setTitle("cdroid")
+                        .setMessage("stress dialog")
+                        .setPositiveButton("OK", noop)
+                        .setNegativeButton("Cancel", noop)
+                        .show();
+                }
+                self->postDelayed([step](){ (*step)(); }, 400);
+            };
+            postDelayed([step](){ (*step)(); }, 400);
+        }
+
+        // TEMP STRESS HOOK: PRD_STRESS=1 churns pager tabs every 250ms
+        // (teardown-UAF repro; same tab-churn shape as the old app).
+        if (getenv("PRD_STRESS")) {
+            auto step = new std::function<void()>;
+            WidgetsDemoActivity* self = this;
+            *step = [step, self]() {
+                ViewPager* pager =
+                        self->mRootTabs ? self->mRootTabs->getViewPager() : nullptr;
+                if (pager && pager->getAdapter() && pager->getAdapter()->getCount() > 0) {
+                    pager->setCurrentItem(
+                            (pager->getCurrentItem() + 1) % pager->getAdapter()->getCount(),
+                            false);
+                }
+                self->postDelayed([step](){ (*step)(); }, 250);
+            };
+            postDelayed([step](){ (*step)(); }, 250);
         }
     }
 };
@@ -146,14 +172,14 @@ public:
 REGISTER_ACTIVITY(WidgetsDemoActivity);
 
 // A11Y_DUMP=1: register a tree-dumping accessibility service and walk every
-// node of the active window on each page switch — combined with
+// node of the active window on each fragment switch — combined with
 // WIDGETSDEMO_AUTOCYCLE this is a full-zoo a11y enumeration report.
 namespace {
 void dumpNode(AccessibilityNodeInfo* node, int depth) {
     if (node == nullptr || depth > 24) return;
     // AOSP visibility semantics: the node carries isVisibleToUser (window
     // visibility, ancestor alpha/visibility chain, global-rect clipping) —
-    // ViewPager's offscreen pages stay attached but report false.
+    // offscreen content stays attached but reports false.
     if (!node->isVisibleToUser()) {
         node->recycle();
         return;
@@ -213,15 +239,15 @@ public:
         LOGD("A11YTREE service connected");
     }
     void onAccessibilityEvent(AccessibilityEvent& event) override {
-        // ViewPager paging fires content-changed, not window-state; throttle
-        // to one dump per 2s (AUTOCYCLE dwells 5s per page -> ~2 dumps each).
+        // Fragment switches fire content-changed; throttle to one dump per 2s
+        // (AUTOCYCLE dwells 5s per demo -> ~2 dumps each).
         const long now = SystemClock::uptimeMillis();
         if (now - mLastDumpMs < 2000) return;
         mLastDumpMs = now;
-        // Dump OUT of the event dispatch stack: a page-switch event fires while
-        // the outgoing page is tearing down, and walking that tree dereferences
-        // views the adapter already freed. The posted dump runs a looper turn
-        // later, on the settled tree.
+        // Dump OUT of the event dispatch stack: a switch event fires while
+        // the outgoing fragment is tearing down, and walking that tree
+        // dereferences views the manager already freed. The posted dump runs
+        // a looper turn later, on the settled tree.
         static Handler sDumpHandler(Looper::getMainLooper());
         sDumpHandler.post([this]() {
             AccessibilityNodeInfo* root = getRootInActiveWindow();

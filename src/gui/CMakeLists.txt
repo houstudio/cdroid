@@ -131,18 +131,15 @@ endforeach(each_file)
 # --- pkg-config (cdroid.pc) public/private link split ---
 # cairo/cairomm is PUBLIC: cdroid public headers expose Cairo::Context / ImageSurface / RefPtr
 # (Canvas is-a cairo_t). Everything else is PRIVATE (internal impl: minikin, image codecs, XML,
-# compression, font, system libs). Keep in sync with the find_package() list in cmake/options.cmake.
+# compression, font, system libs). Keep in sync with the find_package() list in cmake/options.cmake
+# and the actual link line: fontconfig is gone (runtime reads fonts.xml only); zip/z are linked.
 set(PKGCONFIG_LIBS          "cairo")
-set(PKGCONFIG_LIBS_PRIVATE  "freetype2 fontconfig harfbuzz libpng expat")
+set(PKGCONFIG_LIBS_PRIVATE  "freetype2 harfbuzz libpng expat libzip zlib")
 set(NONPKG_LIBS_PRIVATE     "-lm -pthread -ldl")
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 file(COPY ${PROJECT_BINARY_DIR}/gui_features.h DESTINATION "${CMAKE_BINARY_DIR}/include/gui/")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")
 
-set(PKGCONFIG_LIBS "cairo libzip")#do not use -l
-set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
-set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
-set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid
     PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal cdtext androidfw  # androidfw PUBLIC: symbols exported from cdroid.so so tests/apps link ONE copy

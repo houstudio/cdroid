@@ -49,6 +49,14 @@ Dialog::Dialog(Context* context,int themeResId,bool createContextThemeWrapper){
     mShowing = false;
     mCancelable = true;
     mWindow = new Window(mContext, 0, 0, 640, 320);
+    // AOSP: the dialog's PhoneWindow is NOT attached to WMS until show()
+    // (WindowManager.addView in Dialog.show). CDROID windows self-register in
+    // the ctor, so park this one INVISIBLE until show(): compose, input
+    // hit-testing and visible-region occlusion all skip non-VISIBLE windows.
+    // Otherwise a created-but-unshown dialog (Builder.create() held for later)
+    // sits in the stack as a live occluder swallowing input and compositing
+    // its blank frame over the host.
+    mWindow->setVisibility(View::INVISIBLE);
     // AOSP Dialog ctor: mWindow.setCallback(this) — the Dialog receives the
     // window's input dispatch + lifecycle through the Window.Callback seam
     // (cleared in dismissDialog: the window teardown is posted and may outlive
@@ -143,12 +151,32 @@ void Dialog::show(){
     // hosts may stamp window attributes before show (AOSP Dialog.show never
     // writes gravity either).
     WindowManager::LayoutParams& attrs = mWindow->getAttributes();
-    attrs.width  = frm->getMeasuredWidth()  + horzMargin;
-    attrs.height = frm->getMeasuredHeight() + vertMargin;
+    /* The themed windowBackground insets the decor content (the traversal
+     * lays the panel at its padding — a 16px themed dialog background on a
+     * 206px window leaves 174px for title+list+buttons, squeezing the list
+     * to ~1.x rows). AOSP ViewRootImpl sizes a wrap-content window INCLUDING
+     * the decor background padding; the manual measure here must do the
+     * same or the window is short by 2x the padding. */
+    int bgPadH = 0, bgPadV = 0;
+    Rect bgPad;
+    if (mWindow->getBackground() != nullptr && mWindow->getBackground()->getPadding(bgPad)) {
+        /* Drawable::getPadding's Rect convention: the right/bottom insets are
+         * stored in the .width/.height slots (View::resolvePadding reads
+         * padding.width as the AOSP padding.right) — .right() would be
+         * left+width and double-count the left inset. */
+        bgPadH = bgPad.left + bgPad.width;
+        bgPadV = bgPad.top + bgPad.height;
+    }
+    attrs.width  = frm->getMeasuredWidth()  + horzMargin + bgPadH;
+    attrs.height = frm->getMeasuredHeight() + vertMargin + bgPadV;
     WindowManager::getInstance().relayoutWindow(mWindow);
 
     LOGD("size=%dx%d %d,%d",frm->getMeasuredWidth(),frm->getMeasuredHeight(),mWindow->getWidth(),mWindow->getHeight());
     frm->layout(lp->leftMargin,lp->topMargin,mWindow->getWidth()-horzMargin, mWindow->getHeight()-vertMargin);
+    // AOSP Dialog.show's WindowManager.addView attaches the window VISIBLE.
+    // The ctor parked it INVISIBLE (see there); the re-show branch above
+    // restores visibility too — this is the first-show counterpart.
+    mWindow->setVisibility(View::VISIBLE);
     mShowing = true;
 }
 
@@ -220,15 +248,14 @@ void Dialog::setCanceledOnTouchOutside(bool cancel) {
     }
     if (mWindow == nullptr) return;
     mWindow->setCloseOnTouchOutside(cancel);
-    /* CDROID stage-1 substitution: AOSP dialog windows are touch-modal, so an
-       out-of-frame tap is delivered as the real gesture and consumed by
-       shouldCloseOnTouch's UP-out-of-bounds clause. CDROID dispatch is
-       topmost-hit only (non-modal), so the dialog window instead opts into
-       the OUTSIDE notification — WindowManager synthesizes ACTION_OUTSIDE for
-       a DOWN outside it, and shouldCloseOnTouch's ACTION_OUTSIDE clause fires.
-       Same consumption point, same Dialog.cancel() dismissal. */
-    mWindow->setFlags(cancel ? WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH : 0,
-                      WindowManager::LayoutParams::FLAG_WATCH_OUTSIDE_TOUCH);
+    /* AOSP Dialog.setCanceledOnTouchOutside touches no window FLAGS (Dialog.java:
+       1273-1278 -> Window.setCloseOnTouchOutside only stores the field). The dialog
+       window is touch-modal by default, so an out-of-frame tap is delivered to it as
+       the REAL gesture (WindowManager's dispatcher honors modality like
+       InputDispatcher.findTouchedWindowAtLocked) and consumed by shouldCloseOnTouch's
+       UP-out-of-bounds clause. The stage-1 substitute that raised
+       FLAG_WATCH_OUTSIDE_TOUCH on dialogs — for the old topmost-hit-only dispatch —
+       is retired with it. */
 }
 
 bool Dialog::onTouchEvent(MotionEvent& event) {
@@ -294,6 +321,11 @@ void Dialog::addContentView(View* view,ViewGroup::LayoutParams* params){
 
 void Dialog::setTitle(const std::string&title){
     mWindow->setText(title);
+}
+
+/* Dialog.java:635-637 -- setTitle(@StringRes int) */
+void Dialog::setTitle(int titleId){
+    setTitle(mContext->getString(titleId));
 }
 
 bool Dialog::onKeyDown(int keyCode,KeyEvent& event){

@@ -143,6 +143,15 @@ bool TypedArray::getValue(size_t idx, TypedValue* out) const {
     return get(idx, out);
 }
 
+// AOSP TypedArray.getChangingConfigurations(): drains the mask (reads and
+// resets) of configuration parameters for which values in this array may
+// change, requiring a re-resolution. CDROID's styled-attr pipeline does not
+// yet model per-value changing-config bits (nothing ORs into the mask), so
+// this stays 0 — see the header note.
+int TypedArray::getChangingConfigurations() const {
+    return 0;
+}
+
 bool TypedArray::getResolved(size_t idx, TypedValue* out) const {
     TypedValue v;
     if (!get(idx, &v)) return false;

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Drawer family strings, verbatim from upstream wear values/strings.xml. -->
+<resources>
+    <!-- String describing the navigation drawer which is read aloud when focused using accessibility gestures [CHAR LIMIT=35] -->
+    <string name="ws_navigation_drawer_content_description">Navigation drawer</string>
+
+    <!-- String describing the action drawer which is read aloud when focused using accessibility gestures [CHAR LIMIT=35] -->
+    <string name="ws_action_drawer_content_description">Action drawer</string>
+</resources>
