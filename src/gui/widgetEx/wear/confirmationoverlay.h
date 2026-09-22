@@ -109,6 +109,7 @@ public:
      * @return {@code this} object for method chaining.
      */
     ConfirmationOverlay& setFinishedAnimationListener(const OnAnimationFinishedListener& listener);
+    ConfirmationOverlay& setOnAnimationFinishedListener(const OnAnimationFinishedListener& listener);   // HEAD rename (java:214-218)
 
     /**
      * Adds the overlay as a child of {@code view.getRootView()}, removing it when complete. While

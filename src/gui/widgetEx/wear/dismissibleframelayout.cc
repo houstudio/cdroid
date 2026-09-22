@@ -52,6 +52,12 @@ void DismissibleFrameLayout::unregisterCallback(const Callback& callback) {
     mCallbacks.erase(it);
 }
 
+DismissibleFrameLayout::~DismissibleFrameLayout() {
+    // Java GC collects the controllers with the view; CDROID owns them.
+    delete mSwipeDismissController;
+    delete mBackButtonDismissController;
+}
+
 void DismissibleFrameLayout::setSwipeDismissible(bool swipeDismissible) {
     if (swipeDismissible) {
         if (mSwipeDismissController == nullptr) {
@@ -60,6 +66,7 @@ void DismissibleFrameLayout::setSwipeDismissible(bool swipeDismissible) {
         }
     } else if (mSwipeDismissController != nullptr) {
         mSwipeDismissController->setOnDismissListener({});//nullptr);
+        delete mSwipeDismissController;   // Java GC; CDROID owns it
         mSwipeDismissController = nullptr;
     }
 }
@@ -77,6 +84,7 @@ void DismissibleFrameLayout::setBackButtonDismissible(bool backButtonDismissible
         }
     } else if (mBackButtonDismissController != nullptr) {
         mBackButtonDismissController->disable(this);
+        delete mBackButtonDismissController;   // Java GC; CDROID owns it
         mBackButtonDismissController = nullptr;
     }
 }

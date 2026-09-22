@@ -22,10 +22,18 @@ namespace cdroid{
 SwipeDismissTransitionHelper::SwipeDismissTransitionHelper(Context* context,DismissibleFrameLayout* layout) {
     mLayout = layout;
     mVelocityTracker = nullptr;
-    mIsScreenRound = true;//layout.getResources().getConfiguration().isScreenRound();
+    mIsScreenRound = layout->getResources().getConfiguration().isScreenRound();
     mScreenWidth = context->getDisplayMetrics().widthPixels;
     mScrimBackground = generateScrimBackgroundDrawable(mScreenWidth,
             context->getDisplayMetrics().heightPixels);
+}
+
+SwipeDismissTransitionHelper::~SwipeDismissTransitionHelper() {
+    // Java GC collects the springs with the helper; CDROID owns them. The
+    // scrim background's ownership passed to setBackground (the view deletes
+    // it on replace/teardown), so it is NOT freed here.
+    delete mDismissalSpring;
+    delete mRecoverySpring;
 }
 
 void SwipeDismissTransitionHelper::clipOutline(View* view, bool useRoundShape) {
@@ -130,6 +138,9 @@ void SwipeDismissTransitionHelper::updateView() {
 }
 
 void SwipeDismissTransitionHelper::updateDim() {
+    // TODO: upstream dims the foreground through a SRC_ATOP layer paint
+    // (SwipeDismissTransitionHelper.java:207-210); cairo has no per-layer
+    // paint — deferred until a View::setLayerPaint seam exists.
     //mCompositingPaint->setColorFilter(createDimmingColorFilter(mDimming));
     //mLayout->setLayerPaint(mCompositingPaint);
 }
@@ -194,9 +205,12 @@ void SwipeDismissTransitionHelper::resetTranslationAndAlpha() {
 
 Drawable* SwipeDismissTransitionHelper::generateScrimBackgroundDrawable(int width, int height) {
     ShapeDrawable* shape = new ShapeDrawable();
-    shape->setShape(new RectShape());
+    RectShape* rect = new RectShape();
+    //shape.getPaint().setColor(Color.BLACK); — CDROID shapes fill from their
+    // gradient color list (size 1 = solid), so the scrim is a solid black fill.
+    rect->setGradientColors({(uint32_t)Color::BLACK});
+    shape->setShape(rect);
     shape->setBounds(0, 0, width, height);
-    //shape.getPaint().setColor(Color.BLACK);
     return shape;
 }
 
@@ -218,12 +232,13 @@ void SwipeDismissTransitionHelper::animateRecovery(const DismissController::OnDi
     
             });
     const DynamicAnimation::OnAnimationEndListener endls(
-            [this,&dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
+            [this,dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
                 resetTranslationAndAlpha();
                 if (dismissListener.onDismissCanceled != nullptr) {
                     dismissListener.onDismissCanceled();
                 }
             });
+    delete mRecoverySpring;
     mRecoverySpring = createSpringAnimation(mTranslationX, 0, 
             mVelocityTracker->getXVelocity(),update,endls);
 }
@@ -247,12 +262,13 @@ void SwipeDismissTransitionHelper::animateDismissal(const DismissController::OnD
                 onDismissalRecoveryAnimationProgressChanged(value);
             });
     const DynamicAnimation::OnAnimationEndListener endls(
-            [this,&dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
+            [this,dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
                 resetTranslationAndAlpha();
                 if (dismissListener.onDismissed != nullptr) {
                     dismissListener.onDismissed();
                 }
             });
+    delete mDismissalSpring;
     mDismissalSpring = createSpringAnimation(mTranslationX, mScreenWidth, mVelocityTracker->getXVelocity(), update, endls);
 }
 

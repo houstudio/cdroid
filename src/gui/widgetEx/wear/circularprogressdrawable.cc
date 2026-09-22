@@ -21,6 +21,13 @@
 #include <widgetEx/wear/circularprogressdrawable.h>
 
 namespace cdroid{
+namespace {
+// androidx's Paint.setColor(c)+setAlpha(a) equivalent: scale the color's alpha.
+unsigned int applyAlpha(unsigned int color, int alpha) {
+    const unsigned a = (unsigned)alpha & 0xff;
+    return (a << 24) | (color & 0xffffff);
+}
+} // namespace
 CircularProgressDrawable::CircularProgressDrawable(Context* context) {
     //mResources = Preconditions.checkNotNull(context).getResources();
     mContext = context;
@@ -161,9 +168,8 @@ void CircularProgressDrawable::setColorSchemeColors(const std::vector<int>&color
 void CircularProgressDrawable::draw(Canvas& canvas) {
     Rect bounds = getBounds();
     canvas.save();
-    const float centerX = float(bounds.left+ bounds.width)/2.f;
-    const float centerY = float(bounds.top + bounds.height)/2.f;
-    //canvas.rotate(mRotation, centerX,centerY);
+    const float centerX = bounds.centerX();
+    const float centerY = bounds.centerY();
     canvas.translate(centerX ,centerY);
     canvas.rotate_degrees(mRotation);
     canvas.translate(-centerX,-centerY);
@@ -406,7 +412,7 @@ void CircularProgressDrawable::Ring::draw(Canvas& c,const Rect& bounds) {
     arcBounds.inset(-inset, -inset); // Revert the inset
 
     //c.drawArc(arcBounds, startAngle, sweepAngle, false, mPaint);
-    c.set_color(mCurrentColor);
+    c.set_color(applyAlpha(mCurrentColor, mAlpha));
     c.set_line_width(mStrokeWidth);
     c.set_antialias(Cairo::ANTIALIAS_GRAY);
     c.set_line_cap(static_cast<Cairo::Context::LineCap>(mRingCap));
@@ -433,16 +439,20 @@ void CircularProgressDrawable::Ring::drawTriangle(Canvas& c, float startAngle, f
         mArrow->moveTo(0, 0);
         mArrow->lineTo(mArrowWidth * mArrowScale, 0);
         mArrow->lineTo((mArrowWidth * mArrowScale / 2), (mArrowHeight * mArrowScale));
-        //mArrow->offset(centerRadius + bounds.centerX() - inset, bounds.centerY() + mStrokeWidth / 2.0f);
         mArrow->close();//_path();
         // draw a triangle
         //mArrowPaint.setColor(mCurrentColor);mArrowPaint.setAlpha(mAlpha);
-        c.set_color(mCurrentColor);
+        c.set_color(applyAlpha(mCurrentColor, mAlpha));
         c.save();
         //c.rotate(startAngle + sweepAngle, bounds.centerX(), bounds.centerY());
         c.translate( bounds.centerX(), bounds.centerY());
         c.rotate_degrees(startAngle + sweepAngle);
         c.translate(-bounds.centerX(),-bounds.centerY());
+        // mArrow->offset(centerRadius + bounds.centerX() - inset,
+        //         bounds.centerY() + mStrokeWidth / 2.0f) — CDROID's Path has no
+        // offset(); the same translation composes into the CTM here.
+        c.translate(centerRadius + bounds.centerX() - inset,
+                bounds.centerY() + mStrokeWidth / 2.0f);
         //c.drawPath(mArrow, mArrowPaint);
         mArrow->append_to_context(&c);
         c.fill();

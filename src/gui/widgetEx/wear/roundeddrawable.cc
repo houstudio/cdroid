@@ -97,23 +97,22 @@ void RoundedDrawable::draw(Canvas& canvas) {
     canvas.save();
     canvas.translate(bounds.left, bounds.top);
     // mTmpBoundsF is bounds translated to (0,0) and converted to RectF as drawRoundRect
-    // requires.
-    //canvas.drawRoundRect(mTmpBoundsF, (float) mRadius, (float) mRadius,mBackgroundPaint);
+    // requires. androidx paints the rounded background unconditionally
+    // (RoundedDrawable.java:206-207); setAlpha scales both paints upstream,
+    // the background takes it here.
     GradientDrawable::drawRoundedRect(canvas,mTmpBoundsF,mRadius,mRadius,mRadius,mRadius);
+    canvas.set_color((mBackgroundColor & 0xffffffu) | (((unsigned)mAlpha & 0xffu) << 24));
+    canvas.fill();
     if (mIsClipEnabled) {
         // Clip to a rounded rectangle
-        //canvas.drawRoundRect(mTmpBoundsF, (float) mRadius, (float) mRadius, mPaint);
-        canvas.clip_preserve();
-        if(mBackgroundColor!=Color::TRANSPARENT){
-            canvas.set_color(mBackgroundColor);
-            canvas.fill();
-        }
+        GradientDrawable::drawRoundedRect(canvas,mTmpBoundsF,mRadius,mRadius,mRadius,mRadius);
+        canvas.clip();
         mDrawable->setBounds(mTmpBounds);
         mDrawable->draw(canvas);
     } else {
         // Scale to fit the rounded rectangle
         const int minEdge = std::min(bounds.width, bounds.height);
-        const int padding = (int) std::ceil(std::min(mRadius, minEdge) * (1.f - 1.f / (float) std::sqrt(2.0)));
+        const int padding = (int) std::ceil(std::min(mRadius, minEdge / 2) * (1.f - 1.f / (float) std::sqrt(2.0)));
         mTmpBounds.inset(padding, padding);
         mDrawable->setBounds(mTmpBounds);
         mDrawable->draw(canvas);
@@ -127,7 +126,12 @@ int RoundedDrawable::getOpacity() const{
 }
 
 void RoundedDrawable::setAlpha(int alpha) {
-    mAlpha = alpha;
+    // androidx sets it on both paints (draw applies it to the rounded
+    // background; the content drawable keeps its own alpha).
+    if (mAlpha != alpha) {
+        mAlpha = alpha;
+        invalidateSelf();
+    }
 }
 
 int RoundedDrawable::getAlpha() const{
@@ -135,7 +139,8 @@ int RoundedDrawable::getAlpha() const{
 }
 
 void RoundedDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) {
-    //mPaint.setColorFilter(cf);
+    // TODO: cairo has no per-source color filter (tint emulates through
+    // push/pop group) — deferred until that seam gains a Drawable hook.
 }
 
 void RoundedDrawable::setRadius(int radius) {

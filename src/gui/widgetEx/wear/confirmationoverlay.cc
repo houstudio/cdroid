@@ -52,6 +52,12 @@ ConfirmationOverlay& ConfirmationOverlay::setFinishedAnimationListener(const OnA
     return *this;
 }
 
+ConfirmationOverlay& ConfirmationOverlay::setOnAnimationFinishedListener(const OnAnimationFinishedListener& listener) {
+    // HEAD rename (ConfirmationOverlay.java:214-218); the deprecated name forwards.
+    mListener = listener;
+    return *this;
+}
+
 void ConfirmationOverlay::showAbove(View* view) {
     if (mIsShowing) {
         return;
