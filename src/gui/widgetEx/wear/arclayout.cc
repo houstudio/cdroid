@@ -478,8 +478,7 @@ void ArcLayout::calculateArcAngle(View* view, ChildArcAngles* childAngles) {
 float ArcLayout::getChildTopInset(View* child) {
     LayoutParams* childLayoutParams = (LayoutParams*) child->getLayoutParams();
 
-    int childHeight = child->getMeasuredHeight();
-        (dynamic_cast<ArcLayout::Widget*>(child) != nullptr)
+    int childHeight = dynamic_cast<ArcLayout::Widget*>(child) != nullptr
             ? dynamic_cast<ArcLayout::Widget*>(child)->getThickness()
             : child->getMeasuredHeight();
 
