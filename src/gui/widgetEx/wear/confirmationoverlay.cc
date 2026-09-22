@@ -103,7 +103,9 @@ void ConfirmationOverlay::setUpForAccessibility() {
 // (no getSystemService).
 int ConfirmationOverlay::getDurationMillis() {
     if (AccessibilityManager::getInstance(mOverlayView->getContext()).isEnabled()) {
-        return std::max(A11Y_ANIMATION_DURATION_MS, mDurationMillis);
+        // (int) materializes a temporary for std::max's reference, avoiding
+        // the ODR-use of the constexpr member (no out-of-class definition).
+        return std::max((int) A11Y_ANIMATION_DURATION_MS, mDurationMillis);
     }
     return mDurationMillis;
 }
