@@ -461,6 +461,14 @@ void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int 
         const Path& path, float hOffset, float vOffset)const {
     if (count <= 0) return;
 
+    // android.graphics.Paint draws with its Shader when set, else its color
+    // (the sibling drawText path at :409-413 does exactly this); show_glyphs
+    // consumes the context's current source.
+    if (mShader) {
+        canvas.set_source(mShader);
+    } else {
+        canvas.set_color(getColor());
+    }
     minikin::U16StringPiece lineTextPiece((const uint16_t*)text + index, count);
     minikin::Layout layout(lineTextPiece, minikin::Range(0, count),
                            minikin::Bidi::FORCE_LTR, *mMinikinPaint,
