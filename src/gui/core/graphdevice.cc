@@ -362,7 +362,7 @@ void GraphDevice::composeSurfaces(){
         rcw.top  += wins[i]->mSurfaceDy;
         GFXHANDLE hdlSurface = wSurfaces[i]->mHandle;
         Cairo::RefPtr<Cairo::Region> rgn = wins[i]->mPendingRgn;
-        if(rgn->empty())continue; 
+        if(rgn->empty())continue;
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
         if (!rgn->empty() && wins[i]->getAlpha() < 1.0f) {
