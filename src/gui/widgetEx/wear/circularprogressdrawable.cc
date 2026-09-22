@@ -32,6 +32,8 @@ CircularProgressDrawable::CircularProgressDrawable(Context* context) {
     //mResources = Preconditions.checkNotNull(context).getResources();
     mContext = context;
     mRotation =0;
+    mRotationCount = 0.f;   // Java field-default zero-init (was read uninitialized)
+    mFinishing = false;
     mRing = new Ring();
     mRing->setColors({(int)Color::BLACK});
 
@@ -361,6 +363,15 @@ CircularProgressDrawable::Ring::Ring() {
     mRingCap=static_cast<int>(Cairo::Context::LineCap::SQUARE);
     mRingCenterRadius =0.f;
     mCircleColor = Color::TRANSPARENT;
+    // Java leaves these as field-default zero-init (false/0); C++ must spell
+    // them out or the first draw reads garbage (mShowArrow gates the arrow
+    // branch, mCurrentColor feeds the arc color).
+    mColorIndex = 0;
+    mStartingStartTrim = 0.f;
+    mStartingEndTrim = 0.f;
+    mStartingRotation = 0.f;
+    mCurrentColor = 0;
+    mShowArrow = false;
 }
 
 void CircularProgressDrawable::Ring::setArrowDimensions(float width, float height) {
