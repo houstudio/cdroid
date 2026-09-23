@@ -52,7 +52,11 @@ struct NavItem {
 class DemoNavDrawerAdapter : public WearableNavigationDrawerView::WearableNavigationDrawerAdapter {
 private:
     Context* mContext;
-    const std::vector<NavItem> mNavItems;
+    // Java field pointed at the activity's SAME list; as a member of the
+    // activity a BY-VALUE copy would snapshot the vector BEFORE the ctor body
+    // fills it (members init first) — bind by reference instead so the drawer
+    // sees the populated list.
+    const std::vector<NavItem>& mNavItems;
 
 public:
     explicit DemoNavDrawerAdapter(Context* context, const std::vector<NavItem>& navItems)
@@ -77,6 +81,10 @@ private:
     WearableNavigationDrawerView* mNavDrawer;
     WearableActionDrawerView* mActionDrawer;
     std::vector<NavItem> mNavItems;
+    // The drawer borrows its adapter — host it as a member so teardown frees
+    // it (declared after mNavItems, its init source; members die before the
+    // base Window's view tree).
+    DemoNavDrawerAdapter mNavAdapter{getContext(), mNavItems};
 
 public:
     WearableDrawersDemo() : Window(&App::getInstance(), 0, 0, -1, -1) {
@@ -94,7 +102,7 @@ public:
         onNavItemSelected(0);
 
         mNavDrawer = (WearableNavigationDrawerView*)findViewById(weardemos::R::id::nav_drawer);
-        mNavDrawer->setAdapter(new DemoNavDrawerAdapter(getContext(), mNavItems));
+        mNavDrawer->setAdapter(&mNavAdapter);
         mNavDrawer->addOnItemSelectedListener([this](int pos) { onNavItemSelected(pos); });
         mNavDrawer->getController()->peekDrawer();
 

@@ -37,5 +37,6 @@ SET(WEAR_SOURCES
     widgetEx/wear/singlepageui.cc
     widgetEx/wear/multipagepresenter.cc
     widgetEx/wear/multipageui.cc
+    widgetEx/wear/curvedtextview.cc
 )
 endif(ENABLE_WEARABLE_WIDGETS)

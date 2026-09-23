@@ -58,7 +58,7 @@ public:
      *                       to a pre-defined constant on the horizontal axis and half of the
      *                       child height on the vertical axis (vertical center).
      */
-    void adjustAnchorOffsetXY(View& child, float* anchorOffsetXY);
+    virtual void adjustAnchorOffsetXY(View& child, float* anchorOffsetXY);   // upstream: "Override this method"
 
     void setRound(bool isScreenRound);
     void setOffset(int offset);

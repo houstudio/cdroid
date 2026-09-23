@@ -71,7 +71,7 @@ void WearableLinearLayoutManager::updateLayout() {
     for (int count = 0; count < childCount; count++) {
         View* child = getChildAt(count);
         RecyclerView*rv = (RecyclerView*)child->getParent();
-        mLayoutCallback/*->onLayoutFinished*/(*child, *rv);
+        mLayoutCallback(*child, *rv);   // upstream mLayoutCallback.onLayoutFinished(child, rv)
     }
 }
 }/*endof namespace*/

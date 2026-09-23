@@ -74,6 +74,7 @@ private:
     ViewGroup* getOriginalParentView();
 public:
     SwipeDismissTransitionHelper(Context* context,DismissibleFrameLayout* layout);
+    ~SwipeDismissTransitionHelper();
 
     void onSwipeProgressChanged(float deltaX, MotionEvent& ev);
 

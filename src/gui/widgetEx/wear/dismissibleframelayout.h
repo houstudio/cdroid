@@ -44,6 +44,7 @@ protected:
 public:
     DismissibleFrameLayout(Context* context, const AttributeSet* attrs);
     DismissibleFrameLayout(Context* context,const AttributeSet* attrs,int defStyleAttr);
+    ~DismissibleFrameLayout() override;
     /** Registers a callback for dismissal. */
     void registerCallback(const Callback& callback);
     void unregisterCallback(const Callback& callback);

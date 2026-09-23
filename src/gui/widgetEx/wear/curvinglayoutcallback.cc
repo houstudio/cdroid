@@ -24,7 +24,7 @@ CurvingLayoutCallback::CurvingLayoutCallback(Context* context) {
     mCurvePath = std::make_shared<cdroid::Path>();
     mPathMeasure = new PathMeasure();
     mParentView= nullptr;
-    mIsScreenRound = true;//context.getResources().getConfiguration().isScreenRound();
+    mIsScreenRound = context->getResources().getConfiguration().isScreenRound();
     mXCurveOffset = context->getDimensionPixelSize(
             (int)internal::R::dimen::ws_wrv_curve_default_x_offset);
 }
